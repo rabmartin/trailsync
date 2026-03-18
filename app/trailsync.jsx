@@ -8,7 +8,7 @@ import {
   BookOpen, Bell, User, Play, Pause, Route,
   Home, Map, UserCircle, ArrowRight, Camera,
   CloudRain, Sun, CloudSun, Snowflake, Settings, List, ArrowUpDown, Check, CircleDot,
-  Shield, Mail, Apple, Sparkles, Zap, Plus
+  Shield, Mail, Apple, Sparkles, Zap, Plus, Maximize2, Minimize2
 } from "lucide-react";
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1379,6 +1379,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, savedWalks }) => 
   const [lbm, setLbm] = useState("d");
   const [lbTime, setLbTime] = useState("all");
   const [mtView, setMtView] = useState("map");
+  const [mtExpanded, setMtExpanded] = useState(false);
   const [mtCls, setMtCls] = useState(null);
   const [mtDone, setMtDone] = useState(null);
   const [mtSort, setMtSort] = useState("name");
@@ -1491,30 +1492,44 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, savedWalks }) => 
 
           {/* ═══ MAP VIEW ═══ */}
           {mtView === "map" && (
-            <div style={{ marginBottom: "10px" }}>
-              <MiniMap height="340px" markers={filteredPeaks.map(pk => ({ lat: pk.lat, lng: pk.lng, color: pk.done ? "#6BCB77" : "#E85D3A", data: pk, style: `width:14px;height:14px;border-radius:50%;background:${pk.done ? "#6BCB77" : "#E85D3A"};border:2px solid rgba(255,255,255,0.5);cursor:pointer;box-shadow:0 0 6px ${pk.done ? "rgba(107,203,119,0.4)" : "rgba(232,93,58,0.4)"};` }))} onMarkerClick={(m) => { setSelPeak(m.data); setLogging(false); }}>
-              {selPeak && (
-                <div style={{ position: "absolute", bottom: 10, left: 10, right: 10, zIndex: 20, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.15)", animation: "su .25s ease", overflow: "hidden" }}>
-                  <div style={{ height: "3px", background: selPeak.done ? "linear-gradient(90deg,#6BCB77,transparent)" : "linear-gradient(90deg,#E85D3A,transparent)" }} />
-                  <div style={{ padding: "12px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8" }}>{selPeak.name}</span>
-                          <div onClick={(e) => { e.stopPropagation(); if (selPeak.done && !logging) { setPeakData(prev => prev.map(p => p.id === selPeak.id ? { ...p, done: false, date: undefined, log: undefined } : p)); setSelPeak(prev => ({ ...prev, done: false, date: undefined, log: undefined })); setLogging(false); } else if (!selPeak.done) { const today = new Date().toISOString().split("T")[0]; setPeakData(prev => prev.map(p => p.id === selPeak.id ? { ...p, done: true, date: today, log: "" } : p)); setSelPeak(prev => ({ ...prev, done: true, date: today, log: "" })); setLogDate(today); setLogNote(""); setLogging(true); } }} style={{ width: "22px", height: "22px", borderRadius: "6px", background: selPeak.done ? "rgba(107,203,119,0.15)" : "rgba(232,93,58,0.1)", border: `2px solid ${selPeak.done ? "#6BCB77" : "rgba(232,93,58,0.3)"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all .2s" }}>{selPeak.done && <Check size={13} color="#6BCB77" strokeWidth={3} />}</div>
-                        </div>
-                        <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>{selPeak.ht}m · {selPeak.reg}</div>
-                        <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "5px", background: `${CLS[selPeak.cls]?.color}15`, color: CLS[selPeak.cls]?.color, fontWeight: 600, marginTop: "4px", display: "inline-block" }}>{CLS[selPeak.cls]?.name}</span>
-                      </div>
-                      <button onClick={() => { setSelPeak(null); setLogging(false); }} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "26px", height: "26px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={12} /></button>
-                    </div>
-                    {selPeak.done && !logging && (<div style={{ marginTop: "10px", padding: "10px", background: "rgba(107,203,119,0.06)", borderRadius: "10px", border: "1px solid rgba(107,203,119,0.12)" }}><div style={{ fontSize: "10px", color: "#6BCB77", fontWeight: 700, marginBottom: "4px" }}>Completed · {selPeak.date}</div>{selPeak.log && <div style={{ fontSize: "11px", color: "#BDD6F4", lineHeight: 1.4 }}>{selPeak.log}</div>}</div>)}
-                    {!selPeak.done && !logging && (<button onClick={() => { const today = new Date().toISOString().split("T")[0]; setPeakData(prev => prev.map(p => p.id === selPeak.id ? { ...p, done: true, date: today, log: "" } : p)); setSelPeak(prev => ({ ...prev, done: true, date: today, log: "" })); setLogDate(today); setLogNote(""); setLogging(true); }} style={{ marginTop: "10px", width: "100%", padding: "10px", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", border: "none", borderRadius: "10px", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Log This Summit</button>)}
-                    {logging && (<div style={{ marginTop: "10px" }}><div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, marginBottom: "4px" }}>Date completed</div><input type="date" value={logDate} onChange={e => setLogDate(e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "8px" }} /><div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, marginBottom: "4px" }}>Log (optional)</div><textarea value={logNote} onChange={e => setLogNote(e.target.value)} placeholder="How was it? Conditions, route, memories..." rows={2} style={{ width: "100%", padding: "8px 10px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", resize: "none", marginBottom: "10px" }} /><div style={{ display: "flex", gap: "6px" }}><button onClick={() => setLogging(false)} style={{ flex: 1, padding: "9px", borderRadius: "9px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button><button onClick={() => handleLog(selPeak.id)} style={{ flex: 1, padding: "9px", borderRadius: "9px", border: "none", background: logDate ? "linear-gradient(135deg,#6BCB77,#55a866)" : "#264f80", color: logDate ? "#F8F8F8" : "#BDD6F4", fontSize: "12px", fontWeight: 700, cursor: logDate ? "pointer" : "default", fontFamily: "'DM Sans'", opacity: logDate ? 1 : 0.5 }}>Done</button></div></div>)}
-                  </div>
+            <div style={mtExpanded ? { position: "fixed", inset: 0, zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" } : { marginBottom: "10px" }}>
+              {/* Expand/collapse controls */}
+              {mtExpanded && (
+                <div style={{ padding: "10px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+                  <select value={mtCls || ""} onChange={e => setMtCls(e.target.value || null)} style={{ padding: "7px 12px", borderRadius: "10px", fontSize: "11px", fontWeight: 600, background: mtCls ? `${CLS[mtCls]?.color}15` : "#0a2240", border: `1px solid ${mtCls ? CLS[mtCls]?.color : "rgba(90,152,227,0.12)"}`, color: mtCls ? CLS[mtCls]?.color : "#BDD6F4", outline: "none", cursor: "pointer", fontFamily: "'DM Sans'" }}>
+                    <option value="">All Classifications</option>
+                    {Object.entries(CLS).filter(([k]) => k !== "non-mountain").map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
+                  </select>
+                  <div style={{ fontSize: "10px", color: "#6BCB77", fontWeight: 600 }}>{mtCls ? `${filteredPeaks.filter(p => p.done).length}/${CLS[mtCls]?.count || filteredPeaks.length} logged` : ""}</div>
+                  <button onClick={() => setMtExpanded(false)} style={{ background: "rgba(4,30,61,0.88)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "8px", padding: "6px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><Minimize2 size={14} /></button>
                 </div>
               )}
-              </MiniMap>
+              <div style={mtExpanded ? { flex: 1, position: "relative" } : { position: "relative" }}>
+                {!mtExpanded && <button onClick={() => setMtExpanded(true)} style={{ position: "absolute", top: 10, right: 10, zIndex: 22, background: "rgba(4,30,61,0.88)", backdropFilter: "blur(8px)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "8px", padding: "6px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><Maximize2 size={14} /></button>}
+                <MiniMap height={mtExpanded ? "100%" : "340px"} markers={filteredPeaks.map(pk => ({ lat: pk.lat, lng: pk.lng, color: pk.done ? "#6BCB77" : "#E85D3A", data: pk, style: `width:14px;height:14px;border-radius:50%;background:${pk.done ? "#6BCB77" : "#E85D3A"};border:2px solid rgba(255,255,255,0.5);cursor:pointer;box-shadow:0 0 6px ${pk.done ? "rgba(107,203,119,0.4)" : "rgba(232,93,58,0.4)"};` }))} onMarkerClick={(m) => { setSelPeak(m.data); setLogging(false); }}>
+                {selPeak && (
+                  <div style={{ position: "absolute", bottom: 10, left: 10, right: 10, zIndex: 20, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.15)", animation: "su .25s ease", overflow: "hidden" }}>
+                    <div style={{ height: "3px", background: selPeak.done ? "linear-gradient(90deg,#6BCB77,transparent)" : "linear-gradient(90deg,#E85D3A,transparent)" }} />
+                    <div style={{ padding: "12px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8" }}>{selPeak.name}</span>
+                            <div onClick={(e) => { e.stopPropagation(); if (selPeak.done && !logging) { setPeakData(prev => prev.map(p => p.id === selPeak.id ? { ...p, done: false, date: undefined, log: undefined } : p)); setSelPeak(prev => ({ ...prev, done: false, date: undefined, log: undefined })); setLogging(false); } else if (!selPeak.done) { const today = new Date().toISOString().split("T")[0]; setPeakData(prev => prev.map(p => p.id === selPeak.id ? { ...p, done: true, date: today, log: "" } : p)); setSelPeak(prev => ({ ...prev, done: true, date: today, log: "" })); setLogDate(today); setLogNote(""); setLogging(true); } }} style={{ width: "22px", height: "22px", borderRadius: "6px", background: selPeak.done ? "rgba(107,203,119,0.15)" : "rgba(232,93,58,0.1)", border: `2px solid ${selPeak.done ? "#6BCB77" : "rgba(232,93,58,0.3)"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all .2s" }}>{selPeak.done && <Check size={13} color="#6BCB77" strokeWidth={3} />}</div>
+                          </div>
+                          <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>{selPeak.ht}m · {selPeak.reg}</div>
+                          <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "5px", background: `${CLS[selPeak.cls]?.color}15`, color: CLS[selPeak.cls]?.color, fontWeight: 600, marginTop: "4px", display: "inline-block" }}>{CLS[selPeak.cls]?.name}</span>
+                        </div>
+                        <button onClick={() => { setSelPeak(null); setLogging(false); }} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "26px", height: "26px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={12} /></button>
+                      </div>
+                      {selPeak.done && !logging && (<div style={{ marginTop: "10px", padding: "10px", background: "rgba(107,203,119,0.06)", borderRadius: "10px", border: "1px solid rgba(107,203,119,0.12)" }}><div style={{ fontSize: "10px", color: "#6BCB77", fontWeight: 700, marginBottom: "4px" }}>Completed · {selPeak.date}</div>{selPeak.log && <div style={{ fontSize: "11px", color: "#BDD6F4", lineHeight: 1.4 }}>{selPeak.log}</div>}</div>)}
+                      {!selPeak.done && !logging && (<button onClick={() => { const today = new Date().toISOString().split("T")[0]; setPeakData(prev => prev.map(p => p.id === selPeak.id ? { ...p, done: true, date: today, log: "" } : p)); setSelPeak(prev => ({ ...prev, done: true, date: today, log: "" })); setLogDate(today); setLogNote(""); setLogging(true); }} style={{ marginTop: "10px", width: "100%", padding: "10px", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", border: "none", borderRadius: "10px", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Log This Summit</button>)}
+                      {logging && (<div style={{ marginTop: "10px" }}><div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, marginBottom: "4px" }}>Date completed</div><input type="date" value={logDate} onChange={e => setLogDate(e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "8px" }} /><div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, marginBottom: "4px" }}>Log (optional)</div><textarea value={logNote} onChange={e => setLogNote(e.target.value)} placeholder="How was it? Conditions, route, memories..." rows={2} style={{ width: "100%", padding: "8px 10px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", resize: "none", marginBottom: "10px" }} /><div style={{ display: "flex", gap: "6px" }}><button onClick={() => setLogging(false)} style={{ flex: 1, padding: "9px", borderRadius: "9px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button><button onClick={() => handleLog(selPeak.id)} style={{ flex: 1, padding: "9px", borderRadius: "9px", border: "none", background: logDate ? "linear-gradient(135deg,#6BCB77,#55a866)" : "#264f80", color: logDate ? "#F8F8F8" : "#BDD6F4", fontSize: "12px", fontWeight: 700, cursor: logDate ? "pointer" : "default", fontFamily: "'DM Sans'", opacity: logDate ? 1 : 0.5 }}>Done</button></div></div>)}
+                    </div>
+                  </div>
+                )}
+                </MiniMap>
+              </div>
             </div>
           )}
 
