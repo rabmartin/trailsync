@@ -225,11 +225,15 @@ const greet = () => { const h = new Date().getHours(); return h < 12 ? "Good mor
 const MiniMap = ({ height, center, zoom, markers, onMarkerClick, children }) => {
   const containerRef = useRef(null);
   const mapInstance = useRef(null);
+  const markersRef = useRef([]);
+  const mapboxRef = useRef(null);
 
+  // Initialize map once
   useEffect(() => {
     if (mapInstance.current || !containerRef.current) return;
     import("mapbox-gl").then(mod => {
       const mapboxgl = mod.default;
+      mapboxRef.current = mapboxgl;
       mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
       const map = new mapboxgl.Map({
         container: containerRef.current,
@@ -239,22 +243,42 @@ const MiniMap = ({ height, center, zoom, markers, onMarkerClick, children }) => 
         interactive: true,
       });
       mapInstance.current = map;
-
-      map.on("load", () => {
-        if (markers) {
-          markers.forEach((m, i) => {
-            const el = document.createElement("div");
-            el.style.cssText = m.style || `width:20px;height:20px;border-radius:50%;background:${m.color || "#E85D3A"};border:2px solid rgba(255,255,255,0.8);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);`;
-            if (m.label) el.textContent = m.label;
-            if (m.html) el.innerHTML = m.html;
-            if (onMarkerClick) el.addEventListener("click", () => onMarkerClick(m, i));
-            new mapboxgl.Marker({ element: el }).setLngLat([m.lng, m.lat]).addTo(map);
-          });
-        }
-      });
     });
-    return () => { if (mapInstance.current) mapInstance.current.remove(); };
+    return () => { if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
   }, []);
+
+  // Update markers when markers prop changes
+  useEffect(() => {
+    if (!mapInstance.current || !mapboxRef.current) return;
+    const mapboxgl = mapboxRef.current;
+    const map = mapInstance.current;
+
+    // Wait for map to be loaded
+    const addMarkers = () => {
+      // Remove old markers
+      markersRef.current.forEach(m => m.remove());
+      markersRef.current = [];
+
+      // Add new markers
+      if (markers) {
+        markers.forEach((m, i) => {
+          const el = document.createElement("div");
+          el.style.cssText = m.style || `width:20px;height:20px;border-radius:50%;background:${m.color || "#E85D3A"};border:2px solid rgba(255,255,255,0.8);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);`;
+          if (m.label) el.textContent = m.label;
+          if (m.html) el.innerHTML = m.html;
+          if (onMarkerClick) el.addEventListener("click", () => onMarkerClick(m, i));
+          const marker = new mapboxgl.Marker({ element: el }).setLngLat([m.lng, m.lat]).addTo(map);
+          markersRef.current.push(marker);
+        });
+      }
+    };
+
+    if (map.isStyleLoaded()) {
+      addMarkers();
+    } else {
+      map.on("load", addMarkers);
+    }
+  }, [markers]);
 
   return (
     <div style={{ position: "relative", height: height || "380px", borderRadius: "14px", overflow: "hidden", border: "1px solid rgba(90,152,227,0.12)" }}>
@@ -1218,7 +1242,7 @@ const LearnPage = () => {
   const categories = [...new Set(DISCOVER.map(a => a.cat))];
 
   return (
-    <div style={{ padding: "0 16px 16px", overflowY: "auto", flex: 1 }}>
+    <div style={{ padding: (subTab === "discover" && discView === "map") ? "0 16px 0" : "0 16px 16px", overflowY: (subTab === "discover" && discView === "map") ? "hidden" : "auto", flex: 1, display: "flex", flexDirection: "column" }}>
       {/* Header with sub-tabs */}
       <div style={{ padding: "24px 0 12px", display: "flex", alignItems: "baseline", gap: "16px" }}>
         <div onClick={() => setSubTab("learn")} style={{ fontSize: "24px", fontWeight: 800, color: subTab === "learn" ? "#F8F8F8" : "#BDD6F4", fontFamily: "'Playfair Display',serif", cursor: "pointer", opacity: subTab === "learn" ? 1 : 0.4, transition: "all .2s" }}>Learn</div>
@@ -1319,7 +1343,8 @@ const LearnPage = () => {
 
           {/* ═══ MAP VIEW ═══ */}
           {discView === "map" && (
-            <MiniMap height="380px" markers={filteredArticles.map(a => ({ lat: a.lat, lng: a.lng, color: "#264f80", html: `<span style="font-size:17px">${a.icon}</span>`, data: a, style: "width:38px;height:38px;border-radius:50%;background:#264f80;border:2px solid rgba(90,152,227,0.3);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.3);" }))} onMarkerClick={(m) => setSelArticle(selArticle?.id === m.data.id ? null : m.data)}>
+            <div style={{ flex: 1, position: "relative" }}>
+            <MiniMap height="100%" markers={filteredArticles.map(a => ({ lat: a.lat, lng: a.lng, color: "#264f80", html: `<span style="font-size:17px">${a.icon}</span>`, data: a, style: "width:38px;height:38px;border-radius:50%;background:#264f80;border:2px solid rgba(90,152,227,0.3);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.3);" }))} onMarkerClick={(m) => setSelArticle(selArticle?.id === m.data.id ? null : m.data)}>
 
               {/* Selected article popup */}
               {selArticle && (
@@ -1353,6 +1378,7 @@ const LearnPage = () => {
                 </div>
               )}
             </MiniMap>
+            </div>
           )}
         </div>
       )}
