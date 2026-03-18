@@ -37,13 +37,13 @@ const CLS = {
   munros: { name: "Munros", count: 282, color: "#E85D3A", desc: "Scottish peaks over 3,000ft" },
   "munro-tops": { name: "Munro Tops", count: 226, color: "#D08770", desc: "Subsidiary tops of Munros" },
   corbetts: { name: "Corbetts", count: 222, color: "#F49D37", desc: "Scottish 2,500-3,000ft" },
-  grahams: { name: "Grahams", count: 224, color: "#7FB069", desc: "Scottish 2,000-2,500ft" },
-  donalds: { name: "Donalds", count: 89, color: "#8FBCBB", desc: "Lowland Scotland over 2,000ft" },
+  grahams: { name: "Grahams", count: 231, color: "#7FB069", desc: "Scottish 2,000-2,500ft" },
+  donalds: { name: "Donalds", count: 59, color: "#8FBCBB", desc: "Lowland Scotland over 2,000ft" },
   wainwrights: { name: "Wainwrights", count: 214, color: "#B48EAD", desc: "Lake District fells" },
-  hewitts: { name: "Hewitts", count: 525, color: "#5A98E3", desc: "England & Wales over 2,000ft" },
-  nuttalls: { name: "Nuttalls", count: 446, color: "#88C0D0", desc: "England & Wales 2,000ft+" },
-  furths: { name: "Furths", count: 34, color: "#EBCB8B", desc: "3,000ft peaks outside Scotland" },
-  "sub2000": { name: "Sub-2000", count: 573, color: "#88C0D0", desc: "Hills under 2,000ft" },
+  hewitts: { name: "Hewitts", count: 426, color: "#5A98E3", desc: "England & Wales over 2,000ft" },
+  nuttalls: { name: "Nuttalls", count: 109, color: "#88C0D0", desc: "England & Wales 2,000ft+" },
+  furths: { name: "Furths", count: 1, color: "#EBCB8B", desc: "3,000ft peaks outside Scotland" },
+  "sub2000": { name: "Sub-2000", count: 0, color: "#88C0D0", desc: "Hills under 2,000ft" },
   "non-mountain": { name: "Non-Mountain", count: 0, color: "#7FB069", desc: "Valley, lochside & long-distance walks" },
 };
 
@@ -290,7 +290,7 @@ const MiniMap = ({ height, center, zoom, markers, onMarkerClick, children }) => 
   }, [markers]);
 
   return (
-    <div style={{ position: "relative", height: height || "380px", borderRadius: "14px", overflow: "hidden", border: "1px solid rgba(90,152,227,0.12)" }}>
+    <div style={{ position: "relative", height: height === "100%" ? undefined : (height || "380px"), flex: height === "100%" ? 1 : undefined, borderRadius: "14px", overflow: "hidden", border: "1px solid rgba(90,152,227,0.12)" }}>
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
       {children}
     </div>
@@ -789,7 +789,7 @@ const RoutesPage = () => {
 
       {/* ═══ MAP VIEW ═══ */}
       {subTab === "map" && (
-        <div style={{ flex: 1, position: "relative" }}>
+        <div style={{ flex: 1, position: "relative", display: "flex", flexDirection: "column" }}>
         <MiniMap height="100%" markers={regionClusters.map(reg => ({ lat: reg.lat, lng: reg.lng, color: "#264f80", label: String(reg.routes.length), data: reg }))} onMarkerClick={(m) => setSelRegion(selRegion?.name === m.data.name ? null : m.data)}>
 
           {/* Selected region route list */}
@@ -920,17 +920,8 @@ const MapPage = ({ goHome, goProfile, onSaveWalk }) => {
     map.addControl(new mapboxgl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showUserHeading: true }), "top-left");
     mapRef.current = map;
 
-    // Add peak markers once map loads
-    map.on("load", () => {
-      PEAKS.forEach(pk => {
-        const cls = CLS[pk.cls];
-        const el = document.createElement("div");
-        el.style.cssText = `width:24px;height:24px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${cls?.color || "#E85D3A"};border:2px solid rgba(255,255,255,0.85);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px ${cls?.color || "#E85D3A"}40;`;
-        el.innerHTML = `<svg style="transform:rotate(45deg)" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="m8 3 4 8 5-5 2 19H2L8 3z"/></svg>`;
-        el.addEventListener("click", () => { setSp(pk); setSw(null); });
-        new mapboxgl.Marker({ element: el }).setLngLat([pk.lng, pk.lat]).addTo(map);
-      });
-    });
+    // Main map is clean - no peak markers (peaks are on the mountain tracker map)
+    map.on("load", () => {});
 
     }); return () => { if (mapRef.current) mapRef.current.remove(); };
   }, []);
@@ -1352,7 +1343,7 @@ const LearnPage = () => {
 
           {/* ═══ MAP VIEW ═══ */}
           {discView === "map" && (
-            <div style={{ flex: 1, position: "relative" }}>
+            <div style={{ flex: 1, position: "relative", display: "flex", flexDirection: "column" }}>
             <MiniMap height="100%" markers={filteredArticles.map(a => ({ lat: a.lat, lng: a.lng, color: "#264f80", html: `<span style="font-size:17px">${a.icon}</span>`, data: a, style: "width:38px;height:38px;border-radius:50%;background:#264f80;border:2px solid rgba(90,152,227,0.3);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.3);" }))} onMarkerClick={(m) => setSelArticle(selArticle?.id === m.data.id ? null : m.data)}>
 
               {/* Selected article popup */}
@@ -1398,7 +1389,7 @@ const LearnPage = () => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 5: PROFILE
    ═══════════════════════════════════════════════════════════════════ */
-const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, savedWalks }) => {
+const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, savedWalks, dbPeaks }) => {
   const [sec, setSec] = useState(initialSec || "mountains");
 
   // Sync with parent when initialSec changes
@@ -1422,7 +1413,12 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, savedWa
   const [logging, setLogging] = useState(false);
   const [logDate, setLogDate] = useState("");
   const [logNote, setLogNote] = useState("");
-  const [peakData, setPeakData] = useState(PEAKS);
+  const [peakData, setPeakData] = useState(dbPeaks || PEAKS);
+
+  // Update peakData when Supabase peaks load
+  useEffect(() => {
+    if (dbPeaks && dbPeaks.length > 0) setPeakData(dbPeaks);
+  }, [dbPeaks]);
   const [showCreate, setShowCreate] = useState(false);
   const [createType, setCreateType] = useState(null);
   const [evName, setEvName] = useState("");
@@ -1539,7 +1535,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, savedWa
                   <button onClick={() => setMtExpanded(false)} style={{ background: "rgba(4,30,61,0.88)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "8px", padding: "6px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><Minimize2 size={14} /></button>
                 </div>
               )}
-              <div style={mtExpanded ? { flex: 1, position: "relative" } : { position: "relative" }}>
+              <div style={mtExpanded ? { flex: 1, position: "relative", display: "flex", flexDirection: "column" } : { position: "relative" }}>
                 {!mtExpanded && <button onClick={() => setMtExpanded(true)} style={{ position: "absolute", top: 10, right: 10, zIndex: 22, background: "rgba(4,30,61,0.88)", backdropFilter: "blur(8px)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "8px", padding: "6px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><Maximize2 size={14} /></button>}
                 <MiniMap height={mtExpanded ? "100%" : "340px"} markers={filteredPeaks.map(pk => ({ lat: pk.lat, lng: pk.lng, color: pk.done ? "#6BCB77" : "#E85D3A", data: pk, style: `width:14px;height:14px;border-radius:50%;background:${pk.done ? "#6BCB77" : "#E85D3A"};border:2px solid rgba(255,255,255,0.5);cursor:pointer;box-shadow:0 0 6px ${pk.done ? "rgba(107,203,119,0.4)" : "rgba(232,93,58,0.4)"};` }))} onMarkerClick={(m) => { setSelPeak(m.data); setLogging(false); }}>
                 {selPeak && (
@@ -2107,7 +2103,7 @@ export default function TrailSync() {
         {tab === "routes" && <RoutesPage />}
         {tab === "map" && <MapPage goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={(walk) => setSavedWalks(prev => [walk, ...prev])} />}
         {tab === "learn" && <LearnPage />}
-        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} savedWalks={savedWalks} />}
+        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} savedWalks={savedWalks} dbPeaks={dbPeaks} />}
       </div>
 
       {/* Tutorial overlay */}
