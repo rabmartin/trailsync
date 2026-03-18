@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   MapPin, Mountain, Cloud, Users, Trophy, Search, X, ChevronDown, ChevronRight,
   Star, Wind, Droplets, Eye, Thermometer, Navigation, Calendar, Clock,
@@ -8,7 +8,7 @@ import {
   BookOpen, Bell, User, Play, Pause, Route,
   Home, Map, UserCircle, ArrowRight, Camera,
   CloudRain, Sun, CloudSun, Snowflake, Settings, List, ArrowUpDown, Check, CircleDot,
-  Shield, Mail, Apple, Sparkles
+  Shield, Mail, Apple, Sparkles, Zap, Plus
 } from "lucide-react";
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -28,14 +28,16 @@ import {
    ═══════════════════════════════════════════════════════════════════ */
 const CLS = {
   munros: { name: "Munros", count: 282, color: "#E85D3A", desc: "Scottish peaks over 3,000ft" },
+  "munro-tops": { name: "Munro Tops", count: 226, color: "#D08770", desc: "Subsidiary tops of Munros" },
   corbetts: { name: "Corbetts", count: 222, color: "#F49D37", desc: "Scottish 2,500-3,000ft" },
   grahams: { name: "Grahams", count: 224, color: "#7FB069", desc: "Scottish 2,000-2,500ft" },
   donalds: { name: "Donalds", count: 89, color: "#8FBCBB", desc: "Lowland Scotland over 2,000ft" },
   wainwrights: { name: "Wainwrights", count: 214, color: "#B48EAD", desc: "Lake District fells" },
   hewitts: { name: "Hewitts", count: 525, color: "#5A98E3", desc: "England & Wales over 2,000ft" },
   nuttalls: { name: "Nuttalls", count: 446, color: "#88C0D0", desc: "England & Wales 2,000ft+" },
-  marilyns: { name: "Marilyns", count: 1556, color: "#D08770", desc: "150m prominence, any height" },
   furths: { name: "Furths", count: 34, color: "#EBCB8B", desc: "3,000ft peaks outside Scotland" },
+  "sub2000": { name: "Sub-2000", count: 573, color: "#88C0D0", desc: "Hills under 2,000ft" },
+  "non-mountain": { name: "Non-Mountain", count: 0, color: "#7FB069", desc: "Valley, lochside & long-distance walks" },
 };
 
 const WX_AREAS = [
@@ -70,18 +72,26 @@ const PEAKS = [
 ];
 
 const ROUTES = [
-  { id: 1, name: "Ben Nevis via the Mountain Track", cls: "munros", reg: "Ben Nevis & Mamores", diff: "Moderate", dist: 14.2, elev: 1350, time: "6-8h", peaks: ["Ben Nevis"], rat: 4.6, rev: 342, start: "Glen Nevis Visitor Centre" },
-  { id: 2, name: "CMD Arete to Ben Nevis", cls: "munros", reg: "Ben Nevis & Mamores", diff: "Hard", dist: 16.8, elev: 1500, time: "8-10h", peaks: ["Carn Mor Dearg", "Ben Nevis"], rat: 4.9, rev: 187, start: "North Face Car Park" },
-  { id: 3, name: "Buachaille Etive Mor via Coire na Tulaich", cls: "munros", reg: "Glen Coe", diff: "Hard", dist: 10.1, elev: 980, time: "5-7h", peaks: ["Buachaille Etive Mor"], rat: 4.8, rev: 256, start: "Altnafeadh Layby" },
-  { id: 4, name: "Helvellyn via Striding Edge", cls: "wainwrights", reg: "Lake District", diff: "Hard", dist: 12.8, elev: 890, time: "5-7h", peaks: ["Helvellyn"], rat: 4.7, rev: 412, start: "Glenridding Car Park" },
-  { id: 5, name: "Snowdon Horseshoe", cls: "hewitts", reg: "Snowdonia", diff: "Hard", dist: 11.5, elev: 1050, time: "6-8h", peaks: ["Crib Goch", "Snowdon"], rat: 4.8, rev: 289, start: "Pen-y-Pass Car Park" },
-  { id: 6, name: "The Cobbler from Arrochar", cls: "corbetts", reg: "Arrochar Alps", diff: "Moderate", dist: 11.0, elev: 850, time: "5-6h", peaks: ["The Cobbler"], rat: 4.7, rev: 198, start: "Succoth Car Park" },
-  { id: 7, name: "Liathach Traverse", cls: "munros", reg: "Torridon", diff: "Expert", dist: 12.4, elev: 1200, time: "7-9h", peaks: ["Liathach"], rat: 4.9, rev: 134, start: "Glen Torridon Layby" },
-  { id: 8, name: "Ben Lomond via Ptarmigan Ridge", cls: "munros", reg: "Southern Highlands", diff: "Moderate", dist: 11.6, elev: 974, time: "5-6h", peaks: ["Ben Lomond"], rat: 4.5, rev: 523, start: "Rowardennan Car Park" },
-  { id: 9, name: "Cairn Gorm & Ben Macdui", cls: "munros", reg: "Cairngorms", diff: "Hard", dist: 18.6, elev: 1120, time: "7-9h", peaks: ["Cairn Gorm", "Ben Macdui"], rat: 4.7, rev: 267, start: "Cairn Gorm Ski Centre" },
-  { id: 10, name: "Pen y Fan Horseshoe", cls: "hewitts", reg: "Brecon Beacons", diff: "Easy", dist: 6.2, elev: 550, time: "2-3h", peaks: ["Pen y Fan", "Corn Du"], rat: 4.4, rev: 678, start: "Pont ar Daf Car Park" },
-  { id: 11, name: "An Teallach Traverse", cls: "munros", reg: "Fisherfield", diff: "Expert", dist: 15.2, elev: 1300, time: "8-10h", peaks: ["An Teallach"], rat: 4.9, rev: 112, start: "Dundonnell Car Park" },
-  { id: 12, name: "Schiehallion", cls: "munros", reg: "Southern Highlands", diff: "Easy", dist: 9.5, elev: 760, time: "4-5h", peaks: ["Schiehallion"], rat: 4.3, rev: 445, start: "Braes of Foss Car Park" },
+  { id: 1, name: "Ben Nevis via the Mountain Track", cls: "munros", reg: "Ben Nevis & Mamores", diff: "Moderate", dist: 14.2, elev: 1350, time: "6-8h", peaks: ["Ben Nevis"], rat: 4.6, rev: 342, start: "Glen Nevis Visitor Centre", src: "ts" },
+  { id: 2, name: "CMD Arete to Ben Nevis", cls: "munros", reg: "Ben Nevis & Mamores", diff: "Hard", dist: 16.8, elev: 1500, time: "8-10h", peaks: ["Carn Mor Dearg", "Ben Nevis"], rat: 4.9, rev: 187, start: "North Face Car Park", src: "ts" },
+  { id: 3, name: "Buachaille Etive Mor via Coire na Tulaich", cls: "munros", reg: "Glen Coe", diff: "Hard", dist: 10.1, elev: 980, time: "5-7h", peaks: ["Buachaille Etive Mor"], rat: 4.8, rev: 256, start: "Altnafeadh Layby", src: "ts" },
+  { id: 4, name: "Helvellyn via Striding Edge", cls: "wainwrights", reg: "Lake District", diff: "Hard", dist: 12.8, elev: 890, time: "5-7h", peaks: ["Helvellyn"], rat: 4.7, rev: 412, start: "Glenridding Car Park", src: "ts" },
+  { id: 5, name: "Snowdon Horseshoe", cls: "hewitts", reg: "Snowdonia", diff: "Hard", dist: 11.5, elev: 1050, time: "6-8h", peaks: ["Crib Goch", "Snowdon"], rat: 4.8, rev: 289, start: "Pen-y-Pass Car Park", src: "ts" },
+  { id: 6, name: "The Cobbler from Arrochar", cls: "corbetts", reg: "Arrochar Alps", diff: "Moderate", dist: 11.0, elev: 850, time: "5-6h", peaks: ["The Cobbler"], rat: 4.7, rev: 198, start: "Succoth Car Park", src: "ts" },
+  { id: 7, name: "Liathach Traverse", cls: "munros", reg: "Torridon", diff: "Expert", dist: 12.4, elev: 1200, time: "7-9h", peaks: ["Liathach"], rat: 4.9, rev: 134, start: "Glen Torridon Layby", src: "ts" },
+  { id: 8, name: "Ben Lomond via Ptarmigan Ridge", cls: "munros", reg: "Southern Highlands", diff: "Moderate", dist: 11.6, elev: 974, time: "5-6h", peaks: ["Ben Lomond"], rat: 4.5, rev: 523, start: "Rowardennan Car Park", src: "ts" },
+  { id: 9, name: "Cairn Gorm & Ben Macdui", cls: "munros", reg: "Cairngorms", diff: "Hard", dist: 18.6, elev: 1120, time: "7-9h", peaks: ["Cairn Gorm", "Ben Macdui"], rat: 4.7, rev: 267, start: "Cairn Gorm Ski Centre", src: "ts" },
+  { id: 10, name: "Pen y Fan Horseshoe", cls: "hewitts", reg: "Brecon Beacons", diff: "Easy", dist: 6.2, elev: 550, time: "2-3h", peaks: ["Pen y Fan", "Corn Du"], rat: 4.4, rev: 678, start: "Pont ar Daf Car Park", src: "ts" },
+  { id: 11, name: "An Teallach Traverse", cls: "munros", reg: "Fisherfield", diff: "Expert", dist: 15.2, elev: 1300, time: "8-10h", peaks: ["An Teallach"], rat: 4.9, rev: 112, start: "Dundonnell Car Park", src: "ts" },
+  { id: 12, name: "Schiehallion", cls: "munros", reg: "Southern Highlands", diff: "Easy", dist: 9.5, elev: 760, time: "4-5h", peaks: ["Schiehallion"], rat: 4.3, rev: 445, start: "Braes of Foss Car Park", src: "ts" },
+  { id: 13, name: "West Highland Way (Full)", cls: "non-mountain", reg: "Southern Highlands", diff: "Moderate", dist: 154, elev: 4400, time: "6-8 days", peaks: [], rat: 4.8, rev: 890, start: "Milngavie Station", src: "ts" },
+  { id: 14, name: "Loch an Eilein Circuit", cls: "non-mountain", reg: "Cairngorms", diff: "Easy", dist: 5.2, elev: 60, time: "1.5-2h", peaks: [], rat: 4.6, rev: 312, start: "Loch an Eilein Car Park", src: "ts" },
+  { id: 15, name: "Glen Nevis Gorge Walk", cls: "non-mountain", reg: "Ben Nevis & Mamores", diff: "Easy", dist: 4.8, elev: 120, time: "1.5-2h", peaks: [], rat: 4.5, rev: 267, start: "Glen Nevis Lower Falls Car Park", src: "ts" },
+  { id: 16, name: "Loch Muick Circuit", cls: "non-mountain", reg: "Cairngorms", diff: "Easy", dist: 12.0, elev: 180, time: "3-4h", peaks: [], rat: 4.4, rev: 198, start: "Spittal of Glenmuick Car Park", src: "ts" },
+  { id: 17, name: "Great Glen Way", cls: "non-mountain", reg: "Ben Nevis & Mamores", diff: "Moderate", dist: 127, elev: 2200, time: "5-6 days", peaks: [], rat: 4.5, rev: 345, start: "Fort William", src: "ts" },
+  { id: 18, name: "Trossachs Trail - Loch Katrine", cls: "non-mountain", reg: "Southern Highlands", diff: "Easy", dist: 21, elev: 280, time: "5-6h", peaks: [], rat: 4.3, rev: 178, start: "Trossachs Pier", src: "ts" },
+  { id: 19, name: "Buachaille Etive Mor - South Ridge Variation", cls: "munros", reg: "Glen Coe", diff: "Expert", dist: 12.5, elev: 1100, time: "6-8h", peaks: ["Buachaille Etive Mor"], rat: 4.6, rev: 23, start: "Altnafeadh Layby", src: "community" },
+  { id: 20, name: "Cairngorms Lairig Ghru Through-Walk", cls: "non-mountain", reg: "Cairngorms", diff: "Hard", dist: 30, elev: 640, time: "10-12h", peaks: [], rat: 4.7, rev: 45, start: "Linn of Dee Car Park", src: "community" },
 ];
 
 const C_WALKS = [
@@ -101,6 +111,7 @@ const HIKERS = [
 
 const FEED = [
   { id: 1, user: "MountainMeg", av: "👩", time: "2h ago", type: "summit", text: "Stunning inversion on Ben Lomond this morning! Cloud sea stretching to the Arrochar Alps. Days like these are why we climb.", likes: 47, comments: 12, peaks: ["Ben Lomond"] },
+  { id: 6, user: "Glencoe MRT", av: "🚁", time: "3h ago", type: "fundraiser", text: "Our volunteers responded to 127 callouts last year — every one of them unpaid. We need to replace our ageing stretcher equipment and upgrade radio systems. Every donation, no matter how small, helps us bring people home safe.", likes: 156, comments: 31, peaks: [], link: "https://gofundme.com/glencoe-mrt" },
   { id: 2, user: "ScotWalks", av: "🏔️", time: "4h ago", type: "event", text: "Beginner Munro walk this Thursday - Schiehallion! Perfect intro peak with incredible views. 8 spots left, all welcome.", likes: 23, comments: 5, peaks: ["Schiehallion"] },
   { id: 3, user: "HighlandHiker", av: "🧑‍🦰", time: "6h ago", type: "summit", text: "Completed the Ring of Steall today. Brutal wind on the ridge but incredible scrambling. 4 Munros bagged!", likes: 89, comments: 24, peaks: ["An Gearanach", "Stob Coire a' Chairn", "Am Bodach", "Sgurr a' Mhaim"] },
   { id: 4, user: "TrailSync", av: "▲", time: "8h ago", type: "news", text: "SAIS avalanche forecast updated: Considerable (3) hazard in Northern Cairngorms and Lochaber. Take care on steep lee slopes above 900m.", likes: 34, comments: 8, peaks: [] },
@@ -139,14 +150,59 @@ const BADGES = [
   { n: "Munro Compleatist", i: "🏆", e: false, p: 14 }, { n: "Ridge Runner", i: "⛰️", e: false, p: 40 },
 ];
 
-const LB = [
-  { n: "HighlandHiker", m: 187, d: 2450, e: 89200, av: "🧗" },
-  { n: "MountainMeg", m: 156, d: 1890, e: 72100, av: "🥾" },
-  { n: "ScotWalks", m: 142, d: 2100, e: 68500, av: "🏔️" },
-  { n: "FellRunner_Tom", m: 98, d: 3200, e: 95600, av: "🏃" },
-  { n: "WinterSummits", m: 134, d: 1560, e: 62300, av: "❄️" },
-  { n: "You", m: 41, d: 620, e: 24800, av: "⭐", u: true },
-];
+const LB_DATA = {
+  daily: [
+    { n: "FellRunner_Tom", d: 28, e: 1240, pts: 85, av: "🏃" },
+    { n: "You", d: 14, e: 890, pts: 52, av: "⭐", u: true },
+    { n: "MountainMeg", d: 12, e: 780, pts: 45, av: "🥾" },
+    { n: "HighlandHiker", d: 0, e: 0, pts: 10, av: "🧗" },
+    { n: "WinterSummits", d: 0, e: 0, pts: 5, av: "❄️" },
+    { n: "ScotWalks", d: 0, e: 0, pts: 0, av: "🏔️" },
+  ],
+  weekly: [
+    { n: "FellRunner_Tom", d: 82, e: 4200, pts: 340, av: "🏃" },
+    { n: "MountainMeg", d: 45, e: 3100, pts: 210, av: "🥾" },
+    { n: "HighlandHiker", d: 38, e: 2800, pts: 195, av: "🧗" },
+    { n: "CairnGormCarl", d: 35, e: 2600, pts: 180, av: "🏔️" },
+    { n: "You", d: 22, e: 1450, pts: 120, av: "⭐", u: true },
+    { n: "WinterSummits", d: 18, e: 1200, pts: 95, av: "❄️" },
+  ],
+  monthly: [
+    { n: "FellRunner_Tom", d: 320, e: 18500, pts: 1420, av: "🏃" },
+    { n: "HighlandHiker", d: 245, e: 14200, pts: 1180, av: "🧗" },
+    { n: "MountainMeg", d: 189, e: 12100, pts: 950, av: "🥾" },
+    { n: "RidgeWalker_Jen", d: 178, e: 11800, pts: 890, av: "⛰️" },
+    { n: "ScotWalks", d: 156, e: 9500, pts: 780, av: "🏔️" },
+    { n: "You", d: 62, e: 4800, pts: 340, av: "⭐", u: true },
+  ],
+  "6month": [
+    { n: "FellRunner_Tom", d: 1800, e: 62000, pts: 3200, av: "🏃" },
+    { n: "HighlandHiker", d: 1400, e: 52000, pts: 2800, av: "🧗" },
+    { n: "MountainMeg", d: 1050, e: 41000, pts: 2200, av: "🥾" },
+    { n: "ScotWalks", d: 980, e: 38000, pts: 2050, av: "🏔️" },
+    { n: "WinterSummits", d: 890, e: 35000, pts: 1800, av: "❄️" },
+    { n: "TorridonTrek", d: 720, e: 28000, pts: 1500, av: "🥾" },
+    { n: "You", d: 380, e: 15200, pts: 820, av: "⭐", u: true },
+  ],
+  yearly: [
+    { n: "FellRunner_Tom", d: 3200, e: 95600, pts: 5100, av: "🏃" },
+    { n: "HighlandHiker", d: 2450, e: 89200, pts: 4820, av: "🧗" },
+    { n: "ScotWalks", d: 2100, e: 68500, pts: 3780, av: "🏔️" },
+    { n: "MountainMeg", d: 1890, e: 72100, pts: 3950, av: "🥾" },
+    { n: "WinterSummits", d: 1560, e: 62300, pts: 3200, av: "❄️" },
+    { n: "SkywalkSarah", d: 1320, e: 48000, pts: 2600, av: "🌤️" },
+    { n: "You", d: 620, e: 24800, pts: 1340, av: "⭐", u: true },
+  ],
+  all: [
+    { n: "FellRunner_Tom", d: 8400, e: 245000, pts: 12800, av: "🏃" },
+    { n: "HighlandHiker", d: 6800, e: 198000, pts: 10500, av: "🧗" },
+    { n: "ScotWalks", d: 5200, e: 162000, pts: 8900, av: "🏔️" },
+    { n: "MountainMeg", d: 4500, e: 148000, pts: 7800, av: "🥾" },
+    { n: "WinterSummits", d: 3800, e: 128000, pts: 6500, av: "❄️" },
+    { n: "OldSchoolHill", d: 3200, e: 112000, pts: 5800, av: "🧭" },
+    { n: "You", d: 620, e: 24800, pts: 1340, av: "⭐", u: true },
+  ],
+};
 
 /* ═══════════════════════════════════════════════════════════════════
    HELPERS
@@ -332,11 +388,15 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 1: HOME
    ═══════════════════════════════════════════════════════════════════ */
-const HomePage = ({ userName }) => {
+const HomePage = ({ userName, initialFilter }) => {
   const [wxOpen, setWxOpen] = useState(true);
-  const [ff, setFf] = useState("all");
+  const [ff, setFf] = useState(initialFilter || "all");
   const [expandedArea, setExpandedArea] = useState(null);
   const [showSAIS, setShowSAIS] = useState(false);
+
+  useEffect(() => {
+    if (initialFilter) setFf(initialFilter);
+  }, [initialFilter]);
   const sorted = [...WX_AREAS].sort((a, b) => b.score - a.score);
 
   return (
@@ -409,10 +469,10 @@ const HomePage = ({ userName }) => {
                         <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.5 }}>feels</div>
                       </div>
                       <div style={{ textAlign: "right", minWidth: "36px" }}>
-                        <div style={{ fontSize: "12px", fontWeight: 700, color: a.wind > 30 ? "#E85D3A" : "#F8F8F8" }}>{a.wind}</div>
+                        <div style={{ fontSize: "12px", fontWeight: 700, color: a.wind > 35 ? "#E85D3A" : a.wind >= 20 ? "#F49D37" : "#F8F8F8" }}>{a.wind}</div>
                         <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.5 }}>mph</div>
                       </div>
-                      <ChevronRight size={14} color="#BDD6F4" style={{ opacity: 0.4, transform: isExpanded ? "rotate(90deg)" : "none", transition: ".2s", flexShrink: 0 }} />
+                      <ChevronRight size={14} color="#F8F8F8" style={{ opacity: 0.8, transform: isExpanded ? "rotate(90deg)" : "none", transition: ".2s", flexShrink: 0 }} />
                     </div>
                   </div>
 
@@ -446,7 +506,7 @@ const HomePage = ({ userName }) => {
                                 <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.4 }}>feels</div>
                               </div>
                               <div style={{ textAlign: "center" }}>
-                                <div style={{ fontSize: "11px", fontWeight: 700, color: pk.w.wi > 35 ? "#E85D3A" : "#F8F8F8" }}>{pk.w.wi}<span style={{ fontSize: "8px" }}>mph</span></div>
+                                <div style={{ fontSize: "11px", fontWeight: 700, color: pk.w.wi > 35 ? "#E85D3A" : pk.w.wi >= 20 ? "#F49D37" : "#F8F8F8" }}>{pk.w.wi}<span style={{ fontSize: "8px" }}>mph</span></div>
                                 <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.4 }}>wind</div>
                               </div>
                               {pk.w.sn && <Snowflake size={12} color="#BDD6F4" />}
@@ -501,7 +561,7 @@ const HomePage = ({ userName }) => {
 
       {/* Feed filters */}
       <div style={{ display: "flex", gap: "6px", marginBottom: "12px", animation: "su .4s ease .3s both" }}>
-        {[["all", "For You"], ["summits", "Summits"], ["events", "Events"], ["news", "News"]].map(([k, l]) => (
+        {[["all", "For You"], ["summits", "Summits"], ["events", "Events"], ["news", "News"], ["fundraiser", "Fundraiser"]].map(([k, l]) => (
           <button key={k} onClick={() => setFf(k)} style={{
             padding: "6px 14px", borderRadius: "20px", fontSize: "12px", cursor: "pointer",
             background: ff === k ? "rgba(90,152,227,0.2)" : "#0a2240",
@@ -514,7 +574,7 @@ const HomePage = ({ userName }) => {
 
       {/* Feed */}
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        {FEED.filter(p => ff === "all" || (ff === "summits" && p.type === "summit") || (ff === "events" && p.type === "event") || (ff === "news" && p.type === "news")).map((p, i) => (
+        {FEED.filter(p => ff === "all" || (ff === "summits" && p.type === "summit") || (ff === "events" && p.type === "event") || (ff === "news" && p.type === "news") || (ff === "fundraiser" && p.type === "fundraiser")).map((p, i) => (
           <div key={p.id} style={{
             background: "#0a2240", borderRadius: "14px", padding: "14px",
             border: "1px solid rgba(90,152,227,0.1)", animation: `su .3s ease ${.35 + i * .05}s both`
@@ -527,8 +587,14 @@ const HomePage = ({ userName }) => {
               </div>
               {p.type === "event" && <span style={{ fontSize: "9px", padding: "2px 8px", borderRadius: "6px", background: "rgba(90,152,227,0.15)", color: "#5A98E3", fontWeight: 700 }}>EVENT</span>}
               {p.type === "news" && <span style={{ fontSize: "9px", padding: "2px 8px", borderRadius: "6px", background: "rgba(232,93,58,0.12)", color: "#E85D3A", fontWeight: 700 }}>ALERT</span>}
+              {p.type === "fundraiser" && <span style={{ fontSize: "9px", padding: "2px 8px", borderRadius: "6px", background: "rgba(107,203,119,0.12)", color: "#6BCB77", fontWeight: 700 }}>FUNDRAISER</span>}
             </div>
             <div style={{ fontSize: "13px", color: "#BDD6F4", lineHeight: 1.55 }}>{p.text}</div>
+            {p.type === "fundraiser" && p.link && (
+              <a href={p.link} target="_blank" rel="noopener noreferrer" style={{ display: "block", marginTop: "10px", padding: "10px", borderRadius: "10px", background: "linear-gradient(135deg,#6BCB77,#55a866)", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'DM Sans'" }}>
+                Donate to {p.user} ❤️
+              </a>
+            )}
             {p.peaks.length > 0 && <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginTop: "10px" }}>{p.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "6px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}</div>}
             <div style={{ display: "flex", gap: "16px", marginTop: "12px" }}>
               {[[Heart, p.likes], [MessageCircle, p.comments], [Share2, ""]].map(([I, v], j) => <button key={j} style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><I size={14} /> {v}</button>)}
@@ -543,24 +609,54 @@ const HomePage = ({ userName }) => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 2: ROUTES
    ═══════════════════════════════════════════════════════════════════ */
+const ROUTE_REGIONS = [
+  { name: "Ben Nevis & Mamores", lat: 56.80, lng: -5.00, routes: [] },
+  { name: "Glen Coe", lat: 56.65, lng: -5.05, routes: [] },
+  { name: "Cairngorms", lat: 57.07, lng: -3.67, routes: [] },
+  { name: "Southern Highlands", lat: 56.30, lng: -4.40, routes: [] },
+  { name: "Torridon", lat: 57.58, lng: -5.47, routes: [] },
+  { name: "Fisherfield", lat: 57.80, lng: -5.24, routes: [] },
+  { name: "Arrochar Alps", lat: 56.22, lng: -4.82, routes: [] },
+  { name: "Lake District", lat: 54.50, lng: -3.10, routes: [] },
+  { name: "Snowdonia", lat: 53.07, lng: -4.08, routes: [] },
+  { name: "Brecon Beacons", lat: 51.88, lng: -3.44, routes: [] },
+  { name: "Skye Cuillin", lat: 57.25, lng: -6.20, routes: [] },
+  { name: "Galloway Hills", lat: 55.15, lng: -4.62, routes: [] },
+];
+
 const RoutesPage = () => {
   const [cf, setCf] = useState(null);
   const [df, setDf] = useState(null);
-  const filtered = ROUTES.filter(r => (!cf || r.cls === cf) && (!df || r.diff === df));
+  const [showCommunity, setShowCommunity] = useState(true);
+  const [subTab, setSubTab] = useState("list");
+  const [selRegion, setSelRegion] = useState(null);
+
+  const filtered = ROUTES.filter(r => {
+    if (cf && r.cls !== cf) return false;
+    if (df && r.diff !== df) return false;
+    if (!showCommunity && r.src === "community") return false;
+    return true;
+  });
+
+  // Group filtered routes by region for map view
+  const regionClusters = ROUTE_REGIONS.map(reg => ({
+    ...reg,
+    routes: filtered.filter(r => r.reg === reg.name)
+  })).filter(reg => reg.routes.length > 0);
 
   return (
     <div style={{ padding: "0 16px 16px", overflowY: "auto", flex: 1 }}>
-      <div style={{ padding: "24px 0 8px" }}>
-        <div style={{ fontSize: "24px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>Routes</div>
-        <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, marginTop: "4px" }}>Discover your next adventure</div>
+      {/* Header with sub-tabs */}
+      <div style={{ padding: "24px 0 12px", display: "flex", alignItems: "baseline", gap: "16px" }}>
+        <div onClick={() => setSubTab("list")} style={{ fontSize: "24px", fontWeight: 800, color: subTab === "list" ? "#F8F8F8" : "#BDD6F4", fontFamily: "'Playfair Display',serif", cursor: "pointer", opacity: subTab === "list" ? 1 : 0.4, transition: "all .2s" }}>Routes</div>
+        <div onClick={() => setSubTab("map")} style={{ fontSize: "24px", fontWeight: 800, color: subTab === "map" ? "#F8F8F8" : "#BDD6F4", fontFamily: "'Playfair Display',serif", cursor: "pointer", opacity: subTab === "map" ? 1 : 0.4, transition: "all .2s", display: "flex", alignItems: "center", gap: "8px" }}>
+          Map
+          <Map size={16} color={subTab === "map" ? "#5A98E3" : "#BDD6F4"} style={{ opacity: subTab === "map" ? 1 : 0.4 }} />
+        </div>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.12)", marginBottom: "12px" }}>
-        <Search size={16} color="#BDD6F4" style={{ opacity: 0.4 }} />
-        <span style={{ color: "#BDD6F4", opacity: 0.4, fontSize: "13px" }}>Search routes, peaks, areas...</span>
-      </div>
-
-      <div style={{ display: "flex", gap: "6px", marginBottom: "10px", flexWrap: "wrap" }}>
+      {/* Shared filters */}
+      <div style={{ display: "flex", gap: "6px", marginBottom: "10px", flexWrap: "wrap", alignItems: "center" }}>
         <select value={cf || ""} onChange={e => setCf(e.target.value || null)} style={{ padding: "7px 12px", borderRadius: "10px", fontSize: "11px", fontWeight: 600, background: cf ? "rgba(232,93,58,0.1)" : "#0a2240", border: `1px solid ${cf ? "rgba(232,93,58,0.3)" : "rgba(90,152,227,0.12)"}`, color: cf ? "#E85D3A" : "#BDD6F4", outline: "none", cursor: "pointer", fontFamily: "'DM Sans'" }}>
           <option value="">All Classifications</option>
           {Object.entries(CLS).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
@@ -569,37 +665,127 @@ const RoutesPage = () => {
           <option value="">All Difficulty</option>
           {["Easy", "Moderate", "Hard", "Expert"].map(d => <option key={d} value={d}>{d}</option>)}
         </select>
+        <button onClick={() => setShowCommunity(!showCommunity)} style={{ padding: "7px 12px", borderRadius: "10px", fontSize: "11px", fontWeight: 600, background: showCommunity ? "rgba(90,152,227,0.12)" : "#0a2240", border: `1px solid ${showCommunity ? "rgba(90,152,227,0.25)" : "rgba(90,152,227,0.12)"}`, color: showCommunity ? "#5A98E3" : "#BDD6F4", cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "4px", opacity: showCommunity ? 1 : 0.5 }}>
+          <Users size={12} /> Community
+        </button>
       </div>
 
       <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4, marginBottom: "12px" }}>{filtered.length} routes found</div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        {filtered.map((r, i) => (
-          <div key={r.id} style={{ background: "#0a2240", borderRadius: "14px", padding: "14px", border: "1px solid rgba(90,152,227,0.1)", cursor: "pointer", animation: `fi .3s ease ${i * .04}s both` }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "8px" }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8", lineHeight: 1.3 }}>{r.name}</div>
-                <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "3px" }}>{r.reg} · Start: {r.start}</div>
+      {/* ═══ LIST VIEW ═══ */}
+      {subTab === "list" && (
+        <div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {filtered.map((r, i) => (
+              <div key={r.id} style={{ background: "#0a2240", borderRadius: "14px", padding: "14px", border: "1px solid rgba(90,152,227,0.1)", cursor: "pointer", animation: `fi .3s ease ${i * .04}s both` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "8px" }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8", lineHeight: 1.3 }}>{r.name}</div>
+                    <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "3px" }}>{r.reg} · Start: {r.start}</div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "3px", flexShrink: 0 }}>
+                    <Star size={12} color="#EBCB8B" fill="#EBCB8B" />
+                    <span style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8" }}>{r.rat}</span>
+                    <span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>({r.rev})</span>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
+                  <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "8px", background: `${CLS[r.cls]?.color}15`, color: CLS[r.cls]?.color, fontWeight: 600 }}>{CLS[r.cls]?.name}</span>
+                  <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "8px", background: `${dc(r.diff)}18`, color: dc(r.diff), fontWeight: 600 }}>{r.diff}</span>
+                  {r.src === "ts" ? (
+                    <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "8px", background: "rgba(90,152,227,0.1)", color: "#5A98E3", fontWeight: 600 }}>✓ Verified</span>
+                  ) : (
+                    <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "8px", background: "rgba(244,157,55,0.1)", color: "#F49D37", fontWeight: 600 }}>Community</span>
+                  )}
+                </div>
+                <div style={{ display: "flex", gap: "16px" }}>
+                  {[[Navigation, `${r.dist}km`], [TrendingUp, `${r.elev}m`], [Clock, r.time]].map(([I, v], j) => <span key={j} style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "4px" }}><I size={12} /> {v}</span>)}
+                </div>
+                {r.peaks.length > 0 && <div style={{ display: "flex", gap: "4px", marginTop: "8px" }}>{r.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "5px", background: "rgba(232,93,58,0.08)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}</div>}
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "3px", flexShrink: 0 }}>
-                <Star size={12} color="#EBCB8B" fill="#EBCB8B" />
-                <span style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8" }}>{r.rat}</span>
-                <span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>({r.rev})</span>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
-              <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "8px", background: `${CLS[r.cls]?.color}15`, color: CLS[r.cls]?.color, fontWeight: 600 }}>{CLS[r.cls]?.name}</span>
-              <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "8px", background: `${dc(r.diff)}18`, color: dc(r.diff), fontWeight: 600 }}>{r.diff}</span>
-              <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "8px", background: "rgba(90,152,227,0.1)", color: "#5A98E3", fontWeight: 600 }}>✓ Verified</span>
-            </div>
-            <div style={{ display: "flex", gap: "16px" }}>
-              {[[Navigation, `${r.dist}km`], [TrendingUp, `${r.elev}m`], [Clock, r.time]].map(([I, v], j) => <span key={j} style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "4px" }}><I size={12} /> {v}</span>)}
-            </div>
-            <div style={{ display: "flex", gap: "4px", marginTop: "8px" }}>{r.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "5px", background: "rgba(232,93,58,0.08)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}</div>
+            ))}
           </div>
-        ))}
-      </div>
-      <div style={{ padding: "14px 0", fontSize: "10px", color: "#BDD6F4", opacity: 0.4, textAlign: "center", fontStyle: "italic" }}>Community routes are not regulated. Please use at your own risk and always carry appropriate navigation equipment.</div>
+          <div style={{ padding: "14px 0", fontSize: "10px", color: "#BDD6F4", opacity: 0.4, textAlign: "center", fontStyle: "italic" }}>Community routes are not regulated. Please use at your own risk and always carry appropriate navigation equipment.</div>
+        </div>
+      )}
+
+      {/* ═══ MAP VIEW ═══ */}
+      {subTab === "map" && (
+        <div style={{ position: "relative", height: "420px", borderRadius: "14px", overflow: "hidden", border: "1px solid rgba(90,152,227,0.12)" }}>
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, #041e3d, #0a2848 30%, #082540 60%, #061e3a)" }}>
+            {/* Contours */}
+            {[...Array(14)].map((_, i) => <div key={i} style={{ position: "absolute", left: `${8 + (i * 6) % 78}%`, top: `${10 + (i * 7.5) % 65}%`, width: `${90 + i * 16}px`, height: `${55 + i * 11}px`, border: "1px solid rgba(90,152,227,0.05)", borderRadius: "50%" }} />)}
+
+            {/* Route cluster bubbles */}
+            {regionClusters.map((reg, i) => {
+              const x = ((reg.lng + 8) / 12) * 100;
+              const y = ((58 - reg.lat) / 7) * 100;
+              const isSelected = selRegion?.name === reg.name;
+              return (
+                <div key={reg.name} onClick={() => setSelRegion(isSelected ? null : reg)} style={{
+                  position: "absolute", left: `${Math.max(6, Math.min(90, x))}%`, top: `${Math.max(6, Math.min(85, y))}%`,
+                  transform: "translate(-50%,-50%)", cursor: "pointer", zIndex: 10,
+                  animation: `fi .3s ease ${i * .05}s both`
+                }}>
+                  <div style={{
+                    width: isSelected ? "48px" : "40px", height: isSelected ? "48px" : "40px",
+                    borderRadius: "50%",
+                    background: isSelected ? "linear-gradient(135deg,#E85D3A,#d04a2a)" : "#264f80",
+                    border: `2px solid ${isSelected ? "#E85D3A" : "rgba(90,152,227,0.3)"}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: isSelected ? "16px" : "14px", fontWeight: 800, color: "#F8F8F8",
+                    boxShadow: isSelected ? "0 0 20px rgba(232,93,58,0.4)" : "0 2px 8px rgba(0,0,0,0.3)",
+                    transition: "all .2s", fontFamily: "'JetBrains Mono'"
+                  }}>{reg.routes.length}</div>
+                  <div style={{
+                    position: "absolute", top: isSelected ? "52px" : "44px", left: "50%", transform: "translateX(-50%)",
+                    whiteSpace: "nowrap", fontSize: "9px", color: "#F8F8F8",
+                    textShadow: "0 1px 4px rgba(0,0,0,.8)", fontWeight: 700
+                  }}>{reg.name}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Selected region route list */}
+          {selRegion && (
+            <div style={{
+              position: "absolute", bottom: 10, left: 10, right: 10, zIndex: 20,
+              background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)",
+              borderRadius: "14px", border: "1px solid rgba(90,152,227,0.15)",
+              animation: "su .25s ease", maxHeight: "200px", overflow: "auto"
+            }}>
+              <div style={{ height: "3px", background: "linear-gradient(90deg,#E85D3A,transparent)" }} />
+              <div style={{ padding: "10px 12px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <div style={{ fontSize: "13px", fontWeight: 800, color: "#F8F8F8" }}>{selRegion.name} · {selRegion.routes.length} routes</div>
+                  <button onClick={() => setSelRegion(null)} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "24px", height: "24px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={11} /></button>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  {selRegion.routes.map((r, j) => (
+                    <div key={r.id} style={{
+                      display: "flex", alignItems: "center", gap: "10px",
+                      padding: "8px 10px", borderRadius: "10px",
+                      background: "#0a2240", border: "1px solid rgba(90,152,227,0.08)",
+                      animation: `fi .2s ease ${j * .04}s both`
+                    }}>
+                      <Route size={14} color={CLS[r.cls]?.color} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
+                        <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{r.dist}km · {r.elev}m · {r.time}</div>
+                      </div>
+                      <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+                        <span style={{ fontSize: "9px", padding: "1px 5px", borderRadius: "4px", background: `${CLS[r.cls]?.color}15`, color: CLS[r.cls]?.color, fontWeight: 600 }}>{CLS[r.cls]?.name}</span>
+                        <span style={{ fontSize: "9px", padding: "1px 5px", borderRadius: "4px", background: `${dc(r.diff)}15`, color: dc(r.diff), fontWeight: 600 }}>{r.diff}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
@@ -607,64 +793,94 @@ const RoutesPage = () => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 3: MAP
    ═══════════════════════════════════════════════════════════════════ */
-const MapPage = ({ goHome }) => {
+const MapPage = ({ goHome, goProfile, onSaveWalk }) => {
   const [layer, setLayer] = useState("standard");
   const [lm, setLm] = useState(false);
   const [wo, setWo] = useState(null);
-  const [sh, setSh] = useState(true);
-  const [sc, setSc] = useState(true);
+  const [sh, setSh] = useState(false);
+  const [sc, setSc] = useState(false);
   const [sp, setSp] = useState(null);
   const [sw, setSw] = useState(null);
   const [cf, setCf] = useState(null);
   const [d3, setD3] = useState(false);
+  const [trackMode, setTrackMode] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [finished, setFinished] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const [actName, setActName] = useState("");
+  const [actDesc, setActDesc] = useState("");
+  const [actPhotos, setActPhotos] = useState(0);
+  const [saved, setSaved] = useState(false);
   const fp = PEAKS.filter(p => !cf || p.cls === cf);
+
+  // Timer for recording
+  useEffect(() => {
+    if (!recording) return;
+    const iv = setInterval(() => setElapsed(e => e + 1), 1000);
+    return () => clearInterval(iv);
+  }, [recording]);
+
+  const fmtTime = (s) => `${String(Math.floor(s / 3600)).padStart(2, "0")}:${String(Math.floor((s % 3600) / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+  const simDist = (elapsed * 0.0014).toFixed(2);
+  const simSpeed = recording ? (elapsed > 5 ? (4.2 + Math.sin(elapsed / 30) * 0.8).toFixed(1) : "0.0") : "0.0";
+  const simElev = Math.floor(320 + elapsed * 0.35);
+
+  const mapContainer = useRef(null);
+  const mapRef = useRef(null);
+
+  // Initialize Mapbox map
+  useEffect(() => {
+    if (mapRef.current || !mapContainer.current) return;
+    const mapboxgl = require("mapbox-gl");
+    mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+    const map = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: "mapbox://styles/mapbox/outdoors-v12",
+      center: [-4.5, 56.5],
+      zoom: 5.8,
+      pitch: d3 ? 45 : 0,
+    });
+    map.addControl(new mapboxgl.NavigationControl(), "top-left");
+    map.addControl(new mapboxgl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showUserHeading: true }), "top-left");
+    mapRef.current = map;
+
+    // Add peak markers once map loads
+    map.on("load", () => {
+      PEAKS.forEach(pk => {
+        const cls = CLS[pk.cls];
+        const el = document.createElement("div");
+        el.style.cssText = `width:24px;height:24px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${cls?.color || "#E85D3A"};border:2px solid rgba(255,255,255,0.85);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px ${cls?.color || "#E85D3A"}40;`;
+        el.innerHTML = `<svg style="transform:rotate(45deg)" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="m8 3 4 8 5-5 2 19H2L8 3z"/></svg>`;
+        el.addEventListener("click", () => { setSp(pk); setSw(null); });
+        new mapboxgl.Marker({ element: el }).setLngLat([pk.lng, pk.lat]).addTo(map);
+      });
+    });
+
+    return () => map.remove();
+  }, []);
+
+  // Update map style when layer changes
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const styles = {
+      standard: "mapbox://styles/mapbox/outdoors-v12",
+      topo: "mapbox://styles/mapbox/outdoors-v12",
+      satellite: "mapbox://styles/mapbox/satellite-streets-v12",
+    };
+    mapRef.current.setStyle(styles[layer] || styles.standard);
+  }, [layer]);
+
+  // Update 3D pitch
+  useEffect(() => {
+    if (!mapRef.current) return;
+    mapRef.current.easeTo({ pitch: d3 ? 55 : 0, duration: 600 });
+  }, [d3]);
 
   return (
     <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
-      {/* Map bg */}
-      <div style={{
-        position: "absolute", inset: 0, transition: "background .6s",
-        background: layer === "satellite"
-          ? "linear-gradient(160deg, #031210, #0a1e18 30%, #0e251c 60%, #071510)"
-          : layer === "topo"
-          ? "linear-gradient(160deg, #041e3d, #0c2d55 30%, #0a2848 60%, #061e3a)"
-          : d3
-          ? "linear-gradient(160deg, #031525, #0a2540 30%, #0e2d3d 60%, #062030)"
-          : "linear-gradient(160deg, #041e3d, #0a2848 30%, #082540 60%, #061e3a)"
-      }}>
-        {/* Contours */}
-        {[...Array(18)].map((_, i) => <div key={i} style={{ position: "absolute", left: `${8 + (i * 5.5) % 82}%`, top: `${10 + (i * 7.3) % 65}%`, width: `${100 + i * 18}px`, height: `${65 + i * 12}px`, border: `1px solid rgba(90,152,227,${layer === "topo" ? 0.12 : 0.05})`, borderRadius: "50%", transform: d3 ? `perspective(800px) rotateX(55deg) translateZ(${i * 2}px)` : "none", transition: "all .6s" }} />)}
-
-        {/* Weather overlay */}
-        {wo && <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>{[...Array(12)].map((_, i) => <div key={i} style={{ position: "absolute", left: `${5 + i * 8}%`, top: `${10 + (i * 13) % 60}%`, width: `${50 + i * 10}px`, height: `${50 + i * 10}px`, background: wo === "wind" ? `radial-gradient(circle,rgba(90,152,227,${.08 + i * .02}),transparent)` : wo === "precip" ? `radial-gradient(circle,rgba(90,130,180,${.06 + i * .015}),transparent)` : `radial-gradient(circle,rgba(189,214,244,${.04 + i * .01}),transparent)`, borderRadius: "50%", animation: `fl ${3 + i * .4}s ease-in-out infinite alternate` }} />)}</div>}
-
-        {/* Peaks */}
-        {fp.map((pk, i) => { const x = ((pk.lng + 8) / 12) * 100; const y = ((58 - pk.lat) / 7) * 100; const cls = CLS[pk.cls]; return (
-          <div key={pk.id} onClick={() => { setSp(pk); setSw(null); }} style={{ position: "absolute", left: `${Math.max(4, Math.min(92, x))}%`, top: `${Math.max(6, Math.min(88, y))}%`, transform: "translate(-50%,-50%)", cursor: "pointer", zIndex: 10, animation: `fi .3s ease ${i * .04}s both` }}>
-            <div style={{ width: "26px", height: "26px", borderRadius: "50% 50% 50% 0", transform: "rotate(-45deg)", background: cls?.color, border: "2px solid rgba(248,248,248,.85)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 2px 10px ${cls?.color}40` }}>
-              <Mountain size={11} style={{ transform: "rotate(45deg)", color: "#fff" }} />
-            </div>
-            <div style={{ position: "absolute", top: "30px", left: "50%", transform: "translateX(-50%)", whiteSpace: "nowrap", fontSize: "9px", color: "#F8F8F8", textShadow: "0 1px 6px rgba(4,30,61,.9)", fontWeight: 700 }}>{pk.name}</div>
-          </div>
-        ); })}
-
-        {/* Community walks */}
-        {sc && C_WALKS.map((w, i) => { const x = ((w.lng + 8) / 12) * 100; const y = ((58 - w.lat) / 7) * 100 - 5; return (
-          <div key={w.id} onClick={() => { setSw(w); setSp(null); }} style={{ position: "absolute", left: `${Math.max(4, Math.min(92, x))}%`, top: `${Math.max(6, Math.min(88, y))}%`, transform: "translate(-50%,-50%)", zIndex: 12, cursor: "pointer", animation: `fi .4s ease ${.3 + i * .05}s both` }}>
-            <div style={{ background: "rgba(90,152,227,.85)", backdropFilter: "blur(8px)", borderRadius: "12px", padding: "4px 9px", border: "1px solid rgba(248,248,248,.2)", display: "flex", alignItems: "center", gap: "4px", fontSize: "10px", color: "#F8F8F8", whiteSpace: "nowrap" }}><Users size={10} /><span style={{ fontWeight: 700 }}>{w.filled}/{w.spots}</span><span style={{ opacity: .75 }}>{w.date}</span></div>
-          </div>
-        ); })}
-
-        {/* Live hikers */}
-        {sh && HIKERS.map((h, i) => { const pk = PEAKS.find(p => p.name === h.peak); if (!pk) return null; const x = ((pk.lng + 8) / 12) * 100 + (i % 2 ? 2.5 : -2.5); const y = ((58 - pk.lat) / 7) * 100 + 5; return (
-          <div key={h.id} style={{ position: "absolute", left: `${Math.max(4, Math.min(92, x))}%`, top: `${Math.max(6, Math.min(88, y))}%`, transform: "translate(-50%,-50%)", zIndex: 15, animation: `fl 3s ease-in-out infinite, fi .4s ease ${.5 + i * .06}s both` }}>
-            <div style={{ background: "rgba(4,30,61,.9)", backdropFilter: "blur(8px)", borderRadius: "16px", padding: "3px 8px", border: `1px solid ${h.st === "summit" ? "#6BCB77" : h.st === "ascending" ? "#5A98E3" : "#F49D37"}`, display: "flex", alignItems: "center", gap: "4px", fontSize: "9px", color: "#F8F8F8", whiteSpace: "nowrap" }}>
-              <span>{h.av}</span><span style={{ fontWeight: 600 }}>{h.name}</span>
-              <span style={{ color: h.st === "summit" ? "#6BCB77" : h.st === "ascending" ? "#5A98E3" : "#F49D37" }}>{h.st === "summit" ? "⛰️" : h.st === "ascending" ? "↗" : "↘"}</span>
-            </div>
-          </div>
-        ); })}
-      </div>
+      {/* Real Mapbox Map */}
+      <div ref={mapContainer} style={{ position: "absolute", inset: 0 }} />
 
       {/* Top controls */}
       <div style={{ position: "absolute", top: 10, left: 10, right: 10, display: "flex", gap: "6px", zIndex: 20 }}>
@@ -684,6 +900,10 @@ const MapPage = ({ goHome }) => {
               <div style={{ padding: "6px 12px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Overlays</div>
               <button onClick={() => setD3(!d3)} style={{ display: "flex", width: "100%", padding: "8px 12px", borderRadius: "8px", border: "none", alignItems: "center", gap: "8px", background: d3 ? "rgba(90,152,227,0.15)" : "transparent", color: d3 ? "#5A98E3" : "#BDD6F4", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans'" }}><Globe size={12} /> 3D Terrain</button>
               {[["wind", "💨 Wind"], ["precip", "🌧️ Precipitation"], ["cloud", "☁️ Cloud Cover"]].map(([k, l]) => <button key={k} onClick={() => setWo(wo === k ? null : k)} style={{ display: "block", width: "100%", padding: "8px 12px", borderRadius: "8px", border: "none", background: wo === k ? "rgba(90,152,227,0.15)" : "transparent", color: wo === k ? "#5A98E3" : "#BDD6F4", fontSize: "12px", cursor: "pointer", textAlign: "left", fontFamily: "'DM Sans'" }}>{l}</button>)}
+              <div style={{ height: "1px", background: "rgba(90,152,227,0.1)", margin: "4px 0" }} />
+              <div style={{ padding: "6px 12px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Community</div>
+              <button onClick={() => setSh(!sh)} style={{ display: "flex", width: "100%", padding: "8px 12px", borderRadius: "8px", border: "none", alignItems: "center", gap: "8px", background: sh ? "rgba(90,152,227,0.15)" : "transparent", color: sh ? "#5A98E3" : "#BDD6F4", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans'" }}><Eye size={12} /> Live Hikers ({HIKERS.length})</button>
+              <button onClick={() => setSc(!sc)} style={{ display: "flex", width: "100%", padding: "8px 12px", borderRadius: "8px", border: "none", alignItems: "center", gap: "8px", background: sc ? "rgba(90,152,227,0.15)" : "transparent", color: sc ? "#5A98E3" : "#BDD6F4", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans'" }}><Users size={12} /> Community Walks ({C_WALKS.length})</button>
             </div>
           )}
         </div>
@@ -692,18 +912,190 @@ const MapPage = ({ goHome }) => {
       {/* Unsure prompt */}
       {wo && <div onClick={goHome} style={{ position: "absolute", top: 56, left: "50%", transform: "translateX(-50%)", background: "rgba(232,93,58,.92)", backdropFilter: "blur(8px)", borderRadius: "20px", padding: "7px 18px", zIndex: 20, display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", animation: "fi .4s ease", border: "1px solid rgba(248,248,248,.15)" }}><span style={{ fontSize: "12px", color: "#F8F8F8", fontWeight: 600 }}>Unsure where to go?</span><ArrowRight size={14} color="#F8F8F8" /></div>}
 
-      {/* Bottom toggles */}
-      <div style={{ position: "absolute", bottom: 12, left: 10, display: "flex", gap: "6px", zIndex: 20 }}>
-        {[["Live", sh, setSh, HIKERS.length, Eye], ["Walks", sc, setSc, C_WALKS.length, Users]].map(([l, s, fn, n, I]) => (
-          <button key={l} onClick={() => fn(!s)} style={{ background: s ? "rgba(90,152,227,0.2)" : "rgba(4,30,61,.75)", backdropFilter: "blur(8px)", border: `1px solid ${s ? "rgba(90,152,227,0.35)" : "rgba(90,152,227,0.1)"}`, borderRadius: "20px", padding: "5px 12px", color: s ? "#5A98E3" : "#BDD6F4", fontSize: "10px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontWeight: 600, fontFamily: "'DM Sans'", opacity: s ? 1 : 0.6 }}><I size={12} /> {l} ({n})</button>
-        ))}
-      </div>
+      {/* Track button (when not in track mode) */}
+      {!trackMode && !sp && !sw && (
+        <button onClick={() => setTrackMode(true)} style={{
+          position: "absolute", bottom: 42, left: "50%", transform: "translateX(-50%)",
+          zIndex: 21, padding: "8px 20px", borderRadius: "20px",
+          background: "rgba(4,30,61,0.9)", backdropFilter: "blur(8px)",
+          border: "1px solid rgba(90,152,227,0.2)",
+          color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer",
+          display: "flex", alignItems: "center", gap: "6px", fontFamily: "'DM Sans'"
+        }}>
+          <Navigation size={14} /> Track Walk
+        </button>
+      )}
+
+      {/* Recording mode UI */}
+      {trackMode && (
+        <div style={{
+          position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 25,
+          background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)",
+          borderRadius: "16px 16px 0 0", border: "1px solid rgba(90,152,227,0.15)",
+          borderBottom: "none", animation: "su .3s ease"
+        }}>
+          {(recording || paused) && !finished && <div style={{ height: "3px", background: recording ? "linear-gradient(90deg,#6BCB77,#5A98E3)" : "linear-gradient(90deg,#F49D37,#E85D3A)", animation: recording ? "pulse 2s ease infinite" : "none" }} />}
+          {finished && <div style={{ height: "3px", background: "linear-gradient(90deg,#6BCB77,transparent)" }} />}
+
+          <div style={{ padding: "14px 16px", maxHeight: "70vh", overflowY: "auto" }}>
+
+            {/* ═══ ACTIVE RECORDING / PAUSED VIEW ═══ */}
+            {!finished && !saved && (
+              <>
+                {/* Timer */}
+                {(recording || paused) && (
+                  <div style={{ textAlign: "center", marginBottom: "12px" }}>
+                    <div style={{ fontSize: "32px", fontWeight: 800, color: paused ? "#F49D37" : "#F8F8F8", fontFamily: "'JetBrains Mono'", letterSpacing: "2px" }}>{fmtTime(elapsed)}</div>
+                    {paused && <div style={{ fontSize: "10px", color: "#F49D37", fontWeight: 600, marginTop: "2px" }}>PAUSED</div>}
+                  </div>
+                )}
+
+                {/* Stats grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px", marginBottom: "14px" }}>
+                  {[
+                    ["Distance", `${simDist}km`, Navigation],
+                    ["Time", (recording || paused) ? fmtTime(elapsed) : "00:00:00", Clock],
+                    ["Elevation", `${simElev}m`, TrendingUp],
+                    ["Speed", `${simSpeed}kph`, Zap],
+                  ].map(([label, val, Icon]) => (
+                    <div key={label} style={{ textAlign: "center", padding: "8px 4px", background: "#0a2240", borderRadius: "10px" }}>
+                      <Icon size={13} color="#BDD6F4" style={{ opacity: 0.5 }} />
+                      <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", marginTop: "2px", fontFamily: "'JetBrains Mono'" }}>{val}</div>
+                      <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>{label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Control buttons */}
+                <div style={{ display: "flex", gap: "8px" }}>
+                  {!recording && !paused && (
+                    <>
+                      <button onClick={() => { setTrackMode(false); setElapsed(0); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
+                      <button onClick={() => setRecording(true)} style={{ flex: 2, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#6BCB77,#55a866)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                        <Play size={16} /> Start Recording
+                      </button>
+                    </>
+                  )}
+                  {recording && (
+                    <>
+                      <button onClick={() => { setRecording(false); setPaused(true); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                        <Pause size={14} /> Stop
+                      </button>
+                      <div style={{ flex: 1, padding: "8px", borderRadius: "10px", background: "#0a2240", textAlign: "center" }}>
+                        <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.5 }}>Est. finish</div>
+                        <div style={{ fontSize: "14px", fontWeight: 700, color: "#5A98E3", fontFamily: "'JetBrains Mono'" }}>{elapsed > 10 ? `${Math.floor(3 + elapsed / 600)}h ${Math.floor((elapsed / 10) % 60)}m` : "--:--"}</div>
+                      </div>
+                    </>
+                  )}
+                  {paused && (
+                    <>
+                      <button onClick={() => { setPaused(false); setRecording(true); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#6BCB77,#55a866)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                        <Play size={14} /> Resume
+                      </button>
+                      <button onClick={() => { setPaused(false); setFinished(true); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#5A98E3,#4080cc)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                        <CheckCircle size={14} /> Finish
+                      </button>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* ═══ FINISHED SUMMARY VIEW ═══ */}
+            {finished && !saved && (
+              <>
+                <div style={{ textAlign: "center", marginBottom: "14px" }}>
+                  <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>Walk Complete!</div>
+                  <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>Great effort out there</div>
+                </div>
+
+                {/* Summary stats */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "12px" }}>
+                  {[
+                    ["Distance", `${simDist}km`],
+                    ["Elevation", `${simElev}m`],
+                    ["Avg Speed", `${(parseFloat(simDist) / (elapsed / 3600) || 0).toFixed(1)}kph`],
+                  ].map(([label, val]) => (
+                    <div key={label} style={{ textAlign: "center", padding: "10px 4px", background: "#0a2240", borderRadius: "10px" }}>
+                      <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
+                      <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4 }}>{label}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px" }}>
+                  {[
+                    ["Moving Time", fmtTime(Math.floor(elapsed * 0.88))],
+                    ["Total Time", fmtTime(elapsed)],
+                  ].map(([label, val]) => (
+                    <div key={label} style={{ textAlign: "center", padding: "10px 4px", background: "#0a2240", borderRadius: "10px" }}>
+                      <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
+                      <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4 }}>{label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Peaks detected */}
+                <div style={{ padding: "10px", background: "rgba(107,203,119,0.06)", borderRadius: "10px", border: "1px solid rgba(107,203,119,0.12)", marginBottom: "14px" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#6BCB77", marginBottom: "6px" }}>Peaks Detected</div>
+                  <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                    {["Ben Lomond"].map(pk => (
+                      <span key={pk} style={{ fontSize: "10px", padding: "3px 8px", borderRadius: "6px", background: "rgba(107,203,119,0.1)", color: "#6BCB77", fontWeight: 600, display: "flex", alignItems: "center", gap: "3px" }}>
+                        <CheckCircle size={10} /> {pk}
+                      </span>
+                    ))}
+                  </div>
+                  <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "6px", fontStyle: "italic" }}>Peaks are auto-detected based on your route. You can adjust this in your summit log.</div>
+                </div>
+
+                {/* Activity name */}
+                <div style={{ marginBottom: "10px" }}>
+                  <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Activity Name</label>
+                  <input type="text" placeholder="e.g. Ben Lomond via Ptarmigan Ridge" value={actName} onChange={e => setActName(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'" }} />
+                </div>
+
+                {/* Description */}
+                <div style={{ marginBottom: "10px" }}>
+                  <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Description (optional)</label>
+                  <textarea placeholder="How was the walk? Conditions, highlights, memorable moments..." value={actDesc} onChange={e => setActDesc(e.target.value)} rows={3} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", resize: "none" }} />
+                </div>
+
+                {/* Add photos */}
+                <button onClick={() => setActPhotos(p => p + 1)} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px dashed rgba(90,152,227,0.25)", background: "transparent", color: "#BDD6F4", fontSize: "11px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontFamily: "'DM Sans'", marginBottom: "14px" }}>
+                  <Camera size={14} /> {actPhotos > 0 ? `${actPhotos} photo${actPhotos > 1 ? "s" : ""} added — tap to add more` : "Add Photos"}
+                </button>
+
+                {/* Save buttons */}
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button onClick={() => { setFinished(false); setTrackMode(false); setElapsed(0); setActName(""); setActDesc(""); setActPhotos(0); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Discard</button>
+                  <button onClick={() => { if (onSaveWalk) onSaveWalk({ name: actName || "Untitled Walk", desc: actDesc, dist: simDist, elev: simElev, time: fmtTime(elapsed), movingTime: fmtTime(Math.floor(elapsed * 0.88)), avgSpeed: (parseFloat(simDist) / (elapsed / 3600) || 0).toFixed(1), peaks: ["Ben Lomond"], photos: actPhotos, date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) }); setSaved(true); }} style={{ flex: 2, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Save & Publish</button>
+                </div>
+              </>
+            )}
+
+            {/* ═══ SAVED CONFIRMATION ═══ */}
+            {saved && (
+              <div style={{ textAlign: "center", padding: "20px 0" }}>
+                <div style={{ fontSize: "36px", marginBottom: "10px" }}>🎉</div>
+                <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>Walk Saved!</div>
+                <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, marginTop: "4px", marginBottom: "16px" }}>Published to your profile and the community feed</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <button onClick={() => { setTrackMode(false); setFinished(false); setSaved(false); setRecording(false); setPaused(false); setElapsed(0); setActName(""); setActDesc(""); setActPhotos(0); goProfile("posts"); }} style={{ width: "100%", padding: "11px 24px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>View Activity</button>
+                  <button onClick={() => { setTrackMode(false); setFinished(false); setSaved(false); setRecording(false); setPaused(false); setElapsed(0); setActName(""); setActDesc(""); setActPhotos(0); }} style={{ width: "100%", padding: "11px 24px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Back to Map</button>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
 
       {/* Classification chips */}
-      <div style={{ position: "absolute", bottom: 12, right: 10, display: "flex", gap: "4px", zIndex: 20, flexWrap: "wrap", justifyContent: "flex-end", maxWidth: "280px" }}>
+      {!trackMode && (
+      <div style={{ position: "absolute", bottom: 12, left: 10, right: 10, display: "flex", gap: "4px", zIndex: 20, flexWrap: "wrap", justifyContent: "center" }}>
         <button onClick={() => setCf(null)} style={{ background: !cf ? "rgba(248,248,248,.12)" : "rgba(4,30,61,.65)", border: "1px solid rgba(90,152,227,0.12)", borderRadius: "14px", padding: "4px 9px", color: !cf ? "#F8F8F8" : "#BDD6F4", fontSize: "9px", cursor: "pointer", fontWeight: !cf ? 700 : 400, fontFamily: "'DM Sans'", opacity: cf ? 0.6 : 1 }}>All</button>
         {Object.entries(CLS).slice(0, 5).map(([k, c]) => <button key={k} onClick={() => setCf(cf === k ? null : k)} style={{ background: cf === k ? `${c.color}20` : "rgba(4,30,61,.65)", border: `1px solid ${cf === k ? c.color : "rgba(90,152,227,0.1)"}`, borderRadius: "14px", padding: "4px 9px", color: cf === k ? c.color : "#BDD6F4", fontSize: "9px", cursor: "pointer", fontWeight: cf === k ? 700 : 400, fontFamily: "'DM Sans'", opacity: cf === k ? 1 : 0.6 }}>{c.name}</button>)}
       </div>
+      )}
 
       {/* Peak card */}
       {sp && (
@@ -716,7 +1108,7 @@ const MapPage = ({ goHome }) => {
             </div>
             <div style={{ display: "flex", gap: "6px", marginTop: "8px" }}><span style={{ fontSize: "9px", padding: "2px 8px", borderRadius: "6px", background: `${CLS[sp.cls]?.color}15`, color: CLS[sp.cls]?.color, fontWeight: 700 }}>{CLS[sp.cls]?.name}</span></div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px", marginTop: "12px" }}>
-              {[["Feels", `${sp.w.f}°`, Thermometer, sp.w.f < -5 ? "#BDD6F4" : "#F8F8F8"], ["Wind", `${sp.w.wi}mph`, Wind, sp.w.wi > 35 ? "#E85D3A" : "#F8F8F8"], ["Rain", `${sp.w.p}mm`, Droplets, sp.w.p > 2 ? "#5A98E3" : "#F8F8F8"], ["Vis", sp.w.v, Eye, "#F8F8F8"]].map(([l, v, I, c]) => <div key={l} style={{ textAlign: "center", padding: "10px 4px", background: "#0a2240", borderRadius: "10px" }}><I size={14} color="#BDD6F4" style={{ opacity: 0.5 }} /><div style={{ fontSize: "14px", fontWeight: 700, color: c, marginTop: "3px" }}>{v}</div><div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4, marginTop: "1px" }}>{l}</div></div>)}
+              {[["Feels", `${sp.w.f}°`, Thermometer, sp.w.f < -5 ? "#BDD6F4" : "#F8F8F8"], ["Wind", `${sp.w.wi}mph`, Wind, sp.w.wi > 35 ? "#E85D3A" : sp.w.wi >= 20 ? "#F49D37" : "#F8F8F8"], ["Rain", `${sp.w.p}mm`, Droplets, sp.w.p > 2 ? "#5A98E3" : "#F8F8F8"], ["Vis", sp.w.v, Eye, "#F8F8F8"]].map(([l, v, I, c]) => <div key={l} style={{ textAlign: "center", padding: "10px 4px", background: "#0a2240", borderRadius: "10px" }}><I size={14} color="#BDD6F4" style={{ opacity: 0.5 }} /><div style={{ fontSize: "14px", fontWeight: 700, color: c, marginTop: "3px" }}>{v}</div><div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4, marginTop: "1px" }}>{l}</div></div>)}
             </div>
             <button style={{ marginTop: "14px", width: "100%", padding: "11px", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", border: "none", borderRadius: "11px", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Log This Summit ⛰️</button>
           </div>
@@ -932,9 +1324,21 @@ const LearnPage = () => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 5: PROFILE
    ═══════════════════════════════════════════════════════════════════ */
-const ProfilePage = () => {
-  const [sec, setSec] = useState("mountains");
-  const [lbm, setLbm] = useState("m");
+const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, savedWalks }) => {
+  const [sec, setSec] = useState(initialSec || "mountains");
+
+  // Sync with parent when initialSec changes
+  useEffect(() => {
+    if (initialSec) setSec(initialSec);
+  }, [initialSec]);
+
+  // Notify parent when sec changes
+  const handleSecChange = (newSec) => {
+    setSec(newSec);
+    if (onSecChange) onSecChange(newSec);
+  };
+  const [lbm, setLbm] = useState("d");
+  const [lbTime, setLbTime] = useState("all");
   const [mtView, setMtView] = useState("map");
   const [mtCls, setMtCls] = useState(null);
   const [mtDone, setMtDone] = useState(null);
@@ -944,6 +1348,19 @@ const ProfilePage = () => {
   const [logDate, setLogDate] = useState("");
   const [logNote, setLogNote] = useState("");
   const [peakData, setPeakData] = useState(PEAKS);
+  const [showCreate, setShowCreate] = useState(false);
+  const [createType, setCreateType] = useState(null);
+  const [evName, setEvName] = useState("");
+  const [evDate, setEvDate] = useState("");
+  const [evTime, setEvTime] = useState("");
+  const [evAge, setEvAge] = useState("Any");
+  const [evGender, setEvGender] = useState("Mixed");
+  const [evRegion, setEvRegion] = useState("");
+  const [evRoute, setEvRoute] = useState("");
+  const [evGpx, setEvGpx] = useState(false);
+  const [evDiff, setEvDiff] = useState("Moderate");
+  const [evSpots, setEvSpots] = useState("8");
+  const [evCreated, setEvCreated] = useState(false);
 
   const lists = [
     { k: "munros", ...ME.munros, c: CLS.munros }, { k: "corbetts", ...ME.corbetts, c: CLS.corbetts },
@@ -991,7 +1408,7 @@ const ProfilePage = () => {
       </div>
 
       <div style={{ display: "flex", gap: "3px", marginBottom: "14px", background: "#0a2240", borderRadius: "12px", padding: "3px" }}>
-        {[["mountains", "Mountains"], ["badges", "Badges"], ["leaderboard", "Rankings"], ["posts", "Posts"]].map(([k, l]) => <button key={k} onClick={() => setSec(k)} style={{ flex: 1, padding: "8px", borderRadius: "10px", border: "none", background: sec === k ? "rgba(90,152,227,0.2)" : "transparent", color: sec === k ? "#5A98E3" : "#BDD6F4", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: sec === k ? 1 : 0.5 }}>{l}</button>)}
+        {[["mountains", "Mountains"], ["posts", "Posts"], ["leaderboard", "Rankings"], ["badges", "Badges"]].map(([k, l]) => <button key={k} onClick={() => handleSecChange(k)} style={{ flex: 1, padding: "8px", borderRadius: "10px", border: "none", background: sec === k ? "rgba(90,152,227,0.2)" : "transparent", color: sec === k ? "#5A98E3" : "#BDD6F4", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: sec === k ? 1 : 0.5 }}>{l}</button>)}
       </div>
 
       {/* ═══ MOUNTAINS SECTION ═══ */}
@@ -1004,14 +1421,20 @@ const ProfilePage = () => {
               <button onClick={() => setMtView("list")} style={{ padding: "5px 12px", borderRadius: "8px", border: "none", background: mtView === "list" ? "rgba(90,152,227,0.2)" : "#0a2240", color: mtView === "list" ? "#5A98E3" : "#BDD6F4", fontSize: "11px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'", opacity: mtView === "list" ? 1 : 0.5 }}><List size={12} /> List</button>
             </div>
             <div style={{ fontSize: "10px", color: "#6BCB77", fontWeight: 600 }}>
-              {peakData.filter(p => p.done).length}/{peakData.length} logged
+              {(() => {
+                if (!mtCls) return "";
+                const fp = peakData.filter(p => p.cls === mtCls);
+                const done = fp.filter(p => p.done).length;
+                const total = CLS[mtCls]?.count || fp.length;
+                return `${done}/${total} logged`;
+              })()}
             </div>
           </div>
 
           {/* Classification chips */}
           <div style={{ display: "flex", gap: "4px", marginBottom: "10px", flexWrap: "wrap" }}>
             <button onClick={() => setMtCls(null)} style={{ padding: "4px 10px", borderRadius: "12px", border: `1px solid ${!mtCls ? "rgba(248,248,248,0.2)" : "rgba(90,152,227,0.1)"}`, background: !mtCls ? "rgba(248,248,248,0.08)" : "transparent", color: !mtCls ? "#F8F8F8" : "#BDD6F4", fontSize: "10px", cursor: "pointer", fontWeight: !mtCls ? 700 : 400, fontFamily: "'DM Sans'", opacity: mtCls ? 0.5 : 1 }}>All</button>
-            {Object.entries(CLS).slice(0, 6).map(([k, c]) => (
+            {Object.entries(CLS).filter(([k]) => k !== "non-mountain").map(([k, c]) => (
               <button key={k} onClick={() => setMtCls(mtCls === k ? null : k)} style={{ padding: "4px 10px", borderRadius: "12px", border: `1px solid ${mtCls === k ? c.color : "rgba(90,152,227,0.1)"}`, background: mtCls === k ? `${c.color}18` : "transparent", color: mtCls === k ? c.color : "#BDD6F4", fontSize: "10px", cursor: "pointer", fontWeight: mtCls === k ? 700 : 400, fontFamily: "'DM Sans'", opacity: mtCls === k ? 1 : 0.5 }}>{c.name}</button>
             ))}
           </div>
@@ -1075,13 +1498,30 @@ const ProfilePage = () => {
                       <div style={{ flex: 1 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                           <span style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8" }}>{selPeak.name}</span>
-                          <div style={{
-                            width: "20px", height: "20px", borderRadius: "6px",
+                          <div onClick={(e) => {
+                            e.stopPropagation();
+                            if (selPeak.done && !logging) {
+                              // Untick - mark as not done
+                              setPeakData(prev => prev.map(p => p.id === selPeak.id ? { ...p, done: false, date: undefined, log: undefined } : p));
+                              setSelPeak(prev => ({ ...prev, done: false, date: undefined, log: undefined }));
+                              setLogging(false);
+                            } else if (!selPeak.done) {
+                              // Tick - immediately mark as done, show green, open log form
+                              const today = new Date().toISOString().split("T")[0];
+                              setPeakData(prev => prev.map(p => p.id === selPeak.id ? { ...p, done: true, date: today, log: "" } : p));
+                              setSelPeak(prev => ({ ...prev, done: true, date: today, log: "" }));
+                              setLogDate(today);
+                              setLogNote("");
+                              setLogging(true);
+                            }
+                          }} style={{
+                            width: "22px", height: "22px", borderRadius: "6px",
                             background: selPeak.done ? "rgba(107,203,119,0.15)" : "rgba(232,93,58,0.1)",
-                            border: `1.5px solid ${selPeak.done ? "#6BCB77" : "rgba(232,93,58,0.3)"}`,
-                            display: "flex", alignItems: "center", justifyContent: "center"
+                            border: `2px solid ${selPeak.done ? "#6BCB77" : "rgba(232,93,58,0.3)"}`,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            cursor: "pointer", transition: "all .2s"
                           }}>
-                            {selPeak.done && <Check size={12} color="#6BCB77" strokeWidth={3} />}
+                            {selPeak.done && <Check size={13} color="#6BCB77" strokeWidth={3} />}
                           </div>
                         </div>
                         <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>{selPeak.ht}m · {selPeak.reg}</div>
@@ -1100,7 +1540,14 @@ const ProfilePage = () => {
 
                     {/* If not completed - show log button or logging form */}
                     {!selPeak.done && !logging && (
-                      <button onClick={() => setLogging(true)} style={{
+                      <button onClick={() => {
+                        const today = new Date().toISOString().split("T")[0];
+                        setPeakData(prev => prev.map(p => p.id === selPeak.id ? { ...p, done: true, date: today, log: "" } : p));
+                        setSelPeak(prev => ({ ...prev, done: true, date: today, log: "" }));
+                        setLogDate(today);
+                        setLogNote("");
+                        setLogging(true);
+                      }} style={{
                         marginTop: "10px", width: "100%", padding: "10px",
                         background: "linear-gradient(135deg,#E85D3A,#d04a2a)",
                         border: "none", borderRadius: "10px", color: "#F8F8F8",
@@ -1192,23 +1639,256 @@ const ProfilePage = () => {
       </div>}
 
       {sec === "leaderboard" && <div>
+        {/* Time period filter */}
+        <div style={{ display: "flex", gap: "3px", marginBottom: "10px", background: "#0a2240", borderRadius: "10px", padding: "3px", overflowX: "auto" }}>
+          {[["daily", "Day"], ["weekly", "Week"], ["monthly", "Month"], ["6month", "6 Month"], ["yearly", "Year"], ["all", "All Time"]].map(([k, l]) => <button key={k} onClick={() => setLbTime(k)} style={{ padding: "5px 10px", borderRadius: "8px", border: "none", background: lbTime === k ? "rgba(90,152,227,0.2)" : "transparent", color: lbTime === k ? "#5A98E3" : "#BDD6F4", fontSize: "10px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'", opacity: lbTime === k ? 1 : 0.4, whiteSpace: "nowrap" }}>{l}</button>)}
+        </div>
+        {/* Metric filter */}
         <div style={{ display: "flex", gap: "4px", marginBottom: "10px" }}>
-          {[["m", "Munros"], ["d", "Distance"], ["e", "Elevation"]].map(([k, l]) => <button key={k} onClick={() => setLbm(k)} style={{ padding: "6px 14px", borderRadius: "10px", fontSize: "10px", cursor: "pointer", background: lbm === k ? "rgba(90,152,227,0.2)" : "#0a2240", border: `1px solid ${lbm === k ? "rgba(90,152,227,0.3)" : "rgba(90,152,227,0.1)"}`, color: lbm === k ? "#5A98E3" : "#BDD6F4", fontWeight: 700, fontFamily: "'DM Sans'" }}>{l}</button>)}
+          {[["d", "Distance"], ["e", "Elevation"], ["pts", "Points"]].map(([k, l]) => <button key={k} onClick={() => setLbm(k)} style={{ padding: "6px 14px", borderRadius: "10px", fontSize: "10px", cursor: "pointer", background: lbm === k ? "rgba(90,152,227,0.2)" : "#0a2240", border: `1px solid ${lbm === k ? "rgba(90,152,227,0.3)" : "rgba(90,152,227,0.1)"}`, color: lbm === k ? "#5A98E3" : "#BDD6F4", fontWeight: 700, fontFamily: "'DM Sans'" }}>{l}</button>)}
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          {[...LB].sort((a, b) => b[lbm] - a[lbm]).map((u, i) => <div key={u.n} style={{ background: u.u ? "rgba(90,152,227,0.08)" : "#0a2240", borderRadius: "10px", padding: "10px 12px", border: `1px solid ${u.u ? "rgba(90,152,227,0.2)" : "rgba(90,152,227,0.08)"}`, display: "flex", alignItems: "center", gap: "10px", animation: `fi .3s ease ${i * .04}s both` }}>
+          {[...(LB_DATA[lbTime] || LB_DATA.all)].sort((a, b) => b[lbm] - a[lbm]).map((u, i) => <div key={u.n} style={{ background: u.u ? "rgba(90,152,227,0.08)" : "#0a2240", borderRadius: "10px", padding: "10px 12px", border: `1px solid ${u.u ? "rgba(90,152,227,0.2)" : "rgba(90,152,227,0.08)"}`, display: "flex", alignItems: "center", gap: "10px", animation: `fi .3s ease ${i * .04}s both` }}>
             <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: i < 3 ? `${["#FFD700","#C0C0C0","#CD7F32"][i]}15` : "#264f80", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 800, color: i < 3 ? ["#FFD700","#C0C0C0","#CD7F32"][i] : "#BDD6F4" }}>{i + 1}</div>
             <span style={{ fontSize: "16px" }}>{u.av}</span>
             <div style={{ flex: 1 }}><div style={{ fontSize: "12px", fontWeight: 700, color: u.u ? "#5A98E3" : "#F8F8F8" }}>{u.n}</div></div>
-            <div style={{ fontSize: "14px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{lbm === "d" ? `${u[lbm]}km` : lbm === "e" ? `${(u[lbm] / 1000).toFixed(1)}km` : u[lbm]}</div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: "14px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{lbm === "d" ? `${u[lbm]}km` : lbm === "e" ? `${(u[lbm] / 1000).toFixed(1)}km` : u[lbm].toLocaleString()}</div>
+              <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>{lbm === "d" ? "distance" : lbm === "e" ? "elevation" : "points"}</div>
+            </div>
           </div>)}
         </div>
       </div>}
 
-      {sec === "posts" && <div style={{ textAlign: "center", padding: "50px 20px" }}>
-        <Camera size={36} color="#BDD6F4" style={{ opacity: 0.3, marginBottom: "14px" }} />
-        <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>Your Posts</div>
-        <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, marginTop: "6px" }}>Share summit photos, route reviews, and walk reports with the community</div>
+      {sec === "posts" && <div>
+        {/* Create button */}
+        <div style={{ position: "relative", marginBottom: "14px" }}>
+          <button onClick={() => setShowCreate(!showCreate)} style={{ width: "100%", padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+            <Plus size={16} /> Create
+          </button>
+          {showCreate && !createType && (
+            <div style={{ marginTop: "6px", background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.15)", overflow: "hidden", animation: "fi .2s ease" }}>
+              {[["post", "📝 Post", "Share an update or photo"], ["event", "📅 Event", "Schedule a community walk"], ["fundraiser", "❤️ Fundraiser", "Support a local MRT or cause"]].map(([k, icon, desc]) => (
+                <button key={k} onClick={() => setCreateType(k)} style={{ width: "100%", padding: "12px 14px", border: "none", borderBottom: "1px solid rgba(90,152,227,0.08)", background: "transparent", color: "#F8F8F8", fontSize: "13px", fontWeight: 600, cursor: "pointer", textAlign: "left", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span style={{ fontSize: "16px" }}>{icon.split(" ")[0]}</span>
+                  <div><div>{icon.split(" ").slice(1).join(" ")}</div><div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5, fontWeight: 400 }}>{desc}</div></div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ═══ EVENT CREATOR ═══ */}
+        {createType === "event" && !evCreated && (
+          <div style={{ background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.12)", overflow: "hidden", animation: "su .3s ease" }}>
+            <div style={{ height: "3px", background: "linear-gradient(90deg,#5A98E3,transparent)" }} />
+            <div style={{ padding: "14px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
+                <button onClick={() => { setCreateType(null); setShowCreate(false); }} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "26px", height: "26px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><X size={12} /></button>
+                <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>Schedule a Walk</div>
+              </div>
+
+              <div style={{ marginBottom: "10px" }}>
+                <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Walk Name</label>
+                <input type="text" placeholder="e.g. Beginner Munro - Ben Lomond" value={evName} onChange={e => setEvName(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'" }} />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "10px" }}>
+                <div>
+                  <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Date</label>
+                  <input type="date" value={evDate} onChange={e => setEvDate(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'" }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Time</label>
+                  <input type="time" value={evTime} onChange={e => setEvTime(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'" }} />
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "10px" }}>
+                <div>
+                  <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Age Range</label>
+                  <select value={evAge} onChange={e => setEvAge(e.target.value)} style={{ width: "100%", padding: "10px 8px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "11px", outline: "none", fontFamily: "'DM Sans'" }}>
+                    {["Any", "18+", "21+", "18-30", "25-45", "30-50", "40+", "50+"].map(a => <option key={a} value={a}>{a}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Gender</label>
+                  <select value={evGender} onChange={e => setEvGender(e.target.value)} style={{ width: "100%", padding: "10px 8px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "11px", outline: "none", fontFamily: "'DM Sans'" }}>
+                    {["Mixed", "Female only", "Male only"].map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Spots</label>
+                  <select value={evSpots} onChange={e => setEvSpots(e.target.value)} style={{ width: "100%", padding: "10px 8px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "11px", outline: "none", fontFamily: "'DM Sans'" }}>
+                    {["4", "6", "8", "10", "12", "15", "20"].map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "10px" }}>
+                <div>
+                  <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Difficulty {evRoute && <span style={{ color: "#6BCB77", fontSize: "8px" }}>(auto)</span>}</label>
+                  <select value={evDiff} onChange={e => { if (!evRoute) setEvDiff(e.target.value); }} disabled={!!evRoute} style={{ width: "100%", padding: "10px 8px", borderRadius: "8px", border: `1px solid ${evRoute ? "rgba(107,203,119,0.2)" : "rgba(90,152,227,0.2)"}`, background: evRoute ? "rgba(107,203,119,0.06)" : "#041e3d", color: "#F8F8F8", fontSize: "11px", outline: "none", fontFamily: "'DM Sans'", opacity: evRoute ? 0.7 : 1 }}>
+                    {["Easy", "Moderate", "Hard", "Expert"].map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Region</label>
+                  <select value={evRegion} onChange={e => { setEvRegion(e.target.value); setEvRoute(""); setEvGpx(false); }} style={{ width: "100%", padding: "10px 8px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "11px", outline: "none", fontFamily: "'DM Sans'" }}>
+                    <option value="">Select region</option>
+                    {[...new Set(ROUTES.map(r => r.reg))].sort().map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              {/* Route selection - only shows when region is selected */}
+              {evRegion && (
+                <div style={{ marginBottom: "10px" }}>
+                  <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Route</label>
+                  <select value={evRoute} onChange={e => { const val = e.target.value; setEvRoute(val); if (val) { setEvGpx(false); const route = ROUTES.find(r => r.name === val); if (route) setEvDiff(route.diff); } }} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'" }}>
+                    <option value="">Select a verified route (or upload GPX below)</option>
+                    {ROUTES.filter(r => r.reg === evRegion && r.src === "ts").map(r => <option key={r.id} value={r.name}>{r.name} ({r.dist}km · {r.diff})</option>)}
+                  </select>
+                </div>
+              )}
+
+              {/* GPX upload - required if no verified route selected */}
+              {evRegion && !evRoute && (
+                <div style={{ marginBottom: "10px" }}>
+                  <button onClick={() => setEvGpx(!evGpx)} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: `1px dashed ${evGpx ? "#6BCB77" : "rgba(90,152,227,0.25)"}`, background: evGpx ? "rgba(107,203,119,0.06)" : "transparent", color: evGpx ? "#6BCB77" : "#BDD6F4", fontSize: "11px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontFamily: "'DM Sans'" }}>
+                    {evGpx ? <><CheckCircle size={14} /> GPX file uploaded</> : <><Navigation size={14} /> Upload GPX file (required)</>}
+                  </button>
+                  {!evGpx && (
+                    <div style={{ fontSize: "9px", color: "#E85D3A", opacity: 0.8, marginTop: "4px", fontStyle: "italic" }}>
+                      A GPX file is required when not using a verified route, so participants know exactly what they're signing up for.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Create button */}
+              {(() => {
+                const canCreate = evName && evDate && evTime && evRegion && (evRoute || evGpx);
+                return (
+                  <button onClick={() => { if (canCreate) setEvCreated(true); }} style={{ width: "100%", padding: "11px", borderRadius: "10px", border: "none", background: canCreate ? "linear-gradient(135deg,#E85D3A,#d04a2a)" : "#264f80", color: canCreate ? "#F8F8F8" : "#BDD6F4", fontSize: "13px", fontWeight: 700, cursor: canCreate ? "pointer" : "default", fontFamily: "'DM Sans'", opacity: canCreate ? 1 : 0.5, transition: "all .2s" }}>
+                    Create Walk Event
+                  </button>
+                );
+              })()}
+            </div>
+          </div>
+        )}
+
+        {/* Event created confirmation */}
+        {createType === "event" && evCreated && (
+          <div style={{ background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(107,203,119,0.15)", padding: "20px", textAlign: "center", animation: "su .3s ease" }}>
+            <div style={{ fontSize: "36px", marginBottom: "10px" }}>🥾</div>
+            <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>Walk Scheduled!</div>
+            <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, marginTop: "4px", marginBottom: "4px" }}>{evName}</div>
+            <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginBottom: "16px" }}>{evDate} · {evTime} · {evRegion} · {evGender} · {evAge}</div>
+            <div style={{ fontSize: "10px", color: "#6BCB77", marginBottom: "16px" }}>Published to the community map and feed</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <button onClick={() => { setCreateType(null); setShowCreate(false); setEvCreated(false); setEvName(""); setEvDate(""); setEvTime(""); setEvAge("Any"); setEvGender("Mixed"); setEvRegion(""); setEvRoute(""); setEvGpx(false); setEvDiff("Moderate"); setEvSpots("8"); if (goHome) goHome("events"); }} style={{ width: "100%", padding: "10px 24px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>View Event</button>
+              <button onClick={() => { setCreateType(null); setShowCreate(false); setEvCreated(false); setEvName(""); setEvDate(""); setEvTime(""); setEvAge("Any"); setEvGender("Mixed"); setEvRegion(""); setEvRoute(""); setEvGpx(false); setEvDiff("Moderate"); setEvSpots("8"); }} style={{ width: "100%", padding: "10px 24px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Done</button>
+            </div>
+          </div>
+        )}
+
+        {/* Post creator placeholder */}
+        {createType === "post" && (
+          <div style={{ background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.12)", padding: "14px", animation: "su .3s ease" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+              <button onClick={() => { setCreateType(null); setShowCreate(false); }} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "26px", height: "26px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><X size={12} /></button>
+              <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>Create Post</div>
+            </div>
+            <textarea placeholder="What's on your mind? Share a summit story, trail tip, or photo..." rows={3} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", resize: "none", marginBottom: "10px" }} />
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button style={{ flex: 1, padding: "9px", borderRadius: "8px", border: "1px dashed rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Camera size={13} /> Photo</button>
+              <button onClick={() => { setCreateType(null); setShowCreate(false); if (goHome) goHome("all"); }} style={{ flex: 1, padding: "9px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Post</button>
+            </div>
+          </div>
+        )}
+
+        {/* Fundraiser creator placeholder */}
+        {createType === "fundraiser" && (
+          <div style={{ background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.12)", padding: "14px", animation: "su .3s ease" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+              <button onClick={() => { setCreateType(null); setShowCreate(false); }} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "26px", height: "26px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><X size={12} /></button>
+              <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>Create Fundraiser</div>
+            </div>
+            <input type="text" placeholder="Organisation name (e.g. Glencoe MRT)" style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "8px" }} />
+            <textarea placeholder="Tell people why this matters..." rows={2} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", resize: "none", marginBottom: "8px" }} />
+            <input type="url" placeholder="GoFundMe or donation link" style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "10px" }} />
+            <button onClick={() => { setCreateType(null); setShowCreate(false); if (goHome) goHome("fundraiser"); }} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg,#6BCB77,#55a866)", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Publish Fundraiser</button>
+          </div>
+        )}
+
+        {/* Saved walks and empty state */}
+        {!createType && !showCreate && (
+          <div>
+            {savedWalks && savedWalks.length > 0 ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {savedWalks.map((w, i) => (
+                  <div key={i} style={{ background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.1)", overflow: "hidden", animation: `fi .3s ease ${i * .05}s both` }}>
+                    <div style={{ height: "3px", background: "linear-gradient(90deg,#6BCB77,#5A98E3)" }} />
+                    <div style={{ padding: "14px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "8px" }}>
+                        <div>
+                          <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{w.name}</div>
+                          <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5, marginTop: "2px" }}>{w.date}</div>
+                        </div>
+                        {w.photos > 0 && <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "6px", background: "rgba(90,152,227,0.1)", color: "#5A98E3", fontWeight: 600 }}><Camera size={10} style={{ verticalAlign: "middle" }} /> {w.photos}</span>}
+                      </div>
+
+                      {w.desc && <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.5, marginBottom: "10px" }}>{w.desc}</div>}
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px", marginBottom: "10px" }}>
+                        {[
+                          ["Distance", `${w.dist}km`, Navigation],
+                          ["Elevation", `${w.elev}m`, TrendingUp],
+                          ["Avg Speed", `${w.avgSpeed}kph`, Zap],
+                        ].map(([label, val, Icon]) => (
+                          <div key={label} style={{ textAlign: "center", padding: "8px 4px", background: "#041e3d", borderRadius: "8px" }}>
+                            <Icon size={12} color="#BDD6F4" style={{ opacity: 0.4 }} />
+                            <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8", marginTop: "2px", fontFamily: "'JetBrains Mono'" }}>{val}</div>
+                            <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>{label}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div style={{ display: "flex", gap: "6px", marginBottom: "8px" }}>
+                        <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "6px", background: "rgba(90,152,227,0.08)", color: "#BDD6F4", fontWeight: 500 }}>Total: {w.time}</span>
+                        <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "6px", background: "rgba(90,152,227,0.08)", color: "#BDD6F4", fontWeight: 500 }}>Moving: {w.movingTime}</span>
+                      </div>
+
+                      {w.peaks && w.peaks.length > 0 && (
+                        <div style={{ display: "flex", gap: "4px" }}>
+                          {w.peaks.map(pk => (
+                            <span key={pk} style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "6px", background: "rgba(107,203,119,0.1)", color: "#6BCB77", fontWeight: 600 }}>⛰️ {pk}</span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div style={{ display: "flex", gap: "16px", marginTop: "10px", borderTop: "1px solid rgba(90,152,227,0.08)", paddingTop: "10px" }}>
+                        {[[Heart, 0], [MessageCircle, 0], [Share2, ""]].map(([Icon, val], j) => (
+                          <button key={j} style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.4, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}>
+                            <Icon size={14} /> {val || ""}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                <Camera size={36} color="#BDD6F4" style={{ opacity: 0.3, marginBottom: "14px" }} />
+                <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>Your Posts</div>
+                <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, marginTop: "6px" }}>Share summit photos, schedule walks, and support your local MRT</div>
+              </div>
+            )}
+          </div>
+        )}
       </div>}
     </div>
   );
@@ -1218,42 +1898,87 @@ const ProfilePage = () => {
    TUTORIAL OVERLAY
    ═══════════════════════════════════════════════════════════════════ */
 const TUTORIAL_STEPS = [
-  { tab: "map", title: "Welcome to TrailSync!", text: "This is your map. You can see peaks across the UK, who's on the hills right now, and community walks happening near you. Let's show you around.", highlight: "map" },
-  { tab: "map", title: "Map Layers", text: "Tap the Layers button to switch between Standard, Topographical (OS/Harvey), and Satellite views. You can also toggle 3D terrain and weather overlays for wind, precipitation, and cloud cover.", highlight: "layers" },
-  { tab: "map", title: "Peak Markers", text: "Each coloured pin is a mountain. Tap any peak to see its summit weather, height, classification, and a button to log it. Green community bubbles show upcoming group walks.", highlight: "peaks" },
-  { tab: "map", title: "Live Hikers & Walks", text: "Use the bottom toggles to show or hide live hikers on the hills and community walk pins. See who's ascending, who's summited, and what walks are planned.", highlight: "toggles" },
-  { tab: "home", title: "Best Weather Areas", text: "This is the heart of TrailSync. Weather areas are ranked by wind, feels-like temperature, and precipitation so you can instantly see where the best conditions are. Tap any region to see individual mountain forecasts.", highlight: "weather" },
-  { tab: "home", title: "Community Feed", text: "Scroll down for summit posts, upcoming events, and safety alerts from SAIS during winter. Filter between summits, events, and news.", highlight: "feed" },
-  { tab: "routes", title: "Discover Routes", text: "Browse TrailSync verified walks and community routes. Filter by classification, difficulty, and region. Each route shows the start point, distance, elevation, and reviews.", highlight: "routes" },
-  { tab: "learn", title: "Build Your Skills", text: "Work through guided modules on navigation, winter skills, weather reading, first aid, and more. Track your progress and build your mountain knowledge.", highlight: "learn" },
-  { tab: "profile", title: "Your Mountains", text: "Track every peak you've climbed. View them on a map with green (completed) and red (to do) dots, or switch to list view. Tap any peak to log it or review your notes.", highlight: "mountains" },
-  { tab: "profile", title: "You're all set!", text: "That's the basics. Explore, log your peaks, check the weather, and connect with the community. Happy walking!", highlight: "done" },
+  { tab: "map", title: "Welcome to TrailSync!", text: "This is your interactive map. Every peak in the UK is plotted here by classification. Let's show you how it all works.", pos: "center", arrow: null },
+  { tab: "map", title: "Map Layers", text: "Tap Layers to switch between Standard, Topographical (OS/Harvey), and Satellite views. Toggle 3D terrain and weather overlays for wind, precipitation, and cloud cover.", pos: "top-left", arrow: "top-right" },
+  { tab: "map", title: "Community Layer", text: "Inside Layers, you'll find the Community section. Toggle on Live Hikers to see who's on the hills right now, and Community Walks to see planned group hikes. Sharing your status is always optional.", pos: "top-left", arrow: "top-right" },
+  { tab: "map", title: "Peak Markers", text: "Each coloured pin is a mountain — colour-coded by classification. Tap any peak to see its summit weather, height, and a button to log it as bagged.", pos: "center", arrow: "center" },
+  { tab: "map", title: "Filter by Classification", text: "Use these chips to filter the map by Munros, Corbetts, Wainwrights, and more. Quickly find exactly what you're looking for.", pos: "top", arrow: "bottom-center" },
+  { tab: "home", title: "Best Weather Areas", text: "This is the heart of TrailSync. Areas ranked by wind, feels-like temperature, and precipitation. Tap any region to see individual mountain forecasts. Find where the best conditions are in seconds.", pos: "bottom", arrow: "top-center" },
+  { tab: "home", title: "Community Feed", text: "Scroll down for summit posts, events, and safety alerts including SAIS avalanche warnings during winter. Filter by summits, events, and news.", pos: "center", arrow: null },
+  { tab: "routes", title: "Discover Routes", text: "Browse verified walks and community routes. Filter by classification (including non-mountain walks), difficulty, and toggle community routes on or off. Every route shows the start point, distance, and reviews.", pos: "center", arrow: null },
+  { tab: "learn", title: "Learn & Discover", text: "Build your mountain skills with guided modules, or switch to Discover for local history, folklore, wildlife, and geology stories pinned to places on the map.", pos: "center", arrow: null },
+  { tab: "profile", title: "Your Mountains", text: "Track every peak you've bagged. Map view shows green (done) and red (to do) dots — tap to log or review. Switch to list view to sort and filter. Tick and untick peaks anytime.", pos: "center", arrow: null },
+  { tab: "profile", title: "You're all set!", text: "Explore, bag peaks, check the weather, and connect with the community. Happy walking! You can replay this guide anytime from Settings.", pos: "center", arrow: null },
 ];
 
-const TutorialOverlay = ({ step, totalSteps, currentStep, onNext, onSkip }) => (
-  <div style={{ position: "fixed", inset: 0, zIndex: 90, background: "rgba(4,30,61,0.75)", backdropFilter: "blur(4px)", display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "20px", pointerEvents: "auto" }}>
-    <div style={{ background: "#0a2240", borderRadius: "18px", border: "1px solid rgba(90,152,227,0.2)", maxWidth: "400px", width: "100%", padding: "20px", animation: "su .3s ease", marginBottom: "60px" }}>
-      {/* Progress dots */}
-      <div style={{ display: "flex", gap: "4px", marginBottom: "14px", justifyContent: "center" }}>
-        {[...Array(totalSteps)].map((_, i) => (
-          <div key={i} style={{ width: i === currentStep ? "20px" : "6px", height: "6px", borderRadius: "3px", background: i === currentStep ? "#E85D3A" : i < currentStep ? "#5A98E3" : "#264f80", transition: "all .3s" }} />
-        ))}
+const TutorialOverlay = ({ step, totalSteps, currentStep, onNext, onSkip }) => {
+  // Position the card based on what we're pointing at
+  const getCardStyle = () => {
+    const base = { background: "rgba(10,34,64,0.95)", backdropFilter: "blur(12px)", borderRadius: "16px", border: "1px solid rgba(90,152,227,0.25)", maxWidth: "340px", width: "calc(100% - 32px)", padding: "18px", animation: "su .3s ease", position: "absolute", zIndex: 92 };
+    if (step.pos === "top" || step.pos === "top-left") return { ...base, top: "60px", left: "16px" };
+    if (step.pos === "bottom") return { ...base, bottom: "80px", left: "16px" };
+    return { ...base, top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
+  };
+
+  // Arrow pointing to the UI element
+  const getArrow = () => {
+    if (!step.arrow) return null;
+    const arrowBase = { position: "absolute", zIndex: 91 };
+    if (step.arrow === "top-right") return (
+      <div style={{ ...arrowBase, top: "52px", right: "80px" }}>
+        <svg width="60" height="30" viewBox="0 0 60 30"><path d="M5 25 Q30 5 55 8" stroke="#E85D3A" strokeWidth="2" fill="none" strokeDasharray="4 3" /><polygon points="55,3 60,10 52,10" fill="#E85D3A" /></svg>
       </div>
+    );
+    if (step.arrow === "bottom-center") return (
+      <div style={{ ...arrowBase, bottom: "50px", left: "50%", transform: "translateX(-50%)" }}>
+        <svg width="30" height="40" viewBox="0 0 30 40"><path d="M15 5 Q15 20 15 35" stroke="#E85D3A" strokeWidth="2" fill="none" strokeDasharray="4 3" /><polygon points="10,35 20,35 15,42" fill="#E85D3A" /></svg>
+      </div>
+    );
+    if (step.arrow === "top-center") return (
+      <div style={{ ...arrowBase, top: "55px", left: "50%", transform: "translateX(-50%)" }}>
+        <svg width="30" height="40" viewBox="0 0 30 40"><path d="M15 35 Q15 20 15 5" stroke="#E85D3A" strokeWidth="2" fill="none" strokeDasharray="4 3" /><polygon points="10,5 20,5 15,-2" fill="#E85D3A" /></svg>
+      </div>
+    );
+    if (step.arrow === "center") return (
+      <div style={{ ...arrowBase, top: "45%", left: "50%", transform: "translate(-50%, -50%)" }}>
+        <div style={{ width: "120px", height: "120px", borderRadius: "50%", border: "2px dashed rgba(232,93,58,0.4)", animation: "pulse 2s ease-in-out infinite" }} />
+      </div>
+    );
+    return null;
+  };
 
-      <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", marginBottom: "8px", fontFamily: "'Playfair Display',serif" }}>{step.title}</div>
-      <div style={{ fontSize: "13px", color: "#BDD6F4", lineHeight: 1.6, marginBottom: "18px" }}>{step.text}</div>
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 89, pointerEvents: "auto" }}>
+      {/* Semi-transparent overlay */}
+      <div style={{ position: "absolute", inset: 0, background: "rgba(4,30,61,0.6)" }} />
 
-      <div style={{ display: "flex", gap: "8px" }}>
-        <button onClick={onSkip} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>
-          Skip tutorial
-        </button>
-        <button onClick={onNext} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", background: currentStep === totalSteps - 1 ? "linear-gradient(135deg,#6BCB77,#55a866)" : "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
-          {currentStep === totalSteps - 1 ? "Get Started" : "Next"}
-        </button>
+      {/* Arrow */}
+      {getArrow()}
+
+      {/* Card */}
+      <div style={getCardStyle()}>
+        {/* Progress dots */}
+        <div style={{ display: "flex", gap: "4px", marginBottom: "12px", justifyContent: "center" }}>
+          {[...Array(totalSteps)].map((_, i) => (
+            <div key={i} style={{ width: i === currentStep ? "18px" : "6px", height: "5px", borderRadius: "3px", background: i === currentStep ? "#E85D3A" : i < currentStep ? "#5A98E3" : "#264f80", transition: "all .3s" }} />
+          ))}
+        </div>
+
+        <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", marginBottom: "6px", fontFamily: "'Playfair Display',serif" }}>{step.title}</div>
+        <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.6, marginBottom: "16px" }}>{step.text}</div>
+
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button onClick={onSkip} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+            Skip
+          </button>
+          <button onClick={onNext} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: currentStep === totalSteps - 1 ? "linear-gradient(135deg,#6BCB77,#55a866)" : "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+            {currentStep === totalSteps - 1 ? "Get Started" : `Next (${currentStep + 1}/${totalSteps})`}
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 /* ═══════════════════════════════════════════════════════════════════
    MAIN APP
@@ -1262,6 +1987,9 @@ export default function TrailSync() {
   const [authState, setAuthState] = useState("login"); // "login", "signup", "app", "tutorial"
   const [userName, setUserName] = useState("Alex");
   const [tab, setTab] = useState("map");
+  const [profileSec, setProfileSec] = useState("mountains");
+  const [feedFilter, setFeedFilter] = useState("all");
+  const [savedWalks, setSavedWalks] = useState([]);
   const [tutStep, setTutStep] = useState(0);
   const tabs = [
     { id: "home", icon: Home, label: "Home" },
@@ -1325,6 +2053,7 @@ export default function TrailSync() {
         @keyframes su { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fl { 0%,100% { transform: translate(-50%,-50%) scale(1); } 50% { transform: translate(-50%,-50%) scale(1.04); } }
         @keyframes glow { 0%,100% { box-shadow: 0 0 8px rgba(232,93,58,.25); } 50% { box-shadow: 0 0 18px rgba(232,93,58,.45); } }
+        @keyframes pulse { 0%,100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.08); } }
       `}</style>
 
       {/* Header */}
@@ -1348,11 +2077,11 @@ export default function TrailSync() {
 
       {/* Content */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        {tab === "home" && <HomePage userName={userName} />}
+        {tab === "home" && <HomePage userName={userName} initialFilter={feedFilter} />}
         {tab === "routes" && <RoutesPage />}
-        {tab === "map" && <MapPage goHome={() => setTab("home")} />}
+        {tab === "map" && <MapPage goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={(walk) => setSavedWalks(prev => [walk, ...prev])} />}
         {tab === "learn" && <LearnPage />}
-        {tab === "profile" && <ProfilePage />}
+        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} savedWalks={savedWalks} />}
       </div>
 
       {/* Tutorial overlay */}
