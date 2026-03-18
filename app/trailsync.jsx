@@ -814,6 +814,35 @@ const MapPage = ({ goHome, goProfile, onSaveWalk }) => {
   const [sw, setSw] = useState(null);
   const [cf, setCf] = useState(null);
   const [d3, setD3] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
+
+  // Build searchable items
+  const searchItems = useMemo(() => {
+    const items = [];
+    PEAKS.forEach(pk => items.push({ type: "peak", name: pk.name, sub: `${pk.ht}m · ${CLS[pk.cls]?.name || ""} · ${pk.reg}`, lat: pk.lat, lng: pk.lng, zoom: 13, color: CLS[pk.cls]?.color, data: pk }));
+    ROUTES.forEach(r => items.push({ type: "route", name: r.name, sub: `${r.dist}km · ${r.diff} · ${r.reg}`, lat: ROUTE_REGIONS.find(rr => rr.name === r.reg)?.lat || 56.5, lng: ROUTE_REGIONS.find(rr => rr.name === r.reg)?.lng || -4.5, zoom: 11, color: "#5A98E3" }));
+    ROUTE_REGIONS.forEach(rr => items.push({ type: "area", name: rr.name, sub: "Region", lat: rr.lat, lng: rr.lng, zoom: 10, color: "#BDD6F4" }));
+    return items;
+  }, []);
+
+  const searchResults = useMemo(() => {
+    if (!searchQuery || searchQuery.length < 2) return [];
+    const q = searchQuery.toLowerCase();
+    return searchItems.filter(item => item.name.toLowerCase().includes(q)).slice(0, 8);
+  }, [searchQuery, searchItems]);
+
+  const handleSearchSelect = (item) => {
+    if (mapRef.current) {
+      mapRef.current.flyTo({ center: [item.lng, item.lat], zoom: item.zoom, duration: 1500 });
+    }
+    if (item.type === "peak" && item.data) {
+      setSp(item.data);
+      setSw(null);
+    }
+    setSearchQuery("");
+    setSearchFocused(false);
+  };
   const [trackMode, setTrackMode] = useState(false);
   const [recording, setRecording] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -895,9 +924,42 @@ const MapPage = ({ goHome, goProfile, onSaveWalk }) => {
 
       {/* Top controls */}
       <div style={{ position: "absolute", top: 10, left: 10, right: 10, display: "flex", gap: "6px", zIndex: 20 }}>
-        <div style={{ flex: 1, background: "rgba(4,30,61,.88)", backdropFilter: "blur(12px)", borderRadius: "12px", padding: "9px 14px", display: "flex", alignItems: "center", gap: "8px", border: "1px solid rgba(90,152,227,0.15)" }}>
-          <Search size={14} color="#BDD6F4" style={{ opacity: 0.4 }} />
-          <span style={{ color: "#BDD6F4", opacity: 0.4, fontSize: "12px" }}>Search peaks, routes...</span>
+        <div style={{ flex: 1, position: "relative" }}>
+          <div style={{ background: "rgba(4,30,61,.88)", backdropFilter: "blur(12px)", borderRadius: "12px", padding: "9px 14px", display: "flex", alignItems: "center", gap: "8px", border: `1px solid ${searchFocused ? "rgba(90,152,227,0.3)" : "rgba(90,152,227,0.15)"}` }}>
+            <Search size={14} color="#BDD6F4" style={{ opacity: 0.4 }} />
+            <input
+              type="text"
+              placeholder="Search peaks, routes, areas..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+              style={{ flex: 1, background: "none", border: "none", outline: "none", color: "#F8F8F8", fontSize: "12px", fontFamily: "'DM Sans'" }}
+            />
+            {searchQuery && (
+              <button onClick={() => { setSearchQuery(""); setSearchFocused(false); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#BDD6F4", padding: 0, display: "flex" }}><X size={14} /></button>
+            )}
+          </div>
+          {/* Search results dropdown */}
+          {searchFocused && searchResults.length > 0 && (
+            <div style={{ position: "absolute", top: "110%", left: 0, right: 0, background: "rgba(4,30,61,.97)", backdropFilter: "blur(16px)", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.2)", overflow: "hidden", zIndex: 30 }}>
+              {searchResults.map((item, i) => (
+                <button key={`${item.type}-${item.name}-${i}`} onClick={() => handleSearchSelect(item)} style={{
+                  width: "100%", padding: "10px 14px", border: "none",
+                  borderBottom: i < searchResults.length - 1 ? "1px solid rgba(90,152,227,0.08)" : "none",
+                  background: "transparent", color: "#F8F8F8", cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: "10px", textAlign: "left", fontFamily: "'DM Sans'"
+                }}>
+                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: item.color || "#5A98E3", flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "12px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</div>
+                    <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{item.sub}</div>
+                  </div>
+                  <span style={{ fontSize: "8px", padding: "2px 6px", borderRadius: "4px", background: "rgba(90,152,227,0.1)", color: "#BDD6F4", fontWeight: 600, textTransform: "uppercase", flexShrink: 0 }}>{item.type}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <div style={{ position: "relative" }}>
           <button onClick={() => setLm(!lm)} style={{ background: "rgba(4,30,61,.88)", backdropFilter: "blur(12px)", border: "1px solid rgba(90,152,227,0.15)", borderRadius: "12px", padding: "9px 12px", color: "#BDD6F4", fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", fontWeight: 600, fontFamily: "'DM Sans'" }}>
