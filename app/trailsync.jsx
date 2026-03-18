@@ -220,6 +220,51 @@ const WI = ({ type, size = 16 }) => {
 const greet = () => { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"; };
 
 /* ═══════════════════════════════════════════════════════════════════
+   MINI MAP COMPONENT (reusable for Routes, Discover, Mountain Tracker)
+   ═══════════════════════════════════════════════════════════════════ */
+const MiniMap = ({ height, center, zoom, markers, onMarkerClick, children }) => {
+  const containerRef = useRef(null);
+  const mapInstance = useRef(null);
+
+  useEffect(() => {
+    if (mapInstance.current || !containerRef.current) return;
+    import("mapbox-gl").then(mod => {
+      const mapboxgl = mod.default;
+      mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+      const map = new mapboxgl.Map({
+        container: containerRef.current,
+        style: "mapbox://styles/mapbox/outdoors-v12",
+        center: center || [-4.5, 56.5],
+        zoom: zoom || 5.5,
+        interactive: true,
+      });
+      mapInstance.current = map;
+
+      map.on("load", () => {
+        if (markers) {
+          markers.forEach((m, i) => {
+            const el = document.createElement("div");
+            el.style.cssText = m.style || `width:20px;height:20px;border-radius:50%;background:${m.color || "#E85D3A"};border:2px solid rgba(255,255,255,0.8);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);`;
+            if (m.label) el.textContent = m.label;
+            if (m.html) el.innerHTML = m.html;
+            if (onMarkerClick) el.addEventListener("click", () => onMarkerClick(m, i));
+            new mapboxgl.Marker({ element: el }).setLngLat([m.lng, m.lat]).addTo(map);
+          });
+        }
+      });
+    });
+    return () => { if (mapInstance.current) mapInstance.current.remove(); };
+  }, []);
+
+  return (
+    <div style={{ position: "relative", height: height || "380px", borderRadius: "14px", overflow: "hidden", border: "1px solid rgba(90,152,227,0.12)" }}>
+      <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
+      {children}
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════════════
    PRIVACY POPUP
    ═══════════════════════════════════════════════════════════════════ */
 const PrivacyPopup = ({ onClose }) => (
@@ -711,41 +756,7 @@ const RoutesPage = () => {
 
       {/* ═══ MAP VIEW ═══ */}
       {subTab === "map" && (
-        <div style={{ position: "relative", height: "420px", borderRadius: "14px", overflow: "hidden", border: "1px solid rgba(90,152,227,0.12)" }}>
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, #041e3d, #0a2848 30%, #082540 60%, #061e3a)" }}>
-            {/* Contours */}
-            {[...Array(14)].map((_, i) => <div key={i} style={{ position: "absolute", left: `${8 + (i * 6) % 78}%`, top: `${10 + (i * 7.5) % 65}%`, width: `${90 + i * 16}px`, height: `${55 + i * 11}px`, border: "1px solid rgba(90,152,227,0.05)", borderRadius: "50%" }} />)}
-
-            {/* Route cluster bubbles */}
-            {regionClusters.map((reg, i) => {
-              const x = ((reg.lng + 8) / 12) * 100;
-              const y = ((58 - reg.lat) / 7) * 100;
-              const isSelected = selRegion?.name === reg.name;
-              return (
-                <div key={reg.name} onClick={() => setSelRegion(isSelected ? null : reg)} style={{
-                  position: "absolute", left: `${Math.max(6, Math.min(90, x))}%`, top: `${Math.max(6, Math.min(85, y))}%`,
-                  transform: "translate(-50%,-50%)", cursor: "pointer", zIndex: 10,
-                  animation: `fi .3s ease ${i * .05}s both`
-                }}>
-                  <div style={{
-                    width: isSelected ? "48px" : "40px", height: isSelected ? "48px" : "40px",
-                    borderRadius: "50%",
-                    background: isSelected ? "linear-gradient(135deg,#E85D3A,#d04a2a)" : "#264f80",
-                    border: `2px solid ${isSelected ? "#E85D3A" : "rgba(90,152,227,0.3)"}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: isSelected ? "16px" : "14px", fontWeight: 800, color: "#F8F8F8",
-                    boxShadow: isSelected ? "0 0 20px rgba(232,93,58,0.4)" : "0 2px 8px rgba(0,0,0,0.3)",
-                    transition: "all .2s", fontFamily: "'JetBrains Mono'"
-                  }}>{reg.routes.length}</div>
-                  <div style={{
-                    position: "absolute", top: isSelected ? "52px" : "44px", left: "50%", transform: "translateX(-50%)",
-                    whiteSpace: "nowrap", fontSize: "9px", color: "#F8F8F8",
-                    textShadow: "0 1px 4px rgba(0,0,0,.8)", fontWeight: 700
-                  }}>{reg.name}</div>
-                </div>
-              );
-            })}
-          </div>
+        <MiniMap height="420px" markers={regionClusters.map(reg => ({ lat: reg.lat, lng: reg.lng, color: "#264f80", label: String(reg.routes.length), data: reg }))} onMarkerClick={(m) => setSelRegion(selRegion?.name === m.data.name ? null : m.data)}>
 
           {/* Selected region route list */}
           {selRegion && (
@@ -784,7 +795,7 @@ const RoutesPage = () => {
               </div>
             </div>
           )}
-        </div>
+        </MiniMap>
       )}
     </div>
   );
@@ -832,7 +843,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk }) => {
   // Initialize Mapbox map
   useEffect(() => {
     if (mapRef.current || !mapContainer.current) return;
-    const mapboxgl = require("mapbox-gl");
+    import("mapbox-gl").then(mod => { const mapboxgl = mod.default;
     mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
     const map = new mapboxgl.Map({
       container: mapContainer.current,
@@ -857,7 +868,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk }) => {
       });
     });
 
-    return () => map.remove();
+    }); return () => { if (mapRef.current) mapRef.current.remove(); };
   }, []);
 
   // Update map style when layer changes
@@ -1089,14 +1100,6 @@ const MapPage = ({ goHome, goProfile, onSaveWalk }) => {
         </div>
       )}
 
-      {/* Classification chips */}
-      {!trackMode && (
-      <div style={{ position: "absolute", bottom: 12, left: 10, right: 10, display: "flex", gap: "4px", zIndex: 20, flexWrap: "wrap", justifyContent: "center" }}>
-        <button onClick={() => setCf(null)} style={{ background: !cf ? "rgba(248,248,248,.12)" : "rgba(4,30,61,.65)", border: "1px solid rgba(90,152,227,0.12)", borderRadius: "14px", padding: "4px 9px", color: !cf ? "#F8F8F8" : "#BDD6F4", fontSize: "9px", cursor: "pointer", fontWeight: !cf ? 700 : 400, fontFamily: "'DM Sans'", opacity: cf ? 0.6 : 1 }}>All</button>
-        {Object.entries(CLS).slice(0, 5).map(([k, c]) => <button key={k} onClick={() => setCf(cf === k ? null : k)} style={{ background: cf === k ? `${c.color}20` : "rgba(4,30,61,.65)", border: `1px solid ${cf === k ? c.color : "rgba(90,152,227,0.1)"}`, borderRadius: "14px", padding: "4px 9px", color: cf === k ? c.color : "#BDD6F4", fontSize: "9px", cursor: "pointer", fontWeight: cf === k ? 700 : 400, fontFamily: "'DM Sans'", opacity: cf === k ? 1 : 0.6 }}>{c.name}</button>)}
-      </div>
-      )}
-
       {/* Peak card */}
       {sp && (
         <div style={{ position: "absolute", bottom: 50, left: 10, right: 10, zIndex: 25, background: "rgba(4,30,61,.97)", backdropFilter: "blur(16px)", borderRadius: "16px", border: "1px solid rgba(90,152,227,0.15)", animation: "su .3s ease", overflow: "hidden" }}>
@@ -1252,35 +1255,7 @@ const LearnPage = () => {
 
           {/* ═══ MAP VIEW ═══ */}
           {discView === "map" && (
-            <div style={{ position: "relative", height: "380px", borderRadius: "14px", overflow: "hidden", border: "1px solid rgba(90,152,227,0.12)" }}>
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, #041e3d, #0a2848 30%, #082540 60%, #061e3a)" }}>
-                {/* Contours */}
-                {[...Array(12)].map((_, i) => <div key={i} style={{ position: "absolute", left: `${10 + (i * 6) % 75}%`, top: `${12 + (i * 8) % 60}%`, width: `${80 + i * 15}px`, height: `${50 + i * 10}px`, border: "1px solid rgba(90,152,227,0.06)", borderRadius: "50%" }} />)}
-
-                {/* Discover bubbles */}
-                {filteredArticles.map((a, i) => {
-                  const x = ((a.lng + 8) / 12) * 100;
-                  const y = ((58 - a.lat) / 7) * 100;
-                  return (
-                    <div key={a.id} onClick={() => setSelArticle(selArticle?.id === a.id ? null : a)} style={{
-                      position: "absolute", left: `${Math.max(6, Math.min(90, x))}%`, top: `${Math.max(6, Math.min(88, y))}%`,
-                      transform: "translate(-50%,-50%)", cursor: "pointer", zIndex: 10,
-                      animation: `fi .3s ease ${i * .05}s both`
-                    }}>
-                      <div style={{
-                        width: selArticle?.id === a.id ? "44px" : "38px",
-                        height: selArticle?.id === a.id ? "44px" : "38px",
-                        borderRadius: "50%", background: "#264f80",
-                        border: `2px solid ${selArticle?.id === a.id ? "#E85D3A" : "rgba(90,152,227,0.3)"}`,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: selArticle?.id === a.id ? "20px" : "17px",
-                        boxShadow: selArticle?.id === a.id ? "0 0 16px rgba(232,93,58,0.3)" : "0 2px 8px rgba(0,0,0,0.3)",
-                        transition: "all .2s"
-                      }}>{a.icon}</div>
-                    </div>
-                  );
-                })}
-              </div>
+            <MiniMap height="380px" markers={filteredArticles.map(a => ({ lat: a.lat, lng: a.lng, color: "#264f80", html: `<span style="font-size:17px">${a.icon}</span>`, data: a, style: "width:38px;height:38px;border-radius:50%;background:#264f80;border:2px solid rgba(90,152,227,0.3);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.3);" }))} onMarkerClick={(m) => setSelArticle(selArticle?.id === m.data.id ? null : m.data)}>
 
               {/* Selected article popup */}
               {selArticle && (
@@ -1313,7 +1288,7 @@ const LearnPage = () => {
                   </div>
                 </div>
               )}
-            </div>
+            </MiniMap>
           )}
         </div>
       )}
@@ -1452,133 +1427,30 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, savedWalks }) => 
 
           {/* ═══ MAP VIEW ═══ */}
           {mtView === "map" && (
-            <div style={{ position: "relative", height: "340px", borderRadius: "14px", overflow: "hidden", border: "1px solid rgba(90,152,227,0.12)", marginBottom: "10px" }}>
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, #041e3d, #0a2848 30%, #082540 60%, #061e3a)" }}>
-                {/* Contours */}
-                {[...Array(12)].map((_, i) => <div key={i} style={{ position: "absolute", left: `${10 + (i * 6) % 75}%`, top: `${12 + (i * 8) % 60}%`, width: `${80 + i * 15}px`, height: `${50 + i * 10}px`, border: "1px solid rgba(90,152,227,0.06)", borderRadius: "50%" }} />)}
-
-                {/* Peak dots */}
-                {filteredPeaks.map((pk, i) => {
-                  const x = ((pk.lng + 8) / 12) * 100;
-                  const y = ((58 - pk.lat) / 7) * 100;
-                  return (
-                    <div key={pk.id} onClick={() => { setSelPeak(pk); setLogging(false); }} style={{
-                      position: "absolute", left: `${Math.max(6, Math.min(92, x))}%`, top: `${Math.max(6, Math.min(90, y))}%`,
-                      transform: "translate(-50%,-50%)", cursor: "pointer", zIndex: 10,
-                      animation: `fi .3s ease ${i * .03}s both`
-                    }}>
-                      <div style={{
-                        width: selPeak?.id === pk.id ? "18px" : "14px",
-                        height: selPeak?.id === pk.id ? "18px" : "14px",
-                        borderRadius: "50%",
-                        background: pk.done ? "#6BCB77" : "#E85D3A",
-                        border: `2px solid ${selPeak?.id === pk.id ? "#F8F8F8" : "rgba(248,248,248,0.5)"}`,
-                        boxShadow: `0 0 ${selPeak?.id === pk.id ? "12px" : "6px"} ${pk.done ? "rgba(107,203,119,0.4)" : "rgba(232,93,58,0.4)"}`,
-                        transition: "all .2s"
-                      }} />
-                      {selPeak?.id === pk.id && (
-                        <div style={{ position: "absolute", top: "22px", left: "50%", transform: "translateX(-50%)", whiteSpace: "nowrap", fontSize: "9px", color: "#F8F8F8", textShadow: "0 1px 4px rgba(0,0,0,.9)", fontWeight: 700 }}>{pk.name}</div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Peak detail popup */}
+            <div style={{ marginBottom: "10px" }}>
+              <MiniMap height="340px" markers={filteredPeaks.map(pk => ({ lat: pk.lat, lng: pk.lng, color: pk.done ? "#6BCB77" : "#E85D3A", data: pk, style: `width:14px;height:14px;border-radius:50%;background:${pk.done ? "#6BCB77" : "#E85D3A"};border:2px solid rgba(255,255,255,0.5);cursor:pointer;box-shadow:0 0 6px ${pk.done ? "rgba(107,203,119,0.4)" : "rgba(232,93,58,0.4)"};` }))} onMarkerClick={(m) => { setSelPeak(m.data); setLogging(false); }}>
               {selPeak && (
-                <div style={{
-                  position: "absolute", bottom: 10, left: 10, right: 10, zIndex: 20,
-                  background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)",
-                  borderRadius: "14px", border: "1px solid rgba(90,152,227,0.15)",
-                  animation: "su .25s ease", overflow: "hidden"
-                }}>
+                <div style={{ position: "absolute", bottom: 10, left: 10, right: 10, zIndex: 20, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.15)", animation: "su .25s ease", overflow: "hidden" }}>
                   <div style={{ height: "3px", background: selPeak.done ? "linear-gradient(90deg,#6BCB77,transparent)" : "linear-gradient(90deg,#E85D3A,transparent)" }} />
                   <div style={{ padding: "12px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                           <span style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8" }}>{selPeak.name}</span>
-                          <div onClick={(e) => {
-                            e.stopPropagation();
-                            if (selPeak.done && !logging) {
-                              // Untick - mark as not done
-                              setPeakData(prev => prev.map(p => p.id === selPeak.id ? { ...p, done: false, date: undefined, log: undefined } : p));
-                              setSelPeak(prev => ({ ...prev, done: false, date: undefined, log: undefined }));
-                              setLogging(false);
-                            } else if (!selPeak.done) {
-                              // Tick - immediately mark as done, show green, open log form
-                              const today = new Date().toISOString().split("T")[0];
-                              setPeakData(prev => prev.map(p => p.id === selPeak.id ? { ...p, done: true, date: today, log: "" } : p));
-                              setSelPeak(prev => ({ ...prev, done: true, date: today, log: "" }));
-                              setLogDate(today);
-                              setLogNote("");
-                              setLogging(true);
-                            }
-                          }} style={{
-                            width: "22px", height: "22px", borderRadius: "6px",
-                            background: selPeak.done ? "rgba(107,203,119,0.15)" : "rgba(232,93,58,0.1)",
-                            border: `2px solid ${selPeak.done ? "#6BCB77" : "rgba(232,93,58,0.3)"}`,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            cursor: "pointer", transition: "all .2s"
-                          }}>
-                            {selPeak.done && <Check size={13} color="#6BCB77" strokeWidth={3} />}
-                          </div>
+                          <div onClick={(e) => { e.stopPropagation(); if (selPeak.done && !logging) { setPeakData(prev => prev.map(p => p.id === selPeak.id ? { ...p, done: false, date: undefined, log: undefined } : p)); setSelPeak(prev => ({ ...prev, done: false, date: undefined, log: undefined })); setLogging(false); } else if (!selPeak.done) { const today = new Date().toISOString().split("T")[0]; setPeakData(prev => prev.map(p => p.id === selPeak.id ? { ...p, done: true, date: today, log: "" } : p)); setSelPeak(prev => ({ ...prev, done: true, date: today, log: "" })); setLogDate(today); setLogNote(""); setLogging(true); } }} style={{ width: "22px", height: "22px", borderRadius: "6px", background: selPeak.done ? "rgba(107,203,119,0.15)" : "rgba(232,93,58,0.1)", border: `2px solid ${selPeak.done ? "#6BCB77" : "rgba(232,93,58,0.3)"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all .2s" }}>{selPeak.done && <Check size={13} color="#6BCB77" strokeWidth={3} />}</div>
                         </div>
                         <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>{selPeak.ht}m · {selPeak.reg}</div>
                         <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "5px", background: `${CLS[selPeak.cls]?.color}15`, color: CLS[selPeak.cls]?.color, fontWeight: 600, marginTop: "4px", display: "inline-block" }}>{CLS[selPeak.cls]?.name}</span>
                       </div>
                       <button onClick={() => { setSelPeak(null); setLogging(false); }} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "26px", height: "26px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={12} /></button>
                     </div>
-
-                    {/* If completed - show log */}
-                    {selPeak.done && !logging && (
-                      <div style={{ marginTop: "10px", padding: "10px", background: "rgba(107,203,119,0.06)", borderRadius: "10px", border: "1px solid rgba(107,203,119,0.12)" }}>
-                        <div style={{ fontSize: "10px", color: "#6BCB77", fontWeight: 700, marginBottom: "4px" }}>Completed · {selPeak.date}</div>
-                        {selPeak.log && <div style={{ fontSize: "11px", color: "#BDD6F4", lineHeight: 1.4 }}>{selPeak.log}</div>}
-                      </div>
-                    )}
-
-                    {/* If not completed - show log button or logging form */}
-                    {!selPeak.done && !logging && (
-                      <button onClick={() => {
-                        const today = new Date().toISOString().split("T")[0];
-                        setPeakData(prev => prev.map(p => p.id === selPeak.id ? { ...p, done: true, date: today, log: "" } : p));
-                        setSelPeak(prev => ({ ...prev, done: true, date: today, log: "" }));
-                        setLogDate(today);
-                        setLogNote("");
-                        setLogging(true);
-                      }} style={{
-                        marginTop: "10px", width: "100%", padding: "10px",
-                        background: "linear-gradient(135deg,#E85D3A,#d04a2a)",
-                        border: "none", borderRadius: "10px", color: "#F8F8F8",
-                        fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'"
-                      }}>Log This Summit</button>
-                    )}
-
-                    {/* Logging form */}
-                    {logging && (
-                      <div style={{ marginTop: "10px" }}>
-                        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, marginBottom: "4px" }}>Date completed</div>
-                        <input type="date" value={logDate} onChange={e => setLogDate(e.target.value)} style={{
-                          width: "100%", padding: "8px 10px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)",
-                          background: "#0a2240", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'",
-                          marginBottom: "8px"
-                        }} />
-                        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, marginBottom: "4px" }}>Log (optional)</div>
-                        <textarea value={logNote} onChange={e => setLogNote(e.target.value)} placeholder="How was it? Conditions, route, memories..." rows={2} style={{
-                          width: "100%", padding: "8px 10px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)",
-                          background: "#0a2240", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'",
-                          resize: "none", marginBottom: "8px"
-                        }} />
-                        <div style={{ display: "flex", gap: "8px" }}>
-                          <button onClick={() => setLogging(false)} style={{ flex: 1, padding: "9px", borderRadius: "9px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
-                          <button onClick={() => handleLog(selPeak.id)} style={{ flex: 1, padding: "9px", borderRadius: "9px", border: "none", background: logDate ? "linear-gradient(135deg,#6BCB77,#55a866)" : "#264f80", color: logDate ? "#F8F8F8" : "#BDD6F4", fontSize: "12px", fontWeight: 700, cursor: logDate ? "pointer" : "default", fontFamily: "'DM Sans'", opacity: logDate ? 1 : 0.5 }}>Done</button>
-                        </div>
-                      </div>
-                    )}
+                    {selPeak.done && !logging && (<div style={{ marginTop: "10px", padding: "10px", background: "rgba(107,203,119,0.06)", borderRadius: "10px", border: "1px solid rgba(107,203,119,0.12)" }}><div style={{ fontSize: "10px", color: "#6BCB77", fontWeight: 700, marginBottom: "4px" }}>Completed · {selPeak.date}</div>{selPeak.log && <div style={{ fontSize: "11px", color: "#BDD6F4", lineHeight: 1.4 }}>{selPeak.log}</div>}</div>)}
+                    {!selPeak.done && !logging && (<button onClick={() => { const today = new Date().toISOString().split("T")[0]; setPeakData(prev => prev.map(p => p.id === selPeak.id ? { ...p, done: true, date: today, log: "" } : p)); setSelPeak(prev => ({ ...prev, done: true, date: today, log: "" })); setLogDate(today); setLogNote(""); setLogging(true); }} style={{ marginTop: "10px", width: "100%", padding: "10px", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", border: "none", borderRadius: "10px", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Log This Summit</button>)}
+                    {logging && (<div style={{ marginTop: "10px" }}><div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, marginBottom: "4px" }}>Date completed</div><input type="date" value={logDate} onChange={e => setLogDate(e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "8px" }} /><div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, marginBottom: "4px" }}>Log (optional)</div><textarea value={logNote} onChange={e => setLogNote(e.target.value)} placeholder="How was it? Conditions, route, memories..." rows={2} style={{ width: "100%", padding: "8px 10px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", resize: "none", marginBottom: "10px" }} /><div style={{ display: "flex", gap: "6px" }}><button onClick={() => setLogging(false)} style={{ flex: 1, padding: "9px", borderRadius: "9px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button><button onClick={() => handleLog(selPeak.id)} style={{ flex: 1, padding: "9px", borderRadius: "9px", border: "none", background: logDate ? "linear-gradient(135deg,#6BCB77,#55a866)" : "#264f80", color: logDate ? "#F8F8F8" : "#BDD6F4", fontSize: "12px", fontWeight: 700, cursor: logDate ? "pointer" : "default", fontFamily: "'DM Sans'", opacity: logDate ? 1 : 0.5 }}>Done</button></div></div>)}
                   </div>
                 </div>
               )}
+              </MiniMap>
             </div>
           )}
 
