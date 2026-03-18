@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo, useRef } from "react";
+import { createClient } from "@supabase/supabase-js";
 import {
   MapPin, Mountain, Cloud, Users, Trophy, Search, X, ChevronDown, ChevronRight,
   Star, Wind, Droplets, Eye, Thermometer, Navigation, Calendar, Clock,
@@ -10,6 +11,12 @@ import {
   CloudRain, Sun, CloudSun, Snowflake, Settings, List, ArrowUpDown, Check, CircleDot,
   Shield, Mail, Apple, Sparkles, Zap, Plus, Maximize2, Minimize2
 } from "lucide-react";
+
+/* Supabase client */
+const supabase = createClient(
+  "https://mferkdgzpaaxixqlanzm.supabase.co",
+  process.env.NEXT_PUBLIC_SUPABASE_KEY || ""
+);
 
 /* ═══════════════════════════════════════════════════════════════════
    BRAND PALETTE
@@ -53,7 +60,7 @@ const WX_AREAS = [
   { region: "Cairngorms", score: 58, temp: -3, feels: -12, wind: 45, precip: 2.5, vis: "poor", peaks: ["Cairn Gorm", "Ben Macdui"], cls: "munros", ic: "snow" },
 ];
 
-const PEAKS = [
+const PEAKS_FALLBACK = [
   { id: 1, name: "Ben Nevis", cls: "munros", ht: 1345, reg: "Ben Nevis & Mamores", lat: 56.797, lng: -5.004, w: { t: -3, f: -14, wi: 45, p: 2.5, v: "poor", sn: true }, done: true, date: "12 Oct 2025", log: "CMD Arete in perfect conditions. Incredible ridge walk." },
   { id: 2, name: "Ben Macdui", cls: "munros", ht: 1309, reg: "Cairngorms", lat: 57.070, lng: -3.669, w: { t: -5, f: -16, wi: 55, p: 3.0, v: "poor", sn: true }, done: true, date: "15 Feb 2026", log: "Full whiteout on the plateau. Navigation was everything." },
   { id: 3, name: "Braeriach", cls: "munros", ht: 1296, reg: "Cairngorms", lat: 57.078, lng: -3.729, w: { t: -4, f: -15, wi: 50, p: 2.8, v: "poor", sn: true }, done: false },
@@ -70,6 +77,8 @@ const PEAKS = [
   { id: 14, name: "Merrick", cls: "donalds", ht: 843, reg: "Galloway Hills", lat: 55.146, lng: -4.615, w: { t: 5, f: 1, wi: 16, p: 0.3, v: "good", sn: false }, done: false },
   { id: 15, name: "Sgurr nan Gillean", cls: "munros", ht: 964, reg: "Skye Cuillin", lat: 57.254, lng: -6.196, w: { t: 1, f: -5, wi: 30, p: 1.0, v: "moderate", sn: false }, done: false },
 ];
+// PEAKS will be populated from Supabase in the main app component
+let PEAKS = PEAKS_FALLBACK;
 
 const ROUTES = [
   { id: 1, name: "Ben Nevis via the Mountain Track", cls: "munros", reg: "Ben Nevis & Mamores", diff: "Moderate", dist: 14.2, elev: 1350, time: "6-8h", peaks: ["Ben Nevis"], rat: 4.6, rev: 342, start: "Glen Nevis Visitor Centre", src: "ts" },
@@ -1977,6 +1986,37 @@ export default function TrailSync() {
   const [feedFilter, setFeedFilter] = useState("all");
   const [savedWalks, setSavedWalks] = useState([]);
   const [tutStep, setTutStep] = useState(0);
+  const [dbPeaks, setDbPeaks] = useState(null);
+
+  // Fetch peaks from Supabase on mount
+  useEffect(() => {
+    async function fetchPeaks() {
+      try {
+        const { data, error } = await supabase.from("peaks").select("*");
+        if (error) { console.error("Supabase error:", error); return; }
+        if (data && data.length > 0) {
+          const mapped = data.map(p => ({
+            id: p.id,
+            name: p.name,
+            cls: p.classification,
+            ht: Math.round(p.height),
+            reg: p.region,
+            lat: p.latitude,
+            lng: p.longitude,
+            w: { t: 0, f: 0, wi: 0, p: 0, v: "—", sn: false },
+            done: false,
+          }));
+          PEAKS = mapped;
+          setDbPeaks(mapped);
+          console.log(`Loaded ${mapped.length} peaks from Supabase`);
+        }
+      } catch (err) {
+        console.error("Failed to fetch peaks:", err);
+      }
+    }
+    fetchPeaks();
+  }, []);
+
   const tabs = [
     { id: "home", icon: Home, label: "Home" },
     { id: "routes", icon: Route, label: "Routes" },
