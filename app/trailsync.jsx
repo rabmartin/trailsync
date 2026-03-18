@@ -926,7 +926,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk }) => {
       {/* Track button (when not in track mode) */}
       {!trackMode && !sp && !sw && (
         <button onClick={() => setTrackMode(true)} style={{
-          position: "absolute", bottom: 42, left: "50%", transform: "translateX(-50%)",
+          position: "absolute", bottom: 14, left: "50%", transform: "translateX(-50%)",
           zIndex: 21, padding: "8px 20px", borderRadius: "20px",
           background: "rgba(4,30,61,0.9)", backdropFilter: "blur(8px)",
           border: "1px solid rgba(90,152,227,0.2)",
