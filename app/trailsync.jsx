@@ -1470,12 +1470,12 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, savedWalks }) => 
             </div>
           </div>
 
-          {/* Classification chips */}
-          <div style={{ display: "flex", gap: "4px", marginBottom: "10px", flexWrap: "wrap" }}>
-            <button onClick={() => setMtCls(null)} style={{ padding: "4px 10px", borderRadius: "12px", border: `1px solid ${!mtCls ? "rgba(248,248,248,0.2)" : "rgba(90,152,227,0.1)"}`, background: !mtCls ? "rgba(248,248,248,0.08)" : "transparent", color: !mtCls ? "#F8F8F8" : "#BDD6F4", fontSize: "10px", cursor: "pointer", fontWeight: !mtCls ? 700 : 400, fontFamily: "'DM Sans'", opacity: mtCls ? 0.5 : 1 }}>All</button>
-            {Object.entries(CLS).filter(([k]) => k !== "non-mountain").map(([k, c]) => (
-              <button key={k} onClick={() => setMtCls(mtCls === k ? null : k)} style={{ padding: "4px 10px", borderRadius: "12px", border: `1px solid ${mtCls === k ? c.color : "rgba(90,152,227,0.1)"}`, background: mtCls === k ? `${c.color}18` : "transparent", color: mtCls === k ? c.color : "#BDD6F4", fontSize: "10px", cursor: "pointer", fontWeight: mtCls === k ? 700 : 400, fontFamily: "'DM Sans'", opacity: mtCls === k ? 1 : 0.5 }}>{c.name}</button>
-            ))}
+          {/* Classification dropdown */}
+          <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
+            <select value={mtCls || ""} onChange={e => setMtCls(e.target.value || null)} style={{ padding: "7px 12px", borderRadius: "10px", fontSize: "11px", fontWeight: 600, background: mtCls ? `${CLS[mtCls]?.color}15` : "#0a2240", border: `1px solid ${mtCls ? CLS[mtCls]?.color : "rgba(90,152,227,0.12)"}`, color: mtCls ? CLS[mtCls]?.color : "#BDD6F4", outline: "none", cursor: "pointer", fontFamily: "'DM Sans'" }}>
+              <option value="">All Classifications</option>
+              {Object.entries(CLS).filter(([k]) => k !== "non-mountain").map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
+            </select>
           </div>
 
           {/* Completed filter */}
