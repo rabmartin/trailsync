@@ -710,9 +710,9 @@ const RoutesPage = () => {
           <option value="">All Difficulty</option>
           {["Easy", "Moderate", "Hard", "Expert"].map(d => <option key={d} value={d}>{d}</option>)}
         </select>
-        <button onClick={() => setShowCommunity(!showCommunity)} style={{ padding: "7px 12px", borderRadius: "10px", fontSize: "11px", fontWeight: 600, background: showCommunity ? "rgba(90,152,227,0.12)" : "#0a2240", border: `1px solid ${showCommunity ? "rgba(90,152,227,0.25)" : "rgba(90,152,227,0.12)"}`, color: showCommunity ? "#5A98E3" : "#BDD6F4", cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "4px", opacity: showCommunity ? 1 : 0.5 }}>
+        {subTab !== "map" && <button onClick={() => setShowCommunity(!showCommunity)} style={{ padding: "7px 12px", borderRadius: "10px", fontSize: "11px", fontWeight: 600, background: showCommunity ? "rgba(90,152,227,0.12)" : "#0a2240", border: `1px solid ${showCommunity ? "rgba(90,152,227,0.25)" : "rgba(90,152,227,0.12)"}`, color: showCommunity ? "#5A98E3" : "#BDD6F4", cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "4px", opacity: showCommunity ? 1 : 0.5 }}>
           <Users size={12} /> Community
-        </button>
+        </button>}
       </div>
 
       <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4, marginBottom: "12px" }}>{filtered.length} routes found</div>
