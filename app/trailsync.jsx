@@ -237,23 +237,26 @@ const MiniMap = ({ height, center, zoom, markers, onMarkerClick, children }) => 
   const markersRef = useRef([]);
   const mapboxRef = useRef(null);
 
-  // Initialize map once
+  // Initialize map once (delayed by one frame so container has computed size)
   useEffect(() => {
     if (mapInstance.current || !containerRef.current) return;
-    import("mapbox-gl").then(mod => {
-      const mapboxgl = mod.default;
-      mapboxRef.current = mapboxgl;
-      mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-      const map = new mapboxgl.Map({
-        container: containerRef.current,
-        style: "mapbox://styles/mapbox/outdoors-v12",
-        center: center || [-4.5, 56.5],
-        zoom: zoom || 5.5,
-        interactive: true,
+    const timer = setTimeout(() => {
+      if (!containerRef.current || containerRef.current.clientHeight === 0) return;
+      import("mapbox-gl").then(mod => {
+        const mapboxgl = mod.default;
+        mapboxRef.current = mapboxgl;
+        mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+        const map = new mapboxgl.Map({
+          container: containerRef.current,
+          style: "mapbox://styles/mapbox/outdoors-v12",
+          center: center || [-4.5, 56.5],
+          zoom: zoom || 5.5,
+          interactive: true,
+        });
+        mapInstance.current = map;
       });
-      mapInstance.current = map;
-    });
-    return () => { if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
+    }, 100);
+    return () => { clearTimeout(timer); if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
   }, []);
 
   // Update markers when markers prop changes
@@ -290,8 +293,8 @@ const MiniMap = ({ height, center, zoom, markers, onMarkerClick, children }) => 
   }, [markers]);
 
   return (
-    <div style={{ position: "relative", height: height === "100%" ? undefined : (height || "380px"), flex: height === "100%" ? 1 : undefined, borderRadius: "14px", overflow: "hidden", border: "1px solid rgba(90,152,227,0.12)" }}>
-      <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
+    <div style={{ position: "relative", height: height === "100%" ? "100%" : (height || "380px"), flex: height === "100%" ? 1 : undefined, minHeight: height === "100%" ? "200px" : undefined, borderRadius: height === "100%" ? 0 : "14px", overflow: "hidden", border: height === "100%" ? "none" : "1px solid rgba(90,152,227,0.12)" }}>
+      <div ref={containerRef} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" }} />
       {children}
     </div>
   );
@@ -916,8 +919,8 @@ const MapPage = ({ goHome, goProfile, onSaveWalk }) => {
       zoom: 5.8,
       pitch: d3 ? 45 : 0,
     });
-    map.addControl(new mapboxgl.NavigationControl(), "top-left");
-    map.addControl(new mapboxgl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showUserHeading: true }), "top-left");
+    map.addControl(new mapboxgl.NavigationControl(), "bottom-left");
+    map.addControl(new mapboxgl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showUserHeading: true }), "bottom-left");
     mapRef.current = map;
 
     // Main map is clean - no peak markers (peaks are on the mountain tracker map)
@@ -1537,7 +1540,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, savedWa
               )}
               <div style={mtExpanded ? { flex: 1, position: "relative", display: "flex", flexDirection: "column" } : { position: "relative" }}>
                 {!mtExpanded && <button onClick={() => setMtExpanded(true)} style={{ position: "absolute", top: 10, right: 10, zIndex: 22, background: "rgba(4,30,61,0.88)", backdropFilter: "blur(8px)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "8px", padding: "6px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><Maximize2 size={14} /></button>}
-                <MiniMap height={mtExpanded ? "100%" : "340px"} markers={filteredPeaks.map(pk => ({ lat: pk.lat, lng: pk.lng, color: pk.done ? "#6BCB77" : "#E85D3A", data: pk, style: `width:14px;height:14px;border-radius:50%;background:${pk.done ? "#6BCB77" : "#E85D3A"};border:2px solid rgba(255,255,255,0.5);cursor:pointer;box-shadow:0 0 6px ${pk.done ? "rgba(107,203,119,0.4)" : "rgba(232,93,58,0.4)"};` }))} onMarkerClick={(m) => { setSelPeak(m.data); setLogging(false); }}>
+                <MiniMap key={mtExpanded ? "expanded" : "compact"} height={mtExpanded ? "100%" : "340px"} markers={filteredPeaks.map(pk => ({ lat: pk.lat, lng: pk.lng, color: pk.done ? "#6BCB77" : "#E85D3A", data: pk, style: `width:14px;height:14px;border-radius:50%;background:${pk.done ? "#6BCB77" : "#E85D3A"};border:2px solid rgba(255,255,255,0.5);cursor:pointer;box-shadow:0 0 6px ${pk.done ? "rgba(107,203,119,0.4)" : "rgba(232,93,58,0.4)"};` }))} onMarkerClick={(m) => { setSelPeak(m.data); setLogging(false); }}>
                 {selPeak && (
                   <div style={{ position: "absolute", bottom: 10, left: 10, right: 10, zIndex: 20, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.15)", animation: "su .25s ease", overflow: "hidden" }}>
                     <div style={{ height: "3px", background: selPeak.done ? "linear-gradient(90deg,#6BCB77,transparent)" : "linear-gradient(90deg,#E85D3A,transparent)" }} />
