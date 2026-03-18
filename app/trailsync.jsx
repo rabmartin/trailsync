@@ -1363,7 +1363,7 @@ const LearnPage = () => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 5: PROFILE
    ═══════════════════════════════════════════════════════════════════ */
-const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, savedWalks }) => {
+const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, savedWalks }) => {
   const [sec, setSec] = useState(initialSec || "mountains");
 
   // Sync with parent when initialSec changes
@@ -1519,6 +1519,15 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, savedWalks }) => 
                           </div>
                           <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>{selPeak.ht}m · {selPeak.reg}</div>
                           <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "5px", background: `${CLS[selPeak.cls]?.color}15`, color: CLS[selPeak.cls]?.color, fontWeight: 600, marginTop: "4px", display: "inline-block" }}>{CLS[selPeak.cls]?.name}</span>
+                          {(() => { const matchedRoutes = ROUTES.filter(r => r.peaks.includes(selPeak.name) && r.src === "ts"); return matchedRoutes.length > 0 ? (
+                            <div style={{ marginTop: "6px" }}>
+                              {matchedRoutes.map(r => (
+                                <div key={r.id} onClick={() => { if (goRoutes) goRoutes(); }} style={{ fontSize: "10px", color: "#5A98E3", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
+                                  <Route size={10} /> {r.name} ({r.dist}km · {r.diff})
+                                </div>
+                              ))}
+                            </div>
+                          ) : null; })()}
                         </div>
                         <button onClick={() => { setSelPeak(null); setLogging(false); }} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "26px", height: "26px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={12} /></button>
                       </div>
@@ -2032,7 +2041,7 @@ export default function TrailSync() {
         {tab === "routes" && <RoutesPage />}
         {tab === "map" && <MapPage goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={(walk) => setSavedWalks(prev => [walk, ...prev])} />}
         {tab === "learn" && <LearnPage />}
-        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} savedWalks={savedWalks} />}
+        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} savedWalks={savedWalks} />}
       </div>
 
       {/* Tutorial overlay */}
