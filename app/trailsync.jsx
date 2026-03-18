@@ -690,7 +690,7 @@ const RoutesPage = () => {
   })).filter(reg => reg.routes.length > 0);
 
   return (
-    <div style={{ padding: "0 16px 16px", overflowY: "auto", flex: 1 }}>
+    <div style={{ padding: subTab === "map" ? "0 16px 0" : "0 16px 16px", overflowY: subTab === "map" ? "hidden" : "auto", flex: 1, display: "flex", flexDirection: "column" }}>
       {/* Header with sub-tabs */}
       <div style={{ padding: "24px 0 12px", display: "flex", alignItems: "baseline", gap: "16px" }}>
         <div onClick={() => setSubTab("list")} style={{ fontSize: "24px", fontWeight: 800, color: subTab === "list" ? "#F8F8F8" : "#BDD6F4", fontFamily: "'Playfair Display',serif", cursor: "pointer", opacity: subTab === "list" ? 1 : 0.4, transition: "all .2s" }}>Routes</div>
@@ -756,7 +756,8 @@ const RoutesPage = () => {
 
       {/* ═══ MAP VIEW ═══ */}
       {subTab === "map" && (
-        <MiniMap height="420px" markers={regionClusters.map(reg => ({ lat: reg.lat, lng: reg.lng, color: "#264f80", label: String(reg.routes.length), data: reg }))} onMarkerClick={(m) => setSelRegion(selRegion?.name === m.data.name ? null : m.data)}>
+        <div style={{ flex: 1, position: "relative" }}>
+        <MiniMap height="100%" markers={regionClusters.map(reg => ({ lat: reg.lat, lng: reg.lng, color: "#264f80", label: String(reg.routes.length), data: reg }))} onMarkerClick={(m) => setSelRegion(selRegion?.name === m.data.name ? null : m.data)}>
 
           {/* Selected region route list */}
           {selRegion && (
@@ -796,6 +797,7 @@ const RoutesPage = () => {
             </div>
           )}
         </MiniMap>
+        </div>
       )}
     </div>
   );
