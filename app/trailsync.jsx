@@ -76,7 +76,7 @@ const PEAKS_FALLBACK = [
   { id: 13, name: "Pen y Fan", cls: "hewitts", ht: 886, reg: "Brecon Beacons", lat: 51.884, lng: -3.436, w: { t: 7, f: 4, wi: 14, p: 0.1, v: "good", sn: false }, done: false },
   { id: 14, name: "Merrick", cls: "donalds", ht: 843, reg: "Galloway Hills", lat: 55.146, lng: -4.615, w: { t: 5, f: 1, wi: 16, p: 0.3, v: "good", sn: false }, done: false },
   { id: 15, name: "Sgurr nan Gillean", cls: "munros", ht: 964, reg: "Skye Cuillin", lat: 57.254, lng: -6.196, w: { t: 1, f: -5, wi: 30, p: 1.0, v: "moderate", sn: false }, done: false },
-  { id: 16, name: "The Five Sisters of Kintail", cls: "munros", ht: 1067, reg: "Kintail", lat: 57.215, lng: -5.365, w: { t: 0, f: -7, wi: 35, p: 2.0, v: "poor", sn: true }, done: false },
+  { id: 16, name: "The Five Sisters of Kintail", cls: "munros", ht: 1067, reg: "Kintail", lat: 57.200, lng: -5.350, w: { t: 0, f: -7, wi: 35, p: 2.0, v: "poor", sn: true }, done: false },
 ];
 // PEAKS will be populated from Supabase in the main app component
 let PEAKS = PEAKS_FALLBACK;
@@ -101,7 +101,7 @@ let ROUTES = [
   { id: 16, name: "Loch Muick Circuit", cls: "non-mountain", reg: "Cairngorms", diff: "Easy", dist: 12.0, elev: 180, time: "3-4h", peaks: [], rat: 4.4, rev: 198, start: "Spittal of Glenmuick Car Park", src: "ts" },
   { id: 17, name: "Great Glen Way", cls: "non-mountain", reg: "Ben Nevis & Mamores", diff: "Moderate", dist: 127, elev: 2200, time: "5-6 days", peaks: [], rat: 4.5, rev: 345, start: "Fort William", src: "ts" },
   { id: 18, name: "Trossachs Trail - Loch Katrine", cls: "non-mountain", reg: "Southern Highlands", diff: "Easy", dist: 21, elev: 280, time: "5-6h", peaks: [], rat: 4.3, rev: 178, start: "Trossachs Pier", src: "ts" },
-  { id: 21, name: "The Five Sisters of Kintail", cls: "munros", reg: "Kintail", diff: "Expert", dist: 12.4, elev: 1050, time: "7-9h", peaks: ["The Five Sisters of Kintail"], rat: 4.8, rev: 156, start: "Shiel Bridge Car Park", src: "ts" },
+  { id: 21, name: "The Five Sisters of Kintail", cls: "munros", reg: "Kintail", diff: "Expert", dist: 20.1, elev: 1530, time: "8-10h", peaks: ["The Five Sisters of Kintail"], rat: 4.8, rev: 156, start: "Shiel Bridge Car Park", src: "ts" },
   { id: 19, name: "Buachaille Etive Mor - South Ridge Variation", cls: "munros", reg: "Glen Coe", diff: "Expert", dist: 12.5, elev: 1100, time: "6-8h", peaks: ["Buachaille Etive Mor"], rat: 4.6, rev: 23, start: "Altnafeadh Layby", src: "community" },
   { id: 20, name: "Cairngorms Lairig Ghru Through-Walk", cls: "non-mountain", reg: "Cairngorms", diff: "Hard", dist: 30, elev: 640, time: "10-12h", peaks: [], rat: 4.7, rev: 45, start: "Linn of Dee Car Park", src: "community" },
 ];
@@ -238,18 +238,28 @@ function parseGpxCoords(gpxText) {
   const doc = parser.parseFromString(gpxText, "application/xml");
   if (doc.querySelector("parsererror")) throw new Error("Invalid GPX XML");
 
-  // Prefer trkpts, fall back to rtepts
-  const pts = doc.querySelectorAll("trkpt").length > 0
-    ? doc.querySelectorAll("trkpt")
-    : doc.querySelectorAll("rtept");
+  // Use getElementsByTagName with wildcard namespace to handle namespaced GPX
+  // (querySelector fails on namespace-prefixed elements in some browsers)
+  const getEls = (name) => {
+    // Try non-namespaced first, then wildcard namespace
+    let els = doc.getElementsByTagName(name);
+    if (!els.length) els = doc.getElementsByTagNameNS("*", name);
+    return Array.from(els);
+  };
+
+  const trkpts = getEls("trkpt");
+  const pts = trkpts.length > 0 ? trkpts : getEls("rtept");
 
   const coords = [];
   pts.forEach(pt => {
     const lon = parseFloat(pt.getAttribute("lon"));
     const lat = parseFloat(pt.getAttribute("lat"));
-    const eleEl = pt.querySelector("ele");
+    // Get ele using getElementsByTagName to handle namespace
+    const eleEls = pt.getElementsByTagName("ele");
+    const eleElsNS = eleEls.length ? eleEls : pt.getElementsByTagNameNS("*", "ele");
+    const ele = eleElsNS.length ? parseFloat(eleElsNS[0].textContent) : null;
     if (isNaN(lon) || isNaN(lat)) return;
-    coords.push(eleEl ? [lon, lat, parseFloat(eleEl.textContent)] : [lon, lat]);
+    coords.push(ele !== null ? [lon, lat, ele] : [lon, lat]);
   });
   return coords;
 }
@@ -816,7 +826,7 @@ const ROUTE_REGIONS = [
   { name: "Brecon Beacons", lat: 51.88, lng: -3.44, routes: [] },
   { name: "Skye Cuillin", lat: 57.25, lng: -6.20, routes: [] },
   { name: "Galloway Hills", lat: 55.15, lng: -4.62, routes: [] },
-  { name: "Kintail", lat: 57.215, lng: -5.365, routes: [] },
+  { name: "Kintail", lat: 57.200, lng: -5.350, routes: [] },
 ];
 
 /* ═══════════════════════════════════════════════════════════════════
