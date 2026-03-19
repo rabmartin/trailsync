@@ -1242,6 +1242,10 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
 
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
+  const geolocateRef = useRef(null);
+  const mapLoadedRef = useRef(false);
+  const gpxRouteRef = useRef(gpxRoute);
+  useEffect(() => { gpxRouteRef.current = gpxRoute; }, [gpxRoute]);
 
   // Initialize Mapbox map
   useEffect(() => {
@@ -1259,36 +1263,52 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     const geolocate = new mapboxgl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showUserHeading: true });
     map.addControl(geolocate, "bottom-right");
     mapRef.current = map;
+    geolocateRef.current = geolocate;
 
-    // Main map is clean - no peak markers (peaks are on the mountain tracker map)
     map.on("load", () => {
-      // Auto-trigger geolocation on first load
-      setTimeout(() => { try { geolocate.trigger(); } catch(e) {} }, 1000);
+      mapLoadedRef.current = true;
+      // Only auto-geolocate if no GPX route is waiting to be drawn
+      if (!gpxRouteRef.current) {
+        setTimeout(() => { try { geolocate.trigger(); } catch(e) {} }, 1000);
+      }
     });
 
-    }); return () => { if (mapRef.current) mapRef.current.remove(); };
+    }); return () => {
+      mapLoadedRef.current = false;
+      if (mapRef.current) mapRef.current.remove();
+    };
   }, []);
 
   // Draw GPX route when gpxRoute prop is set (or changes)
   useEffect(() => {
     if (!gpxRoute?.route?.gpx_file) return;
     const route = gpxRoute.route;
-    const tryDraw = () => {
-      if (!mapRef.current) { setTimeout(tryDraw, 200); return; }
-      // Clear any previous GPX
+
+    const doDraw = (map) => {
       if (mapGpxIdRef.current) {
-        removeGpxFromMap(mapRef.current, mapGpxIdRef.current);
+        removeGpxFromMap(map, mapGpxIdRef.current);
         mapGpxIdRef.current = null;
       }
       setMapGpxLoading(true);
       fetchGpxText(route.gpx_file).then(xml => {
         const coords = parseGpxCoords(xml);
         if (coords.length > 1) {
-          drawGpxOnMap(mapRef.current, route.id, coords, { color: "#E85D3A", fitBounds: true, fitPadding: 80 });
+          drawGpxOnMap(map, route.id, coords, { color: "#E85D3A", fitBounds: true, fitPadding: 80 });
           mapGpxIdRef.current = route.id;
         }
       }).catch(err => console.error("GPX draw error:", err))
         .finally(() => setMapGpxLoading(false));
+    };
+
+    const tryDraw = () => {
+      const map = mapRef.current;
+      if (!map) { setTimeout(tryDraw, 150); return; }
+      // If style isn't loaded yet, wait for it
+      if (!map.isStyleLoaded()) {
+        map.once("styledata", () => doDraw(map));
+        return;
+      }
+      doDraw(map);
     };
     tryDraw();
   }, [gpxRoute]);
