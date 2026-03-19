@@ -231,7 +231,7 @@ const greet = () => { const h = new Date().getHours(); return h < 12 ? "Good mor
 /* ═══════════════════════════════════════════════════════════════════
    MINI MAP COMPONENT (reusable for Routes, Discover, Mountain Tracker)
    ═══════════════════════════════════════════════════════════════════ */
-const MiniMap = ({ height, center, zoom, markers, onMarkerClick, children }) => {
+const MiniMap = ({ height, center, zoom, markers, onMarkerClick, showGPS, children }) => {
   const containerRef = useRef(null);
   const mapInstance = useRef(null);
   const markersRef = useRef([]);
@@ -255,6 +255,9 @@ const MiniMap = ({ height, center, zoom, markers, onMarkerClick, children }) => 
           interactive: true,
         });
         mapInstance.current = map;
+        if (showGPS) {
+          map.addControl(new mapboxgl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showUserHeading: true }), "bottom-right");
+        }
         map.on("load", () => setMapReady(true));
       });
     }, 150);
@@ -698,6 +701,156 @@ const ROUTE_REGIONS = [
   { name: "Galloway Hills", lat: 55.15, lng: -4.62, routes: [] },
 ];
 
+/* ═══════════════════════════════════════════════════════════════════
+   ROUTES CLUSTER MAP (native Mapbox clustering)
+   ═══════════════════════════════════════════════════════════════════ */
+const RoutesClusterMap = ({ filtered, selRegion, setSelRegion }) => {
+  const containerRef = useRef(null);
+  const mapRef = useRef(null);
+
+  useEffect(() => {
+    if (mapRef.current || !containerRef.current) return;
+    const timer = setTimeout(() => {
+      if (!containerRef.current || containerRef.current.clientHeight === 0) return;
+      import("mapbox-gl").then(mod => {
+        const mapboxgl = mod.default;
+        mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+        const map = new mapboxgl.Map({
+          container: containerRef.current,
+          style: "mapbox://styles/mapbox/outdoors-v12",
+          center: [-4.5, 56.5],
+          zoom: 5.5,
+          interactive: true,
+        });
+        map.addControl(new mapboxgl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showUserHeading: true }), "bottom-right");
+        mapRef.current = map;
+
+        map.on("load", () => {
+          // Build GeoJSON from routes with small offsets so they spread when zoomed
+          const features = filtered.map((r, i) => {
+            const region = ROUTE_REGIONS.find(rr => rr.name === r.reg);
+            const baseLat = region?.lat || 56.5;
+            const baseLng = region?.lng || -4.5;
+            // Offset each route slightly so they spread when zoomed in
+            const offset = 0.03;
+            const angle = (i / filtered.length) * Math.PI * 2;
+            return {
+              type: "Feature",
+              properties: { id: r.id, name: r.name, dist: r.dist, elev: r.elev, diff: r.diff, cls: r.cls, time: r.time, region: r.reg },
+              geometry: { type: "Point", coordinates: [baseLng + Math.cos(angle) * offset * (i % 3 + 1), baseLat + Math.sin(angle) * offset * (i % 3 + 1)] }
+            };
+          });
+
+          map.addSource("routes", {
+            type: "geojson",
+            data: { type: "FeatureCollection", features },
+            cluster: true,
+            clusterMaxZoom: 12,
+            clusterRadius: 50,
+          });
+
+          // Cluster circle layer
+          map.addLayer({
+            id: "clusters",
+            type: "circle",
+            source: "routes",
+            filter: ["has", "point_count"],
+            paint: {
+              "circle-color": "#264f80",
+              "circle-radius": ["step", ["get", "point_count"], 22, 5, 28, 10, 34],
+              "circle-stroke-width": 2,
+              "circle-stroke-color": "rgba(90,152,227,0.4)",
+            }
+          });
+
+          // Cluster count label
+          map.addLayer({
+            id: "cluster-count",
+            type: "symbol",
+            source: "routes",
+            filter: ["has", "point_count"],
+            layout: {
+              "text-field": ["get", "point_count_abbreviated"],
+              "text-font": ["DIN Pro Medium", "Arial Unicode MS Bold"],
+              "text-size": 14,
+            },
+            paint: { "text-color": "#F8F8F8" }
+          });
+
+          // Individual route dots
+          map.addLayer({
+            id: "unclustered-point",
+            type: "circle",
+            source: "routes",
+            filter: ["!", ["has", "point_count"]],
+            paint: {
+              "circle-color": "#E85D3A",
+              "circle-radius": 8,
+              "circle-stroke-width": 2,
+              "circle-stroke-color": "rgba(255,255,255,0.8)",
+            }
+          });
+
+          // Click on cluster - zoom in
+          map.on("click", "clusters", (e) => {
+            const features = map.queryRenderedFeatures(e.point, { layers: ["clusters"] });
+            const clusterId = features[0].properties.cluster_id;
+            map.getSource("routes").getClusterExpansionZoom(clusterId, (err, zoom) => {
+              if (err) return;
+              map.easeTo({ center: features[0].geometry.coordinates, zoom: zoom });
+            });
+          });
+
+          // Click on individual route - show details
+          map.on("click", "unclustered-point", (e) => {
+            const props = e.features[0].properties;
+            const regionRoutes = filtered.filter(r => r.reg === props.region);
+            const region = ROUTE_REGIONS.find(rr => rr.name === props.region);
+            if (region) {
+              setSelRegion({ ...region, routes: regionRoutes.length === 1 ? regionRoutes : filtered.filter(r => r.id === props.id) });
+            }
+          });
+
+          // Cursor changes
+          map.on("mouseenter", "clusters", () => { map.getCanvas().style.cursor = "pointer"; });
+          map.on("mouseleave", "clusters", () => { map.getCanvas().style.cursor = ""; });
+          map.on("mouseenter", "unclustered-point", () => { map.getCanvas().style.cursor = "pointer"; });
+          map.on("mouseleave", "unclustered-point", () => { map.getCanvas().style.cursor = ""; });
+        });
+      });
+    }, 150);
+    return () => { clearTimeout(timer); if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; } };
+  }, []);
+
+  // Update source data when filtered routes change
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const map = mapRef.current;
+    const source = map.getSource("routes");
+    if (!source) return;
+
+    const features = filtered.map((r, i) => {
+      const region = ROUTE_REGIONS.find(rr => rr.name === r.reg);
+      const baseLat = region?.lat || 56.5;
+      const baseLng = region?.lng || -4.5;
+      const offset = 0.03;
+      const angle = (i / filtered.length) * Math.PI * 2;
+      return {
+        type: "Feature",
+        properties: { id: r.id, name: r.name, dist: r.dist, elev: r.elev, diff: r.diff, cls: r.cls, time: r.time, region: r.reg },
+        geometry: { type: "Point", coordinates: [baseLng + Math.cos(angle) * offset * (i % 3 + 1), baseLat + Math.sin(angle) * offset * (i % 3 + 1)] }
+      };
+    });
+    source.setData({ type: "FeatureCollection", features });
+  }, [filtered]);
+
+  return (
+    <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+      <div ref={containerRef} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
+    </div>
+  );
+};
+
 const RoutesPage = () => {
   const [cf, setCf] = useState(null);
   const [df, setDf] = useState(null);
@@ -786,7 +939,7 @@ const RoutesPage = () => {
       {/* ═══ MAP VIEW ═══ */}
       {subTab === "map" && (
         <div style={{ flex: 1, position: "relative", display: "flex", flexDirection: "column" }}>
-        <MiniMap height="100%" markers={regionClusters.map(reg => ({ lat: reg.lat, lng: reg.lng, color: "#264f80", label: String(reg.routes.length), data: reg }))} onMarkerClick={(m) => setSelRegion(selRegion?.name === m.data.name ? null : m.data)}>
+        <RoutesClusterMap filtered={filtered} selRegion={selRegion} setSelRegion={setSelRegion} />
 
           {/* Selected region route list */}
           {selRegion && (
@@ -825,7 +978,6 @@ const RoutesPage = () => {
               </div>
             </div>
           )}
-        </MiniMap>
         </div>
       )}
     </div>
@@ -913,11 +1065,15 @@ const MapPage = ({ goHome, goProfile, onSaveWalk }) => {
       pitch: d3 ? 45 : 0,
     });
     map.addControl(new mapboxgl.NavigationControl(), "bottom-left");
-    map.addControl(new mapboxgl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showUserHeading: true }), "bottom-left");
+    const geolocate = new mapboxgl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showUserHeading: true });
+    map.addControl(geolocate, "bottom-right");
     mapRef.current = map;
 
     // Main map is clean - no peak markers (peaks are on the mountain tracker map)
-    map.on("load", () => {});
+    map.on("load", () => {
+      // Auto-trigger geolocation on first load
+      setTimeout(() => { try { geolocate.trigger(); } catch(e) {} }, 1000);
+    });
 
     }); return () => { if (mapRef.current) mapRef.current.remove(); };
   }, []);
@@ -1533,7 +1689,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, savedWa
               )}
               <div style={mtExpanded ? { flex: 1, position: "relative", display: "flex", flexDirection: "column" } : { position: "relative" }}>
                 {!mtExpanded && <button onClick={() => setMtExpanded(true)} style={{ position: "absolute", top: 10, right: 10, zIndex: 22, background: "rgba(4,30,61,0.88)", backdropFilter: "blur(8px)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "8px", padding: "6px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><Maximize2 size={14} /></button>}
-                <MiniMap key={mtExpanded ? "expanded" : "compact"} height={mtExpanded ? "100%" : "340px"} markers={filteredPeaks.map(pk => ({ lat: pk.lat, lng: pk.lng, color: pk.done ? "#6BCB77" : "#E85D3A", data: pk, style: `width:14px;height:14px;border-radius:50%;background:${pk.done ? "#6BCB77" : "#E85D3A"};border:2px solid rgba(255,255,255,0.5);cursor:pointer;box-shadow:0 0 6px ${pk.done ? "rgba(107,203,119,0.4)" : "rgba(232,93,58,0.4)"};` }))} onMarkerClick={(m) => { setSelPeak(m.data); setLogging(false); }}>
+                <MiniMap key={mtExpanded ? "expanded" : "compact"} height={mtExpanded ? "100%" : "340px"} showGPS={true} markers={filteredPeaks.map(pk => ({ lat: pk.lat, lng: pk.lng, color: pk.done ? "#6BCB77" : "#E85D3A", data: pk, style: `width:14px;height:14px;border-radius:50%;background:${pk.done ? "#6BCB77" : "#E85D3A"};border:2px solid rgba(255,255,255,0.5);cursor:pointer;box-shadow:0 0 6px ${pk.done ? "rgba(107,203,119,0.4)" : "rgba(232,93,58,0.4)"};` }))} onMarkerClick={(m) => { setSelPeak(m.data); setLogging(false); }}>
                 {selPeak && (
                   <div style={{ position: "absolute", bottom: 10, left: 10, right: 10, zIndex: 20, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.15)", animation: "su .25s ease", overflow: "hidden" }}>
                     <div style={{ height: "3px", background: selPeak.done ? "linear-gradient(90deg,#6BCB77,transparent)" : "linear-gradient(90deg,#E85D3A,transparent)" }} />
