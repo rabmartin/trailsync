@@ -1014,7 +1014,7 @@ const RoutesClusterMap = ({ filtered, selRegion, setSelRegion, onMapReady }) => 
   );
 };
 
-const RoutesPage = () => {
+const RoutesPage = ({ initialRouteId, onRouteOpened }) => {
   const [cf, setCf] = useState(null);
   const [df, setDf] = useState(null);
   const [showCommunity, setShowCommunity] = useState(true);
@@ -1023,10 +1023,26 @@ const RoutesPage = () => {
   const [activeGpxRouteId, setActiveGpxRouteId] = useState(null);
   const [gpxLoading, setGpxLoading] = useState(false);
   const routesMapRef = useRef(null);
+  const pendingRouteRef = useRef(null);
+
+  // If navigated here with a specific route id, open map and draw it
+  useEffect(() => {
+    if (!initialRouteId) return;
+    const route = ROUTES.find(r => String(r.id) === String(initialRouteId));
+    if (!route || !route.gpx_file) return;
+    setSubTab("map");
+    pendingRouteRef.current = route;
+    if (onRouteOpened) onRouteOpened();
+  }, [initialRouteId]);
 
   async function handleDrawGpx(route) {
-    if (!routesMapRef.current) return;
     if (!route.gpx_file) return;
+    // If map isn't ready yet, queue it
+    if (!routesMapRef.current) {
+      setSubTab("map");
+      pendingRouteRef.current = route;
+      return;
+    }
     if (activeGpxRouteId === route.id) {
       removeGpxFromMap(routesMapRef.current, route.id);
       setActiveGpxRouteId(null);
@@ -1045,6 +1061,16 @@ const RoutesPage = () => {
       console.error("GPX draw error:", err);
     } finally {
       setGpxLoading(false);
+    }
+  }
+
+  function handleMapReady(map) {
+    routesMapRef.current = map;
+    // Draw any pending route that was queued before map was ready
+    if (pendingRouteRef.current) {
+      const route = pendingRouteRef.current;
+      pendingRouteRef.current = null;
+      handleDrawGpx(route);
     }
   }
 
@@ -1094,13 +1120,25 @@ const RoutesPage = () => {
         <div>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             {filtered.map((r, i) => (
-              <div key={r.id} style={{ background: "#0a2240", borderRadius: "14px", padding: "14px", border: "1px solid rgba(90,152,227,0.1)", cursor: "pointer", animation: `fi .3s ease ${i * .04}s both` }}>
+              <div key={r.id}
+                onClick={() => r.gpx_file && handleDrawGpx(r)}
+                style={{ background: "#0a2240", borderRadius: "14px", padding: "14px",
+                  border: `1px solid ${activeGpxRouteId === r.id ? "rgba(232,93,58,0.3)" : "rgba(90,152,227,0.1)"}`,
+                  cursor: r.gpx_file ? "pointer" : "default", animation: `fi .3s ease ${i * .04}s both`,
+                  transition: "border .15s" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "8px" }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8", lineHeight: 1.3 }}>{r.name}</div>
                     <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "3px" }}>{r.reg} · Start: {r.start}</div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "3px", flexShrink: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+                    {r.gpx_file && (
+                      <span style={{ fontSize: "9px", padding: "2px 8px", borderRadius: "8px",
+                        background: activeGpxRouteId === r.id ? "rgba(232,93,58,0.15)" : "rgba(90,152,227,0.08)",
+                        color: activeGpxRouteId === r.id ? "#E85D3A" : "#5A98E3", fontWeight: 700 }}>
+                        {gpxLoading && activeGpxRouteId !== r.id ? "Loading…" : activeGpxRouteId === r.id ? "✓ On map" : "View on map →"}
+                      </span>
+                    )}
                     <Star size={12} color="#EBCB8B" fill="#EBCB8B" />
                     <span style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8" }}>{r.rat}</span>
                     <span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>({r.rev})</span>
@@ -1118,7 +1156,7 @@ const RoutesPage = () => {
                 <div style={{ display: "flex", gap: "16px" }}>
                   {[[Navigation, `${r.dist}km`], [TrendingUp, `${r.elev}m`], [Clock, r.time]].map(([I, v], j) => <span key={j} style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "4px" }}><I size={12} /> {v}</span>)}
                 </div>
-                {r.peaks.length > 0 && <div style={{ display: "flex", gap: "4px", marginTop: "8px" }}>{r.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "5px", background: "rgba(232,93,58,0.08)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}</div>}
+                {r.peaks && r.peaks.length > 0 && <div style={{ display: "flex", gap: "4px", marginTop: "8px" }}>{r.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "5px", background: "rgba(232,93,58,0.08)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}</div>}
               </div>
             ))}
           </div>
@@ -1129,7 +1167,7 @@ const RoutesPage = () => {
       {/* ═══ MAP VIEW ═══ */}
       {subTab === "map" && (
         <div style={{ flex: 1, position: "relative", display: "flex", flexDirection: "column" }}>
-        <RoutesClusterMap filtered={filtered} selRegion={selRegion} setSelRegion={setSelRegion} onMapReady={map => { routesMapRef.current = map; }} />
+        <RoutesClusterMap filtered={filtered} selRegion={selRegion} setSelRegion={setSelRegion} onMapReady={handleMapReady} />
 
           {/* Selected region route list */}
           {selRegion && (
@@ -1188,7 +1226,7 @@ const RoutesPage = () => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 3: MAP
    ═══════════════════════════════════════════════════════════════════ */
-const MapPage = ({ goHome, goProfile, onSaveWalk }) => {
+const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute }) => {
   const [layer, setLayer] = useState("standard");
   const [lm, setLm] = useState(false);
   const [wo, setWo] = useState(null);
@@ -1598,21 +1636,20 @@ const MapPage = ({ goHome, goProfile, onSaveWalk }) => {
                 <div style={{ marginTop: "10px", borderTop: "1px solid rgba(90,152,227,0.08)", paddingTop: "10px" }}>
                   <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, fontWeight: 700, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Routes</div>
                   {peakRoutes.map(r => (
-                    <div key={r.id} onClick={() => handleMapDrawGpx(r)} style={{
+                    <div key={r.id} onClick={() => r.gpx_file && openRoute && openRoute(r.id)} style={{
                       display: "flex", alignItems: "center", gap: "6px", marginTop: "4px",
                       padding: "6px 9px", borderRadius: "8px", cursor: r.gpx_file ? "pointer" : "default",
-                      background: mapGpxActiveId === r.id ? "rgba(232,93,58,0.1)" : "rgba(90,152,227,0.06)",
-                      border: `1px solid ${mapGpxActiveId === r.id ? "rgba(232,93,58,0.25)" : "rgba(90,152,227,0.1)"}`,
+                      background: "rgba(90,152,227,0.06)",
+                      border: "1px solid rgba(90,152,227,0.1)",
                       transition: "all .15s"
                     }}>
-                      <Route size={10} color={mapGpxActiveId === r.id ? "#E85D3A" : "#5A98E3"} />
-                      <span style={{ flex: 1, fontSize: "10px", fontWeight: 600, color: mapGpxActiveId === r.id ? "#E85D3A" : "#5A98E3", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</span>
-                      <span style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5 }}>{r.dist}km</span>
+                      <Route size={10} color="#5A98E3" />
+                      <span style={{ flex: 1, fontSize: "10px", fontWeight: 600, color: "#5A98E3", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</span>
+                      <span style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5 }}>{r.dist}km · {r.diff}</span>
                       {r.gpx_file && (
                         <span style={{ fontSize: "8px", padding: "1px 5px", borderRadius: "3px",
-                          background: mapGpxActiveId === r.id ? "rgba(232,93,58,0.2)" : "rgba(90,152,227,0.1)",
-                          color: mapGpxActiveId === r.id ? "#E85D3A" : "#5A98E3", fontWeight: 700 }}>
-                          {mapGpxLoading ? "…" : mapGpxActiveId === r.id ? "✓" : "GPX"}
+                          background: "rgba(232,93,58,0.15)", color: "#E85D3A", fontWeight: 700 }}>
+                          View route →
                         </span>
                       )}
                     </div>
@@ -1807,7 +1844,7 @@ const LearnPage = () => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 5: PROFILE
    ═══════════════════════════════════════════════════════════════════ */
-const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, savedWalks, dbPeaks }) => {
+const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRoute, savedWalks, dbPeaks }) => {
   const [sec, setSec] = useState(initialSec || "mountains");
 
   // Sync with parent when initialSec changes
@@ -2015,22 +2052,21 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, savedWa
                             <div style={{ marginTop: "6px" }}>
                               <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, fontWeight: 600, marginBottom: "3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Routes</div>
                               {matchedRoutes.map(r => (
-                                <div key={r.id} onClick={() => { if (r.gpx_file && mtMapRef.current) { handleMtDrawGpx(r); } }} style={{
+                                <div key={r.id} onClick={() => r.gpx_file && openRoute && openRoute(r.id)} style={{
                                   fontSize: "10px", cursor: r.gpx_file ? "pointer" : "default",
                                   fontWeight: 600, display: "flex", alignItems: "center", gap: "4px", marginTop: "3px",
                                   padding: "5px 8px", borderRadius: "7px",
-                                  background: mtActiveGpxId === r.id ? "rgba(232,93,58,0.1)" : "rgba(90,152,227,0.06)",
-                                  border: `1px solid ${mtActiveGpxId === r.id ? "rgba(232,93,58,0.25)" : "rgba(90,152,227,0.1)"}`,
-                                  color: mtActiveGpxId === r.id ? "#E85D3A" : "#5A98E3",
+                                  background: "rgba(90,152,227,0.06)",
+                                  border: "1px solid rgba(90,152,227,0.1)",
+                                  color: "#5A98E3",
                                   transition: "all .15s"
                                 }}>
                                   <Route size={10} />
                                   <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</span>
                                   <span style={{ opacity: 0.6, fontWeight: 400 }}>{r.dist}km · {r.diff}</span>
                                   {r.gpx_file && <span style={{ fontSize: "8px", padding: "1px 4px", borderRadius: "3px",
-                                    background: mtActiveGpxId === r.id ? "rgba(232,93,58,0.2)" : "rgba(90,152,227,0.1)",
-                                    color: mtActiveGpxId === r.id ? "#E85D3A" : "#5A98E3", fontWeight: 700 }}>
-                                    {mtGpxLoading && mtActiveGpxId !== r.id ? "…" : mtActiveGpxId === r.id ? "✓" : "GPX"}
+                                    background: "rgba(232,93,58,0.15)", color: "#E85D3A", fontWeight: 700 }}>
+                                    View route →
                                   </span>}
                                 </div>
                               ))}
@@ -2461,6 +2497,13 @@ export default function TrailSync() {
   const [tutStep, setTutStep] = useState(0);
   const [dbPeaks, setDbPeaks] = useState(null);
   const [dbRoutes, setDbRoutes] = useState(null);
+  const [activeRouteId, setActiveRouteId] = useState(null);
+
+  // Navigate to Routes tab and open a specific route with GPX drawn
+  function openRouteOnMap(routeId) {
+    setActiveRouteId(routeId);
+    setTab("routes");
+  }
 
   // Fetch peaks from Supabase on mount
   useEffect(() => {
@@ -2614,10 +2657,10 @@ export default function TrailSync() {
       {/* Content */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {tab === "home" && <HomePage userName={userName} initialFilter={feedFilter} />}
-        {tab === "routes" && <RoutesPage />}
-        {tab === "map" && <MapPage goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={(walk) => setSavedWalks(prev => [walk, ...prev])} />}
+        {tab === "routes" && <RoutesPage initialRouteId={activeRouteId} onRouteOpened={() => setActiveRouteId(null)} />}
+        {tab === "map" && <MapPage goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={(walk) => setSavedWalks(prev => [walk, ...prev])} openRoute={openRouteOnMap} />}
         {tab === "learn" && <LearnPage />}
-        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} savedWalks={savedWalks} dbPeaks={dbPeaks} />}
+        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} dbPeaks={dbPeaks} />}
       </div>
 
       {/* Tutorial overlay */}
