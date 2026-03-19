@@ -236,8 +236,9 @@ const MiniMap = ({ height, center, zoom, markers, onMarkerClick, children }) => 
   const mapInstance = useRef(null);
   const markersRef = useRef([]);
   const mapboxRef = useRef(null);
+  const [mapReady, setMapReady] = useState(false);
 
-  // Initialize map once (delayed by one frame so container has computed size)
+  // Initialize map once (delayed so container has computed size)
   useEffect(() => {
     if (mapInstance.current || !containerRef.current) return;
     const timer = setTimeout(() => {
@@ -254,43 +255,35 @@ const MiniMap = ({ height, center, zoom, markers, onMarkerClick, children }) => 
           interactive: true,
         });
         mapInstance.current = map;
+        map.on("load", () => setMapReady(true));
       });
-    }, 100);
+    }, 150);
     return () => { clearTimeout(timer); if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
   }, []);
 
-  // Update markers when markers prop changes
+  // Update markers when markers prop changes OR map becomes ready
   useEffect(() => {
-    if (!mapInstance.current || !mapboxRef.current) return;
+    if (!mapReady || !mapInstance.current || !mapboxRef.current) return;
     const mapboxgl = mapboxRef.current;
     const map = mapInstance.current;
 
-    // Wait for map to be loaded
-    const addMarkers = () => {
-      // Remove old markers
-      markersRef.current.forEach(m => m.remove());
-      markersRef.current = [];
+    // Remove old markers
+    markersRef.current.forEach(m => m.remove());
+    markersRef.current = [];
 
-      // Add new markers
-      if (markers) {
-        markers.forEach((m, i) => {
-          const el = document.createElement("div");
-          el.style.cssText = m.style || `width:20px;height:20px;border-radius:50%;background:${m.color || "#E85D3A"};border:2px solid rgba(255,255,255,0.8);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);`;
-          if (m.label) el.textContent = m.label;
-          if (m.html) el.innerHTML = m.html;
-          if (onMarkerClick) el.addEventListener("click", () => onMarkerClick(m, i));
-          const marker = new mapboxgl.Marker({ element: el }).setLngLat([m.lng, m.lat]).addTo(map);
-          markersRef.current.push(marker);
-        });
-      }
-    };
-
-    if (map.isStyleLoaded()) {
-      addMarkers();
-    } else {
-      map.on("load", addMarkers);
+    // Add new markers
+    if (markers) {
+      markers.forEach((m, i) => {
+        const el = document.createElement("div");
+        el.style.cssText = m.style || `width:20px;height:20px;border-radius:50%;background:${m.color || "#E85D3A"};border:2px solid rgba(255,255,255,0.8);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);`;
+        if (m.label) el.textContent = m.label;
+        if (m.html) el.innerHTML = m.html;
+        if (onMarkerClick) el.addEventListener("click", () => onMarkerClick(m, i));
+        const marker = new mapboxgl.Marker({ element: el }).setLngLat([m.lng, m.lat]).addTo(map);
+        markersRef.current.push(marker);
+      });
     }
-  }, [markers]);
+  }, [markers, mapReady]);
 
   return (
     <div style={{ position: "relative", height: height === "100%" ? "100%" : (height || "380px"), flex: height === "100%" ? 1 : undefined, minHeight: height === "100%" ? "200px" : undefined, borderRadius: height === "100%" ? 0 : "14px", overflow: "hidden", border: height === "100%" ? "none" : "1px solid rgba(90,152,227,0.12)" }}>
@@ -963,7 +956,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk }) => {
               onChange={e => setSearchQuery(e.target.value)}
               onFocus={() => setSearchFocused(true)}
               onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
-              style={{ flex: 1, background: "none", border: "none", outline: "none", color: "#F8F8F8", fontSize: "12px", fontFamily: "'DM Sans'" }}
+              style={{ flex: 1, background: "none", border: "none", outline: "none", color: "#F8F8F8", fontSize: "16px", fontFamily: "'DM Sans'" }}
             />
             {searchQuery && (
               <button onClick={() => { setSearchQuery(""); setSearchFocused(false); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#BDD6F4", padding: 0, display: "flex" }}><X size={14} /></button>
@@ -1290,7 +1283,7 @@ const LearnPage = () => {
 
       {/* ═══ DISCOVER SUB-TAB ═══ */}
       {subTab === "discover" && (
-        <div>
+        <div style={discView === "map" ? { flex: 1, display: "flex", flexDirection: "column" } : {}}>
           <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, marginBottom: "12px" }}>Stories, history, and hidden gems from the hills</div>
 
           {/* View toggle */}
@@ -2072,6 +2065,7 @@ export default function TrailSync() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&family=Playfair+Display:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        input, select, textarea { font-size: 16px !important; }
         ::-webkit-scrollbar { width: 3px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(90,152,227,.15); border-radius: 4px; }
         select option { background: #0a2240; color: #F8F8F8; }
         @keyframes fi { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
