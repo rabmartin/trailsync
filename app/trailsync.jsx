@@ -80,7 +80,8 @@ const PEAKS_FALLBACK = [
 // PEAKS will be populated from Supabase in the main app component
 let PEAKS = PEAKS_FALLBACK;
 
-const ROUTES = [
+// ROUTES populated from Supabase on mount; fallback hardcoded data kept as default
+let ROUTES = [
   { id: 1, name: "Ben Nevis via the Mountain Track", cls: "munros", reg: "Ben Nevis & Mamores", diff: "Moderate", dist: 14.2, elev: 1350, time: "6-8h", peaks: ["Ben Nevis"], rat: 4.6, rev: 342, start: "Glen Nevis Visitor Centre", src: "ts" },
   { id: 2, name: "CMD Arete to Ben Nevis", cls: "munros", reg: "Ben Nevis & Mamores", diff: "Hard", dist: 16.8, elev: 1500, time: "8-10h", peaks: ["Carn Mor Dearg", "Ben Nevis"], rat: 4.9, rev: 187, start: "North Face Car Park", src: "ts" },
   { id: 3, name: "Buachaille Etive Mor via Coire na Tulaich", cls: "munros", reg: "Glen Coe", diff: "Hard", dist: 10.1, elev: 980, time: "5-7h", peaks: ["Buachaille Etive Mor"], rat: 4.8, rev: 256, start: "Altnafeadh Layby", src: "ts" },
@@ -217,6 +218,120 @@ const LB_DATA = {
    HELPERS
    ═══════════════════════════════════════════════════════════════════ */
 const dc = d => d === "Expert" ? "#E85D3A" : d === "Hard" ? "#F49D37" : d === "Moderate" ? "#EBCB8B" : "#6BCB77";
+
+/* ═══════════════════════════════════════════════════════════════════
+   GPX HELPERS
+   ═══════════════════════════════════════════════════════════════════ */
+
+/** Fetch GPX XML text from a full URL (gpx_url column) */
+async function fetchGpxText(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`GPX fetch failed: ${res.status}`);
+  return res.text();
+}
+
+/** Parse GPX XML string → array of [lng, lat, ele?] coordinates */
+function parseGpxCoords(gpxText) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(gpxText, "application/xml");
+  if (doc.querySelector("parsererror")) throw new Error("Invalid GPX XML");
+
+  // Prefer trkpts, fall back to rtepts
+  const pts = doc.querySelectorAll("trkpt").length > 0
+    ? doc.querySelectorAll("trkpt")
+    : doc.querySelectorAll("rtept");
+
+  const coords = [];
+  pts.forEach(pt => {
+    const lon = parseFloat(pt.getAttribute("lon"));
+    const lat = parseFloat(pt.getAttribute("lat"));
+    const eleEl = pt.querySelector("ele");
+    if (isNaN(lon) || isNaN(lat)) return;
+    coords.push(eleEl ? [lon, lat, parseFloat(eleEl.textContent)] : [lon, lat]);
+  });
+  return coords;
+}
+
+/** Compute [west, south, east, north] bounding box from coordinate array */
+function coordsBbox(coords) {
+  let w = Infinity, s = Infinity, e = -Infinity, n = -Infinity;
+  coords.forEach(([lon, lat]) => {
+    if (lon < w) w = lon; if (lon > e) e = lon;
+    if (lat < s) s = lat; if (lat > n) n = lat;
+  });
+  return [[w, s], [e, n]];
+}
+
+/**
+ * Draw a GPX route line on a Mapbox map instance.
+ * Removes any previous route line for this id first.
+ * @param {mapboxgl.Map} map
+ * @param {string}       id       unique key (route db id)
+ * @param {Array}        coords   [[lng,lat], ...]
+ * @param {object}       opts     { color, width, fitBounds, fitPadding }
+ */
+function drawGpxOnMap(map, id, coords, opts = {}) {
+  const {
+    color = "#E85D3A",
+    width = 3.5,
+    fitBounds = true,
+    fitPadding = 60,
+  } = opts;
+
+  const sourceId = `gpx-${id}`;
+
+  // Remove old layers/source for this route
+  [`${sourceId}-casing`, `${sourceId}-line`].forEach(l => {
+    if (map.getLayer(l)) map.removeLayer(l);
+  });
+  if (map.getSource(sourceId)) map.removeSource(sourceId);
+
+  map.addSource(sourceId, {
+    type: "geojson",
+    data: { type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: {} },
+  });
+
+  // White casing underneath for legibility on any basemap
+  map.addLayer({
+    id: `${sourceId}-casing`,
+    type: "line",
+    source: sourceId,
+    layout: { "line-join": "round", "line-cap": "round" },
+    paint: { "line-color": "#ffffff", "line-width": width + 3, "line-opacity": 0.6 },
+  });
+
+  // Animate the line in by going from 0 to target width
+  map.addLayer({
+    id: `${sourceId}-line`,
+    type: "line",
+    source: sourceId,
+    layout: { "line-join": "round", "line-cap": "round" },
+    paint: { "line-color": color, "line-width": 0, "line-opacity": 0.95 },
+  });
+
+  // Cubic ease-out animation over 700ms
+  const start = performance.now();
+  const duration = 700;
+  const lineLayerId = `${sourceId}-line`;
+  const animate = (now) => {
+    const t = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - t, 3);
+    if (map.getLayer(lineLayerId)) map.setPaintProperty(lineLayerId, "line-width", eased * width);
+    if (t < 1) requestAnimationFrame(animate);
+  };
+  requestAnimationFrame(animate);
+
+  if (fitBounds && coords.length > 1) {
+    map.fitBounds(coordsBbox(coords), { padding: fitPadding, duration: 1000 });
+  }
+}
+
+/** Remove a previously drawn GPX route from the map */
+function removeGpxFromMap(map, id) {
+  const sourceId = `gpx-${id}`;
+  [`${sourceId}-casing`, `${sourceId}-line`].forEach(l => { if (map.getLayer(l)) map.removeLayer(l); });
+  if (map.getSource(sourceId)) map.removeSource(sourceId);
+}
 const WI = ({ type, size = 16 }) => {
   const p = { size, strokeWidth: 1.8 };
   if (type === "sun") return <Sun {...p} color="#EBCB8B" />;
@@ -231,7 +346,7 @@ const greet = () => { const h = new Date().getHours(); return h < 12 ? "Good mor
 /* ═══════════════════════════════════════════════════════════════════
    MINI MAP COMPONENT (reusable for Routes, Discover, Mountain Tracker)
    ═══════════════════════════════════════════════════════════════════ */
-const MiniMap = ({ height, center, zoom, markers, onMarkerClick, showGPS, children }) => {
+const MiniMap = ({ height, center, zoom, markers, onMarkerClick, showGPS, onMapReady, children }) => {
   const containerRef = useRef(null);
   const mapInstance = useRef(null);
   const markersRef = useRef([]);
@@ -258,7 +373,7 @@ const MiniMap = ({ height, center, zoom, markers, onMarkerClick, showGPS, childr
         if (showGPS) {
           map.addControl(new mapboxgl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showUserHeading: true }), "bottom-right");
         }
-        map.on("load", () => setMapReady(true));
+        map.on("load", () => { setMapReady(true); if (onMapReady) onMapReady(map); });
       });
     }, 150);
     return () => { clearTimeout(timer); if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
@@ -704,9 +819,35 @@ const ROUTE_REGIONS = [
 /* ═══════════════════════════════════════════════════════════════════
    ROUTES CLUSTER MAP (native Mapbox clustering)
    ═══════════════════════════════════════════════════════════════════ */
-const RoutesClusterMap = ({ filtered, selRegion, setSelRegion }) => {
+const RoutesClusterMap = ({ filtered, selRegion, setSelRegion, onMapReady }) => {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
+  const [activeGpxId, setActiveGpxId] = useState(null);
+  const [gpxLoading, setGpxLoading] = useState(false);
+
+  async function loadRouteGpx(route) {
+    if (!mapRef.current) return;
+    if (!route.gpx_file) return;
+    if (activeGpxId === route.id) {
+      removeGpxFromMap(mapRef.current, route.id);
+      setActiveGpxId(null);
+      return;
+    }
+    if (activeGpxId) removeGpxFromMap(mapRef.current, activeGpxId);
+    setGpxLoading(true);
+    try {
+      const xml = await fetchGpxText(route.gpx_file);
+      const coords = parseGpxCoords(xml);
+      if (coords.length > 1) {
+        drawGpxOnMap(mapRef.current, route.id, coords, { color: "#E85D3A", fitBounds: true });
+        setActiveGpxId(route.id);
+      }
+    } catch (err) {
+      console.error("GPX draw error:", err);
+    } finally {
+      setGpxLoading(false);
+    }
+  }
 
   useEffect(() => {
     if (mapRef.current || !containerRef.current) return;
@@ -726,6 +867,7 @@ const RoutesClusterMap = ({ filtered, selRegion, setSelRegion }) => {
         mapRef.current = map;
 
         map.on("load", () => {
+          if (onMapReady) onMapReady(map);
           // Build GeoJSON from routes with small offsets so they spread when zoomed
           const features = filtered.map((r, i) => {
             const region = ROUTE_REGIONS.find(rr => rr.name === r.reg);
@@ -847,6 +989,27 @@ const RoutesClusterMap = ({ filtered, selRegion, setSelRegion }) => {
   return (
     <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
       <div ref={containerRef} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
+      {gpxLoading && (
+        <div style={{ position: "absolute", top: 12, left: "50%", transform: "translateX(-50%)", zIndex: 25,
+          background: "rgba(4,30,61,0.92)", backdropFilter: "blur(10px)", borderRadius: "20px",
+          padding: "6px 16px", border: "1px solid rgba(90,152,227,0.2)", display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#E85D3A", animation: "pulse 1s ease infinite" }} />
+          <span style={{ fontSize: "11px", fontWeight: 600, color: "#BDD6F4", fontFamily: "'DM Sans'" }}>Loading route…</span>
+        </div>
+      )}
+      {activeGpxId && (
+        <div style={{ position: "absolute", top: 12, right: 12, zIndex: 25 }}>
+          <button onClick={() => { removeGpxFromMap(mapRef.current, activeGpxId); setActiveGpxId(null); }}
+            style={{ background: "rgba(4,30,61,0.92)", backdropFilter: "blur(10px)", border: "1px solid rgba(232,93,58,0.3)",
+              borderRadius: "20px", padding: "5px 12px", color: "#E85D3A", fontSize: "11px", fontWeight: 600,
+              cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "5px" }}>
+            <X size={11} /> Clear route
+          </button>
+        </div>
+      )}
+      {/* Pass loadRouteGpx up via a hidden div data attribute is not ideal —
+          instead RoutesPage passes it down and the panel calls it directly */}
+      <div style={{ display: "none" }} ref={el => { if (el) el._loadGpx = loadRouteGpx; }} />
     </div>
   );
 };
@@ -857,6 +1020,33 @@ const RoutesPage = () => {
   const [showCommunity, setShowCommunity] = useState(true);
   const [subTab, setSubTab] = useState("list");
   const [selRegion, setSelRegion] = useState(null);
+  const [activeGpxRouteId, setActiveGpxRouteId] = useState(null);
+  const [gpxLoading, setGpxLoading] = useState(false);
+  const routesMapRef = useRef(null);
+
+  async function handleDrawGpx(route) {
+    if (!routesMapRef.current) return;
+    if (!route.gpx_file) return;
+    if (activeGpxRouteId === route.id) {
+      removeGpxFromMap(routesMapRef.current, route.id);
+      setActiveGpxRouteId(null);
+      return;
+    }
+    if (activeGpxRouteId) removeGpxFromMap(routesMapRef.current, activeGpxRouteId);
+    setGpxLoading(true);
+    try {
+      const xml = await fetchGpxText(route.gpx_file);
+      const coords = parseGpxCoords(xml);
+      if (coords.length > 1) {
+        drawGpxOnMap(routesMapRef.current, route.id, coords, { color: "#E85D3A", fitBounds: true });
+        setActiveGpxRouteId(route.id);
+      }
+    } catch (err) {
+      console.error("GPX draw error:", err);
+    } finally {
+      setGpxLoading(false);
+    }
+  }
 
   const filtered = ROUTES.filter(r => {
     if (cf && r.cls !== cf) return false;
@@ -939,7 +1129,7 @@ const RoutesPage = () => {
       {/* ═══ MAP VIEW ═══ */}
       {subTab === "map" && (
         <div style={{ flex: 1, position: "relative", display: "flex", flexDirection: "column" }}>
-        <RoutesClusterMap filtered={filtered} selRegion={selRegion} setSelRegion={setSelRegion} />
+        <RoutesClusterMap filtered={filtered} selRegion={selRegion} setSelRegion={setSelRegion} onMapReady={map => { routesMapRef.current = map; }} />
 
           {/* Selected region route list */}
           {selRegion && (
@@ -957,20 +1147,31 @@ const RoutesPage = () => {
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                   {selRegion.routes.map((r, j) => (
-                    <div key={r.id} style={{
-                      display: "flex", alignItems: "center", gap: "10px",
-                      padding: "8px 10px", borderRadius: "10px",
-                      background: "#0a2240", border: "1px solid rgba(90,152,227,0.08)",
-                      animation: `fi .2s ease ${j * .04}s both`
-                    }}>
-                      <Route size={14} color={CLS[r.cls]?.color} />
+                    <div key={r.id}
+                      onClick={() => handleDrawGpx(r)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: "10px",
+                        padding: "8px 10px", borderRadius: "10px",
+                        background: activeGpxRouteId === r.id ? "rgba(232,93,58,0.08)" : "#0a2240",
+                        border: `1px solid ${activeGpxRouteId === r.id ? "rgba(232,93,58,0.25)" : "rgba(90,152,227,0.08)"}`,
+                        animation: `fi .2s ease ${j * .04}s both`, cursor: r.gpx_file ? "pointer" : "default",
+                        transition: "background .15s, border .15s"
+                      }}>
+                      <Route size={14} color={activeGpxRouteId === r.id ? "#E85D3A" : (CLS[r.cls]?.color)} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
                         <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{r.dist}km · {r.elev}m · {r.time}</div>
                       </div>
-                      <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+                      <div style={{ display: "flex", gap: "4px", flexShrink: 0, alignItems: "center" }}>
                         <span style={{ fontSize: "9px", padding: "1px 5px", borderRadius: "4px", background: `${CLS[r.cls]?.color}15`, color: CLS[r.cls]?.color, fontWeight: 600 }}>{CLS[r.cls]?.name}</span>
                         <span style={{ fontSize: "9px", padding: "1px 5px", borderRadius: "4px", background: `${dc(r.diff)}15`, color: dc(r.diff), fontWeight: 600 }}>{r.diff}</span>
+                        {r.gpx_file && (
+                          <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px",
+                            background: activeGpxRouteId === r.id ? "rgba(232,93,58,0.2)" : "rgba(90,152,227,0.1)",
+                            color: activeGpxRouteId === r.id ? "#E85D3A" : "#5A98E3", fontWeight: 700 }}>
+                            {gpxLoading && activeGpxRouteId !== r.id ? "…" : activeGpxRouteId === r.id ? "✓ drawn" : "GPX"}
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -1026,6 +1227,32 @@ const MapPage = ({ goHome, goProfile, onSaveWalk }) => {
     setSearchQuery("");
     setSearchFocused(false);
   };
+  const [mapGpxActiveId, setMapGpxActiveId] = useState(null);
+  const [mapGpxLoading, setMapGpxLoading] = useState(false);
+
+  async function handleMapDrawGpx(route) {
+    if (!mapRef.current || !route.gpx_file) return;
+    if (mapGpxActiveId === route.id) {
+      removeGpxFromMap(mapRef.current, route.id);
+      setMapGpxActiveId(null);
+      return;
+    }
+    if (mapGpxActiveId) removeGpxFromMap(mapRef.current, mapGpxActiveId);
+    setMapGpxLoading(true);
+    try {
+      const xml = await fetchGpxText(route.gpx_file);
+      const coords = parseGpxCoords(xml);
+      if (coords.length > 1) {
+        drawGpxOnMap(mapRef.current, route.id, coords, { color: "#E85D3A", fitBounds: true });
+        setMapGpxActiveId(route.id);
+      }
+    } catch (err) {
+      console.error("Map GPX error:", err);
+    } finally {
+      setMapGpxLoading(false);
+    }
+  }
+
   const [trackMode, setTrackMode] = useState(false);
   const [recording, setRecording] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -1163,6 +1390,15 @@ const MapPage = ({ goHome, goProfile, onSaveWalk }) => {
       {/* Unsure prompt */}
       {wo && <div onClick={goHome} style={{ position: "absolute", top: 56, left: "50%", transform: "translateX(-50%)", background: "rgba(232,93,58,.92)", backdropFilter: "blur(8px)", borderRadius: "20px", padding: "7px 18px", zIndex: 20, display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", animation: "fi .4s ease", border: "1px solid rgba(248,248,248,.15)" }}><span style={{ fontSize: "12px", color: "#F8F8F8", fontWeight: 600 }}>Unsure where to go?</span><ArrowRight size={14} color="#F8F8F8" /></div>}
 
+      {/* GPX loading indicator on main map */}
+      {mapGpxLoading && (
+        <div style={{ position: "absolute", top: 56, left: "50%", transform: "translateX(-50%)", zIndex: 22,
+          background: "rgba(4,30,61,0.92)", backdropFilter: "blur(10px)", borderRadius: "20px",
+          padding: "6px 16px", border: "1px solid rgba(90,152,227,0.2)", display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#E85D3A", animation: "pulse 1s ease infinite" }} />
+          <span style={{ fontSize: "11px", fontWeight: 600, color: "#BDD6F4", fontFamily: "'DM Sans'" }}>Loading route…</span>
+        </div>
+      )}
       {/* Track button (when not in track mode) */}
       {!trackMode && !sp && !sw && (
         <button onClick={() => setTrackMode(true)} style={{
@@ -1347,13 +1583,43 @@ const MapPage = ({ goHome, goProfile, onSaveWalk }) => {
           <div style={{ padding: "14px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
               <div><div style={{ fontSize: "17px", fontWeight: 800, color: "#F8F8F8" }}>{sp.name}</div><div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>{sp.ht}m · {sp.reg}</div></div>
-              <button onClick={() => setSp(null)} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={13} /></button>
+              <button onClick={() => setSp(null); if (mapGpxActiveId) { removeGpxFromMap(mapRef.current, mapGpxActiveId); setMapGpxActiveId(null); }}} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={13} /></button>
             </div>
             <div style={{ display: "flex", gap: "6px", marginTop: "8px" }}><span style={{ fontSize: "9px", padding: "2px 8px", borderRadius: "6px", background: `${CLS[sp.cls]?.color}15`, color: CLS[sp.cls]?.color, fontWeight: 700 }}>{CLS[sp.cls]?.name}</span></div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px", marginTop: "12px" }}>
               {[["Feels", `${sp.w.f}°`, Thermometer, sp.w.f < -5 ? "#BDD6F4" : "#F8F8F8"], ["Wind", `${sp.w.wi}mph`, Wind, sp.w.wi > 35 ? "#E85D3A" : sp.w.wi >= 20 ? "#F49D37" : "#F8F8F8"], ["Rain", `${sp.w.p}mm`, Droplets, sp.w.p > 2 ? "#5A98E3" : "#F8F8F8"], ["Vis", sp.w.v, Eye, "#F8F8F8"]].map(([l, v, I, c]) => <div key={l} style={{ textAlign: "center", padding: "10px 4px", background: "#0a2240", borderRadius: "10px" }}><I size={14} color="#BDD6F4" style={{ opacity: 0.5 }} /><div style={{ fontSize: "14px", fontWeight: 700, color: c, marginTop: "3px" }}>{v}</div><div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4, marginTop: "1px" }}>{l}</div></div>)}
             </div>
             <button style={{ marginTop: "14px", width: "100%", padding: "11px", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", border: "none", borderRadius: "11px", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Log This Summit ⛰️</button>
+            {/* Routes for this peak */}
+            {(() => {
+              const peakRoutes = ROUTES.filter(r => r.peaks && r.peaks.includes(sp.name));
+              if (!peakRoutes.length) return null;
+              return (
+                <div style={{ marginTop: "10px", borderTop: "1px solid rgba(90,152,227,0.08)", paddingTop: "10px" }}>
+                  <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, fontWeight: 700, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Routes</div>
+                  {peakRoutes.map(r => (
+                    <div key={r.id} onClick={() => handleMapDrawGpx(r)} style={{
+                      display: "flex", alignItems: "center", gap: "6px", marginTop: "4px",
+                      padding: "6px 9px", borderRadius: "8px", cursor: r.gpx_file ? "pointer" : "default",
+                      background: mapGpxActiveId === r.id ? "rgba(232,93,58,0.1)" : "rgba(90,152,227,0.06)",
+                      border: `1px solid ${mapGpxActiveId === r.id ? "rgba(232,93,58,0.25)" : "rgba(90,152,227,0.1)"}`,
+                      transition: "all .15s"
+                    }}>
+                      <Route size={10} color={mapGpxActiveId === r.id ? "#E85D3A" : "#5A98E3"} />
+                      <span style={{ flex: 1, fontSize: "10px", fontWeight: 600, color: mapGpxActiveId === r.id ? "#E85D3A" : "#5A98E3", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</span>
+                      <span style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5 }}>{r.dist}km</span>
+                      {r.gpx_file && (
+                        <span style={{ fontSize: "8px", padding: "1px 5px", borderRadius: "3px",
+                          background: mapGpxActiveId === r.id ? "rgba(232,93,58,0.2)" : "rgba(90,152,227,0.1)",
+                          color: mapGpxActiveId === r.id ? "#E85D3A" : "#5A98E3", fontWeight: 700 }}>
+                          {mapGpxLoading ? "…" : mapGpxActiveId === r.id ? "✓" : "GPX"}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -1566,6 +1832,32 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, savedWa
   const [logDate, setLogDate] = useState("");
   const [logNote, setLogNote] = useState("");
   const [peakData, setPeakData] = useState(dbPeaks || PEAKS);
+  const mtMapRef = useRef(null);
+  const [mtActiveGpxId, setMtActiveGpxId] = useState(null);
+  const [mtGpxLoading, setMtGpxLoading] = useState(false);
+
+  async function handleMtDrawGpx(route) {
+    if (!mtMapRef.current || !route.gpx_file) return;
+    if (mtActiveGpxId === route.id) {
+      removeGpxFromMap(mtMapRef.current, route.id);
+      setMtActiveGpxId(null);
+      return;
+    }
+    if (mtActiveGpxId) removeGpxFromMap(mtMapRef.current, mtActiveGpxId);
+    setMtGpxLoading(true);
+    try {
+      const xml = await fetchGpxText(route.gpx_file);
+      const coords = parseGpxCoords(xml);
+      if (coords.length > 1) {
+        drawGpxOnMap(mtMapRef.current, route.id, coords, { color: "#E85D3A", fitBounds: true, fitPadding: 40 });
+        setMtActiveGpxId(route.id);
+      }
+    } catch (err) {
+      console.error("MT GPX draw error:", err);
+    } finally {
+      setMtGpxLoading(false);
+    }
+  }
 
   // Update peakData when Supabase peaks load
   useEffect(() => {
@@ -1689,7 +1981,24 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, savedWa
               )}
               <div style={mtExpanded ? { flex: 1, position: "relative", display: "flex", flexDirection: "column" } : { position: "relative" }}>
                 {!mtExpanded && <button onClick={() => setMtExpanded(true)} style={{ position: "absolute", top: 10, right: 10, zIndex: 22, background: "rgba(4,30,61,0.88)", backdropFilter: "blur(8px)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "8px", padding: "6px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><Maximize2 size={14} /></button>}
-                <MiniMap key={mtExpanded ? "expanded" : "compact"} height={mtExpanded ? "100%" : "340px"} showGPS={true} markers={filteredPeaks.map(pk => ({ lat: pk.lat, lng: pk.lng, color: pk.done ? "#6BCB77" : "#E85D3A", data: pk, style: `width:14px;height:14px;border-radius:50%;background:${pk.done ? "#6BCB77" : "#E85D3A"};border:2px solid rgba(255,255,255,0.5);cursor:pointer;box-shadow:0 0 6px ${pk.done ? "rgba(107,203,119,0.4)" : "rgba(232,93,58,0.4)"};` }))} onMarkerClick={(m) => { setSelPeak(m.data); setLogging(false); }}>
+              {mtActiveGpxId && (
+                <button onClick={() => { removeGpxFromMap(mtMapRef.current, mtActiveGpxId); setMtActiveGpxId(null); }}
+                  style={{ position: "absolute", top: 10, left: 10, zIndex: 22, background: "rgba(4,30,61,0.88)", backdropFilter: "blur(8px)",
+                    border: "1px solid rgba(232,93,58,0.3)", borderRadius: "20px", padding: "5px 12px",
+                    color: "#E85D3A", fontSize: "11px", fontWeight: 600, cursor: "pointer",
+                    fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "5px" }}>
+                  <X size={11} /> Clear route
+                </button>
+              )}
+              {mtGpxLoading && (
+                <div style={{ position: "absolute", top: 10, left: "50%", transform: "translateX(-50%)", zIndex: 22,
+                  background: "rgba(4,30,61,0.92)", backdropFilter: "blur(10px)", borderRadius: "20px",
+                  padding: "5px 14px", border: "1px solid rgba(90,152,227,0.2)", display: "flex", alignItems: "center", gap: "7px" }}>
+                  <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#E85D3A", animation: "pulse 1s ease infinite" }} />
+                  <span style={{ fontSize: "10px", fontWeight: 600, color: "#BDD6F4", fontFamily: "'DM Sans'" }}>Loading route…</span>
+                </div>
+              )}
+                <MiniMap key={mtExpanded ? "expanded" : "compact"} height={mtExpanded ? "100%" : "340px"} showGPS={true} onMapReady={map => { mtMapRef.current = map; }} markers={filteredPeaks.map(pk => ({ lat: pk.lat, lng: pk.lng, color: pk.done ? "#6BCB77" : "#E85D3A", data: pk, style: `width:14px;height:14px;border-radius:50%;background:${pk.done ? "#6BCB77" : "#E85D3A"};border:2px solid rgba(255,255,255,0.5);cursor:pointer;box-shadow:0 0 6px ${pk.done ? "rgba(107,203,119,0.4)" : "rgba(232,93,58,0.4)"};` }))} onMarkerClick={(m) => { setSelPeak(m.data); setLogging(false); if (mtActiveGpxId) { removeGpxFromMap(mtMapRef.current, mtActiveGpxId); setMtActiveGpxId(null); } }}>
                 {selPeak && (
                   <div style={{ position: "absolute", bottom: 10, left: 10, right: 10, zIndex: 20, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.15)", animation: "su .25s ease", overflow: "hidden" }}>
                     <div style={{ height: "3px", background: selPeak.done ? "linear-gradient(90deg,#6BCB77,transparent)" : "linear-gradient(90deg,#E85D3A,transparent)" }} />
@@ -1702,11 +2011,27 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, savedWa
                           </div>
                           <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>{selPeak.ht}m · {selPeak.reg}</div>
                           <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "5px", background: `${CLS[selPeak.cls]?.color}15`, color: CLS[selPeak.cls]?.color, fontWeight: 600, marginTop: "4px", display: "inline-block" }}>{CLS[selPeak.cls]?.name}</span>
-                          {(() => { const matchedRoutes = ROUTES.filter(r => r.peaks.includes(selPeak.name) && r.src === "ts"); return matchedRoutes.length > 0 ? (
+                          {(() => { const matchedRoutes = ROUTES.filter(r => r.peaks && r.peaks.includes(selPeak.name)); return matchedRoutes.length > 0 ? (
                             <div style={{ marginTop: "6px" }}>
+                              <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, fontWeight: 600, marginBottom: "3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Routes</div>
                               {matchedRoutes.map(r => (
-                                <div key={r.id} onClick={() => { if (goRoutes) goRoutes(); }} style={{ fontSize: "10px", color: "#5A98E3", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
-                                  <Route size={10} /> {r.name} ({r.dist}km · {r.diff})
+                                <div key={r.id} onClick={() => { if (r.gpx_file && mtMapRef.current) { handleMtDrawGpx(r); } }} style={{
+                                  fontSize: "10px", cursor: r.gpx_file ? "pointer" : "default",
+                                  fontWeight: 600, display: "flex", alignItems: "center", gap: "4px", marginTop: "3px",
+                                  padding: "5px 8px", borderRadius: "7px",
+                                  background: mtActiveGpxId === r.id ? "rgba(232,93,58,0.1)" : "rgba(90,152,227,0.06)",
+                                  border: `1px solid ${mtActiveGpxId === r.id ? "rgba(232,93,58,0.25)" : "rgba(90,152,227,0.1)"}`,
+                                  color: mtActiveGpxId === r.id ? "#E85D3A" : "#5A98E3",
+                                  transition: "all .15s"
+                                }}>
+                                  <Route size={10} />
+                                  <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</span>
+                                  <span style={{ opacity: 0.6, fontWeight: 400 }}>{r.dist}km · {r.diff}</span>
+                                  {r.gpx_file && <span style={{ fontSize: "8px", padding: "1px 4px", borderRadius: "3px",
+                                    background: mtActiveGpxId === r.id ? "rgba(232,93,58,0.2)" : "rgba(90,152,227,0.1)",
+                                    color: mtActiveGpxId === r.id ? "#E85D3A" : "#5A98E3", fontWeight: 700 }}>
+                                    {mtGpxLoading && mtActiveGpxId !== r.id ? "…" : mtActiveGpxId === r.id ? "✓" : "GPX"}
+                                  </span>}
                                 </div>
                               ))}
                             </div>
@@ -2135,6 +2460,7 @@ export default function TrailSync() {
   const [savedWalks, setSavedWalks] = useState([]);
   const [tutStep, setTutStep] = useState(0);
   const [dbPeaks, setDbPeaks] = useState(null);
+  const [dbRoutes, setDbRoutes] = useState(null);
 
   // Fetch peaks from Supabase on mount
   useEffect(() => {
@@ -2163,6 +2489,41 @@ export default function TrailSync() {
       }
     }
     fetchPeaks();
+  }, []);
+
+  // Fetch routes from Supabase on mount
+  useEffect(() => {
+    async function fetchRoutes() {
+      try {
+        const { data, error } = await supabase.from("routes").select("*").order("name");
+        if (error) { console.error("Supabase routes error:", error); return; }
+        if (data && data.length > 0) {
+          const mapped = data.map(r => ({
+            // Supabase id kept as-is (used for GPX lookup)
+            id: r.id,
+            name: r.name,
+            cls: r.classification || r.cls || "munros",
+            reg: r.region || r.reg || "",
+            diff: r.difficulty || r.diff || "Moderate",
+            dist: r.distance_km || r.dist || 0,
+            elev: r.elevation_gain_m || r.elev || 0,
+            time: r.estimated_time || r.time || "",
+            peaks: r.peaks || [],
+            rat: r.rating || r.rat || 0,
+            rev: r.reviews || r.rev || 0,
+            start: r.start_point || r.start || "",
+            src: r.source || r.src || "ts",
+            gpx_file: r.gpx_url || null,  // column is gpx_url in DB
+          }));
+          ROUTES = mapped;
+          setDbRoutes(mapped);
+          console.log(`Loaded ${mapped.length} routes from Supabase`);
+        }
+      } catch (err) {
+        console.error("Failed to fetch routes:", err);
+      }
+    }
+    fetchRoutes();
   }, []);
 
   const tabs = [
