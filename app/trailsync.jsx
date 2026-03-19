@@ -1074,7 +1074,7 @@ const RoutesPage = ({ openRoute }) => {
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             {filtered.map((r, i) => (
               <div key={r.id}
-                onClick={() => r.gpx_file && openRoute(r.id, subTab === "map" ? "routes-map" : "routes-list")}
+                onClick={() => openRoute(r, subTab === "map" ? "routes-map" : "routes-list")}
                 style={{ background: "#0a2240", borderRadius: "14px", padding: "14px",
                   border: "1px solid rgba(90,152,227,0.1)",
                   cursor: r.gpx_file ? "pointer" : "default", animation: `fi .3s ease ${i * .04}s both` }}>
@@ -1084,7 +1084,7 @@ const RoutesPage = ({ openRoute }) => {
                     <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "3px" }}>{r.reg} · Start: {r.start}</div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
-                    {r.gpx_file && (
+                    {(r.gpx_file || ROUTES.find(x => x.name === r.name && x.gpx_file)) && (
                       <span style={{ fontSize: "9px", padding: "2px 8px", borderRadius: "8px",
                         background: "rgba(232,93,58,0.12)", color: "#E85D3A", fontWeight: 700 }}>
                         View on map →
@@ -1137,7 +1137,7 @@ const RoutesPage = ({ openRoute }) => {
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                   {selRegion.routes.map((r, j) => (
                     <div key={r.id}
-                      onClick={() => openRoute(r.id, "routes-map")}
+                      onClick={() => openRoute(r, "routes-map")}
                       style={{
                         display: "flex", alignItems: "center", gap: "10px",
                         padding: "8px 10px", borderRadius: "10px",
@@ -1153,7 +1153,7 @@ const RoutesPage = ({ openRoute }) => {
                       <div style={{ display: "flex", gap: "4px", flexShrink: 0, alignItems: "center" }}>
                         <span style={{ fontSize: "9px", padding: "1px 5px", borderRadius: "4px", background: `${CLS[r.cls]?.color}15`, color: CLS[r.cls]?.color, fontWeight: 600 }}>{CLS[r.cls]?.name}</span>
                         <span style={{ fontSize: "9px", padding: "1px 5px", borderRadius: "4px", background: `${dc(r.diff)}15`, color: dc(r.diff), fontWeight: 600 }}>{r.diff}</span>
-                        {r.gpx_file && (
+                        {(r.gpx_file || ROUTES.find(x => x.name === r.name && x.gpx_file)) && (
                           <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px",
                             background: "rgba(232,93,58,0.12)", color: "#E85D3A", fontWeight: 700 }}>
                             View →
@@ -1633,7 +1633,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                 <div style={{ marginTop: "10px", borderTop: "1px solid rgba(90,152,227,0.08)", paddingTop: "10px" }}>
                   <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, fontWeight: 700, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Routes</div>
                   {peakRoutes.map(r => (
-                    <div key={r.id} onClick={() => r.gpx_file && openRoute && openRoute(r.id, "search")} style={{
+                    <div key={r.id} onClick={() => openRoute && openRoute(r, "search")} style={{
                       display: "flex", alignItems: "center", gap: "6px", marginTop: "4px",
                       padding: "6px 9px", borderRadius: "8px", cursor: r.gpx_file ? "pointer" : "default",
                       background: "rgba(90,152,227,0.06)",
@@ -2049,7 +2049,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                             <div style={{ marginTop: "6px" }}>
                               <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, fontWeight: 600, marginBottom: "3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Routes</div>
                               {matchedRoutes.map(r => (
-                                <div key={r.id} onClick={() => r.gpx_file && openRoute && openRoute(r.id, "mountain-tracker")} style={{
+                                <div key={r.id} onClick={() => openRoute && openRoute(r, "mountain-tracker")} style={{
                                   fontSize: "10px", cursor: r.gpx_file ? "pointer" : "default",
                                   fontWeight: 600, display: "flex", alignItems: "center", gap: "4px", marginTop: "3px",
                                   padding: "5px 8px", borderRadius: "7px",
@@ -2497,10 +2497,16 @@ export default function TrailSync() {
   const [gpxRoute, setGpxRoute] = useState(null); // { route, from }
 
   // Navigate to main map and draw a GPX route
-  // `from` records where we came from so back button restores it
-  function openRouteOnMap(routeId, from) {
-    const route = ROUTES.find(r => String(r.id) === String(routeId));
+  // Accepts a full route object or just an id
+  function openRouteOnMap(routeOrId, from) {
+    let route = typeof routeOrId === "object" ? routeOrId : ROUTES.find(r => String(r.id) === String(routeOrId));
     if (!route) return;
+    // If this hardcoded route has no gpx_file, check if a Supabase version (by name) does
+    if (!route.gpx_file) {
+      const withGpx = ROUTES.find(r => r.name === route.name && r.gpx_file);
+      if (withGpx) route = withGpx;
+    }
+    if (!route.gpx_file) return; // truly no GPX available
     setGpxRoute({ route, from: from || "routes-list" });
     setTab("map");
   }
