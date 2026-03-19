@@ -870,16 +870,19 @@ const RoutesClusterMap = ({ filtered, selRegion, setSelRegion, onMapReady }) => 
           if (onMapReady) onMapReady(map);
           // Build GeoJSON from routes with small offsets so they spread when zoomed
           const features = filtered.map((r, i) => {
+            // Use first matched peak coords for accuracy, fall back to region centre
+            const peakMatch = PEAKS.find(p => r.peaks && r.peaks.includes(p.name));
             const region = ROUTE_REGIONS.find(rr => rr.name === r.reg);
-            const baseLat = region?.lat || 56.5;
-            const baseLng = region?.lng || -4.5;
-            // Offset each route slightly so they spread when zoomed in
-            const offset = 0.03;
-            const angle = (i / filtered.length) * Math.PI * 2;
+            const baseLat = peakMatch?.lat ?? region?.lat ?? 56.5;
+            const baseLng = peakMatch?.lng ?? region?.lng ?? -4.5;
+            // Tiny offset so multiple routes on the same peak spread slightly
+            const offset = 0.008;
+            const angle = (i / Math.max(filtered.length, 1)) * Math.PI * 2;
+            const routeIdx = filtered.filter(x => x.reg === r.reg).indexOf(r);
             return {
               type: "Feature",
               properties: { id: r.id, name: r.name, dist: r.dist, elev: r.elev, diff: r.diff, cls: r.cls, time: r.time, region: r.reg },
-              geometry: { type: "Point", coordinates: [baseLng + Math.cos(angle) * offset * (i % 3 + 1), baseLat + Math.sin(angle) * offset * (i % 3 + 1)] }
+              geometry: { type: "Point", coordinates: [baseLng + Math.cos(angle) * offset * (routeIdx + 1), baseLat + Math.sin(angle) * offset * (routeIdx + 1)] }
             };
           });
 
@@ -972,15 +975,17 @@ const RoutesClusterMap = ({ filtered, selRegion, setSelRegion, onMapReady }) => 
     if (!source) return;
 
     const features = filtered.map((r, i) => {
+      const peakMatch = PEAKS.find(p => r.peaks && r.peaks.includes(p.name));
       const region = ROUTE_REGIONS.find(rr => rr.name === r.reg);
-      const baseLat = region?.lat || 56.5;
-      const baseLng = region?.lng || -4.5;
-      const offset = 0.03;
-      const angle = (i / filtered.length) * Math.PI * 2;
+      const baseLat = peakMatch?.lat ?? region?.lat ?? 56.5;
+      const baseLng = peakMatch?.lng ?? region?.lng ?? -4.5;
+      const offset = 0.008;
+      const angle = (i / Math.max(filtered.length, 1)) * Math.PI * 2;
+      const routeIdx = filtered.filter(x => x.reg === r.reg).indexOf(r);
       return {
         type: "Feature",
         properties: { id: r.id, name: r.name, dist: r.dist, elev: r.elev, diff: r.diff, cls: r.cls, time: r.time, region: r.reg },
-        geometry: { type: "Point", coordinates: [baseLng + Math.cos(angle) * offset * (i % 3 + 1), baseLat + Math.sin(angle) * offset * (i % 3 + 1)] }
+        geometry: { type: "Point", coordinates: [baseLng + Math.cos(angle) * offset * (routeIdx + 1), baseLat + Math.sin(angle) * offset * (routeIdx + 1)] }
       };
     });
     source.setData({ type: "FeatureCollection", features });
@@ -2558,9 +2563,12 @@ export default function TrailSync() {
             src: r.source || r.src || "ts",
             gpx_file: r.gpx_url || null,  // column is gpx_url in DB
           }));
-          ROUTES = mapped;
-          setDbRoutes(mapped);
-          console.log(`Loaded ${mapped.length} routes from Supabase`);
+          // Merge: Supabase rows override hardcoded ones by name, extras are appended
+          const supabaseNames = new Set(mapped.map(r => r.name));
+          const hardcodedOnly = ROUTES.filter(r => !supabaseNames.has(r.name));
+          ROUTES = [...hardcodedOnly, ...mapped];
+          setDbRoutes(ROUTES);
+          console.log(`Routes: ${hardcodedOnly.length} hardcoded + ${mapped.length} Supabase = ${ROUTES.length} total`);
         }
       } catch (err) {
         console.error("Failed to fetch routes:", err);
