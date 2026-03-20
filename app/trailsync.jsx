@@ -2598,12 +2598,39 @@ export default function TrailSync() {
             src: r.source || r.src || "ts",
             gpx_file: r.gpx_url || null,  // column is gpx_url in DB
           }));
-          // Merge: Supabase rows override hardcoded ones by name, extras are appended
-          const supabaseNames = new Set(mapped.map(r => r.name));
-          const hardcodedOnly = ROUTES.filter(r => !supabaseNames.has(r.name));
-          ROUTES = [...hardcodedOnly, ...mapped];
-          setDbRoutes(ROUTES);
-          console.log(`Routes: ${hardcodedOnly.length} hardcoded + ${mapped.length} Supabase = ${ROUTES.length} total`);
+          // Merge: Supabase rows fill in gpx_file on hardcoded routes by name match.
+          // Only fields that are actually populated in Supabase override the hardcoded values.
+          // This means distance, elevation, time etc. stay from the hardcoded data.
+          const supabaseByName = {};
+          mapped.forEach(r => { supabaseByName[r.name] = r; });
+
+          ROUTES = ROUTES.map(r => {
+            const sb = supabaseByName[r.name];
+            if (!sb) return r;
+            // Merge: keep hardcoded fields unless Supabase has a real value
+            return {
+              ...r,
+              id: sb.id,                                          // use Supabase id for GPX lookup
+              gpx_file: sb.gpx_file || r.gpx_file || null,
+              dist: sb.dist || r.dist,
+              elev: sb.elev || r.elev,
+              time: sb.time || r.time,
+              rat: sb.rat || r.rat,
+              rev: sb.rev || r.rev,
+              cls: sb.cls !== "munros" || r.cls === "munros" ? (sb.cls || r.cls) : r.cls,
+              diff: sb.diff !== "Moderate" || r.diff === "Moderate" ? (sb.diff || r.diff) : r.diff,
+              reg: sb.reg || r.reg,
+              start: sb.start || r.start,
+              src: sb.src || r.src,
+            };
+          });
+
+          // Append any Supabase routes not in hardcoded list
+          const hardcodedNames = new Set(ROUTES.map(r => r.name));
+          mapped.forEach(r => { if (!hardcodedNames.has(r.name)) ROUTES.push(r); });
+
+          setDbRoutes([...ROUTES]);
+          console.log(`Routes merged: ${ROUTES.length} total`);
         }
       } catch (err) {
         console.error("Failed to fetch routes:", err);
