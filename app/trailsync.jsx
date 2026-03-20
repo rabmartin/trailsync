@@ -76,7 +76,9 @@ const PEAKS_FALLBACK = [
   { id: 13, name: "Pen y Fan", cls: "hewitts", ht: 886, reg: "Brecon Beacons", lat: 51.884, lng: -3.436, w: { t: 7, f: 4, wi: 14, p: 0.1, v: "good", sn: false }, done: false },
   { id: 14, name: "Merrick", cls: "donalds", ht: 843, reg: "Galloway Hills", lat: 55.146, lng: -4.615, w: { t: 5, f: 1, wi: 16, p: 0.3, v: "good", sn: false }, done: false },
   { id: 15, name: "Sgurr nan Gillean", cls: "munros", ht: 964, reg: "Skye Cuillin", lat: 57.254, lng: -6.196, w: { t: 1, f: -5, wi: 30, p: 1.0, v: "moderate", sn: false }, done: false },
-  { id: 16, name: "The Five Sisters of Kintail", cls: "munros", ht: 1067, reg: "Kintail", lat: 57.200, lng: -5.350, w: { t: 0, f: -7, wi: 35, p: 2.0, v: "poor", sn: true }, done: false },
+  { id: 16, name: "Sgùrr na Ciste Duibhe", cls: "munros", ht: 1027, reg: "Kintail", lat: 57.2040, lng: -5.3210, w: { t: 0, f: -7, wi: 35, p: 2.0, v: "poor", sn: true }, done: false },
+  { id: 17, name: "Sgùrr na Càrnach", cls: "munros", ht: 1002, reg: "Kintail", lat: 57.2020, lng: -5.3330, w: { t: 0, f: -7, wi: 35, p: 2.0, v: "poor", sn: true }, done: false },
+  { id: 18, name: "Sgùrr Fhuaran", cls: "munros", ht: 1067, reg: "Kintail", lat: 57.1987, lng: -5.3487, w: { t: 0, f: -7, wi: 35, p: 2.0, v: "poor", sn: true }, done: false },
 ];
 // PEAKS will be populated from Supabase in the main app component
 let PEAKS = PEAKS_FALLBACK;
@@ -101,7 +103,7 @@ let ROUTES = [
   { id: 16, name: "Loch Muick Circuit", cls: "non-mountain", reg: "Cairngorms", diff: "Easy", dist: 12.0, elev: 180, time: "3-4h", peaks: [], rat: 4.4, rev: 198, start: "Spittal of Glenmuick Car Park", src: "ts" },
   { id: 17, name: "Great Glen Way", cls: "non-mountain", reg: "Ben Nevis & Mamores", diff: "Moderate", dist: 127, elev: 2200, time: "5-6 days", peaks: [], rat: 4.5, rev: 345, start: "Fort William", src: "ts" },
   { id: 18, name: "Trossachs Trail - Loch Katrine", cls: "non-mountain", reg: "Southern Highlands", diff: "Easy", dist: 21, elev: 280, time: "5-6h", peaks: [], rat: 4.3, rev: 178, start: "Trossachs Pier", src: "ts" },
-  { id: 21, name: "The Five Sisters of Kintail", cls: "munros", reg: "Kintail", diff: "Expert", dist: 20.1, elev: 1530, time: "8-10h", peaks: ["The Five Sisters of Kintail"], rat: 4.8, rev: 156, start: "Shiel Bridge Car Park", src: "ts" },
+  { id: 21, name: "The Five Sisters of Kintail", cls: "munros", reg: "Kintail", diff: "Expert", dist: 15.0, elev: 1775, time: "8-10h", peaks: ["Sgùrr na Ciste Duibhe", "Sgùrr na Càrnach", "Sgùrr Fhuaran"], rat: 4.8, rev: 156, start: "Shiel Bridge Car Park", src: "ts" },
   { id: 19, name: "Buachaille Etive Mor - South Ridge Variation", cls: "munros", reg: "Glen Coe", diff: "Expert", dist: 12.5, elev: 1100, time: "6-8h", peaks: ["Buachaille Etive Mor"], rat: 4.6, rev: 23, start: "Altnafeadh Layby", src: "community" },
   { id: 20, name: "Cairngorms Lairig Ghru Through-Walk", cls: "non-mountain", reg: "Cairngorms", diff: "Hard", dist: 30, elev: 640, time: "10-12h", peaks: [], rat: 4.7, rev: 45, start: "Linn of Dee Car Park", src: "community" },
 ];
@@ -826,7 +828,7 @@ const ROUTE_REGIONS = [
   { name: "Brecon Beacons", lat: 51.88, lng: -3.44, routes: [] },
   { name: "Skye Cuillin", lat: 57.25, lng: -6.20, routes: [] },
   { name: "Galloway Hills", lat: 55.15, lng: -4.62, routes: [] },
-  { name: "Kintail", lat: 57.200, lng: -5.350, routes: [] },
+  { name: "Kintail", lat: 57.1987, lng: -5.3487, routes: [] },
 ];
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1205,7 +1207,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   const searchItems = useMemo(() => {
     const items = [];
     PEAKS.forEach(pk => items.push({ type: "peak", name: pk.name, sub: `${pk.ht}m · ${CLS[pk.cls]?.name || ""} · ${pk.reg}`, lat: pk.lat, lng: pk.lng, zoom: 13, color: CLS[pk.cls]?.color, data: pk }));
-    ROUTES.forEach(r => items.push({ type: "route", name: r.name, sub: `${r.dist}km · ${r.diff} · ${r.reg}`, lat: ROUTE_REGIONS.find(rr => rr.name === r.reg)?.lat || 56.5, lng: ROUTE_REGIONS.find(rr => rr.name === r.reg)?.lng || -4.5, zoom: 11, color: "#5A98E3" }));
+    ROUTES.forEach(r => items.push({ type: "route", name: r.name, sub: `${r.dist}km · ${r.diff} · ${r.reg}`, lat: ROUTE_REGIONS.find(rr => rr.name === r.reg)?.lat || 56.5, lng: ROUTE_REGIONS.find(rr => rr.name === r.reg)?.lng || -4.5, zoom: 11, color: "#5A98E3", data: r }));
     ROUTE_REGIONS.forEach(rr => items.push({ type: "area", name: rr.name, sub: "Region", lat: rr.lat, lng: rr.lng, zoom: 10, color: "#BDD6F4" }));
     return items;
   }, []);
@@ -1217,12 +1219,20 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   }, [searchQuery, searchItems]);
 
   const handleSearchSelect = (item) => {
-    if (mapRef.current) {
-      mapRef.current.flyTo({ center: [item.lng, item.lat], zoom: item.zoom, duration: 1500 });
-    }
-    if (item.type === "peak" && item.data) {
-      setSp(item.data);
-      setSw(null);
+    if (item.type === "route" && item.data && item.data.gpx_file) {
+      // Route with GPX — open directly on main map
+      openRoute && openRoute(item.data, "search");
+    } else if (item.type === "route" && item.data) {
+      // Route without GPX — try resolving by name from full ROUTES list
+      openRoute && openRoute(item.data, "search");
+    } else {
+      if (mapRef.current) {
+        mapRef.current.flyTo({ center: [item.lng, item.lat], zoom: item.zoom, duration: 1500 });
+      }
+      if (item.type === "peak" && item.data) {
+        setSp(item.data);
+        setSw(null);
+      }
     }
     setSearchQuery("");
     setSearchFocused(false);
