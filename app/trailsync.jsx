@@ -960,13 +960,27 @@ const HomePage = ({ userName, initialFilter }) => {
                           const loading = peakWxLoading[key];
                           return (
                           <div key={pk.id}
-                            onClick={() => lw && setSelPeakWx({ peak: pk, wx: lw })}
+                            onClick={() => {
+                              // Open card immediately — fetch if not yet loaded
+                              setSelPeakWx({ peak: pk, wx: lw || null });
+                              if (!lw && !loading) {
+                                const offset = wxDay === -1 ? 0 : wxDay;
+                                setPeakWxLoading(prev => ({ ...prev, [key]: true }));
+                                fetchPeakWeather(pk, offset).then(w => {
+                                  if (w) {
+                                    setPeakWx(prev => ({ ...prev, [key]: w }));
+                                    setSelPeakWx({ peak: pk, wx: w });
+                                  }
+                                  setPeakWxLoading(prev => ({ ...prev, [key]: false }));
+                                });
+                              }
+                            }}
                             style={{
                               display: "flex", alignItems: "center", gap: "10px",
                               padding: "9px 10px", borderRadius: "10px",
                               background: "#041e3d", border: "1px solid rgba(90,152,227,0.08)",
                               animation: `fi .2s ease ${j * .05}s both`,
-                              cursor: lw ? "pointer" : "default",
+                              cursor: "pointer",
                               transition: "border .15s"
                             }}>
                             <Mountain size={14} color={CLS[pk.cls]?.color} />
@@ -1026,7 +1040,7 @@ const HomePage = ({ userName, initialFilter }) => {
               <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: "rgba(90,152,227,0.2)" }} />
             </div>
 
-            {/* Header */}
+            {/* Header — always shown */}
             <div style={{ padding: "4px 18px 14px", borderBottom: "1px solid rgba(90,152,227,0.1)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
                 <div>
@@ -1036,66 +1050,82 @@ const HomePage = ({ userName, initialFilter }) => {
                 <button onClick={() => setSelPeakWx(null)} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><X size={13} /></button>
               </div>
 
-              {/* Hero weather */}
-              <div style={{ display: "flex", alignItems: "center", gap: "16px", marginTop: "14px" }}>
-                <WI type={selPeakWx.wx.ic} size={48} />
-                <div>
-                  <div style={{ fontSize: "42px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'", lineHeight: 1 }}>{selPeakWx.wx.t}°</div>
-                  <div style={{ fontSize: "13px", color: "#BDD6F4", marginTop: "2px" }}>Feels like <span style={{ color: selPeakWx.wx.f < -10 ? "#5A98E3" : selPeakWx.wx.f < 0 ? "#BDD6F4" : "#F8F8F8", fontWeight: 700 }}>{selPeakWx.wx.f}°</span></div>
+              {/* Hero weather or loading */}
+              {selPeakWx.wx ? (
+                <div style={{ display: "flex", alignItems: "center", gap: "16px", marginTop: "14px" }}>
+                  <WI type={selPeakWx.wx.ic} size={48} />
+                  <div>
+                    <div style={{ fontSize: "42px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'", lineHeight: 1 }}>{selPeakWx.wx.t}°</div>
+                    <div style={{ fontSize: "13px", color: "#BDD6F4", marginTop: "2px" }}>Feels like <span style={{ color: selPeakWx.wx.f < -10 ? "#5A98E3" : selPeakWx.wx.f < 0 ? "#BDD6F4" : "#F8F8F8", fontWeight: 700 }}>{selPeakWx.wx.f}°</span></div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "14px" }}>
+                  <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(90,152,227,0.08)" }} />
+                  <div>
+                    <div style={{ width: "80px", height: "32px", borderRadius: "8px", background: "rgba(90,152,227,0.08)", marginBottom: "6px" }} />
+                    <div style={{ width: "100px", height: "14px", borderRadius: "6px", background: "rgba(90,152,227,0.06)" }} />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div style={{ overflowY: "auto", flex: 1 }}>
-              {/* Stats grid */}
-              <div style={{ padding: "14px 18px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
-                {[
-                  ["Wind", `${selPeakWx.wx.wi}mph`, selPeakWx.wx.wi > 35 ? "#E85D3A" : selPeakWx.wx.wi >= 20 ? "#F49D37" : "#F8F8F8"],
-                  ["Gusts", `${selPeakWx.wx.gusts}mph`, selPeakWx.wx.gusts > 50 ? "#E85D3A" : selPeakWx.wx.gusts > 30 ? "#F49D37" : "#F8F8F8"],
-                  ["Precip", `${selPeakWx.wx.p}mm`, "#5A98E3"],
-                  ["Rain %", `${selPeakWx.wx.pct}%`, selPeakWx.wx.pct > 70 ? "#5A98E3" : "#F8F8F8"],
-                  ["Sunrise", selPeakWx.wx.sunrise, "#F49D37"],
-                  ["Sunset", selPeakWx.wx.sunset, "#E85D3A"],
-                ].map(([label, val, color]) => (
-                  <div key={label} style={{ background: "#041e3d", borderRadius: "10px", padding: "10px", textAlign: "center" }}>
-                    <div style={{ fontSize: "14px", fontWeight: 700, color, fontFamily: "'JetBrains Mono'" }}>{val}</div>
-                    <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginTop: "3px" }}>{label}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Snow indicator */}
-              {selPeakWx.wx.sn && (
-                <div style={{ margin: "0 18px 10px", padding: "8px 12px", borderRadius: "8px", background: "rgba(189,214,244,0.08)", border: "1px solid rgba(189,214,244,0.15)", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <Snowflake size={14} color="#BDD6F4" />
-                  <span style={{ fontSize: "11px", color: "#BDD6F4", fontWeight: 600 }}>Snow expected at summit level</span>
+              {!selPeakWx.wx ? (
+                /* Loading state */
+                <div style={{ padding: "30px", textAlign: "center" }}>
+                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#5A98E3", margin: "0 auto", animation: "pulse 1s ease infinite" }} />
+                  <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, marginTop: "10px" }}>Fetching summit forecast…</div>
                 </div>
-              )}
-
-              {/* Hourly forecast */}
-              {selPeakWx.wx.hours && (
-                <div style={{ padding: "0 18px 20px" }}>
-                  <div style={{ fontSize: "11px", fontWeight: 700, color: "#BDD6F4", opacity: 0.6, marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Hour by hour</div>
-                  <div style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "4px" }}>
-                    {selPeakWx.wx.hours.filter(h => h.hour >= 5 && h.hour <= 21).map(h => (
-                      <div key={h.hour} style={{
-                        flexShrink: 0, width: "52px", textAlign: "center",
-                        background: "#041e3d", borderRadius: "10px", padding: "8px 4px"
-                      }}>
-                        <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginBottom: "4px" }}>
-                          {h.hour === 0 ? "12am" : h.hour < 12 ? `${h.hour}am` : h.hour === 12 ? "12pm" : `${h.hour - 12}pm`}
-                        </div>
-                        <WI type={wxIcon(h.code)} size={16} />
-                        <div style={{ fontSize: "11px", fontWeight: 700, color: "#F8F8F8", marginTop: "4px" }}>{h.temp}°</div>
-                        <div style={{ fontSize: "9px", color: h.wind > 35 ? "#E85D3A" : h.wind >= 20 ? "#F49D37" : "#BDD6F4", marginTop: "2px" }}>{h.wind}</div>
-                        <div style={{ fontSize: "8px", color: "#5A98E3", opacity: 0.8, marginTop: "1px" }}>{h.precip}%</div>
+              ) : (
+                <>
+                  {/* Stats grid */}
+                  <div style={{ padding: "14px 18px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+                    {[
+                      ["Wind", `${selPeakWx.wx.wi}mph`, selPeakWx.wx.wi > 35 ? "#E85D3A" : selPeakWx.wx.wi >= 20 ? "#F49D37" : "#F8F8F8"],
+                      ["Gusts", `${selPeakWx.wx.gusts}mph`, selPeakWx.wx.gusts > 50 ? "#E85D3A" : selPeakWx.wx.gusts > 30 ? "#F49D37" : "#F8F8F8"],
+                      ["Rain %", `${selPeakWx.wx.pct}%`, selPeakWx.wx.pct > 70 ? "#5A98E3" : "#F8F8F8"],
+                      ["Precip", `${selPeakWx.wx.p}mm`, "#5A98E3"],
+                      ["Sunrise", selPeakWx.wx.sunrise, "#F49D37"],
+                      ["Sunset", selPeakWx.wx.sunset, "#E85D3A"],
+                      ["Visibility", selPeakWx.wx.v, selPeakWx.wx.v === "poor" ? "#E85D3A" : selPeakWx.wx.v === "moderate" ? "#F49D37" : "#6BCB77"],
+                      ["Snow", selPeakWx.wx.sn ? "Yes" : "No", selPeakWx.wx.sn ? "#BDD6F4" : "#6BCB77"],
+                      ["Feels", `${selPeakWx.wx.f}°`, selPeakWx.wx.f < -10 ? "#5A98E3" : selPeakWx.wx.f < 0 ? "#BDD6F4" : "#F8F8F8"],
+                    ].map(([label, val, color]) => (
+                      <div key={label} style={{ background: "#041e3d", borderRadius: "10px", padding: "10px", textAlign: "center" }}>
+                        <div style={{ fontSize: "14px", fontWeight: 700, color, fontFamily: "'JetBrains Mono'" }}>{val}</div>
+                        <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginTop: "3px" }}>{label}</div>
                       </div>
                     ))}
                   </div>
-                  <div style={{ display: "flex", gap: "12px", marginTop: "8px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4 }}>
-                    <span>°C · mph wind · % rain chance</span>
-                  </div>
-                </div>
+
+                  {/* Hourly forecast */}
+                  {selPeakWx.wx.hours && (
+                    <div style={{ padding: "0 18px 24px" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 700, color: "#BDD6F4", opacity: 0.6, marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Hour by hour</div>
+                      <div style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "6px" }}>
+                        {selPeakWx.wx.hours.filter(h => h.hour >= 5 && h.hour <= 21).map(h => (
+                          <div key={h.hour} style={{
+                            flexShrink: 0, width: "54px", textAlign: "center",
+                            background: "#041e3d", borderRadius: "10px", padding: "8px 4px",
+                            border: "1px solid rgba(90,152,227,0.06)"
+                          }}>
+                            <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginBottom: "5px" }}>
+                              {h.hour < 12 ? `${h.hour}am` : h.hour === 12 ? "12pm" : `${h.hour - 12}pm`}
+                            </div>
+                            <WI type={wxIcon(h.code)} size={16} />
+                            <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8", marginTop: "5px" }}>{h.temp}°</div>
+                            <div style={{ fontSize: "9px", fontWeight: 600, color: h.wind > 35 ? "#E85D3A" : h.wind >= 20 ? "#F49D37" : "#BDD6F4", marginTop: "3px" }}>{h.wind}mph</div>
+                            <div style={{ fontSize: "8px", color: "#5A98E3", marginTop: "2px" }}>{h.precip}%</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.35, marginTop: "6px" }}>
+                        temp · wind · rain chance · altitude adjusted
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
