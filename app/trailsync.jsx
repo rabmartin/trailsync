@@ -155,8 +155,11 @@ async function fetchRegionWeather(region, dayOffset) {
 
 // Fetch weather for a single peak (for expanded view)
 async function fetchPeakWeather(peak, dayOffset) {
+  const safeOffset = wxDay === -1 ? 0 : dayOffset;
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${peak.lat}&longitude=${peak.lng}` +
-    `&daily=temperature_2m_max,apparent_temperature_min,apparent_temperature_max,windspeed_10m_max,precipitation_sum,weathercode,snowfall_sum` +
+    `&daily=temperature_2m_max,temperature_2m_min,apparent_temperature_min,apparent_temperature_max,` +
+    `windspeed_10m_max,windgusts_10m_max,precipitation_sum,precipitation_probability_max,weathercode,snowfall_sum,sunrise,sunset` +
+    `&hourly=temperature_2m,apparent_temperature,windspeed_10m,precipitation_probability,weathercode` +
     `&wind_speed_unit=kmh&timezone=Europe%2FLondon&forecast_days=7`;
 
   try {
@@ -164,16 +167,40 @@ async function fetchPeakWeather(peak, dayOffset) {
     if (!res.ok) return null;
     const json = await res.json();
     const d = json.daily;
-    const i = dayOffset;
+    const i = safeOffset;
     const feelsRaw = Math.round((d.apparent_temperature_max[i] + d.apparent_temperature_min[i]) / 2);
     const feelsAdj = altAdjust(feelsRaw, peak.ht || 800);
+    const tempAdj  = altAdjust(Math.round((d.temperature_2m_max[i] + d.temperature_2m_min[i]) / 2), peak.ht || 800);
+
+    // Extract hourly data for this day (24 hours)
+    const hourStart = i * 24;
+    const hours = [];
+    for (let h = 0; h < 24; h++) {
+      const hi = hourStart + h;
+      hours.push({
+        hour: h,
+        temp:  altAdjust(Math.round(json.hourly.temperature_2m[hi] ?? 0), peak.ht || 800),
+        feels: altAdjust(Math.round(json.hourly.apparent_temperature[hi] ?? 0), peak.ht || 800),
+        wind:  toMph(json.hourly.windspeed_10m[hi] ?? 0),
+        precip: json.hourly.precipitation_probability[hi] ?? 0,
+        code:  json.hourly.weathercode[hi] ?? 0,
+      });
+    }
+
     return {
-      f:  feelsAdj,
-      wi: toMph(d.windspeed_10m_max[i]),
-      p:  parseFloat((d.precipitation_sum[i] || 0).toFixed(1)),
-      v:  wxVis(d.weathercode[i]),
-      sn: (d.snowfall_sum?.[i] || 0) > 0,
-      t:  Math.round(d.temperature_2m_max[i]),
+      f:       feelsAdj,
+      t:       tempAdj,
+      wi:      toMph(d.windspeed_10m_max[i]),
+      gusts:   toMph(d.windgusts_10m_max[i] ?? d.windspeed_10m_max[i]),
+      p:       parseFloat((d.precipitation_sum[i] || 0).toFixed(1)),
+      pct:     d.precipitation_probability_max[i] ?? 0,
+      v:       wxVis(d.weathercode[i]),
+      sn:      (d.snowfall_sum?.[i] || 0) > 0,
+      code:    d.weathercode[i],
+      ic:      wxIcon(d.weathercode[i]),
+      sunrise: d.sunrise[i] ? new Date(d.sunrise[i]).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : "--:--",
+      sunset:  d.sunset[i]  ? new Date(d.sunset[i]).toLocaleTimeString("en-GB",  { hour: "2-digit", minute: "2-digit" }) : "--:--",
+      hours,
     };
   } catch { return null; }
 }
@@ -726,6 +753,7 @@ const HomePage = ({ userName, initialFilter }) => {
   const [wxUpdated, setWxUpdated] = useState(null);
   const [peakWx, setPeakWx] = useState({});        // "peakName-day" → weather obj
   const [peakWxLoading, setPeakWxLoading] = useState({});
+  const [selPeakWx, setSelPeakWx] = useState(null); // { peak, wx } — drives weather card modal
 
   useEffect(() => {
     if (initialFilter) setFf(initialFilter);
@@ -782,11 +810,12 @@ const HomePage = ({ userName, initialFilter }) => {
     if (expandedArea === null) return;
     const area = sorted[expandedArea];
     if (!area) return;
-    const regionPeaks = PEAKS.filter(p => {
-      const rLower = area.region.toLowerCase();
-      const pLower = p.reg.toLowerCase();
-      return pLower.includes(rLower.split(" ")[0]) || rLower.includes(pLower.split(" ")[0]);
-    }).slice(0, 5);
+    const regionPeaks = (() => {
+      const exact = PEAKS.filter(p => p.reg === area.region);
+      if (exact.length > 0) return exact.slice(0, 6);
+      const rWords = area.region.toLowerCase().split(/\s/).filter(w => w.length > 3);
+      return PEAKS.filter(p => rWords.some(w => p.reg.toLowerCase().includes(w))).slice(0, 6);
+    })();
 
     regionPeaks.forEach(pk => {
       const key = `${pk.id}-${wxDay}`;
@@ -851,12 +880,14 @@ const HomePage = ({ userName, initialFilter }) => {
             </div>
             {sorted.map((a, i) => {
               const isExpanded = expandedArea === i;
-              const regionPeaks = PEAKS.filter(p => {
-                const rLower = a.region.toLowerCase();
-                const pLower = p.reg.toLowerCase();
-                return pLower.includes(rLower.split(" ")[0]) || rLower.includes(pLower.split(" ")[0]);
+              // Exact region match first, then word-boundary fallback
+              const regionPeaks = PEAKS.filter(p => p.reg === a.region);
+              // For regions like "Ben Nevis & Mamores" also catch "Kintail" matching "Kintail & Affric"
+              const loosePeaks = regionPeaks.length > 0 ? regionPeaks : PEAKS.filter(p => {
+                const rWords = a.region.toLowerCase().split(/[\s&,]+/).filter(w => w.length > 3);
+                return rWords.some(w => p.reg.toLowerCase().includes(w));
               });
-              const displayPeaks = regionPeaks.length > 0 ? regionPeaks : PEAKS.filter(p => p.cls === a.cls).slice(0, 4);
+              const displayPeaks = loosePeaks.slice(0, 6);
 
               return (
                 <div key={i}>
@@ -924,40 +955,44 @@ const HomePage = ({ userName, initialFilter }) => {
                         </div>
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                        {displayPeaks.map((pk, j) => (
-                          <div key={pk.id} style={{
-                            display: "flex", alignItems: "center", gap: "10px",
-                            padding: "9px 10px", borderRadius: "10px",
-                            background: "#041e3d", border: "1px solid rgba(90,152,227,0.08)",
-                            animation: `fi .2s ease ${j * .05}s both`
-                          }}>
+                        {displayPeaks.map((pk, j) => {
+                          const key = `${pk.id}-${wxDay}`;
+                          const lw = peakWx[key];
+                          const loading = peakWxLoading[key];
+                          return (
+                          <div key={pk.id}
+                            onClick={() => lw && setSelPeakWx({ peak: pk, wx: lw })}
+                            style={{
+                              display: "flex", alignItems: "center", gap: "10px",
+                              padding: "9px 10px", borderRadius: "10px",
+                              background: "#041e3d", border: "1px solid rgba(90,152,227,0.08)",
+                              animation: `fi .2s ease ${j * .05}s both`,
+                              cursor: lw ? "pointer" : "default",
+                              transition: "border .15s"
+                            }}>
                             <Mountain size={14} color={CLS[pk.cls]?.color} />
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8" }}>{pk.name}</div>
                               <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5 }}>{pk.ht}m · {pk.reg}</div>
                             </div>
-                            {(() => {
-                              const key = `${pk.id}-${wxDay}`;
-                              const lw = peakWx[key];
-                              const loading = peakWxLoading[key];
-                              if (loading) return <div style={{ width: "70px", height: "28px", borderRadius: "6px", background: "rgba(90,152,227,0.08)" }} />;
-                              if (!lw) return null;
-                              return (
-                                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                                  <div style={{ textAlign: "center" }}>
-                                    <div style={{ fontSize: "11px", fontWeight: 700, color: lw.f < -5 ? "#BDD6F4" : "#F8F8F8" }}>{lw.f}°</div>
-                                    <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.4 }}>feels</div>
-                                  </div>
-                                  <div style={{ textAlign: "center" }}>
-                                    <div style={{ fontSize: "11px", fontWeight: 700, color: lw.wi > 35 ? "#E85D3A" : lw.wi >= 20 ? "#F49D37" : "#F8F8F8" }}>{lw.wi}<span style={{ fontSize: "8px" }}>mph</span></div>
-                                    <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.4 }}>wind</div>
-                                  </div>
-                                  {lw.sn && <Snowflake size={12} color="#BDD6F4" />}
+                            {loading && <div style={{ width: "70px", height: "28px", borderRadius: "6px", background: "rgba(90,152,227,0.08)" }} />}
+                            {!loading && lw && (
+                              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                <WI type={lw.ic || "cloudsun"} size={14} />
+                                <div style={{ textAlign: "center" }}>
+                                  <div style={{ fontSize: "11px", fontWeight: 700, color: lw.f < -5 ? "#BDD6F4" : "#F8F8F8" }}>{lw.f}°</div>
+                                  <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.4 }}>feels</div>
                                 </div>
-                              );
-                            })()}
+                                <div style={{ textAlign: "center" }}>
+                                  <div style={{ fontSize: "11px", fontWeight: 700, color: lw.wi > 35 ? "#E85D3A" : lw.wi >= 20 ? "#F49D37" : "#F8F8F8" }}>{lw.wi}<span style={{ fontSize: "8px" }}>mph</span></div>
+                                  <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.4 }}>wind</div>
+                                </div>
+                                {lw.sn && <Snowflake size={12} color="#BDD6F4" />}
+                                <ChevronRight size={12} color="#BDD6F4" style={{ opacity: 0.4 }} />
+                              </div>
+                            )}
                           </div>
-                        ))}
+                        );})}
                       </div>
                       {a.peaks.length > displayPeaks.length && (
                         <div style={{ fontSize: "10px", color: "#5A98E3", textAlign: "center", marginTop: "8px", fontWeight: 600, cursor: "pointer" }}>
@@ -972,6 +1007,101 @@ const HomePage = ({ userName, initialFilter }) => {
           </div>
         )}
       </div>
+
+      {/* ═══ PEAK WEATHER CARD MODAL ═══ */}
+      {selPeakWx && (
+        <div onClick={() => setSelPeakWx(null)} style={{
+          position: "fixed", inset: 0, zIndex: 60,
+          background: "rgba(4,30,61,0.7)", backdropFilter: "blur(6px)",
+          display: "flex", alignItems: "flex-end", justifyContent: "center",
+          padding: "0 0 0 0", animation: "fi .2s ease"
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            width: "100%", maxWidth: "480px",
+            background: "#0a2240", borderRadius: "20px 20px 0 0",
+            border: "1px solid rgba(90,152,227,0.2)", borderBottom: "none",
+            animation: "su .3s ease", maxHeight: "88vh", display: "flex", flexDirection: "column"
+          }}>
+            {/* Drag handle */}
+            <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 4px" }}>
+              <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: "rgba(90,152,227,0.2)" }} />
+            </div>
+
+            {/* Header */}
+            <div style={{ padding: "4px 18px 14px", borderBottom: "1px solid rgba(90,152,227,0.1)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+                <div>
+                  <div style={{ fontSize: "18px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>{selPeakWx.peak.name}</div>
+                  <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>{selPeakWx.peak.ht}m · {selPeakWx.peak.reg} · {CLS[selPeakWx.peak.cls]?.name}</div>
+                </div>
+                <button onClick={() => setSelPeakWx(null)} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><X size={13} /></button>
+              </div>
+
+              {/* Hero weather */}
+              <div style={{ display: "flex", alignItems: "center", gap: "16px", marginTop: "14px" }}>
+                <WI type={selPeakWx.wx.ic} size={48} />
+                <div>
+                  <div style={{ fontSize: "42px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'", lineHeight: 1 }}>{selPeakWx.wx.t}°</div>
+                  <div style={{ fontSize: "13px", color: "#BDD6F4", marginTop: "2px" }}>Feels like <span style={{ color: selPeakWx.wx.f < -10 ? "#5A98E3" : selPeakWx.wx.f < 0 ? "#BDD6F4" : "#F8F8F8", fontWeight: 700 }}>{selPeakWx.wx.f}°</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ overflowY: "auto", flex: 1 }}>
+              {/* Stats grid */}
+              <div style={{ padding: "14px 18px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+                {[
+                  ["Wind", `${selPeakWx.wx.wi}mph`, selPeakWx.wx.wi > 35 ? "#E85D3A" : selPeakWx.wx.wi >= 20 ? "#F49D37" : "#F8F8F8"],
+                  ["Gusts", `${selPeakWx.wx.gusts}mph`, selPeakWx.wx.gusts > 50 ? "#E85D3A" : selPeakWx.wx.gusts > 30 ? "#F49D37" : "#F8F8F8"],
+                  ["Precip", `${selPeakWx.wx.p}mm`, "#5A98E3"],
+                  ["Rain %", `${selPeakWx.wx.pct}%`, selPeakWx.wx.pct > 70 ? "#5A98E3" : "#F8F8F8"],
+                  ["Sunrise", selPeakWx.wx.sunrise, "#F49D37"],
+                  ["Sunset", selPeakWx.wx.sunset, "#E85D3A"],
+                ].map(([label, val, color]) => (
+                  <div key={label} style={{ background: "#041e3d", borderRadius: "10px", padding: "10px", textAlign: "center" }}>
+                    <div style={{ fontSize: "14px", fontWeight: 700, color, fontFamily: "'JetBrains Mono'" }}>{val}</div>
+                    <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginTop: "3px" }}>{label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Snow indicator */}
+              {selPeakWx.wx.sn && (
+                <div style={{ margin: "0 18px 10px", padding: "8px 12px", borderRadius: "8px", background: "rgba(189,214,244,0.08)", border: "1px solid rgba(189,214,244,0.15)", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Snowflake size={14} color="#BDD6F4" />
+                  <span style={{ fontSize: "11px", color: "#BDD6F4", fontWeight: 600 }}>Snow expected at summit level</span>
+                </div>
+              )}
+
+              {/* Hourly forecast */}
+              {selPeakWx.wx.hours && (
+                <div style={{ padding: "0 18px 20px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: 700, color: "#BDD6F4", opacity: 0.6, marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Hour by hour</div>
+                  <div style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "4px" }}>
+                    {selPeakWx.wx.hours.filter(h => h.hour >= 5 && h.hour <= 21).map(h => (
+                      <div key={h.hour} style={{
+                        flexShrink: 0, width: "52px", textAlign: "center",
+                        background: "#041e3d", borderRadius: "10px", padding: "8px 4px"
+                      }}>
+                        <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginBottom: "4px" }}>
+                          {h.hour === 0 ? "12am" : h.hour < 12 ? `${h.hour}am` : h.hour === 12 ? "12pm" : `${h.hour - 12}pm`}
+                        </div>
+                        <WI type={wxIcon(h.code)} size={16} />
+                        <div style={{ fontSize: "11px", fontWeight: 700, color: "#F8F8F8", marginTop: "4px" }}>{h.temp}°</div>
+                        <div style={{ fontSize: "9px", color: h.wind > 35 ? "#E85D3A" : h.wind >= 20 ? "#F49D37" : "#BDD6F4", marginTop: "2px" }}>{h.wind}</div>
+                        <div style={{ fontSize: "8px", color: "#5A98E3", opacity: 0.8, marginTop: "1px" }}>{h.precip}%</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", gap: "12px", marginTop: "8px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4 }}>
+                    <span>°C · mph wind · % rain chance</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* SAIS Alert - only shows Dec-Apr when forecasts are active */}
       {(() => {
