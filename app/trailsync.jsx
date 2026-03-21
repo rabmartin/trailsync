@@ -1523,10 +1523,66 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     });
   };
 
+  const locationMarkerRef = useRef(null);
+
+  // Create the pulsing blue location dot element
+  const createLocationDot = () => {
+    const el = document.createElement("div");
+    el.style.cssText = `
+      position: relative;
+      width: 20px;
+      height: 20px;
+    `;
+    // Outer pulse ring
+    const pulse = document.createElement("div");
+    pulse.style.cssText = `
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: rgba(90,152,227,0.2);
+      animation: locationPulse 2s ease-out infinite;
+    `;
+    // Inner dot
+    const dot = document.createElement("div");
+    dot.style.cssText = `
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: #5A98E3;
+      border: 3px solid #ffffff;
+      box-shadow: 0 2px 8px rgba(90,152,227,0.6);
+    `;
+    el.appendChild(pulse);
+    el.appendChild(dot);
+    return el;
+  };
+
   // Draw/update live track on map
   const updateLiveTrack = (points) => {
     const map = mapRef.current;
-    if (!map || points.length < 2) return;
+    if (!map) return;
+
+    // Update location dot
+    const latest = points[points.length - 1];
+    if (latest) {
+      import("mapbox-gl").then(mod => {
+        const mapboxgl = mod.default;
+        if (locationMarkerRef.current) {
+          locationMarkerRef.current.setLngLat([latest.lng, latest.lat]);
+        } else {
+          const el = createLocationDot();
+          locationMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: "center" })
+            .setLngLat([latest.lng, latest.lat])
+            .addTo(map);
+        }
+      });
+    }
+
+    if (points.length < 2) return;
     const coords = points.map(p => [p.lng, p.lat]);
     const geojson = { type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: {} };
     if (map.getSource("live-track")) {
@@ -1542,12 +1598,16 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     }
   };
 
-  // Clear live track from map
+  // Clear live track and location dot from map
   const clearLiveTrack = () => {
     const map = mapRef.current;
     if (!map) return;
     ["live-track-casing", "live-track-line"].forEach(l => { if (map.getLayer(l)) map.removeLayer(l); });
     if (map.getSource("live-track")) map.removeSource("live-track");
+    if (locationMarkerRef.current) {
+      locationMarkerRef.current.remove();
+      locationMarkerRef.current = null;
+    }
   };
 
   // Start GPS watch
@@ -3138,6 +3198,7 @@ export default function TrailSync() {
         @keyframes fl { 0%,100% { transform: translate(-50%,-50%) scale(1); } 50% { transform: translate(-50%,-50%) scale(1.04); } }
         @keyframes glow { 0%,100% { box-shadow: 0 0 8px rgba(232,93,58,.25); } 50% { box-shadow: 0 0 18px rgba(232,93,58,.45); } }
         @keyframes pulse { 0%,100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.08); } }
+        @keyframes locationPulse { 0% { transform: translate(-50%,-50%) scale(0.5); opacity: 0.8; } 100% { transform: translate(-50%,-50%) scale(2.5); opacity: 0; } }
       `}</style>
 
       {/* Header */}
