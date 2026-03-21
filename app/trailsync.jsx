@@ -1249,19 +1249,181 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   const [actDesc, setActDesc] = useState("");
   const [actPhotos, setActPhotos] = useState(0);
   const [saved, setSaved] = useState(false);
+
+  // Real GPS tracking state
+  const [realDist, setRealDist] = useState(0);       // km, cumulative
+  const [realElev, setRealElev] = useState(0);        // m gain, cumulative
+  const [realSpeed, setRealSpeed] = useState(0);      // kph, current
+  const [currentAlt, setCurrentAlt] = useState(null); // m above sea level
+  const [gpsError, setGpsError] = useState(null);
+  const [detectedPeaks, setDetectedPeaks] = useState([]);
+  const watchIdRef = useRef(null);
+  const trackPointsRef = useRef([]);    // [{lng, lat, alt, t}]
+  const lastAltRef = useRef(null);
+  const movingTimeRef = useRef(0);      // seconds actually moving
+  const movingTimerRef = useRef(null);
+
   const fp = PEAKS.filter(p => !cf || p.cls === cf);
 
-  // Timer for recording
+  // Haversine distance between two [lng,lat] points in km
+  const haversineDist = (a, b) => {
+    const R = 6371;
+    const dLat = (b[1] - a[1]) * Math.PI / 180;
+    const dLon = (b[0] - a[0]) * Math.PI / 180;
+    const x = Math.sin(dLat/2)**2 + Math.cos(a[1]*Math.PI/180) * Math.cos(b[1]*Math.PI/180) * Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
+  };
+
+  // Check if current position is near a known peak (within 150m)
+  const checkNearPeak = (lat, lng) => {
+    PEAKS.forEach(pk => {
+      const d = haversineDist([lng, lat], [pk.lng, pk.lat]) * 1000; // metres
+      if (d < 150) {
+        setDetectedPeaks(prev => prev.find(p => p.id === pk.id) ? prev : [...prev, pk]);
+      }
+    });
+  };
+
+  // Draw/update live track on map
+  const updateLiveTrack = (points) => {
+    const map = mapRef.current;
+    if (!map || points.length < 2) return;
+    const coords = points.map(p => [p.lng, p.lat]);
+    const geojson = { type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: {} };
+    if (map.getSource("live-track")) {
+      map.getSource("live-track").setData(geojson);
+    } else {
+      map.addSource("live-track", { type: "geojson", data: geojson });
+      map.addLayer({ id: "live-track-casing", type: "line", source: "live-track",
+        layout: { "line-join": "round", "line-cap": "round" },
+        paint: { "line-color": "#fff", "line-width": 6, "line-opacity": 0.5 } });
+      map.addLayer({ id: "live-track-line", type: "line", source: "live-track",
+        layout: { "line-join": "round", "line-cap": "round" },
+        paint: { "line-color": "#6BCB77", "line-width": 3.5, "line-opacity": 0.95 } });
+    }
+  };
+
+  // Clear live track from map
+  const clearLiveTrack = () => {
+    const map = mapRef.current;
+    if (!map) return;
+    ["live-track-casing", "live-track-line"].forEach(l => { if (map.getLayer(l)) map.removeLayer(l); });
+    if (map.getSource("live-track")) map.removeSource("live-track");
+  };
+
+  // Start GPS watch
+  const startGps = () => {
+    if (!navigator.geolocation) { setGpsError("GPS not available on this device"); return; }
+    setGpsError(null);
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        const { latitude: lat, longitude: lng, altitude: alt, speed } = pos.coords;
+        const now = Date.now();
+        const prev = trackPointsRef.current[trackPointsRef.current.length - 1];
+
+        // Calculate segment distance
+        if (prev) {
+          const segDist = haversineDist([prev.lng, prev.lat], [lng, lat]);
+          // Filter out GPS jumps > 500m in < 10s (noise)
+          const timeDelta = (now - prev.t) / 1000;
+          if (segDist < 0.5) {
+            setRealDist(d => parseFloat((d + segDist).toFixed(3)));
+            if (speed != null) setRealSpeed(parseFloat((speed * 3.6).toFixed(1)));
+            else if (timeDelta > 0) setRealSpeed(parseFloat(((segDist / timeDelta) * 3600).toFixed(1)));
+          }
+        }
+
+        // Elevation gain
+        if (alt !== null) {
+          setCurrentAlt(Math.round(alt));
+          if (lastAltRef.current !== null && alt > lastAltRef.current) {
+            setRealElev(e => e + (alt - lastAltRef.current));
+          }
+          lastAltRef.current = alt;
+        }
+
+        const point = { lng, lat, alt: alt ?? null, t: now };
+        trackPointsRef.current = [...trackPointsRef.current, point];
+        updateLiveTrack(trackPointsRef.current);
+        checkNearPeak(lat, lng);
+
+        // Pan map to follow user while recording
+        if (mapRef.current) {
+          mapRef.current.easeTo({ center: [lng, lat], duration: 800 });
+        }
+      },
+      (err) => {
+        if (err.code === 1) setGpsError("Location permission denied. Please enable in your browser settings.");
+        else if (err.code === 2) setGpsError("GPS signal lost. Move to an open area.");
+        else setGpsError("GPS unavailable. Check your connection.");
+      },
+      { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 }
+    );
+
+    // Moving time counter — only ticks when we have recent GPS activity
+    movingTimerRef.current = setInterval(() => {
+      const pts = trackPointsRef.current;
+      if (pts.length < 2) return;
+      const last = pts[pts.length - 1];
+      const secondAgo = pts[pts.length - 2];
+      const moved = haversineDist([secondAgo.lng, secondAgo.lat], [last.lng, last.lat]);
+      if (moved > 0.001) movingTimeRef.current += 1; // only count if moved > 1m
+    }, 1000);
+  };
+
+  // Stop GPS watch
+  const stopGps = () => {
+    if (watchIdRef.current != null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    if (movingTimerRef.current) {
+      clearInterval(movingTimerRef.current);
+      movingTimerRef.current = null;
+    }
+  };
+
+  // Reset all tracking state
+  const resetTracking = () => {
+    stopGps();
+    clearLiveTrack();
+    trackPointsRef.current = [];
+    lastAltRef.current = null;
+    movingTimeRef.current = 0;
+    setRealDist(0);
+    setRealElev(0);
+    setRealSpeed(0);
+    setCurrentAlt(null);
+    setDetectedPeaks([]);
+    setGpsError(null);
+    setElapsed(0);
+    setRecording(false);
+    setPaused(false);
+    setFinished(false);
+    setSaved(false);
+    setActName("");
+    setActDesc("");
+    setActPhotos(0);
+  };
+
+  // Timer for total elapsed time
   useEffect(() => {
     if (!recording) return;
     const iv = setInterval(() => setElapsed(e => e + 1), 1000);
     return () => clearInterval(iv);
   }, [recording]);
 
+  // Start/stop GPS watch based on recording state
+  useEffect(() => {
+    if (recording) startGps();
+    else stopGps();
+    return () => stopGps();
+  }, [recording]);
+
   const fmtTime = (s) => `${String(Math.floor(s / 3600)).padStart(2, "0")}:${String(Math.floor((s % 3600) / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-  const simDist = (elapsed * 0.0014).toFixed(2);
-  const simSpeed = recording ? (elapsed > 5 ? (4.2 + Math.sin(elapsed / 30) * 0.8).toFixed(1) : "0.0") : "0.0";
-  const simElev = Math.floor(320 + elapsed * 0.35);
+  const realDistDisplay = realDist.toFixed(2);
+  const realElevDisplay = Math.round(realElev);
+  const realSpeedDisplay = realSpeed.toFixed(1);
 
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
@@ -1498,10 +1660,10 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                 {/* Stats grid */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px", marginBottom: "14px" }}>
                   {[
-                    ["Distance", `${simDist}km`, Navigation],
+                    ["Distance", `${realDistDisplay}km`, Navigation],
                     ["Time", (recording || paused) ? fmtTime(elapsed) : "00:00:00", Clock],
-                    ["Elevation", `${simElev}m`, TrendingUp],
-                    ["Speed", `${simSpeed}kph`, Zap],
+                    ["Elevation", currentAlt ? `${currentAlt}m` : `+${realElevDisplay}m`, TrendingUp],
+                    ["Speed", `${realSpeedDisplay}kph`, Zap],
                   ].map(([label, val, Icon]) => (
                     <div key={label} style={{ textAlign: "center", padding: "8px 4px", background: "#0a2240", borderRadius: "10px" }}>
                       <Icon size={13} color="#BDD6F4" style={{ opacity: 0.5 }} />
@@ -1511,12 +1673,21 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                   ))}
                 </div>
 
+                {/* GPS error */}
+                {gpsError && (
+                  <div style={{ padding: "8px 12px", borderRadius: "8px", background: "rgba(232,93,58,0.1)",
+                    border: "1px solid rgba(232,93,58,0.2)", marginBottom: "10px",
+                    fontSize: "11px", color: "#E85D3A", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <AlertTriangle size={12} /> {gpsError}
+                  </div>
+                )}
+
                 {/* Control buttons */}
                 <div style={{ display: "flex", gap: "8px" }}>
                   {!recording && !paused && (
                     <>
-                      <button onClick={() => { setTrackMode(false); setElapsed(0); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
-                      <button onClick={() => setRecording(true)} style={{ flex: 2, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#6BCB77,#55a866)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                      <button onClick={() => { resetTracking(); setTrackMode(false); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
+                      <button onClick={() => { setRecording(true); }} style={{ flex: 2, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#6BCB77,#55a866)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                         <Play size={16} /> Start Recording
                       </button>
                     </>
@@ -1557,9 +1728,9 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                 {/* Summary stats */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "12px" }}>
                   {[
-                    ["Distance", `${simDist}km`],
-                    ["Elevation", `${simElev}m`],
-                    ["Avg Speed", `${(parseFloat(simDist) / (elapsed / 3600) || 0).toFixed(1)}kph`],
+                    ["Distance", `${realDistDisplay}km`],
+                    ["Elev Gain", `+${realElevDisplay}m`],
+                    ["Avg Speed", `${realDist > 0 && elapsed > 0 ? (realDist / (elapsed / 3600)).toFixed(1) : "0.0"}kph`],
                   ].map(([label, val]) => (
                     <div key={label} style={{ textAlign: "center", padding: "10px 4px", background: "#0a2240", borderRadius: "10px" }}>
                       <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
@@ -1569,7 +1740,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px" }}>
                   {[
-                    ["Moving Time", fmtTime(Math.floor(elapsed * 0.88))],
+                    ["Moving Time", fmtTime(movingTimeRef.current)],
                     ["Total Time", fmtTime(elapsed)],
                   ].map(([label, val]) => (
                     <div key={label} style={{ textAlign: "center", padding: "10px 4px", background: "#0a2240", borderRadius: "10px" }}>
@@ -1583,11 +1754,13 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                 <div style={{ padding: "10px", background: "rgba(107,203,119,0.06)", borderRadius: "10px", border: "1px solid rgba(107,203,119,0.12)", marginBottom: "14px" }}>
                   <div style={{ fontSize: "10px", fontWeight: 700, color: "#6BCB77", marginBottom: "6px" }}>Peaks Detected</div>
                   <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-                    {["Ben Lomond"].map(pk => (
-                      <span key={pk} style={{ fontSize: "10px", padding: "3px 8px", borderRadius: "6px", background: "rgba(107,203,119,0.1)", color: "#6BCB77", fontWeight: 600, display: "flex", alignItems: "center", gap: "3px" }}>
-                        <CheckCircle size={10} /> {pk}
+                    {detectedPeaks.length > 0 ? detectedPeaks.map(pk => (
+                      <span key={pk.id} style={{ fontSize: "10px", padding: "3px 8px", borderRadius: "6px", background: "rgba(107,203,119,0.1)", color: "#6BCB77", fontWeight: 600, display: "flex", alignItems: "center", gap: "3px" }}>
+                        <CheckCircle size={10} /> {pk.name}
                       </span>
-                    ))}
+                    )) : (
+                      <span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>No peaks detected on this route</span>
+                    )}
                   </div>
                   <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "6px", fontStyle: "italic" }}>Peaks are auto-detected based on your route. You can adjust this in your summit log.</div>
                 </div>
@@ -1611,8 +1784,8 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
 
                 {/* Save buttons */}
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <button onClick={() => { setFinished(false); setTrackMode(false); setElapsed(0); setActName(""); setActDesc(""); setActPhotos(0); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Discard</button>
-                  <button onClick={() => { if (onSaveWalk) onSaveWalk({ name: actName || "Untitled Walk", desc: actDesc, dist: simDist, elev: simElev, time: fmtTime(elapsed), movingTime: fmtTime(Math.floor(elapsed * 0.88)), avgSpeed: (parseFloat(simDist) / (elapsed / 3600) || 0).toFixed(1), peaks: ["Ben Lomond"], photos: actPhotos, date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) }); setSaved(true); }} style={{ flex: 2, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Save & Publish</button>
+                  <button onClick={() => { resetTracking(); setTrackMode(false); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Discard</button>
+                  <button onClick={() => { if (onSaveWalk) onSaveWalk({ name: actName || "Untitled Walk", desc: actDesc, dist: realDistDisplay, elev: realElevDisplay, time: fmtTime(elapsed), movingTime: fmtTime(movingTimeRef.current), avgSpeed: (realDist > 0 && elapsed > 0 ? (realDist / (elapsed / 3600)).toFixed(1) : "0.0"), peaks: detectedPeaks.map(p => p.name), photos: actPhotos, date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) }); setSaved(true); }} style={{ flex: 2, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Save & Publish</button>
                 </div>
               </>
             )}
