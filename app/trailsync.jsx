@@ -1698,8 +1698,31 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                         <Pause size={14} /> Stop
                       </button>
                       <div style={{ flex: 1, padding: "8px", borderRadius: "10px", background: "#0a2240", textAlign: "center" }}>
-                        <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.5 }}>Est. finish</div>
-                        <div style={{ fontSize: "14px", fontWeight: 700, color: "#5A98E3", fontFamily: "'JetBrains Mono'" }}>{elapsed > 10 ? `${Math.floor(3 + elapsed / 600)}h ${Math.floor((elapsed / 10) % 60)}m` : "--:--"}</div>
+                        <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.5 }}>
+                          {gpxRoute ? "Est. finish" : "Pace"}
+                        </div>
+                        <div style={{ fontSize: "14px", fontWeight: 700, color: "#5A98E3", fontFamily: "'JetBrains Mono'" }}>
+                          {(() => {
+                            // Need at least 60s and 50m travelled for a reliable pace
+                            if (elapsed < 60 || realDist < 0.05) return "--:--";
+                            const paceSecPerKm = elapsed / realDist; // sec/km current pace
+                            if (gpxRoute?.route?.dist) {
+                              // Following a route — project remaining time
+                              const totalKm = gpxRoute.route.dist;
+                              const remainKm = Math.max(0, totalKm - realDist);
+                              if (remainKm <= 0) return "Done!";
+                              const remainSec = remainKm * paceSecPerKm;
+                              const h = Math.floor(remainSec / 3600);
+                              const m = Math.floor((remainSec % 3600) / 60);
+                              return h > 0 ? `${h}h ${m}m` : `${m}m`;
+                            } else {
+                              // Free tracking — show current pace per km
+                              const paceMin = Math.floor(paceSecPerKm / 60);
+                              const paceSec = Math.floor(paceSecPerKm % 60);
+                              return `${paceMin}:${String(paceSec).padStart(2,"0")}/km`;
+                            }
+                          })()}
+                        </div>
                       </div>
                     </>
                   )}
