@@ -47,18 +47,136 @@ const CLS = {
   "non-mountain": { name: "Non-Mountain", count: 0, color: "#7FB069", desc: "Valley, lochside & long-distance walks" },
 };
 
-const WX_AREAS = [
-  { region: "Southern Highlands", score: 94, temp: 4, feels: -1, wind: 12, precip: 0, vis: "good", peaks: ["Ben Lomond", "Ben Vorlich", "Stuc a' Chroin"], cls: "munros", ic: "sun" },
-  { region: "Brecon Beacons", score: 91, temp: 7, feels: 4, wind: 14, precip: 0.1, vis: "good", peaks: ["Pen y Fan", "Corn Du", "Cribyn"], cls: "hewitts", ic: "sun" },
-  { region: "Arrochar Alps", score: 89, temp: 3, feels: -2, wind: 15, precip: 0, vis: "good", peaks: ["The Cobbler", "Ben Narnain", "Beinn Ime"], cls: "corbetts", ic: "sun" },
-  { region: "Galloway Hills", score: 88, temp: 5, feels: 1, wind: 16, precip: 0.3, vis: "good", peaks: ["Merrick", "Corserine"], cls: "donalds", ic: "cloudsun" },
-  { region: "Snowdonia", score: 87, temp: 6, feels: 2, wind: 18, precip: 0.2, vis: "good", peaks: ["Snowdon", "Tryfan", "Glyder Fawr"], cls: "hewitts", ic: "cloudsun" },
-  { region: "Lake District", score: 85, temp: 5, feels: 1, wind: 20, precip: 0.5, vis: "moderate", peaks: ["Helvellyn", "Scafell Pike", "Skiddaw"], cls: "wainwrights", ic: "cloudsun" },
-  { region: "Glen Coe", score: 72, temp: 1, feels: -6, wind: 30, precip: 1.2, vis: "moderate", peaks: ["Buachaille Etive Mor", "Bidean nam Bian"], cls: "munros", ic: "cloud" },
-  { region: "Torridon", score: 68, temp: 2, feels: -4, wind: 25, precip: 1.8, vis: "moderate", peaks: ["Liathach", "Beinn Eighe"], cls: "munros", ic: "cloudrain" },
-  { region: "Kintail", score: 64, temp: 0, feels: -7, wind: 35, precip: 2.0, vis: "poor", peaks: ["The Five Sisters", "The Saddle"], cls: "munros", ic: "cloudrain" },
-  { region: "Cairngorms", score: 58, temp: -3, feels: -12, wind: 45, precip: 2.5, vis: "poor", peaks: ["Cairn Gorm", "Ben Macdui"], cls: "munros", ic: "snow" },
+// Static region config — weather data fetched live from Open-Meteo
+const WX_REGIONS = [
+  { region: "Ben Nevis & Mamores", lat: 56.80, lng: -5.00, alt: 900, peaks: ["Ben Nevis", "Carn Mor Dearg", "Aonach Mor"], cls: "munros" },
+  { region: "Southern Highlands",  lat: 56.19, lng: -4.63, alt: 600, peaks: ["Ben Lomond", "Ben Vorlich", "Stuc a' Chroin"], cls: "munros" },
+  { region: "Arrochar Alps",       lat: 56.22, lng: -4.82, alt: 700, peaks: ["The Cobbler", "Ben Narnain", "Beinn Ime"], cls: "corbetts" },
+  { region: "Glen Coe",            lat: 56.65, lng: -5.05, alt: 800, peaks: ["Buachaille Etive Mor", "Bidean nam Bian"], cls: "munros" },
+  { region: "Cairngorms",          lat: 57.07, lng: -3.67, alt: 900, peaks: ["Cairn Gorm", "Ben Macdui", "Braeriach"], cls: "munros" },
+  { region: "Torridon",            lat: 57.58, lng: -5.47, alt: 700, peaks: ["Liathach", "Beinn Eighe", "Beinn Alligin"], cls: "munros" },
+  { region: "Kintail",             lat: 57.20, lng: -5.35, alt: 700, peaks: ["Sgùrr Fhuaran", "Sgùrr na Ciste Duibhe"], cls: "munros" },
+  { region: "Snowdonia",           lat: 53.07, lng: -4.08, alt: 700, peaks: ["Snowdon", "Tryfan", "Glyder Fawr"], cls: "hewitts" },
+  { region: "Lake District",       lat: 54.50, lng: -3.10, alt: 600, peaks: ["Helvellyn", "Scafell Pike", "Skiddaw"], cls: "wainwrights" },
+  { region: "Brecon Beacons",      lat: 51.88, lng: -3.44, alt: 600, peaks: ["Pen y Fan", "Corn Du", "Cribyn"], cls: "hewitts" },
+  { region: "Galloway Hills",      lat: 55.15, lng: -4.62, alt: 500, peaks: ["Merrick", "Corserine"], cls: "donalds" },
+  { region: "Fisherfield",         lat: 57.80, lng: -5.24, alt: 800, peaks: ["An Teallach", "Beinn Dearg Mor"], cls: "munros" },
 ];
+
+// Keep WX_AREAS as alias for backward compat with any refs
+let WX_AREAS = WX_REGIONS.map(r => ({ ...r, score: 70, temp: 5, feels: 0, wind: 20, precip: 1, vis: "moderate", ic: "cloudsun" }));
+
+/* ═══════════════════════════════════════════════════════════════════
+   WEATHER ENGINE — Open-Meteo (free, no key required)
+   ═══════════════════════════════════════════════════════════════════ */
+
+// WMO weather code → icon type
+function wxIcon(code) {
+  if (code === 0) return "sun";
+  if (code <= 2) return "cloudsun";
+  if (code <= 48) return "cloud";
+  if (code <= 67) return "cloudrain";
+  if (code <= 77) return "snow";
+  if (code <= 82) return "cloudrain";
+  if (code <= 86) return "snow";
+  return "cloudrain";
+}
+
+// Visibility from WMO code (rough)
+function wxVis(code) {
+  if (code <= 1) return "good";
+  if (code <= 45) return "moderate";
+  if (code <= 48) return "poor"; // fog
+  if (code <= 55) return "moderate";
+  return "poor";
+}
+
+// Altitude-adjusted feels-like: lapse rate ~6.5°C/1000m
+function altAdjust(tempC, altM) {
+  return Math.round(tempC - (altM / 1000) * 6.5);
+}
+
+// mph from km/h
+const toMph = kph => Math.round(kph * 0.621371);
+
+// Score a set of weather values (0-100, higher = better conditions)
+function scoreWeather(feels, windMph, precipMm, vis) {
+  const windScore  = Math.max(0, 100 - windMph * 2);         // 0mph=100, 50mph=0
+  const feelsScore = Math.max(0, Math.min(100, 70 + feels));  // -30°=-100→0, 0°=70, +10°=80
+  const precipScore = Math.max(0, 100 - precipMm * 40);      // 0mm=100, 2.5mm=0
+  const visScore  = vis === "good" ? 100 : vis === "moderate" ? 60 : 20;
+  return Math.round(windScore * 0.30 + feelsScore * 0.25 + precipScore * 0.25 + visScore * 0.20);
+}
+
+// Fetch weather for all regions for a given date offset (0=today, 1=tomorrow etc.)
+// Returns array of enriched WX_AREAS entries sorted by score
+const WX_CACHE = {}; // key: "YYYY-MM-DD-regionIndex"
+
+async function fetchRegionWeather(region, dayOffset) {
+  const dateKey = (() => {
+    const d = new Date(); d.setDate(d.getDate() + dayOffset);
+    return d.toISOString().split("T")[0];
+  })();
+  const cacheKey = `${dateKey}-${region.region}`;
+  if (WX_CACHE[cacheKey] && Date.now() - WX_CACHE[cacheKey].ts < 30 * 60 * 1000) {
+    return WX_CACHE[cacheKey].data;
+  }
+
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${region.lat}&longitude=${region.lng}` +
+    `&daily=temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,` +
+    `windspeed_10m_max,precipitation_sum,weathercode` +
+    `&wind_speed_unit=kmh&timezone=Europe%2FLondon&forecast_days=7`;
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Weather fetch failed for ${region.region}`);
+  const json = await res.json();
+  const d = json.daily;
+
+  // Build 7-day array
+  const days = d.time.map((date, i) => {
+    const tempC    = Math.round((d.temperature_2m_max[i] + d.temperature_2m_min[i]) / 2);
+    const feelsRaw = Math.round((d.apparent_temperature_max[i] + d.apparent_temperature_min[i]) / 2);
+    const feelsAdj = altAdjust(feelsRaw, region.alt);
+    const windMph  = toMph(d.windspeed_10m_max[i]);
+    const precip   = parseFloat((d.precipitation_sum[i] || 0).toFixed(1));
+    const code     = d.weathercode[i];
+    const vis      = wxVis(code);
+    const score    = scoreWeather(feelsAdj, windMph, precip, vis);
+    return { date, tempC, feels: feelsAdj, wind: windMph, precip, vis, code, ic: wxIcon(code), score };
+  });
+
+  // Best day in next 7
+  const bestDay = days.reduce((best, day) => day.score > best.score ? day : best, days[0]);
+
+  const result = { days, bestDay };
+  WX_CACHE[cacheKey] = { data: result, ts: Date.now() };
+  return result;
+}
+
+// Fetch weather for a single peak (for expanded view)
+async function fetchPeakWeather(peak, dayOffset) {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${peak.lat}&longitude=${peak.lng}` +
+    `&daily=temperature_2m_max,apparent_temperature_min,apparent_temperature_max,windspeed_10m_max,precipitation_sum,weathercode,snowfall_sum` +
+    `&wind_speed_unit=kmh&timezone=Europe%2FLondon&forecast_days=7`;
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const json = await res.json();
+    const d = json.daily;
+    const i = dayOffset;
+    const feelsRaw = Math.round((d.apparent_temperature_max[i] + d.apparent_temperature_min[i]) / 2);
+    const feelsAdj = altAdjust(feelsRaw, peak.ht || 800);
+    return {
+      f:  feelsAdj,
+      wi: toMph(d.windspeed_10m_max[i]),
+      p:  parseFloat((d.precipitation_sum[i] || 0).toFixed(1)),
+      v:  wxVis(d.weathercode[i]),
+      sn: (d.snowfall_sum?.[i] || 0) > 0,
+      t:  Math.round(d.temperature_2m_max[i]),
+    };
+  } catch { return null; }
+}
 
 const PEAKS_FALLBACK = [
   { id: 1, name: "Ben Nevis", cls: "munros", ht: 1345, reg: "Ben Nevis & Mamores", lat: 56.797, lng: -5.004, w: { t: -3, f: -14, wi: 45, p: 2.5, v: "poor", sn: true }, done: true, date: "12 Oct 2025", log: "CMD Arete in perfect conditions. Incredible ridge walk." },
@@ -600,10 +718,87 @@ const HomePage = ({ userName, initialFilter }) => {
   const [expandedArea, setExpandedArea] = useState(null);
   const [showSAIS, setShowSAIS] = useState(false);
 
+  // Weather state
+  const [wxDay, setWxDay] = useState(0);          // 0=today, 1=tomorrow, -1=best of week
+  const [wxData, setWxData] = useState({});        // region → {days, bestDay}
+  const [wxLoading, setWxLoading] = useState(true);
+  const [wxError, setWxError] = useState(null);
+  const [wxUpdated, setWxUpdated] = useState(null);
+  const [peakWx, setPeakWx] = useState({});        // "peakName-day" → weather obj
+  const [peakWxLoading, setPeakWxLoading] = useState({});
+
   useEffect(() => {
     if (initialFilter) setFf(initialFilter);
   }, [initialFilter]);
-  const sorted = [...WX_AREAS].sort((a, b) => b.score - a.score);
+
+  // Fetch all region weather on mount and every 30 mins
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setWxLoading(true);
+      setWxError(null);
+      try {
+        const results = await Promise.all(
+          WX_REGIONS.map(r => fetchRegionWeather(r, 0).then(data => ({ region: r.region, data })))
+        );
+        if (cancelled) return;
+        const map = {};
+        results.forEach(({ region, data }) => { map[region] = data; });
+        setWxData(map);
+        setWxUpdated(new Date());
+      } catch (e) {
+        if (!cancelled) setWxError("Weather unavailable — check your connection");
+      } finally {
+        if (!cancelled) setWxLoading(false);
+      }
+    }
+    load();
+    const iv = setInterval(load, 30 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(iv); };
+  }, []);
+
+  // Build sorted area list from live data
+  const sorted = WX_REGIONS.map(region => {
+    const data = wxData[region.region];
+    if (!data) return { ...region, score: 0, temp: 0, feels: 0, wind: 0, precip: 0, vis: "moderate", ic: "cloud", loading: true };
+    const day = wxDay === -1 ? data.bestDay : (data.days[wxDay] || data.days[0]);
+    return {
+      ...region,
+      score:  day.score,
+      temp:   day.tempC,
+      feels:  day.feels,
+      wind:   day.wind,
+      precip: day.precip,
+      vis:    day.vis,
+      ic:     day.ic,
+      loading: false,
+      isBestDay: wxDay === -1,
+      bestDayName: wxDay === -1 ? new Date(data.bestDay.date).toLocaleDateString("en-GB", { weekday: "short" }) : null,
+    };
+  }).sort((a, b) => b.score - a.score);
+
+  // Fetch peak weather when a region is expanded
+  useEffect(() => {
+    if (expandedArea === null) return;
+    const area = sorted[expandedArea];
+    if (!area) return;
+    const regionPeaks = PEAKS.filter(p => {
+      const rLower = area.region.toLowerCase();
+      const pLower = p.reg.toLowerCase();
+      return pLower.includes(rLower.split(" ")[0]) || rLower.includes(pLower.split(" ")[0]);
+    }).slice(0, 5);
+
+    regionPeaks.forEach(pk => {
+      const key = `${pk.id}-${wxDay}`;
+      if (peakWx[key] || peakWxLoading[key]) return;
+      setPeakWxLoading(prev => ({ ...prev, [key]: true }));
+      const offset = wxDay === -1 ? 0 : wxDay;
+      fetchPeakWeather(pk, offset).then(w => {
+        if (w) setPeakWx(prev => ({ ...prev, [key]: w }));
+        setPeakWxLoading(prev => ({ ...prev, [key]: false }));
+      });
+    });
+  }, [expandedArea, wxDay, wxData]);
 
   return (
     <div style={{ padding: "0 16px 16px", overflowY: "auto", flex: 1 }}>
@@ -621,63 +816,97 @@ const HomePage = ({ userName, initialFilter }) => {
               <Sun size={18} color="#E85D3A" />
             </div>
             Best Weather Areas
-            <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "8px", background: "rgba(107,203,119,0.15)", color: "#6BCB77", fontWeight: 600 }}>Live</span>
+            {wxLoading ? (
+              <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "8px", background: "rgba(90,152,227,0.15)", color: "#BDD6F4", fontWeight: 600 }}>Loading…</span>
+            ) : wxError ? (
+              <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "8px", background: "rgba(232,93,58,0.12)", color: "#E85D3A", fontWeight: 600 }}>Offline</span>
+            ) : (
+              <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "8px", background: "rgba(107,203,119,0.15)", color: "#6BCB77", fontWeight: 600 }}>Live</span>
+            )}
           </span>
           <ChevronDown size={18} style={{ transform: wxOpen ? "rotate(180deg)" : "none", transition: ".3s", color: "#BDD6F4" }} />
         </button>
         {wxOpen && (
           <div style={{ background: "#0a2240", borderRadius: "0 0 14px 14px", border: "1px solid rgba(90,152,227,0.15)", borderTop: "none" }}>
-            <div style={{ padding: "8px 14px 4px", fontSize: "10px", color: "#BDD6F4", opacity: 0.6, display: "flex", justifyContent: "space-between" }}>
-              <span>Ranked: wind 30% · feels-like 25% · precipitation 25% · vis 20%</span>
-              <span>12 min ago</span>
+            {/* Day picker */}
+            <div style={{ padding: "10px 14px 6px", display: "flex", gap: "4px", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", gap: "4px" }}>
+                {[[-1, "Best day"], [0, "Today"], [1, "Tomorrow"], [2, "Day after"]].map(([d, label]) => (
+                  <button key={d} onClick={() => { setWxDay(d); setExpandedArea(null); }} style={{
+                    padding: "4px 10px", borderRadius: "8px", border: "none", cursor: "pointer",
+                    background: wxDay === d ? "rgba(90,152,227,0.2)" : "transparent",
+                    color: wxDay === d ? "#5A98E3" : "#BDD6F4",
+                    fontSize: "10px", fontWeight: wxDay === d ? 700 : 500, fontFamily: "'DM Sans'"
+                  }}>{label}</button>
+                ))}
+              </div>
+              {wxUpdated && !wxLoading && (
+                <span style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4 }}>
+                  {wxUpdated.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              )}
+            </div>
+            <div style={{ padding: "0 14px 4px", fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>
+              Ranked: wind 30% · feels-like 25% · precip 25% · vis 20% · summit altitude adjusted
             </div>
             {sorted.map((a, i) => {
               const isExpanded = expandedArea === i;
               const regionPeaks = PEAKS.filter(p => {
                 const rLower = a.region.toLowerCase();
                 const pLower = p.reg.toLowerCase();
-                return pLower.includes(rLower) || rLower.includes(pLower.split(" ")[0]);
+                return pLower.includes(rLower.split(" ")[0]) || rLower.includes(pLower.split(" ")[0]);
               });
-              // If no exact match, show peaks matching the classification for that area
               const displayPeaks = regionPeaks.length > 0 ? regionPeaks : PEAKS.filter(p => p.cls === a.cls).slice(0, 4);
 
               return (
                 <div key={i}>
-                  <div onClick={() => setExpandedArea(isExpanded ? null : i)} style={{
+                  <div onClick={() => !a.loading && setExpandedArea(isExpanded ? null : i)} style={{
                     padding: "12px 14px", display: "flex", alignItems: "center", gap: "12px",
-                    borderTop: "1px solid rgba(90,152,227,0.1)", cursor: "pointer",
-                    background: isExpanded ? "rgba(90,152,227,0.06)" : i === 0 ? "rgba(107,203,119,0.04)" : "transparent",
+                    borderTop: "1px solid rgba(90,152,227,0.1)", cursor: a.loading ? "default" : "pointer",
+                    background: isExpanded ? "rgba(90,152,227,0.06)" : i === 0 && !a.loading ? "rgba(107,203,119,0.04)" : "transparent",
                     animation: `fi .3s ease ${i * .04}s both`,
-                    transition: "background .2s"
+                    transition: "background .2s", opacity: a.loading ? 0.5 : 1
                   }}>
                     <div style={{
                       width: "30px", height: "30px", borderRadius: "9px",
-                      background: a.score >= 85 ? "rgba(107,203,119,0.12)" : a.score >= 70 ? "rgba(235,203,139,0.12)" : "rgba(232,93,58,0.12)",
+                      background: a.loading ? "rgba(90,152,227,0.08)" :
+                        a.score >= 85 ? "rgba(107,203,119,0.12)" : a.score >= 70 ? "rgba(235,203,139,0.12)" : "rgba(232,93,58,0.12)",
                       display: "flex", alignItems: "center", justifyContent: "center",
                       fontSize: "12px", fontWeight: 800,
-                      color: a.score >= 85 ? "#6BCB77" : a.score >= 70 ? "#EBCB8B" : "#E85D3A"
-                    }}>{a.score}</div>
+                      color: a.loading ? "#BDD6F4" : a.score >= 85 ? "#6BCB77" : a.score >= 70 ? "#EBCB8B" : "#E85D3A"
+                    }}>{a.loading ? "—" : a.score}</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                         <span style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{a.region}</span>
                         <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", background: `${CLS[a.cls]?.color}18`, color: CLS[a.cls]?.color, fontWeight: 600 }}>
                           {CLS[a.cls]?.name}
                         </span>
+                        {a.isBestDay && a.bestDayName && !a.loading && (
+                          <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", background: "rgba(107,203,119,0.12)", color: "#6BCB77", fontWeight: 600 }}>
+                            {a.bestDayName}
+                          </span>
+                        )}
                       </div>
                       <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, marginTop: "1px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {a.peaks.join(" · ")}
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: "10px", alignItems: "center", flexShrink: 0 }}>
-                      <WI type={a.ic} size={18} />
-                      <div style={{ textAlign: "right", minWidth: "42px" }}>
-                        <div style={{ fontSize: "12px", fontWeight: 700, color: a.feels < -5 ? "#BDD6F4" : "#F8F8F8" }}>{a.feels}°</div>
-                        <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.5 }}>feels</div>
-                      </div>
-                      <div style={{ textAlign: "right", minWidth: "36px" }}>
-                        <div style={{ fontSize: "12px", fontWeight: 700, color: a.wind > 35 ? "#E85D3A" : a.wind >= 20 ? "#F49D37" : "#F8F8F8" }}>{a.wind}</div>
-                        <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.5 }}>mph</div>
-                      </div>
+                      {a.loading ? (
+                        <div style={{ width: "60px", height: "28px", borderRadius: "6px", background: "rgba(90,152,227,0.08)" }} />
+                      ) : (
+                        <>
+                          <WI type={a.ic} size={18} />
+                          <div style={{ textAlign: "right", minWidth: "42px" }}>
+                            <div style={{ fontSize: "12px", fontWeight: 700, color: a.feels < -5 ? "#BDD6F4" : "#F8F8F8" }}>{a.feels}°</div>
+                            <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.5 }}>feels</div>
+                          </div>
+                          <div style={{ textAlign: "right", minWidth: "36px" }}>
+                            <div style={{ fontSize: "12px", fontWeight: 700, color: a.wind > 35 ? "#E85D3A" : a.wind >= 20 ? "#F49D37" : "#F8F8F8" }}>{a.wind}</div>
+                            <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.5 }}>mph</div>
+                          </div>
+                        </>
+                      )}
                       <ChevronRight size={14} color="#F8F8F8" style={{ opacity: 0.8, transform: isExpanded ? "rotate(90deg)" : "none", transition: ".2s", flexShrink: 0 }} />
                     </div>
                   </div>
@@ -691,6 +920,7 @@ const HomePage = ({ userName, initialFilter }) => {
                           <span>Temp: {a.temp}°</span>
                           <span>Precip: {a.precip}mm</span>
                           <span>Vis: {a.vis}</span>
+                          <span>Wind: {a.wind}mph</span>
                         </div>
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -706,17 +936,26 @@ const HomePage = ({ userName, initialFilter }) => {
                               <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8" }}>{pk.name}</div>
                               <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5 }}>{pk.ht}m · {pk.reg}</div>
                             </div>
-                            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                              <div style={{ textAlign: "center" }}>
-                                <div style={{ fontSize: "11px", fontWeight: 700, color: pk.w.f < -5 ? "#BDD6F4" : "#F8F8F8" }}>{pk.w.f}°</div>
-                                <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.4 }}>feels</div>
-                              </div>
-                              <div style={{ textAlign: "center" }}>
-                                <div style={{ fontSize: "11px", fontWeight: 700, color: pk.w.wi > 35 ? "#E85D3A" : pk.w.wi >= 20 ? "#F49D37" : "#F8F8F8" }}>{pk.w.wi}<span style={{ fontSize: "8px" }}>mph</span></div>
-                                <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.4 }}>wind</div>
-                              </div>
-                              {pk.w.sn && <Snowflake size={12} color="#BDD6F4" />}
-                            </div>
+                            {(() => {
+                              const key = `${pk.id}-${wxDay}`;
+                              const lw = peakWx[key];
+                              const loading = peakWxLoading[key];
+                              if (loading) return <div style={{ width: "70px", height: "28px", borderRadius: "6px", background: "rgba(90,152,227,0.08)" }} />;
+                              if (!lw) return null;
+                              return (
+                                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                  <div style={{ textAlign: "center" }}>
+                                    <div style={{ fontSize: "11px", fontWeight: 700, color: lw.f < -5 ? "#BDD6F4" : "#F8F8F8" }}>{lw.f}°</div>
+                                    <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.4 }}>feels</div>
+                                  </div>
+                                  <div style={{ textAlign: "center" }}>
+                                    <div style={{ fontSize: "11px", fontWeight: 700, color: lw.wi > 35 ? "#E85D3A" : lw.wi >= 20 ? "#F49D37" : "#F8F8F8" }}>{lw.wi}<span style={{ fontSize: "8px" }}>mph</span></div>
+                                    <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.4 }}>wind</div>
+                                  </div>
+                                  {lw.sn && <Snowflake size={12} color="#BDD6F4" />}
+                                </div>
+                              );
+                            })()}
                           </div>
                         ))}
                       </div>
