@@ -155,7 +155,7 @@ async function fetchRegionWeather(region, dayOffset) {
 
 // Fetch weather for a single peak (for expanded view)
 async function fetchPeakWeather(peak, dayOffset) {
-  const safeOffset = wxDay === -1 ? 0 : dayOffset;
+  const safeOffset = Math.max(0, dayOffset); // dayOffset -1 (best day) treated as today
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${peak.lat}&longitude=${peak.lng}` +
     `&daily=temperature_2m_max,temperature_2m_min,apparent_temperature_min,apparent_temperature_max,` +
     `windspeed_10m_max,windgusts_10m_max,precipitation_sum,precipitation_probability_max,weathercode,snowfall_sum,sunrise,sunset` +
@@ -964,7 +964,7 @@ const HomePage = ({ userName, initialFilter }) => {
                               // Open card immediately — fetch if not yet loaded
                               setSelPeakWx({ peak: pk, wx: lw || null });
                               if (!lw && !loading) {
-                                const offset = wxDay === -1 ? 0 : wxDay;
+                                const offset = Math.max(0, wxDay);
                                 setPeakWxLoading(prev => ({ ...prev, [key]: true }));
                                 fetchPeakWeather(pk, offset).then(w => {
                                   if (w) {
@@ -989,7 +989,7 @@ const HomePage = ({ userName, initialFilter }) => {
                               <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5 }}>{pk.ht}m · {pk.reg}</div>
                             </div>
                             {loading && <div style={{ width: "70px", height: "28px", borderRadius: "6px", background: "rgba(90,152,227,0.08)" }} />}
-                            {!loading && lw && (
+                            {!loading && lw && lw.wi !== undefined && (
                               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                                 <WI type={lw.ic || "cloudsun"} size={14} />
                                 <div style={{ textAlign: "center" }}>
