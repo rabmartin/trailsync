@@ -811,10 +811,10 @@ const HomePage = ({ userName, initialFilter }) => {
     const area = sorted[expandedArea];
     if (!area) return;
     const regionPeaks = (() => {
-      const exact = PEAKS.filter(p => p.reg === area.region);
+      const exact = PEAKS_FALLBACK.filter(p => p.reg === area.region);
       if (exact.length > 0) return exact.slice(0, 6);
-      const rWords = area.region.toLowerCase().split(/\s/).filter(w => w.length > 3);
-      return PEAKS.filter(p => rWords.some(w => p.reg.toLowerCase().includes(w))).slice(0, 6);
+      const rWords = area.region.toLowerCase().split(" ").filter(w => w.length > 3);
+      return PEAKS_FALLBACK.filter(p => rWords.some(w => p.reg.toLowerCase().includes(w))).slice(0, 6);
     })();
 
     regionPeaks.forEach(pk => {
@@ -880,11 +880,10 @@ const HomePage = ({ userName, initialFilter }) => {
             </div>
             {sorted.map((a, i) => {
               const isExpanded = expandedArea === i;
-              // Exact region match first, then word-boundary fallback
-              const regionPeaks = PEAKS.filter(p => p.reg === a.region);
-              // For regions like "Ben Nevis & Mamores" also catch "Kintail" matching "Kintail & Affric"
-              const loosePeaks = regionPeaks.length > 0 ? regionPeaks : PEAKS.filter(p => {
-                const rWords = a.region.toLowerCase().split(/[\s&,]+/).filter(w => w.length > 3);
+              // Always use PEAKS_FALLBACK for weather display — Supabase peaks use different region names
+              const regionPeaks = PEAKS_FALLBACK.filter(p => p.reg === a.region);
+              const loosePeaks = regionPeaks.length > 0 ? regionPeaks : PEAKS_FALLBACK.filter(p => {
+                const rWords = a.region.toLowerCase().split(" ").filter(w => w.length > 3);
                 return rWords.some(w => p.reg.toLowerCase().includes(w));
               });
               const displayPeaks = loosePeaks.slice(0, 6);
