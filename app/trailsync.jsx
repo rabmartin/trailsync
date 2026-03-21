@@ -125,7 +125,7 @@ async function fetchRegionWeather(region, dayOffset) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${region.lat}&longitude=${region.lng}` +
     `&daily=temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,` +
     `windspeed_10m_max,precipitation_sum,weathercode` +
-    `&wind_speed_unit=kmh&timezone=Europe%2FLondon&forecast_days=7`;
+    `&models=uk_met_office&wind_speed_unit=kmh&timezone=Europe%2FLondon&forecast_days=7`;
 
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Weather fetch failed for ${region.region}`);
@@ -160,7 +160,7 @@ async function fetchPeakWeather(peak, dayOffset) {
     `&daily=temperature_2m_max,temperature_2m_min,apparent_temperature_min,apparent_temperature_max,` +
     `windspeed_10m_max,windgusts_10m_max,precipitation_sum,precipitation_probability_max,weathercode,snowfall_sum,sunrise,sunset` +
     `&hourly=temperature_2m,apparent_temperature,windspeed_10m,precipitation_probability,weathercode` +
-    `&wind_speed_unit=kmh&timezone=Europe%2FLondon&forecast_days=7`;
+    `&models=uk_met_office&wind_speed_unit=kmh&timezone=Europe%2FLondon&forecast_days=7`;
 
   try {
     const res = await fetch(url);
