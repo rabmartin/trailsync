@@ -2654,13 +2654,10 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
     }
   }
 
-  // Update peakData when user peaks load or reset
+  // Update peakData when Supabase peaks load
   useEffect(() => {
     if (dbPeaks && dbPeaks.length > 0) {
       setPeakData(dbPeaks);
-    } else if (dbPeaks !== null) {
-      // dbPeaks set to [] means user has no logged peaks — show all fresh
-      setPeakData(PEAKS_FALLBACK.map(pk => ({ ...pk, done: false })));
     }
   }, [dbPeaks]);
   const [showCreate, setShowCreate] = useState(false);
@@ -3478,24 +3475,40 @@ export default function TrailSync() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Load user's logged peaks and merge done status onto PEAKS_FALLBACK
+      // Fetch all peaks from Supabase
+      const { data: allPeaks } = await supabase
+        .from("peaks")
+        .select("id, name, classification, height, region, latitude, longitude")
+        .order("name");
+
+      // Fetch this user's logged peaks
       const { data: userPeaks } = await supabase
         .from("user_peaks")
         .select("*")
         .eq("user_id", user.id);
 
-      if (userPeaks && userPeaks.length > 0) {
+      if (allPeaks && allPeaks.length > 0) {
         const peakMap = {};
-        userPeaks.forEach(p => { peakMap[String(p.peak_id)] = p; });
-        // Always start from PEAKS_FALLBACK — never the Supabase peaks table
-        const merged = PEAKS_FALLBACK.map(pk => {
-          const saved = peakMap[String(pk.id)];
-          if (saved) return { ...pk, done: saved.done, date: saved.date_completed, log: saved.notes || "" };
-          return { ...pk, done: false }; // ensure fresh start
+        if (userPeaks) userPeaks.forEach(p => { peakMap[String(p.peak_id)] = p; });
+        const merged = allPeaks.map(p => {
+          const saved = peakMap[String(p.id)];
+          return {
+            id: p.id,
+            name: p.name,
+            cls: p.classification,
+            ht: Math.round(p.height),
+            reg: p.region,
+            lat: p.latitude,
+            lng: p.longitude,
+            done: saved ? saved.done : false,
+            date: saved?.date_completed || null,
+            log: saved?.notes || "",
+          };
         });
+        PEAKS = merged;
         setDbPeaks(merged);
       } else {
-        // No logged peaks — start completely fresh
+        // Fallback if Supabase peaks unavailable
         setDbPeaks(PEAKS_FALLBACK.map(pk => ({ ...pk, done: false })));
       }
 
