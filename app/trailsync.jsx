@@ -2607,7 +2607,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
   const [logging, setLogging] = useState(false);
   const [logDate, setLogDate] = useState("");
   const [logNote, setLogNote] = useState("");
-  const [peakData, setPeakData] = useState(dbPeaks || PEAKS);
+  const [peakData, setPeakData] = useState(PEAKS_FALLBACK);
   const mtMapRef = useRef(null);
   const [mtActiveGpxId, setMtActiveGpxId] = useState(null);
   const [mtGpxLoading, setMtGpxLoading] = useState(false);
@@ -2635,9 +2635,12 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
     }
   }
 
-  // Update peakData when Supabase peaks load
+  // Update peakData when Supabase user peaks load — merge done status onto PEAKS_FALLBACK
   useEffect(() => {
-    if (dbPeaks && dbPeaks.length > 0) setPeakData(dbPeaks);
+    if (dbPeaks && dbPeaks.length > 0) {
+      // dbPeaks from loadUserData is already PEAKS_FALLBACK merged with done status
+      setPeakData(dbPeaks);
+    }
   }, [dbPeaks]);
   const [showCreate, setShowCreate] = useState(false);
   const [createType, setCreateType] = useState(null);
@@ -3272,17 +3275,7 @@ export default function TrailSync() {
         setUserName(name);
         setAuthState("app");
       } else {
-        // Fall back to localStorage for users who clicked through without real auth
-        try {
-          const saved = localStorage.getItem("ts_auth");
-          const savedUser = localStorage.getItem("ts_user");
-          if (saved === "app" || saved === "tutorial") {
-            setUserName(savedUser || "Alex");
-            setAuthState("app");
-          } else {
-            setAuthState("login");
-          }
-        } catch { setAuthState("login"); }
+        setAuthState("login");
       }
     });
 
@@ -3294,21 +3287,15 @@ export default function TrailSync() {
           || "Explorer";
         setUserName(name);
         setAuthState("app");
-        try { localStorage.setItem("ts_auth", "app"); localStorage.setItem("ts_user", name); } catch {}
+      } else if (_event === "SIGNED_OUT") {
+        setAuthState("login");
+        setUserName("Alex");
       }
     });
     return () => subscription.unsubscribe();
   }, []);
 
-  // Keep localStorage in sync as fallback
-  useEffect(() => {
-    if (authState !== "loading") {
-      try { localStorage.setItem("ts_auth", authState); } catch {}
-    }
-  }, [authState]);
-  useEffect(() => {
-    try { localStorage.setItem("ts_user", userName); } catch {}
-  }, [userName]);
+  // Auth state managed by Supabase session only — no localStorage sync needed
   const [profileSec, setProfileSec] = useState("mountains");
   const [feedFilter, setFeedFilter] = useState("all");
   const [savedWalks, setSavedWalks] = useState([]);
@@ -3618,9 +3605,11 @@ export default function TrailSync() {
                     <button onClick={async () => {
                       setShowUserMenu(false);
                       await supabase.auth.signOut();
-                      try { localStorage.removeItem("ts_auth"); localStorage.removeItem("ts_user"); } catch {}
-                      setAuthState("login");
+                      try { localStorage.clear(); } catch {}
                       setUserName("Alex");
+                      setSavedWalks([]);
+                      setDbPeaks(null);
+                      setAuthState("login");
                     }} style={{ width: "100%", padding: "10px 14px", border: "none", borderTop: "1px solid rgba(90,152,227,0.08)", background: "transparent", color: "#E85D3A", fontSize: "12px", fontWeight: 600, cursor: "pointer", textAlign: "left", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "8px" }}>
                       <ArrowRight size={14} style={{ transform: "rotate(180deg)" }} /> Sign out
                     </button>
@@ -3659,9 +3648,11 @@ export default function TrailSync() {
         {tab === "learn" && <LearnPage courseProgress={userCourseProgress} onCourseProgress={async (courseId, lessonsCompleted) => { setUserCourseProgress(prev => ({ ...prev, [courseId]: lessonsCompleted })); const { data: { user } } = await supabase.auth.getUser(); if (!user) return; await supabase.from("user_courses").upsert({ user_id: user.id, course_id: courseId, lessons_completed: lessonsCompleted, updated_at: new Date().toISOString() }, { onConflict: "user_id,course_id" }); }} />}
         {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} dbPeaks={dbPeaks} userName={userName} onSignOut={async () => {
   await supabase.auth.signOut();
-  try { localStorage.removeItem("ts_auth"); localStorage.removeItem("ts_user"); } catch {}
-  setAuthState("login");
+  try { localStorage.clear(); } catch {}
   setUserName("Alex");
+  setSavedWalks([]);
+  setDbPeaks(null);
+  setAuthState("login");
 }} />}
       </div>
 
