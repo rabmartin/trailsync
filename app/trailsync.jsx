@@ -3304,7 +3304,7 @@ export default function TrailSync() {
   const [dbRoutes, setDbRoutes] = useState(null);
   const [gpxRoute, setGpxRoute] = useState(null); //
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [userCourseProgress, setUserCourseProgress] = useState({}); { route, from }
+  const [userCourseProgress, setUserCourseProgress] = useState({});
 
   // Navigate to main map and draw a GPX route
   // Accepts a full route object or just an id
