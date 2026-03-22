@@ -2425,7 +2425,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
 /* ═══════════════════════════════════════════════════════════════════
    TAB 4: LEARN
    ═══════════════════════════════════════════════════════════════════ */
-const LearnPage = () => {
+const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
   const [sel, setSel] = useState(null);
   const [subTab, setSubTab] = useState("learn");
   const [discView, setDiscView] = useState("list");
@@ -2458,20 +2458,20 @@ const LearnPage = () => {
             <div style={{ height: "5px", borderRadius: "5px", background: "#0a2240", marginTop: "10px" }}><div style={{ width: "16%", height: "100%", borderRadius: "5px", background: "linear-gradient(90deg,#5A98E3,#6BCB77)" }} /></div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            {MODULES.map((m, i) => { const pct = Math.round((m.done / m.les) * 100); return (
+            {MODULES.map((m, i) => { const doneLessons = courseProgress[m.id] ?? m.done; const pct = Math.round((doneLessons / m.les) * 100); return (
               <div key={m.id} onClick={() => setSel(sel === m.id ? null : m.id)} style={{ background: "#0a2240", borderRadius: "14px", overflow: "hidden", border: "1px solid rgba(90,152,227,0.1)", cursor: "pointer", animation: `fi .3s ease ${i * .04}s both` }}>
                 <div style={{ padding: "14px", display: "flex", alignItems: "center", gap: "12px" }}>
                   <div style={{ width: "46px", height: "46px", borderRadius: "12px", background: pct === 100 ? "rgba(107,203,119,0.1)" : "#264f80", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", border: pct === 100 ? "1px solid rgba(107,203,119,0.2)" : "none" }}>{m.ic}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{m.title}</span>{pct === 100 && <CheckCircle size={13} color="#6BCB77" />}</div>
                     <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5, marginTop: "2px" }}>{m.lvl} · {m.les} lessons · {m.time}</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px" }}><div style={{ flex: 1, height: "3px", borderRadius: "3px", background: "#264f80" }}><div style={{ width: `${pct}%`, height: "100%", borderRadius: "3px", background: pct === 100 ? "#6BCB77" : "#5A98E3" }} /></div><span style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, fontWeight: 600 }}>{m.done}/{m.les}</span></div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px" }}><div style={{ flex: 1, height: "3px", borderRadius: "3px", background: "#264f80" }}><div style={{ width: `${pct}%`, height: "100%", borderRadius: "3px", background: pct === 100 ? "#6BCB77" : "#5A98E3" }} /></div><span style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, fontWeight: 600 }}>{doneLessons}/{m.les}</span></div>
                   </div>
                   <ChevronRight size={16} color="#BDD6F4" style={{ opacity: 0.4, transform: sel === m.id ? "rotate(90deg)" : "none", transition: ".2s" }} />
                 </div>
                 {sel === m.id && <div style={{ padding: "0 14px 14px", borderTop: "1px solid rgba(90,152,227,0.1)", paddingTop: "12px" }}>
                   <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.5, marginBottom: "12px" }}>{m.desc}</div>
-                  <button style={{ padding: "9px 22px", borderRadius: "10px", border: "none", background: pct === 100 ? "#264f80" : "linear-gradient(135deg,#5A98E3,#4080cc)", color: pct === 100 ? "#BDD6F4" : "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>{pct === 100 ? "Review" : pct > 0 ? "Continue" : "Start"}</button>
+                  <button onClick={() => { if (pct < 100 && onCourseProgress) { const next = Math.min(doneLessons + 1, m.les); onCourseProgress(m.id, next); } }} style={{ padding: "9px 22px", borderRadius: "10px", border: "none", background: pct === 100 ? "#264f80" : "linear-gradient(135deg,#5A98E3,#4080cc)", color: pct === 100 ? "#BDD6F4" : "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>{pct === 100 ? "Review" : pct > 0 ? "Continue" : "Start"}</button>
                 </div>}
               </div>
             ); })}
@@ -2670,13 +2670,38 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
     return a.name.localeCompare(b.name);
   });
 
-  const handleLog = (peakId) => {
+  const handleLog = async (peakId) => {
     if (!logDate) return;
+    const peak = peakData.find(p => p.id === peakId);
+    // Update local state immediately
     setPeakData(prev => prev.map(p => p.id === peakId ? { ...p, done: true, date: logDate, log: logNote || "" } : p));
     setLogging(false);
     setLogDate("");
     setLogNote("");
     setSelPeak(prev => ({ ...prev, done: true, date: logDate, log: logNote || "" }));
+    // Save to Supabase
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase.from("user_peaks").upsert({
+        user_id: user.id,
+        peak_id: String(peakId),
+        peak_name: peak?.name || "",
+        done: true,
+        date_completed: logDate,
+        notes: logNote || null,
+      }, { onConflict: "user_id,peak_id" });
+    } catch (e) { console.error("Failed to save peak:", e); }
+  };
+
+  const handleUnlogPeak = async (peakId) => {
+    setPeakData(prev => prev.map(p => p.id === peakId ? { ...p, done: false, date: undefined, log: undefined } : p));
+    setSelPeak(prev => ({ ...prev, done: false, date: undefined, log: undefined }));
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase.from("user_peaks").delete().eq("user_id", user.id).eq("peak_id", String(peakId));
+    } catch (e) { console.error("Failed to unlog peak:", e); }
   };
 
   return (
@@ -2783,7 +2808,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                         <div style={{ flex: 1 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             <span style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8" }}>{selPeak.name}</span>
-                            <div onClick={(e) => { e.stopPropagation(); if (selPeak.done && !logging) { setPeakData(prev => prev.map(p => p.id === selPeak.id ? { ...p, done: false, date: undefined, log: undefined } : p)); setSelPeak(prev => ({ ...prev, done: false, date: undefined, log: undefined })); setLogging(false); } else if (!selPeak.done) { const today = new Date().toISOString().split("T")[0]; setPeakData(prev => prev.map(p => p.id === selPeak.id ? { ...p, done: true, date: today, log: "" } : p)); setSelPeak(prev => ({ ...prev, done: true, date: today, log: "" })); setLogDate(today); setLogNote(""); setLogging(true); } }} style={{ width: "22px", height: "22px", borderRadius: "6px", background: selPeak.done ? "rgba(107,203,119,0.15)" : "rgba(232,93,58,0.1)", border: `2px solid ${selPeak.done ? "#6BCB77" : "rgba(232,93,58,0.3)"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all .2s" }}>{selPeak.done && <Check size={13} color="#6BCB77" strokeWidth={3} />}</div>
+                            <div onClick={(e) => { e.stopPropagation(); if (selPeak.done && !logging) { handleUnlogPeak(selPeak.id); setLogging(false); } else if (!selPeak.done) { const today = new Date().toISOString().split("T")[0]; setPeakData(prev => prev.map(p => p.id === selPeak.id ? { ...p, done: true, date: today, log: "" } : p)); setSelPeak(prev => ({ ...prev, done: true, date: today, log: "" })); setLogDate(today); setLogNote(""); setLogging(true); } }} style={{ width: "22px", height: "22px", borderRadius: "6px", background: selPeak.done ? "rgba(107,203,119,0.15)" : "rgba(232,93,58,0.1)", border: `2px solid ${selPeak.done ? "#6BCB77" : "rgba(232,93,58,0.3)"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all .2s" }}>{selPeak.done && <Check size={13} color="#6BCB77" strokeWidth={3} />}</div>
                           </div>
                           <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>{selPeak.ht}m · {selPeak.reg}</div>
                           <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "5px", background: `${CLS[selPeak.cls]?.color}15`, color: CLS[selPeak.cls]?.color, fontWeight: 600, marginTop: "4px", display: "inline-block" }}>{CLS[selPeak.cls]?.name}</span>
@@ -3286,7 +3311,8 @@ export default function TrailSync() {
   const [dbPeaks, setDbPeaks] = useState(null);
   const [dbRoutes, setDbRoutes] = useState(null);
   const [gpxRoute, setGpxRoute] = useState(null); //
-  const [showUserMenu, setShowUserMenu] = useState(false); { route, from }
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [userCourseProgress, setUserCourseProgress] = useState({}); { route, from }
 
   // Navigate to main map and draw a GPX route
   // Accepts a full route object or just an id
@@ -3417,6 +3443,72 @@ export default function TrailSync() {
   ];
 
   // Handle tutorial step changes - auto switch tabs
+  // ── Load user data from Supabase on mount / auth change ──
+  useEffect(() => {
+    if (authState !== "app") return;
+
+    async function loadUserData() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Load logged peaks
+      const { data: peaks } = await supabase
+        .from("user_peaks")
+        .select("*")
+        .eq("user_id", user.id);
+
+      if (peaks && peaks.length > 0) {
+        const peakMap = {};
+        peaks.forEach(p => { peakMap[String(p.peak_id)] = p; });
+        // Merge into PEAKS_FALLBACK
+        const merged = PEAKS_FALLBACK.map(pk => {
+          const saved = peakMap[String(pk.id)];
+          if (saved) return { ...pk, done: saved.done, date: saved.date_completed, log: saved.notes || "" };
+          return pk;
+        });
+        PEAKS = merged;
+        setDbPeaks(merged);
+      }
+
+      // Load saved walks
+      const { data: walks } = await supabase
+        .from("user_walks")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (walks && walks.length > 0) {
+        setSavedWalks(walks.map(w => ({
+          name: w.name,
+          desc: w.description,
+          dist: w.distance_km,
+          elev: w.elevation_m,
+          time: w.duration,
+          movingTime: w.moving_time,
+          avgSpeed: w.avg_speed_kph,
+          peaks: w.peaks || [],
+          photos: w.photos || 0,
+          date: w.date_walked ? new Date(w.date_walked).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "",
+          id: w.id,
+        })));
+      }
+
+      // Load course progress
+      const { data: courses } = await supabase
+        .from("user_courses")
+        .select("*")
+        .eq("user_id", user.id);
+
+      if (courses && courses.length > 0) {
+        const courseMap = {};
+        courses.forEach(c => { courseMap[c.course_id] = c.lessons_completed; });
+        setUserCourseProgress(courseMap);
+      }
+    }
+
+    loadUserData();
+  }, [authState]);
+
   const handleTutNext = () => {
     if (tutStep >= TUTORIAL_STEPS.length - 1) {
       setAuthState("app");
@@ -3539,8 +3631,27 @@ export default function TrailSync() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {tab === "home" && <HomePage userName={userName} initialFilter={feedFilter} />}
         {tab === "routes" && <RoutesPage openRoute={openRouteOnMap} />}
-        {tab === "map" && <MapPage goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={(walk) => setSavedWalks(prev => [walk, ...prev])} openRoute={openRouteOnMap} gpxRoute={gpxRoute} onCloseGpx={closeGpxRoute} />}
-        {tab === "learn" && <LearnPage />}
+        {tab === "map" && <MapPage goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={async (walk) => {
+              setSavedWalks(prev => [walk, ...prev]);
+              try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
+                await supabase.from("user_walks").insert({
+                  user_id: user.id,
+                  name: walk.name,
+                  description: walk.desc || null,
+                  distance_km: parseFloat(walk.dist) || 0,
+                  elevation_m: parseInt(walk.elev) || 0,
+                  duration: walk.time,
+                  moving_time: walk.movingTime,
+                  avg_speed_kph: parseFloat(walk.avgSpeed) || 0,
+                  peaks: walk.peaks || [],
+                  photos: walk.photos || 0,
+                  date_walked: new Date().toISOString().split("T")[0],
+                });
+              } catch (e) { console.error("Failed to save walk:", e); }
+            }} openRoute={openRouteOnMap} gpxRoute={gpxRoute} onCloseGpx={closeGpxRoute} />}
+        {tab === "learn" && <LearnPage courseProgress={userCourseProgress} onCourseProgress={async (courseId, lessonsCompleted) => { setUserCourseProgress(prev => ({ ...prev, [courseId]: lessonsCompleted })); const { data: { user } } = await supabase.auth.getUser(); if (!user) return; await supabase.from("user_courses").upsert({ user_id: user.id, course_id: courseId, lessons_completed: lessonsCompleted, updated_at: new Date().toISOString() }, { onConflict: "user_id,course_id" }); }} />}
         {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} dbPeaks={dbPeaks} onSignOut={async () => {
   await supabase.auth.signOut();
   try { localStorage.removeItem("ts_auth"); localStorage.removeItem("ts_user"); } catch {}
