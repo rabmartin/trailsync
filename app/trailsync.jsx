@@ -611,6 +611,23 @@ const PrivacyPopup = ({ onClose }) => (
 const LoginScreen = ({ onLogin, onGoSignup }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleLogin = async () => {
+    if (!email || !password) { setError("Please enter your email and password."); return; }
+    setLoading(true);
+    setError("");
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+      if (authError) { setError(authError.message); return; }
+      if (data?.user) onLogin(data.user);
+    } catch (e) {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px", background: "#041e3d", minHeight: "100vh" }}>
@@ -645,10 +662,16 @@ const LoginScreen = ({ onLogin, onGoSignup }) => {
 
         {/* Email/password fields */}
         <input type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "10px" }} />
-        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "16px" }} />
+        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "16px" }} />
 
-        <button onClick={onLogin} style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
-          Sign In
+        {error && (
+          <div style={{ padding: "10px 12px", borderRadius: "8px", background: "rgba(232,93,58,0.1)", border: "1px solid rgba(232,93,58,0.2)", marginBottom: "12px", fontSize: "12px", color: "#E85D3A" }}>
+            {error}
+          </div>
+        )}
+
+        <button onClick={handleLogin} disabled={loading} style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "none", background: loading ? "#264f80" : "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: loading ? "default" : "pointer", fontFamily: "'DM Sans'", opacity: loading ? 0.7 : 1 }}>
+          {loading ? "Signing in…" : "Sign In"}
         </button>
 
         <div style={{ textAlign: "center", marginTop: "20px", fontSize: "13px", color: "#BDD6F4", opacity: 0.6 }}>
@@ -669,8 +692,44 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
   const [password, setPassword] = useState("");
   const [location, setLocation] = useState("");
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const isValid = name && dob && email && password;
+
+  const handleSignup = async () => {
+    if (!isValid) return;
+    setLoading(true);
+    setError("");
+    try {
+      const { data, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+            date_of_birth: dob,
+            location: location || null,
+          }
+        }
+      });
+      if (authError) { setError(authError.message); return; }
+      if (data?.user) {
+        // Supabase may require email confirmation — check
+        if (data.session) {
+          // Logged in immediately — no email confirmation required
+          onSignup(name);
+        } else {
+          // Email confirmation sent
+          setError("Please check your email to confirm your account, then sign in.");
+        }
+      }
+    } catch (e) {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px", background: "#041e3d", minHeight: "100vh" }}>
@@ -716,8 +775,14 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
           <input type="text" placeholder="(Optional)" value={location} onChange={e => setLocation(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: location ? "#F8F8F8" : "#BDD6F4", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'" }} />
         </div>
 
-        <button onClick={() => { if (isValid) onSignup(name); }} style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "none", background: isValid ? "linear-gradient(135deg,#E85D3A,#d04a2a)" : "#264f80", color: isValid ? "#F8F8F8" : "#BDD6F4", fontSize: "14px", fontWeight: 700, cursor: isValid ? "pointer" : "default", fontFamily: "'DM Sans'", opacity: isValid ? 1 : 0.5, transition: "all .2s" }}>
-          Create Account
+        {error && (
+          <div style={{ padding: "10px 12px", borderRadius: "8px", background: error.includes("check your email") ? "rgba(107,203,119,0.1)" : "rgba(232,93,58,0.1)", border: `1px solid ${error.includes("check your email") ? "rgba(107,203,119,0.2)" : "rgba(232,93,58,0.2)"}`, marginBottom: "12px", fontSize: "12px", color: error.includes("check your email") ? "#6BCB77" : "#E85D3A", lineHeight: 1.5 }}>
+            {error}
+          </div>
+        )}
+
+        <button onClick={handleSignup} disabled={!isValid || loading} style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "none", background: isValid && !loading ? "linear-gradient(135deg,#E85D3A,#d04a2a)" : "#264f80", color: isValid ? "#F8F8F8" : "#BDD6F4", fontSize: "14px", fontWeight: 700, cursor: isValid && !loading ? "pointer" : "default", fontFamily: "'DM Sans'", opacity: isValid ? 1 : 0.5, transition: "all .2s" }}>
+          {loading ? "Creating account…" : "Create Account"}
         </button>
 
         {/* Privacy link */}
@@ -2518,7 +2583,7 @@ const LearnPage = () => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 5: PROFILE
    ═══════════════════════════════════════════════════════════════════ */
-const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRoute, savedWalks, dbPeaks }) => {
+const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRoute, onSignOut, savedWalks, dbPeaks }) => {
   const [sec, setSec] = useState(initialSec || "mountains");
 
   // Sync with parent when initialSec changes
@@ -2626,7 +2691,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             <span style={{ fontSize: "11px", color: "#BDD6F4" }}><strong style={{ color: "#F8F8F8" }}>{ME.fng}</strong> following</span>
           </div>
         </div>
-        <button style={{ padding: "7px", borderRadius: "8px", background: "#0a2240", border: "1px solid rgba(90,152,227,0.12)", cursor: "pointer", color: "#BDD6F4" }}><Settings size={16} /></button>
+        <button onClick={onSignOut} title="Sign out" style={{ padding: "7px", borderRadius: "8px", background: "#0a2240", border: "1px solid rgba(90,152,227,0.12)", cursor: "pointer", color: "#BDD6F4" }}><Settings size={16} /></button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "16px" }}>
@@ -3162,22 +3227,54 @@ const TutorialOverlay = ({ step, totalSteps, currentStep, onNext, onSkip }) => {
    MAIN APP
    ═══════════════════════════════════════════════════════════════════ */
 export default function TrailSync() {
-  // Persist auth across refreshes
-  const [authState, setAuthState] = useState(() => {
-    try {
-      const saved = localStorage.getItem("ts_auth");
-      // If they refreshed mid-tutorial, drop them into the app
-      return saved === "tutorial" ? "app" : (saved || "login");
-    } catch { return "login"; }
-  });
-  const [userName, setUserName] = useState(() => {
-    try { return localStorage.getItem("ts_user") || "Alex"; } catch { return "Alex"; }
-  });
+  // Start as loading, then resolve from Supabase session
+  const [authState, setAuthState] = useState("loading");
+  const [userName, setUserName] = useState("Alex");
   const [tab, setTab] = useState("map");
 
-  // Keep localStorage in sync
+  // Check Supabase session on mount
   useEffect(() => {
-    try { localStorage.setItem("ts_auth", authState); } catch {}
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const name = session.user.user_metadata?.full_name?.split(" ")[0]
+          || session.user.email?.split("@")[0]
+          || "Explorer";
+        setUserName(name);
+        setAuthState("app");
+      } else {
+        // Fall back to localStorage for users who clicked through without real auth
+        try {
+          const saved = localStorage.getItem("ts_auth");
+          const savedUser = localStorage.getItem("ts_user");
+          if (saved === "app" || saved === "tutorial") {
+            setUserName(savedUser || "Alex");
+            setAuthState("app");
+          } else {
+            setAuthState("login");
+          }
+        } catch { setAuthState("login"); }
+      }
+    });
+
+    // Listen for auth state changes (sign in / sign out)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const name = session.user.user_metadata?.full_name?.split(" ")[0]
+          || session.user.email?.split("@")[0]
+          || "Explorer";
+        setUserName(name);
+        setAuthState("app");
+        try { localStorage.setItem("ts_auth", "app"); localStorage.setItem("ts_user", name); } catch {}
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Keep localStorage in sync as fallback
+  useEffect(() => {
+    if (authState !== "loading") {
+      try { localStorage.setItem("ts_auth", authState); } catch {}
+    }
   }, [authState]);
   useEffect(() => {
     try { localStorage.setItem("ts_user", userName); } catch {}
@@ -3188,7 +3285,8 @@ export default function TrailSync() {
   const [tutStep, setTutStep] = useState(0);
   const [dbPeaks, setDbPeaks] = useState(null);
   const [dbRoutes, setDbRoutes] = useState(null);
-  const [gpxRoute, setGpxRoute] = useState(null); // { route, from }
+  const [gpxRoute, setGpxRoute] = useState(null); //
+  const [showUserMenu, setShowUserMenu] = useState(false); { route, from }
 
   // Navigate to main map and draw a GPX route
   // Accepts a full route object or just an id
@@ -3331,6 +3429,19 @@ export default function TrailSync() {
   };
 
   // Auth screens
+  if (authState === "loading") {
+    return (
+      <div style={{ width: "100%", height: "100vh", background: "#041e3d", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "linear-gradient(135deg,#E85D3A,#F49D37)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", animation: "glow 3s ease infinite" }}>
+            <Mountain size={24} color="#F8F8F8" />
+          </div>
+          <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.5 }}>Loading TrailSync…</div>
+        </div>
+      </div>
+    );
+  }
+
   if (authState === "login") {
     return (
       <div style={{ width: "100%", height: "100vh", background: "#041e3d", fontFamily: "'DM Sans',system-ui,sans-serif", overflow: "hidden" }}>
@@ -3341,7 +3452,7 @@ export default function TrailSync() {
           @keyframes su { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
           @keyframes glow { 0%,100% { box-shadow: 0 0 8px rgba(232,93,58,.25); } 50% { box-shadow: 0 0 18px rgba(232,93,58,.45); } }
         `}</style>
-        <LoginScreen onLogin={() => setAuthState("app")} onGoSignup={() => setAuthState("signup")} />
+        <LoginScreen onLogin={(user) => { setUserName(user.user_metadata?.full_name?.split(" ")[0] || user.email.split("@")[0]); setAuthState("app"); }} onGoSignup={() => setAuthState("signup")} />
       </div>
     );
   }
@@ -3391,7 +3502,35 @@ export default function TrailSync() {
               <Bell size={16} />
               <div style={{ position: "absolute", top: 1, right: 1, width: "7px", height: "7px", borderRadius: "50%", background: "#E85D3A", border: "1px solid #041e3d" }} />
             </button>
-            <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: "#F8F8F8", border: "2px solid rgba(90,152,227,0.25)" }}>A</div>
+            <div style={{ position: "relative" }}>
+              <div onClick={() => setShowUserMenu(m => !m)} style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: "#F8F8F8", border: "2px solid rgba(90,152,227,0.25)", cursor: "pointer" }}>
+                {userName ? userName[0].toUpperCase() : "A"}
+              </div>
+              {showUserMenu && (
+                <>
+                  {/* Backdrop to close menu */}
+                  <div onClick={() => setShowUserMenu(false)} style={{ position: "fixed", inset: 0, zIndex: 40 }} />
+                  <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 41, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.2)", minWidth: "160px", overflow: "hidden", animation: "fi .15s ease" }}>
+                    <div style={{ padding: "10px 14px", borderBottom: "1px solid rgba(90,152,227,0.1)" }}>
+                      <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8" }}>{userName}</div>
+                      <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>Signed in</div>
+                    </div>
+                    <button onClick={() => { setShowUserMenu(false); setTab("profile"); }} style={{ width: "100%", padding: "10px 14px", border: "none", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", textAlign: "left", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <UserCircle size={14} /> Profile
+                    </button>
+                    <button onClick={async () => {
+                      setShowUserMenu(false);
+                      await supabase.auth.signOut();
+                      try { localStorage.removeItem("ts_auth"); localStorage.removeItem("ts_user"); } catch {}
+                      setAuthState("login");
+                      setUserName("Alex");
+                    }} style={{ width: "100%", padding: "10px 14px", border: "none", borderTop: "1px solid rgba(90,152,227,0.08)", background: "transparent", color: "#E85D3A", fontSize: "12px", fontWeight: 600, cursor: "pointer", textAlign: "left", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <ArrowRight size={14} style={{ transform: "rotate(180deg)" }} /> Sign out
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -3402,7 +3541,12 @@ export default function TrailSync() {
         {tab === "routes" && <RoutesPage openRoute={openRouteOnMap} />}
         {tab === "map" && <MapPage goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={(walk) => setSavedWalks(prev => [walk, ...prev])} openRoute={openRouteOnMap} gpxRoute={gpxRoute} onCloseGpx={closeGpxRoute} />}
         {tab === "learn" && <LearnPage />}
-        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} dbPeaks={dbPeaks} />}
+        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} dbPeaks={dbPeaks} onSignOut={async () => {
+  await supabase.auth.signOut();
+  try { localStorage.removeItem("ts_auth"); localStorage.removeItem("ts_user"); } catch {}
+  setAuthState("login");
+  setUserName("Alex");
+}} />}
       </div>
 
       {/* Tutorial overlay */}
