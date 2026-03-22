@@ -3162,9 +3162,26 @@ const TutorialOverlay = ({ step, totalSteps, currentStep, onNext, onSkip }) => {
    MAIN APP
    ═══════════════════════════════════════════════════════════════════ */
 export default function TrailSync() {
-  const [authState, setAuthState] = useState("login"); // "login", "signup", "app", "tutorial"
-  const [userName, setUserName] = useState("Alex");
+  // Persist auth across refreshes
+  const [authState, setAuthState] = useState(() => {
+    try {
+      const saved = localStorage.getItem("ts_auth");
+      // If they refreshed mid-tutorial, drop them into the app
+      return saved === "tutorial" ? "app" : (saved || "login");
+    } catch { return "login"; }
+  });
+  const [userName, setUserName] = useState(() => {
+    try { return localStorage.getItem("ts_user") || "Alex"; } catch { return "Alex"; }
+  });
   const [tab, setTab] = useState("map");
+
+  // Keep localStorage in sync
+  useEffect(() => {
+    try { localStorage.setItem("ts_auth", authState); } catch {}
+  }, [authState]);
+  useEffect(() => {
+    try { localStorage.setItem("ts_user", userName); } catch {}
+  }, [userName]);
   const [profileSec, setProfileSec] = useState("mountains");
   const [feedFilter, setFeedFilter] = useState("all");
   const [savedWalks, setSavedWalks] = useState([]);
