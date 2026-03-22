@@ -687,6 +687,7 @@ const LoginScreen = ({ onLogin, onGoSignup }) => {
    ═══════════════════════════════════════════════════════════════════ */
 const SignupScreen = ({ onSignup, onGoLogin }) => {
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [dob, setDob] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -695,10 +696,17 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const isValid = name && dob && email && password;
+  const isValid = name && username && dob && email && password;
 
   const handleSignup = async () => {
     if (!isValid) return;
+    // Under-13 check
+    const birthDate = new Date(dob);
+    const age = Math.floor((Date.now() - birthDate) / (365.25 * 24 * 60 * 60 * 1000));
+    if (age < 13) {
+      setError("You must be 13 or older to create a TrailSync account.");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
@@ -708,6 +716,7 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
         options: {
           data: {
             full_name: name,
+            username: username.toLowerCase().replace(/\s+/g, "_"),
             date_of_birth: dob,
             location: location || null,
           }
@@ -749,6 +758,12 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
         <div style={{ marginBottom: "10px" }}>
           <label style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Full name</label>
           <input type="text" placeholder="Your name" value={name} onChange={e => setName(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'" }} />
+        </div>
+
+        {/* Username */}
+        <div style={{ marginBottom: "10px" }}>
+          <label style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Username</label>
+          <input type="text" placeholder="e.g. HighlandHiker" value={username} onChange={e => setUsername(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'" }} />
         </div>
 
         {/* Date of birth */}
@@ -2583,7 +2598,7 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 5: PROFILE
    ═══════════════════════════════════════════════════════════════════ */
-const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRoute, onSignOut, savedWalks, dbPeaks, userName }) => {
+const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRoute, onSignOut, savedWalks, dbPeaks, userName, userLocation, setUserLocation }) => {
   const [sec, setSec] = useState(initialSec || "mountains");
 
   // Sync with parent when initialSec changes
@@ -2635,11 +2650,13 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
     }
   }
 
-  // Update peakData when Supabase user peaks load — merge done status onto PEAKS_FALLBACK
+  // Update peakData when user peaks load or reset
   useEffect(() => {
     if (dbPeaks && dbPeaks.length > 0) {
-      // dbPeaks from loadUserData is already PEAKS_FALLBACK merged with done status
       setPeakData(dbPeaks);
+    } else if (dbPeaks !== null) {
+      // dbPeaks set to [] means user has no logged peaks — show all fresh
+      setPeakData(PEAKS_FALLBACK.map(pk => ({ ...pk, done: false })));
     }
   }, [dbPeaks]);
   const [showCreate, setShowCreate] = useState(false);
@@ -2713,7 +2730,20 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
         <div style={{ width: "58px", height: "58px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", fontWeight: 800, color: "#F8F8F8", border: "3px solid rgba(90,152,227,0.3)" }}>{(userName || "A")[0].toUpperCase()}</div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: "20px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>{userName || ME.name}</div>
-          <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6 }}>@{ME.user} · {ME.loc}</div>
+          <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "6px" }}>
+              <span>@{userName?.toLowerCase().replace(/\s+/g, "_") || ME.user}</span>
+              {userLocation ? (
+                <span>· {userLocation}</span>
+              ) : (
+                <span onClick={async () => {
+                  const loc = prompt("Add your location (e.g. Dundee, Scotland)");
+                  if (!loc) return;
+                  setUserLocation(loc);
+                  const { data: { user } } = await supabase.auth.getUser();
+                  if (user) await supabase.auth.updateUser({ data: { ...user.user_metadata, location: loc } });
+                }} style={{ color: "#5A98E3", cursor: "pointer", fontWeight: 600 }}>+ Add location</span>
+              )}
+            </div>
           <div style={{ display: "flex", gap: "12px", marginTop: "4px" }}>
             <span style={{ fontSize: "11px", color: "#BDD6F4" }}><strong style={{ color: "#F8F8F8" }}>{ME.frs}</strong> followers</span>
             <span style={{ fontSize: "11px", color: "#BDD6F4" }}><strong style={{ color: "#F8F8F8" }}>{ME.fng}</strong> following</span>
@@ -3269,10 +3299,10 @@ export default function TrailSync() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        const name = session.user.user_metadata?.full_name?.split(" ")[0]
-          || session.user.email?.split("@")[0]
-          || "Explorer";
-        setUserName(name);
+        const meta = session.user.user_metadata || {};
+        const displayName = meta.username || meta.full_name?.split(" ")[0] || session.user.email?.split("@")[0] || "Explorer";
+        setUserName(displayName);
+        setUserLocation(meta.location || null);
         setAuthState("app");
       } else {
         setAuthState("login");
@@ -3282,10 +3312,10 @@ export default function TrailSync() {
     // Listen for auth state changes (sign in / sign out)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        const name = session.user.user_metadata?.full_name?.split(" ")[0]
-          || session.user.email?.split("@")[0]
-          || "Explorer";
-        setUserName(name);
+        const meta = session.user.user_metadata || {};
+        const displayName = meta.username || meta.full_name?.split(" ")[0] || session.user.email?.split("@")[0] || "Explorer";
+        setUserName(displayName);
+        setUserLocation(meta.location || null);
         setAuthState("app");
       } else if (_event === "SIGNED_OUT") {
         setAuthState("login");
@@ -3305,6 +3335,7 @@ export default function TrailSync() {
   const [gpxRoute, setGpxRoute] = useState(null); //
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [userCourseProgress, setUserCourseProgress] = useState({});
+  const [userLocation, setUserLocation] = useState(null);
 
   // Navigate to main map and draw a GPX route
   // Accepts a full route object or just an id
@@ -3443,23 +3474,25 @@ export default function TrailSync() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Load logged peaks
-      const { data: peaks } = await supabase
+      // Load user's logged peaks and merge done status onto PEAKS_FALLBACK
+      const { data: userPeaks } = await supabase
         .from("user_peaks")
         .select("*")
         .eq("user_id", user.id);
 
-      if (peaks && peaks.length > 0) {
+      if (userPeaks && userPeaks.length > 0) {
         const peakMap = {};
-        peaks.forEach(p => { peakMap[String(p.peak_id)] = p; });
-        // Merge into PEAKS_FALLBACK
+        userPeaks.forEach(p => { peakMap[String(p.peak_id)] = p; });
+        // Always start from PEAKS_FALLBACK — never the Supabase peaks table
         const merged = PEAKS_FALLBACK.map(pk => {
           const saved = peakMap[String(pk.id)];
           if (saved) return { ...pk, done: saved.done, date: saved.date_completed, log: saved.notes || "" };
-          return pk;
+          return { ...pk, done: false }; // ensure fresh start
         });
-        PEAKS = merged;
         setDbPeaks(merged);
+      } else {
+        // No logged peaks — start completely fresh
+        setDbPeaks(PEAKS_FALLBACK.map(pk => ({ ...pk, done: false })));
       }
 
       // Load saved walks
@@ -3646,7 +3679,7 @@ export default function TrailSync() {
               } catch (e) { console.error("Failed to save walk:", e); }
             }} openRoute={openRouteOnMap} gpxRoute={gpxRoute} onCloseGpx={closeGpxRoute} />}
         {tab === "learn" && <LearnPage courseProgress={userCourseProgress} onCourseProgress={async (courseId, lessonsCompleted) => { setUserCourseProgress(prev => ({ ...prev, [courseId]: lessonsCompleted })); const { data: { user } } = await supabase.auth.getUser(); if (!user) return; await supabase.from("user_courses").upsert({ user_id: user.id, course_id: courseId, lessons_completed: lessonsCompleted, updated_at: new Date().toISOString() }, { onConflict: "user_id,course_id" }); }} />}
-        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} dbPeaks={dbPeaks} userName={userName} onSignOut={async () => {
+        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} dbPeaks={dbPeaks} userName={userName} userLocation={userLocation} setUserLocation={setUserLocation} onSignOut={async () => {
   await supabase.auth.signOut();
   try { localStorage.clear(); } catch {}
   setUserName("Alex");
