@@ -2583,7 +2583,7 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 5: PROFILE
    ═══════════════════════════════════════════════════════════════════ */
-const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRoute, onSignOut, savedWalks, dbPeaks }) => {
+const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRoute, onSignOut, savedWalks, dbPeaks, userName }) => {
   const [sec, setSec] = useState(initialSec || "mountains");
 
   // Sync with parent when initialSec changes
@@ -2707,16 +2707,21 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
   return (
     <div style={{ padding: "0 16px 16px", overflowY: "auto", flex: 1 }}>
       <div style={{ padding: "24px 0 16px", display: "flex", alignItems: "center", gap: "14px" }}>
-        <div style={{ width: "58px", height: "58px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", fontWeight: 800, color: "#F8F8F8", border: "3px solid rgba(90,152,227,0.3)" }}>A</div>
+        <div style={{ width: "58px", height: "58px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", fontWeight: 800, color: "#F8F8F8", border: "3px solid rgba(90,152,227,0.3)" }}>{(userName || "A")[0].toUpperCase()}</div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: "20px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>{ME.name}</div>
+          <div style={{ fontSize: "20px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>{userName || ME.name}</div>
           <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6 }}>@{ME.user} · {ME.loc}</div>
           <div style={{ display: "flex", gap: "12px", marginTop: "4px" }}>
             <span style={{ fontSize: "11px", color: "#BDD6F4" }}><strong style={{ color: "#F8F8F8" }}>{ME.frs}</strong> followers</span>
             <span style={{ fontSize: "11px", color: "#BDD6F4" }}><strong style={{ color: "#F8F8F8" }}>{ME.fng}</strong> following</span>
           </div>
         </div>
-        <button onClick={onSignOut} title="Sign out" style={{ padding: "7px", borderRadius: "8px", background: "#0a2240", border: "1px solid rgba(90,152,227,0.12)", cursor: "pointer", color: "#BDD6F4" }}><Settings size={16} /></button>
+        <div style={{ display: "flex", gap: "6px" }}>
+              <button onClick={onSignOut} style={{ padding: "6px 12px", borderRadius: "8px", background: "#0a2240", border: "1px solid rgba(90,152,227,0.12)", cursor: "pointer", color: "#BDD6F4", fontSize: "11px", fontWeight: 600, display: "flex", alignItems: "center", gap: "5px", fontFamily: "'DM Sans'" }}>
+                <ArrowRight size={13} style={{ transform: "rotate(180deg)" }} /> Sign out
+              </button>
+              <button style={{ padding: "7px", borderRadius: "8px", background: "#0a2240", border: "1px solid rgba(90,152,227,0.12)", cursor: "pointer", color: "#BDD6F4" }}><Settings size={16} /></button>
+            </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "16px" }}>
@@ -3652,7 +3657,7 @@ export default function TrailSync() {
               } catch (e) { console.error("Failed to save walk:", e); }
             }} openRoute={openRouteOnMap} gpxRoute={gpxRoute} onCloseGpx={closeGpxRoute} />}
         {tab === "learn" && <LearnPage courseProgress={userCourseProgress} onCourseProgress={async (courseId, lessonsCompleted) => { setUserCourseProgress(prev => ({ ...prev, [courseId]: lessonsCompleted })); const { data: { user } } = await supabase.auth.getUser(); if (!user) return; await supabase.from("user_courses").upsert({ user_id: user.id, course_id: courseId, lessons_completed: lessonsCompleted, updated_at: new Date().toISOString() }, { onConflict: "user_id,course_id" }); }} />}
-        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} dbPeaks={dbPeaks} onSignOut={async () => {
+        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} dbPeaks={dbPeaks} userName={userName} onSignOut={async () => {
   await supabase.auth.signOut();
   try { localStorage.removeItem("ts_auth"); localStorage.removeItem("ts_user"); } catch {}
   setAuthState("login");
