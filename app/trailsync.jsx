@@ -505,6 +505,15 @@ const WI = ({ type, size = 16 }) => {
   return <Sun {...p} color="#EBCB8B" />;
 };
 const greet = () => { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"; };
+const timeAgo = (ts) => {
+  const diff = Date.now() - new Date(ts).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+};
 
 /* ═══════════════════════════════════════════════════════════════════
    MINI MAP COMPONENT (reusable for Routes, Discover, Mountain Tracker)
@@ -608,6 +617,98 @@ const PrivacyPopup = ({ onClose }) => (
     </div>
   </div>
 );
+
+/* ═══════════════════════════════════════════════════════════════════
+   USERNAME PROMPT (shown once after signup if no username set)
+   ═══════════════════════════════════════════════════════════════════ */
+const UsernamePrompt = ({ onDone, fullName }) => {
+  const [username, setUsername] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [available, setAvailable] = useState(null); // null | true | false
+  const [saving, setSaving] = useState(false);
+  const debounceRef = useRef(null);
+
+  const checkAvailability = (val) => {
+    setAvailable(null);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!val || val.length < 3) return;
+    debounceRef.current = setTimeout(async () => {
+      setChecking(true);
+      const { data } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("username", val.toLowerCase())
+        .maybeSingle();
+      setChecking(false);
+      setAvailable(!data);
+    }, 500);
+  };
+
+  const handleChange = (val) => {
+    const clean = val.toLowerCase().replace(/[^a-z0-9_]/g, "");
+    setUsername(clean);
+    checkAvailability(clean);
+  };
+
+  const handleSave = async () => {
+    if (!available || !username) return;
+    setSaving(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.auth.updateUser({ data: { ...user.user_metadata, username } });
+      await supabase.from("profiles").upsert({ id: user.id, username, full_name: user.user_metadata?.full_name, location: user.user_metadata?.location }, { onConflict: "id" });
+    }
+    onDone(username);
+  };
+
+  const handleSkip = () => onDone(null);
+
+  const statusColor = checking ? "#BDD6F4" : available === true ? "#6BCB77" : available === false ? "#E85D3A" : "#BDD6F4";
+  const statusText = checking ? "Checking…" : available === true ? "✓ Available" : available === false ? "✗ Already taken" : username.length > 0 && username.length < 3 ? "At least 3 characters" : "";
+
+  return (
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px", background: "#041e3d", minHeight: "100vh" }}>
+      <div style={{ width: "100%", maxWidth: "360px", animation: "su .4s ease" }}>
+        <div style={{ textAlign: "center", marginBottom: "32px" }}>
+          <div style={{ width: "52px", height: "52px", borderRadius: "14px", background: "linear-gradient(135deg,#E85D3A,#F49D37)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", animation: "glow 3s ease infinite" }}>
+            <Mountain size={26} color="#F8F8F8" />
+          </div>
+          <div style={{ fontSize: "22px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>Choose a username</div>
+          <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, marginTop: "6px" }}>
+            How the community will find you.<br />You can skip this for now.
+          </div>
+        </div>
+
+        <div style={{ marginBottom: "6px" }}>
+          <div style={{ position: "relative" }}>
+            <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", fontSize: "13px", color: "#BDD6F4", opacity: 0.5 }}>@</span>
+            <input
+              type="text"
+              placeholder="yourname"
+              value={username}
+              onChange={e => handleChange(e.target.value)}
+              maxLength={30}
+              style={{ width: "100%", padding: "12px 14px 12px 28px", borderRadius: "10px", border: `1px solid ${available === true ? "rgba(107,203,119,0.4)" : available === false ? "rgba(232,93,58,0.4)" : "rgba(90,152,227,0.2)"}`, background: "#0a2240", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'", transition: "border .2s" }}
+            />
+          </div>
+          {statusText && <div style={{ fontSize: "11px", color: statusColor, marginTop: "5px", paddingLeft: "4px" }}>{statusText}</div>}
+        </div>
+
+        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4, marginBottom: "20px", paddingLeft: "4px" }}>
+          Letters, numbers and underscores only
+        </div>
+
+        <button onClick={handleSave} disabled={!available || saving} style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "none", background: available ? "linear-gradient(135deg,#E85D3A,#d04a2a)" : "#264f80", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: available ? "pointer" : "default", fontFamily: "'DM Sans'", opacity: available ? 1 : 0.4, marginBottom: "10px", transition: "all .2s" }}>
+          {saving ? "Saving…" : "Set Username"}
+        </button>
+
+        <button onClick={handleSkip} style={{ width: "100%", padding: "11px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+          Skip for now — use {fullName || "my name"}
+        </button>
+      </div>
+    </div>
+  );
+};
 
 /* ═══════════════════════════════════════════════════════════════════
    AUTH: LOGIN SCREEN
@@ -731,7 +832,7 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
         // Supabase may require email confirmation — check
         if (data.session) {
           // Logged in immediately — no email confirmation required
-          onSignup(name);
+          onSignup(name, username);
         } else {
           // Email confirmation sent
           setError("Please check your email to confirm your account, then sign in.");
@@ -823,11 +924,95 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 1: HOME
    ═══════════════════════════════════════════════════════════════════ */
-const HomePage = ({ userName, initialFilter }) => {
+const HomePage = ({ userName, initialFilter, userId }) => {
   const [wxOpen, setWxOpen] = useState(true);
   const [ff, setFf] = useState(initialFilter || "all");
   const [expandedArea, setExpandedArea] = useState(null);
   const [showSAIS, setShowSAIS] = useState(false);
+
+  // Live posts
+  const [livePosts, setLivePosts] = useState(FEED);
+  const [postsLoading, setPostsLoading] = useState(true);
+  const [likedPosts, setLikedPosts] = useState(new Set());
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [searchResults, setSearchResults] = useState({ posts: [], users: [] });
+  const [searching, setSearching] = useState(false);
+
+  useEffect(() => {
+    async function fetchPosts() {
+      try {
+        const { data } = await supabase
+          .from("posts")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(50);
+        if (data && data.length > 0) {
+          setLivePosts(data.map(p => ({
+            id: p.id,
+            user: p.username || p.full_name || "TrailSyncer",
+            av: (p.username || p.full_name || "T")[0].toUpperCase(),
+            time: timeAgo(p.created_at),
+            type: p.type || "summit",
+            text: p.text,
+            likes: p.likes || 0,
+            comments: 0,
+            peaks: p.peaks || [],
+          })));
+        }
+        // Load user's liked posts
+        if (userId) {
+          const { data: likes } = await supabase.from("post_likes").select("post_id").eq("user_id", userId);
+          if (likes) setLikedPosts(new Set(likes.map(l => l.post_id)));
+        }
+      } catch (e) {
+        console.error("Failed to load posts:", e);
+      } finally {
+        setPostsLoading(false);
+      }
+    }
+    fetchPosts();
+  }, [userId]);
+
+  const handleLike = async (postId) => {
+    if (!userId) return;
+    const liked = likedPosts.has(postId);
+    setLikedPosts(prev => {
+      const next = new Set(prev);
+      liked ? next.delete(postId) : next.add(postId);
+      return next;
+    });
+    setLivePosts(prev => prev.map(p => p.id === postId ? { ...p, likes: p.likes + (liked ? -1 : 1) } : p));
+    if (liked) {
+      await supabase.from("post_likes").delete().eq("post_id", postId).eq("user_id", userId);
+      await supabase.from("posts").update({ likes: supabase.rpc("decrement", { x: 1 }) }).eq("id", postId);
+    } else {
+      await supabase.from("post_likes").insert({ post_id: postId, user_id: userId });
+      await supabase.rpc("increment_likes", { post_id: postId });
+    }
+  };
+
+  const handleSearch = async (q) => {
+    setSearchQuery(q);
+    if (!q || q.length < 2) { setSearchResults({ posts: [], users: [] }); return; }
+    setSearching(true);
+    try {
+      const [postsRes, usersRes] = await Promise.all([
+        supabase.from("posts").select("*").or(`text.ilike.%${q}%,peaks.cs.{${q}}`).order("created_at", { ascending: false }).limit(10),
+        supabase.from("profiles").select("*").or(`username.ilike.%${q}%,full_name.ilike.%${q}%`).limit(8),
+      ]);
+      setSearchResults({
+        posts: (postsRes.data || []).map(p => ({
+          id: p.id, user: p.username || p.full_name || "TrailSyncer",
+          av: (p.username || p.full_name || "T")[0].toUpperCase(),
+          time: timeAgo(p.created_at), type: p.type || "summit",
+          text: p.text, likes: p.likes || 0, comments: 0, peaks: p.peaks || [],
+        })),
+        users: usersRes.data || [],
+      });
+    } catch (e) { console.error(e); }
+    finally { setSearching(false); }
+  };
 
   // Weather state
   const [wxDay, setWxDay] = useState(0);          // 0=today, 1=tomorrow, -1=best of week
@@ -919,6 +1104,70 @@ const HomePage = ({ userName, initialFilter }) => {
       <div style={{ padding: "24px 0 14px", animation: "fi .5s ease" }}>
         <div style={{ fontSize: "17px", color: "#BDD6F4", fontWeight: 400 }}>{greet()}, <span style={{ fontWeight: 800, color: "#F8F8F8" }}>{userName}</span></div>
         <div style={{ fontSize: "15px", color: "#BDD6F4", marginTop: "4px", fontWeight: 400 }}>Where we exploring today?</div>
+      </div>
+
+      {/* Social Search */}
+      <div style={{ marginBottom: "16px", position: "relative" }}>
+        <div style={{ background: "#0a2240", borderRadius: "12px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "8px", border: `1px solid ${searchFocused ? "rgba(90,152,227,0.3)" : "rgba(90,152,227,0.12)"}`, transition: "border .2s" }}>
+          <Search size={14} color="#BDD6F4" style={{ opacity: 0.5, flexShrink: 0 }} />
+          <input
+            type="text"
+            placeholder="Search people, walks, mountains…"
+            value={searchQuery}
+            onChange={e => handleSearch(e.target.value)}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+            style={{ flex: 1, background: "none", border: "none", outline: "none", color: "#F8F8F8", fontSize: "14px", fontFamily: "'DM Sans'" }}
+          />
+          {searchQuery && <button onClick={() => { setSearchQuery(""); setSearchResults({ posts: [], users: [] }); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#BDD6F4", padding: 0, display: "flex" }}><X size={14} /></button>}
+        </div>
+
+        {/* Search results dropdown */}
+        {searchFocused && searchQuery.length >= 2 && (
+          <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, background: "rgba(4,30,61,0.98)", backdropFilter: "blur(16px)", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.2)", zIndex: 40, overflow: "hidden", maxHeight: "400px", overflowY: "auto" }}>
+            {searching && <div style={{ padding: "14px", textAlign: "center", fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>Searching…</div>}
+
+            {/* People */}
+            {searchResults.users.length > 0 && (
+              <div>
+                <div style={{ padding: "8px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>People</div>
+                {searchResults.users.map(u => (
+                  <div key={u.id} style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid rgba(90,152,227,0.06)", cursor: "pointer" }}>
+                    <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>
+                      {(u.username || u.full_name || "?")[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{u.full_name || u.username}</div>
+                      {u.username && <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>@{u.username}{u.location ? ` · ${u.location}` : ""}</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Posts */}
+            {searchResults.posts.length > 0 && (
+              <div>
+                <div style={{ padding: "8px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Posts</div>
+                {searchResults.posts.map(p => (
+                  <div key={p.id} style={{ padding: "10px 14px", borderBottom: "1px solid rgba(90,152,227,0.06)", cursor: "pointer" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                      <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#264f80", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: "#F8F8F8" }}>{p.av}</div>
+                      <span style={{ fontSize: "11px", fontWeight: 700, color: "#F8F8F8" }}>{p.user}</span>
+                      <span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4 }}>{p.time}</span>
+                    </div>
+                    <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{p.text}</div>
+                    {p.peaks.length > 0 && <div style={{ display: "flex", gap: "4px", marginTop: "5px" }}>{p.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!searching && searchResults.posts.length === 0 && searchResults.users.length === 0 && (
+              <div style={{ padding: "20px", textAlign: "center", fontSize: "12px", color: "#BDD6F4", opacity: 0.4 }}>No results for "{searchQuery}"</div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Weather Engine */}
@@ -1262,7 +1511,7 @@ const HomePage = ({ userName, initialFilter }) => {
 
       {/* Feed */}
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        {FEED.filter(p => ff === "all" || (ff === "summits" && p.type === "summit") || (ff === "events" && p.type === "event") || (ff === "news" && p.type === "news") || (ff === "fundraiser" && p.type === "fundraiser")).map((p, i) => (
+        {livePosts.filter(p => ff === "all" || (ff === "summits" && p.type === "summit") || (ff === "events" && p.type === "event") || (ff === "news" && p.type === "news") || (ff === "fundraiser" && p.type === "fundraiser")).map((p, i) => (
           <div key={p.id} style={{
             background: "#0a2240", borderRadius: "14px", padding: "14px",
             border: "1px solid rgba(90,152,227,0.1)", animation: `su .3s ease ${.35 + i * .05}s both`
@@ -1285,7 +1534,9 @@ const HomePage = ({ userName, initialFilter }) => {
             )}
             {p.peaks.length > 0 && <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginTop: "10px" }}>{p.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "6px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}</div>}
             <div style={{ display: "flex", gap: "16px", marginTop: "12px" }}>
-              {[[Heart, p.likes], [MessageCircle, p.comments], [Share2, ""]].map(([I, v], j) => <button key={j} style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><I size={14} /> {v}</button>)}
+              <button onClick={() => handleLike(p.id)} style={{ background: "none", border: "none", color: likedPosts.has(p.id) ? "#E85D3A" : "#BDD6F4", opacity: likedPosts.has(p.id) ? 1 : 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Heart size={14} fill={likedPosts.has(p.id) ? "#E85D3A" : "none"} /> {p.likes}</button>
+              <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><MessageCircle size={14} /> {p.comments || 0}</button>
+              <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Share2 size={14} /></button>
             </div>
           </div>
         ))}
@@ -3108,10 +3359,24 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               <button onClick={() => { setCreateType(null); setShowCreate(false); }} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "26px", height: "26px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><X size={12} /></button>
               <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>Create Post</div>
             </div>
-            <textarea placeholder="What's on your mind? Share a summit story, trail tip, or photo..." rows={3} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", resize: "none", marginBottom: "10px" }} />
+            <textarea id="post-text-input" placeholder="What's on your mind? Share a summit story, trail tip, or photo..." rows={3} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", resize: "none", marginBottom: "10px" }} />
             <div style={{ display: "flex", gap: "8px" }}>
               <button style={{ flex: 1, padding: "9px", borderRadius: "8px", border: "1px dashed rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Camera size={13} /> Photo</button>
-              <button onClick={() => { setCreateType(null); setShowCreate(false); if (goHome) goHome("all"); }} style={{ flex: 1, padding: "9px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Post</button>
+              <button onClick={async () => {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                  const meta = user.user_metadata || {};
+                  await supabase.from("posts").insert({
+                    user_id: user.id,
+                    username: meta.username || null,
+                    full_name: meta.full_name || null,
+                    type: "summit",
+                    text: document.querySelector("#post-text-input")?.value || "",
+                    peaks: [],
+                  });
+                }
+                setCreateType(null); setShowCreate(false); if (goHome) goHome("all");
+              }} style={{ flex: 1, padding: "9px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Post</button>
             </div>
           </div>
         )}
@@ -3304,6 +3569,7 @@ export default function TrailSync() {
         const displayName = meta.username || meta.full_name?.split(" ")[0] || session.user.email?.split("@")[0] || "Explorer";
         setUserName(displayName);
         setUserLocation(meta.location || null);
+        setUserId(session.user.id);
         setAuthState("app");
       } else {
         setAuthState("login");
@@ -3337,6 +3603,7 @@ export default function TrailSync() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [userCourseProgress, setUserCourseProgress] = useState({});
   const [userLocation, setUserLocation] = useState(null);
+  const [userId, setUserId] = useState(null);
 
   // Navigate to main map and draw a GPX route
   // Accepts a full route object or just an id
@@ -3563,6 +3830,29 @@ export default function TrailSync() {
   };
 
   // Auth screens
+  if (authState === "username-prompt") {
+    return (
+      <div style={{ width: "100%", height: "100vh", background: "#041e3d", fontFamily: "'DM Sans',system-ui,sans-serif", overflow: "hidden" }}>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap');
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          @keyframes fi { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes su { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes glow { 0%,100% { box-shadow: 0 0 8px rgba(232,93,58,.25); } 50% { box-shadow: 0 0 18px rgba(232,93,58,.45); } }
+        `}</style>
+        <UsernamePrompt
+          fullName={userName}
+          onDone={(chosenUsername) => {
+            if (chosenUsername) setUserName(chosenUsername);
+            setAuthState("tutorial");
+            setTab("map");
+            setTutStep(0);
+          }}
+        />
+      </div>
+    );
+  }
+
   if (authState === "loading") {
     return (
       <div style={{ width: "100%", height: "100vh", background: "#041e3d", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -3601,7 +3891,7 @@ export default function TrailSync() {
           @keyframes su { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
           @keyframes glow { 0%,100% { box-shadow: 0 0 8px rgba(232,93,58,.25); } 50% { box-shadow: 0 0 18px rgba(232,93,58,.45); } }
         `}</style>
-        <SignupScreen onSignup={(name) => { setUserName(name.split(" ")[0]); setAuthState("tutorial"); setTab("map"); setTutStep(0); }} onGoLogin={() => setAuthState("login")} />
+        <SignupScreen onSignup={(name, username) => { setUserName(username || name.split(" ")[0]); setAuthState("username-prompt"); }} onGoLogin={() => setAuthState("login")} />
       </div>
     );
   }
@@ -3673,7 +3963,7 @@ export default function TrailSync() {
 
       {/* Content */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        {tab === "home" && <HomePage userName={userName} initialFilter={feedFilter} />}
+        {tab === "home" && <HomePage userName={userName} initialFilter={feedFilter} userId={userId} />}
         {tab === "routes" && <RoutesPage openRoute={openRouteOnMap} />}
         {tab === "map" && <MapPage goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={async (walk) => {
               setSavedWalks(prev => [walk, ...prev]);
