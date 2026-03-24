@@ -878,10 +878,9 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
         }
       });
       if (authError) {
-        const msg = typeof authError?.message === "string" && authError.message
-          ? authError.message
-          : "Could not create account. Please try again.";
-        setError(msg);
+        console.error("RAW AUTH ERROR:", JSON.stringify(authError));
+        const msg = authError?.message || authError?.error_description || authError?.msg || JSON.stringify(authError);
+        setError(msg || "Could not create account. Please try again.");
         return;
       }
       if (data?.user) {
@@ -1006,6 +1005,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
     }
   }, [headerSearch]);
 
+  // Fetch posts once on mount — no auth needed, posts are public
   useEffect(() => {
     async function fetchPosts() {
       try {
@@ -1035,7 +1035,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
       }
     }
     fetchPosts();
-  }, []); // fetch posts once on mount, independent of auth state
+  }, []);
 
   // Separately load liked posts once userId is known
   useEffect(() => {
@@ -4099,7 +4099,7 @@ export default function TrailSync() {
 
   // Check Supabase session on mount
   useEffect(() => {
-    // Fallback: if INITIAL_SESSION hasn't fired within 4 s, drop to login screen
+    // Fallback: if INITIAL_SESSION hasn't fired within 4s, drop to login screen
     const loadingTimeout = setTimeout(() => {
       setAuthState(prev => prev === "loading" ? "login" : prev);
     }, 4000);
