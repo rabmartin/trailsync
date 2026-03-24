@@ -2002,7 +2002,9 @@ const RoutesPage = ({ openRoute }) => {
                   )}
                 </div>
                 <div style={{ display: "flex", gap: "16px" }}>
-                  {[[Navigation, `${r.dist}km`], [TrendingUp, `${r.elev}m`], [Clock, r.time]].map(([I, v], j) => <span key={j} style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "4px" }}><I size={12} /> {v}</span>)}
+                  <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "4px" }}><Navigation size={12} /> {r.dist}km</span>
+                  <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "4px" }}><TrendingUp size={12} /> {r.elev}m</span>
+                  <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "4px" }}><Clock size={12} /> {r.time}</span>
                 </div>
                 {r.peaks && r.peaks.length > 0 && <div style={{ display: "flex", gap: "4px", marginTop: "8px" }}>{r.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "5px", background: "rgba(232,93,58,0.08)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}</div>}
               </div>
@@ -4054,11 +4056,15 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                       )}
 
                       <div style={{ display: "flex", gap: "16px", marginTop: "10px", borderTop: "1px solid rgba(90,152,227,0.08)", paddingTop: "10px" }}>
-                        {[[Heart, 0], [MessageCircle, 0], [Share2, ""]].map(([Icon, val], j) => (
-                          <button key={j} style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.4, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}>
-                            <Icon size={14} /> {val || ""}
-                          </button>
-                        ))}
+                        <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.4, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}>
+                          <Heart size={14} />
+                        </button>
+                        <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.4, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}>
+                          <MessageCircle size={14} />
+                        </button>
+                        <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.4, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}>
+                          <Share2 size={14} />
+                        </button>
                       </div>
                     </div>
                   </div>
