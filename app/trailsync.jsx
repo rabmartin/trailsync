@@ -4296,34 +4296,6 @@ export default function TrailSync() {
     else { setTab("map"); }
   }
 
-  // Fetch peaks from Supabase on mount
-  useEffect(() => {
-    async function fetchPeaks() {
-      try {
-        const { data, error } = await supabase.from("peaks").select("*");
-        if (error) { console.error("Supabase error:", error); return; }
-        if (data && data.length > 0) {
-          const mapped = data.map(p => ({
-            id: p.id,
-            name: p.name,
-            cls: p.classification,
-            ht: Math.round(p.height),
-            reg: p.region,
-            lat: p.latitude,
-            lng: p.longitude,
-            w: { t: 0, f: 0, wi: 0, p: 0, v: "—", sn: false },
-            done: false,
-          }));
-          PEAKS = mapped;
-          setDbPeaks(mapped);
-          console.log(`Loaded ${mapped.length} peaks from Supabase`);
-        }
-      } catch (err) {
-        console.error("Failed to fetch peaks:", err);
-      }
-    }
-    fetchPeaks();
-  }, []);
 
   // Fetch routes from Supabase on mount
   useEffect(() => {
@@ -4406,6 +4378,9 @@ export default function TrailSync() {
     async function loadUserData() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      // Clear previous user data before loading new user's data
+      setSavedWalks([]);
+      setDbPeaks(null);
 
       // Fetch all peaks from Supabase
       const { data: allPeaks } = await supabase
