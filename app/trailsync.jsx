@@ -3563,7 +3563,13 @@ export default function TrailSync() {
 
   // Check Supabase session on mount
   useEffect(() => {
+    const sessionTimeout = setTimeout(() => {
+      // Failsafe — if session check hangs for 5s, drop to login
+      setAuthState("login");
+    }, 5000);
+
     supabase.auth.getSession().then(({ data: { session } }) => {
+      clearTimeout(sessionTimeout);
       if (session?.user) {
         const meta = session.user.user_metadata || {};
         const displayName = meta.username || meta.full_name?.split(" ")[0] || session.user.email?.split("@")[0] || "Explorer";
@@ -3574,6 +3580,9 @@ export default function TrailSync() {
       } else {
         setAuthState("login");
       }
+    }).catch(() => {
+      clearTimeout(sessionTimeout);
+      setAuthState("login");
     });
 
     // Listen for auth state changes (sign in / sign out)
