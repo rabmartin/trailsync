@@ -752,10 +752,16 @@ const LoginScreen = ({ onLogin, onGoSignup }) => {
     setError("");
     try {
       const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
-      if (authError) { setError(authError.message || "Invalid email or password. Please try again."); return; }
+      if (authError) {
+        const msg = typeof authError.message === "string" && authError.message
+          ? authError.message
+          : "Invalid email or password. Please try again.";
+        setError(msg);
+        return;
+      }
       if (data?.user) onLogin(data.user);
     } catch (e) {
-      setError("Something went wrong. Please try again.");
+      setError(typeof e?.message === "string" ? e.message : "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
