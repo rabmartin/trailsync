@@ -3909,14 +3909,13 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
 
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px", marginBottom: "10px" }}>
                         {[
-                          ["Distance", `${w.dist}km`, Navigation],
-                          ["Elevation", `${w.elev}m`, TrendingUp],
-                          ["Avg Speed", `${w.avgSpeed}kph`, Zap],
-                        ].map(([label, val, Icon]) => (
+                          ["Distance", `${w.dist ?? 0}km`],
+                          ["Elevation", `${w.elev ?? 0}m`],
+                          ["Avg Speed", `${w.avgSpeed ?? 0}kph`],
+                        ].map(([label, val]) => (
                           <div key={label} style={{ textAlign: "center", padding: "8px 4px", background: "#041e3d", borderRadius: "8px" }}>
-                            <Icon size={12} color="#BDD6F4" style={{ opacity: 0.4 }} />
-                            <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8", marginTop: "2px", fontFamily: "'JetBrains Mono'" }}>{val}</div>
-                            <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>{label}</div>
+                            <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
+                            <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>{label}</div>
                           </div>
                         ))}
                       </div>
