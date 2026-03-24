@@ -753,7 +753,7 @@ const LoginScreen = ({ onLogin, onGoSignup }) => {
     setError("");
     try {
       const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
-      if (authError) { setError(authError.message); return; }
+      if (authError) { setError(authError.message || "Invalid email or password. Please try again."); return; }
       if (data?.user) onLogin(data.user);
     } catch (e) {
       setError("Something went wrong. Please try again.");
@@ -807,7 +807,22 @@ const LoginScreen = ({ onLogin, onGoSignup }) => {
           {loading ? "Signing in…" : "Sign In"}
         </button>
 
-        <div style={{ textAlign: "center", marginTop: "20px", fontSize: "13px", color: "#BDD6F4", opacity: 0.6 }}>
+        <div style={{ textAlign: "center", marginTop: "14px" }}>
+          <span onClick={async () => {
+            if (!email) { setError("Enter your email address above first."); return; }
+            setLoading(true);
+            const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+              redirectTo: window.location.origin + "/?reset=true",
+            });
+            setLoading(false);
+            if (resetError) setError(resetError.message || "Could not send reset email.");
+            else setError("✓ Password reset email sent — check your inbox.");
+          }} style={{ fontSize: "12px", color: "#5A98E3", cursor: "pointer", fontWeight: 600 }}>
+            Forgot your password?
+          </span>
+        </div>
+
+        <div style={{ textAlign: "center", marginTop: "14px", fontSize: "13px", color: "#BDD6F4", opacity: 0.6 }}>
           Don't have an account? <span onClick={onGoSignup} style={{ color: "#5A98E3", fontWeight: 700, cursor: "pointer", opacity: 1 }}>Sign up here</span>
         </div>
       </div>
@@ -855,7 +870,7 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
           }
         }
       });
-      if (authError) { setError(authError.message); return; }
+      if (authError) { setError(authError.message || "Could not create account. Please try again."); return; }
       if (data?.user) {
         // Supabase may require email confirmation — check
         if (data.session) {
@@ -1592,9 +1607,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
               {p.user_id === userId && (
                 <button onClick={async (e) => {
                   e.stopPropagation();
-                  if (!window.confirm("Delete this post?")) return;
-                  await supabase.from("posts").delete().eq("id", p.id).eq("user_id", userId);
-                  setLivePosts(prev => prev.filter(post => post.id !== p.id));
+                  setConfirmDelete({ type: "post", id: p.id });
                 }} style={{ background: "none", border: "none", color: "#E85D3A", opacity: 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'", marginLeft: "auto" }}><Trash2 size={13} /></button>
               )}
             </div>
@@ -3181,8 +3194,9 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
   const [followerList, setFollowerList] = useState([]);
   const [followingList, setFollowingList] = useState([]);
   const [listLoading, setListLoading] = useState(false);
-  const [selWalk, setSelWalk] = useState(null); // selected walk for detail view
+  const [selWalk, setSelWalk] = useState(null);
   const [deletingWalk, setDeletingWalk] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null); // { type: "walk" | "post", id? }
 
   // Load followers/following list when modal opens
   useEffect(() => {
@@ -3425,6 +3439,48 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
         </div>
       )}
 
+      {/* ═══ IN-APP CONFIRM DIALOG ═══ */}
+      {confirmDelete && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 80, background: "rgba(4,30,61,0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", animation: "fi .15s ease" }}>
+          <div style={{ background: "#0a2240", borderRadius: "16px", border: "1px solid rgba(232,93,58,0.2)", padding: "24px", width: "100%", maxWidth: "320px", textAlign: "center" }}>
+            <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "rgba(232,93,58,0.1)", border: "1px solid rgba(232,93,58,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+              <Trash2 size={20} color="#E85D3A" />
+            </div>
+            <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", marginBottom: "8px" }}>
+              Delete {confirmDelete.type === "walk" ? "Walk" : "Post"}?
+            </div>
+            <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, marginBottom: "20px", lineHeight: 1.5 }}>
+              This can't be undone.
+            </div>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button onClick={() => setConfirmDelete(null)} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+                Cancel
+              </button>
+              <button onClick={async () => {
+                if (confirmDelete.type === "walk") {
+                  setDeletingWalk(true);
+                  setConfirmDelete(null);
+                  try {
+                    if (selWalk?.id) {
+                      const { data: { user } } = await supabase.auth.getUser();
+                      if (user) await supabase.from("user_walks").delete().eq("id", selWalk.id).eq("user_id", user.id);
+                    }
+                    setSavedWalks(prev => prev.filter(w => w !== selWalk));
+                    setSelWalk(null);
+                  } catch (e) { console.error(e); }
+                  finally { setDeletingWalk(false); }
+                } else if (confirmDelete.type === "post") {
+                  setConfirmDelete(null);
+                  // Post delete is handled in HomePage — just close here
+                }
+              }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ═══ WALK DETAIL FULL PAGE ═══ */}
       {selWalk && (
         <div style={{ position: "fixed", inset: 0, zIndex: 60, background: "#041e3d", display: "flex", flexDirection: "column", animation: "fi .2s ease" }}>
@@ -3495,19 +3551,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
 
             {/* Delete button */}
             <button
-              onClick={async () => {
-                if (!window.confirm("Delete this walk? This can't be undone.")) return;
-                setDeletingWalk(true);
-                try {
-                  if (selWalk.id) {
-                    const { data: { user } } = await supabase.auth.getUser();
-                    if (user) await supabase.from("user_walks").delete().eq("id", selWalk.id).eq("user_id", user.id);
-                  }
-                  setSavedWalks(prev => prev.filter(w => w !== selWalk));
-                  setSelWalk(null);
-                } catch (e) { console.error(e); }
-                finally { setDeletingWalk(false); }
-              }}
+              onClick={() => setConfirmDelete({ type: "walk" })}
               disabled={deletingWalk}
               style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "1px solid rgba(232,93,58,0.25)", background: "rgba(232,93,58,0.06)", color: "#E85D3A", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "8px" }}
             >
