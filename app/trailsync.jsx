@@ -13,9 +13,37 @@ import {
 } from "lucide-react";
 
 /* Supabase client */
+// Safari-safe in-memory storage fallback
+const safariFallbackStorage = (() => {
+  const store = {};
+  return {
+    getItem: (key) => store[key] ?? null,
+    setItem: (key, value) => { store[key] = value; },
+    removeItem: (key) => { delete store[key]; },
+  };
+})();
+
+const storageAdapter = (() => {
+  try {
+    localStorage.setItem("_ts_test", "1");
+    localStorage.removeItem("_ts_test");
+    return localStorage;
+  } catch {
+    return safariFallbackStorage;
+  }
+})();
+
 const supabase = createClient(
   "https://mferkdgzpaaxixqlanzm.supabase.co",
-  process.env.NEXT_PUBLIC_SUPABASE_KEY || ""
+  process.env.NEXT_PUBLIC_SUPABASE_KEY || "",
+  {
+    auth: {
+      storage: storageAdapter,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false,
+    },
+  }
 );
 
 /* ═══════════════════════════════════════════════════════════════════
