@@ -985,6 +985,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
         if (data && data.length > 0) {
           setLivePosts(data.map(p => ({
             id: p.id,
+            user_id: p.user_id,
             user: p.username || p.full_name || "TrailSyncer",
             av: (p.username || p.full_name || "T")[0].toUpperCase(),
             time: timeAgo(p.created_at),
@@ -1588,6 +1589,14 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
               <button onClick={() => handleLike(p.id)} style={{ background: "none", border: "none", color: likedPosts.has(p.id) ? "#E85D3A" : "#BDD6F4", opacity: likedPosts.has(p.id) ? 1 : 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Heart size={14} fill={likedPosts.has(p.id) ? "#E85D3A" : "none"} /> {p.likes}</button>
               <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><MessageCircle size={14} /> {p.comments || 0}</button>
               <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Share2 size={14} /></button>
+              {p.user_id === userId && (
+                <button onClick={async (e) => {
+                  e.stopPropagation();
+                  if (!window.confirm("Delete this post?")) return;
+                  await supabase.from("posts").delete().eq("id", p.id).eq("user_id", userId);
+                  setLivePosts(prev => prev.filter(post => post.id !== p.id));
+                }} style={{ background: "none", border: "none", color: "#E85D3A", opacity: 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'", marginLeft: "auto" }}><Trash2 size={13} /></button>
+              )}
             </div>
           </div>
         ))}
@@ -3172,6 +3181,8 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
   const [followerList, setFollowerList] = useState([]);
   const [followingList, setFollowingList] = useState([]);
   const [listLoading, setListLoading] = useState(false);
+  const [selWalk, setSelWalk] = useState(null); // selected walk for detail view
+  const [deletingWalk, setDeletingWalk] = useState(false);
 
   // Load followers/following list when modal opens
   useEffect(() => {
@@ -3409,6 +3420,98 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ═══ WALK DETAIL FULL PAGE ═══ */}
+      {selWalk && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 60, background: "#041e3d", display: "flex", flexDirection: "column", animation: "fi .2s ease" }}>
+
+          {/* Header */}
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 16px", borderBottom: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,0.95)", backdropFilter: "blur(12px)", flexShrink: 0 }}>
+            <button onClick={() => setSelWalk(null)} style={{ background: "rgba(90,152,227,0.1)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", padding: "7px 12px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600, fontFamily: "'DM Sans'" }}>
+              <ChevronLeft size={16} /> Back
+            </button>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selWalk.name}</div>
+              <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{selWalk.date}</div>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
+
+            {/* Colour bar */}
+            <div style={{ height: "3px", borderRadius: "2px", background: "linear-gradient(90deg,#6BCB77,#5A98E3)", marginBottom: "16px" }} />
+
+            {/* Stats grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "14px" }}>
+              {[
+                ["Distance", `${selWalk.dist}km`, Navigation],
+                ["Elevation", `${selWalk.elev}m`, TrendingUp],
+                ["Avg Speed", `${selWalk.avgSpeed}kph`, Zap],
+              ].map(([label, val, Icon]) => (
+                <div key={label} style={{ textAlign: "center", padding: "12px 4px", background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.08)" }}>
+                  <Icon size={14} color="#BDD6F4" style={{ opacity: 0.5 }} />
+                  <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", marginTop: "4px", fontFamily: "'JetBrains Mono'" }}>{val}</div>
+                  <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>{label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Time stats */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px" }}>
+              {[["Total Time", selWalk.time], ["Moving Time", selWalk.movingTime]].map(([label, val]) => (
+                <div key={label} style={{ textAlign: "center", padding: "12px 4px", background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.08)" }}>
+                  <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
+                  <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>{label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Description */}
+            {selWalk.desc && (
+              <div style={{ padding: "12px 14px", background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.08)", marginBottom: "14px" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "#BDD6F4", opacity: 0.5, marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Notes</div>
+                <div style={{ fontSize: "13px", color: "#BDD6F4", lineHeight: 1.6 }}>{selWalk.desc}</div>
+              </div>
+            )}
+
+            {/* Peaks */}
+            {selWalk.peaks && selWalk.peaks.length > 0 && (
+              <div style={{ padding: "12px 14px", background: "rgba(107,203,119,0.06)", borderRadius: "12px", border: "1px solid rgba(107,203,119,0.12)", marginBottom: "14px" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "#6BCB77", marginBottom: "8px" }}>Peaks summited</div>
+                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                  {selWalk.peaks.map(pk => (
+                    <span key={pk} style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "8px", background: "rgba(107,203,119,0.12)", color: "#6BCB77", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}>
+                      <CheckCircle size={11} /> {pk}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Delete button */}
+            <button
+              onClick={async () => {
+                if (!window.confirm("Delete this walk? This can't be undone.")) return;
+                setDeletingWalk(true);
+                try {
+                  if (selWalk.id) {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (user) await supabase.from("user_walks").delete().eq("id", selWalk.id).eq("user_id", user.id);
+                  }
+                  setSavedWalks(prev => prev.filter(w => w !== selWalk));
+                  setSelWalk(null);
+                } catch (e) { console.error(e); }
+                finally { setDeletingWalk(false); }
+              }}
+              disabled={deletingWalk}
+              style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "1px solid rgba(232,93,58,0.25)", background: "rgba(232,93,58,0.06)", color: "#E85D3A", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "8px" }}
+            >
+              <Trash2 size={14} /> {deletingWalk ? "Deleting…" : "Delete Walk"}
+            </button>
           </div>
         </div>
       )}
@@ -3836,7 +3939,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             {savedWalks && savedWalks.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {savedWalks.map((w, i) => (
-                  <div key={i} style={{ background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.1)", overflow: "hidden", animation: `fi .3s ease ${i * .05}s both` }}>
+                  <div key={i} onClick={() => setSelWalk(w)} style={{ background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.1)", overflow: "hidden", animation: `fi .3s ease ${i * .05}s both`, cursor: "pointer" }}>
                     <div style={{ height: "3px", background: "linear-gradient(90deg,#6BCB77,#5A98E3)" }} />
                     <div style={{ padding: "14px" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "8px" }}>
@@ -3844,7 +3947,10 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                           <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{w.name}</div>
                           <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5, marginTop: "2px" }}>{w.date}</div>
                         </div>
-                        {w.photos > 0 && <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "6px", background: "rgba(90,152,227,0.1)", color: "#5A98E3", fontWeight: 600 }}><Camera size={10} style={{ verticalAlign: "middle" }} /> {w.photos}</span>}
+                        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                          {w.photos > 0 && <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "6px", background: "rgba(90,152,227,0.1)", color: "#5A98E3", fontWeight: 600 }}><Camera size={10} style={{ verticalAlign: "middle" }} /> {w.photos}</span>}
+                          <ChevronRight size={14} color="#BDD6F4" style={{ opacity: 0.4 }} />
+                        </div>
                       </div>
 
                       {w.desc && <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.5, marginBottom: "10px" }}>{w.desc}</div>}
