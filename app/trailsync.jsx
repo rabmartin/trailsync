@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 import {
-  MapPin, Mountain, Cloud, Users, Trophy, Search, X, ChevronDown, ChevronRight,
+  MapPin, Mountain, Cloud, Users, Trophy, Search, X, ChevronDown, ChevronRight, ChevronLeft,
   Star, Wind, Droplets, Eye, Thermometer, Navigation, Download, Calendar, Clock,
   Heart, MessageCircle, Share2, Layers, AlertTriangle, Award,
   TrendingUp, Compass, CloudSnow, CheckCircle, Globe,
