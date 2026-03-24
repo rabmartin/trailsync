@@ -3217,15 +3217,13 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 5: PROFILE
    ═══════════════════════════════════════════════════════════════════ */
-const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRoute, onSignOut, savedWalks, dbPeaks, userName, userLocation, setUserLocation, followerCount, followingCount, followingIds, setFollowingIds, setFollowerCount, setFollowingCount, userId }) => {
+const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRoute, onSignOut, savedWalks, setSavedWalks, dbPeaks, userName, userLocation, setUserLocation, followerCount, followingCount, followingIds, setFollowingIds, setFollowerCount, setFollowingCount, userId, selWalk, setSelWalk, confirmDelete, setConfirmDelete, deletingWalk }) => {
   const [showFollowers, setShowFollowers] = useState(null); // null | "followers" | "following"
   const [followerFilter, setFollowerFilter] = useState("recent");
   const [followerList, setFollowerList] = useState([]);
   const [followingList, setFollowingList] = useState([]);
   const [listLoading, setListLoading] = useState(false);
-  const [selWalk, setSelWalk] = useState(null);
-  const [deletingWalk, setDeletingWalk] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(null); // { type: "walk" | "post", id? }
+  // walk detail handled by parent
 
   // Load followers/following list when modal opens
   useEffect(() => {
@@ -3468,126 +3466,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
         </div>
       )}
 
-      {/* ═══ IN-APP CONFIRM DIALOG ═══ */}
-      {confirmDelete && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 80, background: "rgba(4,30,61,0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", animation: "fi .15s ease" }}>
-          <div style={{ background: "#0a2240", borderRadius: "16px", border: "1px solid rgba(232,93,58,0.2)", padding: "24px", width: "100%", maxWidth: "320px", textAlign: "center" }}>
-            <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "rgba(232,93,58,0.1)", border: "1px solid rgba(232,93,58,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
-              <Trash2 size={20} color="#E85D3A" />
-            </div>
-            <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", marginBottom: "8px" }}>
-              Delete {confirmDelete.type === "walk" ? "Walk" : "Post"}?
-            </div>
-            <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, marginBottom: "20px", lineHeight: 1.5 }}>
-              This can't be undone.
-            </div>
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button onClick={() => setConfirmDelete(null)} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>
-                Cancel
-              </button>
-              <button onClick={async () => {
-                if (confirmDelete.type === "walk") {
-                  setDeletingWalk(true);
-                  setConfirmDelete(null);
-                  try {
-                    if (selWalk?.id) {
-                      const { data: { user } } = await supabase.auth.getUser();
-                      if (user) await supabase.from("user_walks").delete().eq("id", selWalk.id).eq("user_id", user.id);
-                    }
-                    setSavedWalks(prev => prev.filter(w => w !== selWalk));
-                    setSelWalk(null);
-                  } catch (e) { console.error(e); }
-                  finally { setDeletingWalk(false); }
-                } else if (confirmDelete.type === "post") {
-                  setConfirmDelete(null);
-                  // Post delete is handled in HomePage — just close here
-                }
-              }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* ═══ WALK DETAIL FULL PAGE ═══ */}
-      {selWalk && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 60, background: "#041e3d", display: "flex", flexDirection: "column", animation: "fi .2s ease" }}>
-
-          {/* Header */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 16px", borderBottom: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,0.95)", backdropFilter: "blur(12px)", flexShrink: 0 }}>
-            <button onClick={() => setSelWalk(null)} style={{ background: "rgba(90,152,227,0.1)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", padding: "7px 12px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600, fontFamily: "'DM Sans'" }}>
-              <ChevronLeft size={16} /> Back
-            </button>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selWalk.name}</div>
-              <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{selWalk.date}</div>
-            </div>
-          </div>
-
-          {/* Content */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
-
-            {/* Colour bar */}
-            <div style={{ height: "3px", borderRadius: "2px", background: "linear-gradient(90deg,#6BCB77,#5A98E3)", marginBottom: "16px" }} />
-
-            {/* Stats grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "14px" }}>
-              {[
-                ["Distance", `${selWalk.dist ?? 0}km`],
-                ["Elev Gain", `${selWalk.elev ?? 0}m`],
-                ["Avg Speed", `${selWalk.avgSpeed ?? 0}kph`],
-              ].map(([label, val]) => (
-                <div key={label} style={{ textAlign: "center", padding: "12px 4px", background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.08)" }}>
-                  <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
-                  <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "4px" }}>{label}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Time stats */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px" }}>
-              {[["Total Time", selWalk.time || "--"], ["Moving Time", selWalk.movingTime || "--"]].map(([label, val]) => (
-                <div key={label} style={{ textAlign: "center", padding: "12px 4px", background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.08)" }}>
-                  <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
-                  <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>{label}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Description */}
-            {selWalk.desc && (
-              <div style={{ padding: "12px 14px", background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.08)", marginBottom: "14px" }}>
-                <div style={{ fontSize: "11px", fontWeight: 700, color: "#BDD6F4", opacity: 0.5, marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Notes</div>
-                <div style={{ fontSize: "13px", color: "#BDD6F4", lineHeight: 1.6 }}>{selWalk.desc}</div>
-              </div>
-            )}
-
-            {/* Peaks */}
-            {selWalk.peaks?.length > 0 && (
-              <div style={{ padding: "12px 14px", background: "rgba(107,203,119,0.06)", borderRadius: "12px", border: "1px solid rgba(107,203,119,0.12)", marginBottom: "14px" }}>
-                <div style={{ fontSize: "11px", fontWeight: 700, color: "#6BCB77", marginBottom: "8px" }}>Peaks summited</div>
-                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                  {selWalk.peaks.map(pk => (
-                    <span key={pk} style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "8px", background: "rgba(107,203,119,0.12)", color: "#6BCB77", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}>
-                      <CheckCircle size={11} /> {pk}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Delete button */}
-            <button
-              onClick={() => setConfirmDelete({ type: "walk" })}
-              disabled={deletingWalk}
-              style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "1px solid rgba(232,93,58,0.25)", background: "rgba(232,93,58,0.06)", color: "#E85D3A", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "8px" }}
-            >
-              <Trash2 size={14} /> {deletingWalk ? "Deleting…" : "Delete Walk"}
-            </button>
-          </div>
-        </div>
-      )}
 
       <div style={{ padding: "24px 0 16px", display: "flex", alignItems: "center", gap: "14px" }}>
         <div style={{ width: "58px", height: "58px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", fontWeight: 800, color: "#F8F8F8", border: "3px solid rgba(90,152,227,0.3)" }}>{(userName || "A")[0].toUpperCase()}</div>
@@ -4229,6 +4108,9 @@ export default function TrailSync() {
   const [gpxRoute, setGpxRoute] = useState(null); //
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [headerSearch, setHeaderSearch] = useState("");
+  const [selWalk, setSelWalk] = useState(null);
+  const [deletingWalk, setDeletingWalk] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const [userCourseProgress, setUserCourseProgress] = useState({});
   const [userLocation, setUserLocation] = useState(null);
   const [userId, setUserId] = useState(null);
@@ -4656,7 +4538,7 @@ export default function TrailSync() {
               } catch (e) { console.error("Failed to save walk:", e); }
             }} openRoute={openRouteOnMap} gpxRoute={gpxRoute} onCloseGpx={closeGpxRoute} />}
         {tab === "learn" && <LearnPage courseProgress={userCourseProgress} onCourseProgress={async (courseId, lessonsCompleted) => { setUserCourseProgress(prev => ({ ...prev, [courseId]: lessonsCompleted })); const { data: { user } } = await supabase.auth.getUser(); if (!user) return; await supabase.from("user_courses").upsert({ user_id: user.id, course_id: courseId, lessons_completed: lessonsCompleted, updated_at: new Date().toISOString() }, { onConflict: "user_id,course_id" }); }} />}
-        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} dbPeaks={dbPeaks} userName={userName} userLocation={userLocation} setUserLocation={setUserLocation} followerCount={followerCount} followingCount={followingCount} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowerCount={setFollowerCount} setFollowingCount={setFollowingCount} userId={userId} onSignOut={async () => {
+        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} setSavedWalks={setSavedWalks} dbPeaks={dbPeaks} userName={userName} userLocation={userLocation} setUserLocation={setUserLocation} followerCount={followerCount} followingCount={followingCount} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowerCount={setFollowerCount} setFollowingCount={setFollowingCount} userId={userId} selWalk={selWalk} setSelWalk={setSelWalk} confirmDelete={confirmDelete} setConfirmDelete={setConfirmDelete} deletingWalk={deletingWalk} onSignOut={async () => {
   await supabase.auth.signOut();
   try { localStorage.clear(); } catch {}
   setUserName("Alex");
@@ -4690,6 +4572,93 @@ export default function TrailSync() {
               ) : (
                 <div style={{ padding: "3px", borderRadius: "8px", background: a ? "rgba(232,93,58,.1)" : "transparent" }}><I size={18} /></div>
               )}
+
+      {/* ═══ IN-APP CONFIRM DIALOG ═══ */}
+      {confirmDelete && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 80, background: "rgba(4,30,61,0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", animation: "fi .15s ease" }}>
+          <div style={{ background: "#0a2240", borderRadius: "16px", border: "1px solid rgba(232,93,58,0.2)", padding: "24px", width: "100%", maxWidth: "320px", textAlign: "center" }}>
+            <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "rgba(232,93,58,0.1)", border: "1px solid rgba(232,93,58,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+              <Trash2 size={20} color="#E85D3A" />
+            </div>
+            <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", marginBottom: "8px" }}>Delete {confirmDelete.type === "walk" ? "Walk" : "Post"}?</div>
+            <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, marginBottom: "20px", lineHeight: 1.5 }}>This can't be undone.</div>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button onClick={() => setConfirmDelete(null)} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
+              <button onClick={async () => {
+                if (confirmDelete.type === "walk") {
+                  setDeletingWalk(true);
+                  setConfirmDelete(null);
+                  try {
+                    if (selWalk?.id) {
+                      const { data: { user } } = await supabase.auth.getUser();
+                      if (user) await supabase.from("user_walks").delete().eq("id", selWalk.id).eq("user_id", user.id);
+                    }
+                    setSavedWalks(prev => prev.filter(w => w !== selWalk));
+                    setSelWalk(null);
+                  } catch (e) { console.error(e); }
+                  finally { setDeletingWalk(false); }
+                } else {
+                  setConfirmDelete(null);
+                }
+              }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ WALK DETAIL FULL PAGE ═══ */}
+      {selWalk && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 70, background: "#041e3d", display: "flex", flexDirection: "column", animation: "fi .2s ease" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 16px", borderBottom: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,0.95)", backdropFilter: "blur(12px)", flexShrink: 0 }}>
+            <button onClick={() => setSelWalk(null)} style={{ background: "rgba(90,152,227,0.1)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", padding: "7px 12px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600, fontFamily: "'DM Sans'" }}>
+              <ChevronLeft size={16} /> Back
+            </button>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selWalk.name}</div>
+              <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{selWalk.date}</div>
+            </div>
+          </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
+            <div style={{ height: "3px", borderRadius: "2px", background: "linear-gradient(90deg,#6BCB77,#5A98E3)", marginBottom: "16px" }} />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "14px" }}>
+              {[["Distance", `${selWalk.dist ?? 0}km`], ["Elev Gain", `${selWalk.elev ?? 0}m`], ["Avg Speed", `${selWalk.avgSpeed ?? 0}kph`]].map(([label, val]) => (
+                <div key={label} style={{ textAlign: "center", padding: "12px 4px", background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.08)" }}>
+                  <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
+                  <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "4px" }}>{label}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px" }}>
+              {[["Total Time", selWalk.time || "--"], ["Moving Time", selWalk.movingTime || "--"]].map(([label, val]) => (
+                <div key={label} style={{ textAlign: "center", padding: "12px 4px", background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.08)" }}>
+                  <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
+                  <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>{label}</div>
+                </div>
+              ))}
+            </div>
+            {selWalk.desc ? (
+              <div style={{ padding: "12px 14px", background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.08)", marginBottom: "14px" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "#BDD6F4", opacity: 0.5, marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Notes</div>
+                <div style={{ fontSize: "13px", color: "#BDD6F4", lineHeight: 1.6 }}>{selWalk.desc}</div>
+              </div>
+            ) : null}
+            {selWalk.peaks && selWalk.peaks.length > 0 ? (
+              <div style={{ padding: "12px 14px", background: "rgba(107,203,119,0.06)", borderRadius: "12px", border: "1px solid rgba(107,203,119,0.12)", marginBottom: "14px" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "#6BCB77", marginBottom: "8px" }}>Peaks summited</div>
+                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                  {selWalk.peaks.map(pk => (
+                    <span key={pk} style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "8px", background: "rgba(107,203,119,0.12)", color: "#6BCB77", fontWeight: 600 }}>⛰️ {pk}</span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            <button onClick={() => setConfirmDelete({ type: "walk" })} disabled={deletingWalk}
+              style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "1px solid rgba(232,93,58,0.25)", background: "rgba(232,93,58,0.06)", color: "#E85D3A", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "8px" }}>
+              <Trash2 size={14} /> {deletingWalk ? "Deleting…" : "Delete Walk"}
+            </button>
+          </div>
+        </div>
+      )}
               <span style={{ fontSize: "9px", fontWeight: a ? 700 : 500 }}>{t.label}</span>
             </button>
           );
