@@ -4008,7 +4008,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             {/* Distance · Elevation · Speed */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "10px" }}>
               {[
-                ["Distance", `${selWalk.dist ?? 0}km"],
+                ["Distance", `${selWalk.dist ?? 0}km`],
                 ["Elev Gain", `${selWalk.elev ?? 0}m`],
                 ["Avg Speed", `${selWalk.avgSpeed ?? 0}kph`],
               ].map(([label, val]) => (
