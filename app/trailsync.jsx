@@ -1193,6 +1193,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   }, [expandedArea, wxDay, wxData]);
 
   return (
+    <>
     <div style={{ padding: "0 16px 16px", overflowY: "auto", flex: 1 }}>
       {/* Greeting */}
       <div style={{ padding: "24px 0 14px", animation: "fi .5s ease" }}>
@@ -3986,6 +3987,8 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
         )}
       </div>}
 
+    </div> {/* end scroll container */}
+
       {/* ═══ WALK DETAIL FULL-SCREEN MODAL ═══ */}
       {selWalk && (
         <div style={{ position: "fixed", inset: 0, zIndex: 70, background: "#041e3d", display: "flex", flexDirection: "column", animation: "fi .2s ease" }}>
@@ -4107,7 +4110,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
