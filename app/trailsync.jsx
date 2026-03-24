@@ -3230,65 +3230,70 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
   return (
     <div style={{ padding: "0 16px 16px", overflowY: "auto", flex: 1 }}>
 
-      {/* ═══ FOLLOWERS / FOLLOWING MODAL ═══ */}
+      {/* ═══ FOLLOWERS / FOLLOWING — FULL PAGE ═══ */}
       {showFollowers && (
-        <div onClick={() => setShowFollowers(null)} style={{ position: "fixed", inset: 0, zIndex: 60, background: "rgba(4,30,61,0.75)", backdropFilter: "blur(6px)", display: "flex", alignItems: "flex-end", animation: "fi .2s ease" }}>
-          <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: "480px", margin: "0 auto", background: "#0a2240", borderRadius: "20px 20px 0 0", border: "1px solid rgba(90,152,227,0.2)", borderBottom: "none", maxHeight: "75vh", display: "flex", flexDirection: "column", animation: "su .25s ease" }}>
-            <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 4px" }}>
-              <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: "rgba(90,152,227,0.2)" }} />
-            </div>
-            {/* Tabs */}
-            <div style={{ display: "flex", padding: "0 16px 12px", gap: "8px", borderBottom: "1px solid rgba(90,152,227,0.1)" }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: 60, background: "#041e3d", display: "flex", flexDirection: "column", animation: "fi .2s ease" }}>
+
+          {/* Header */}
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 16px", borderBottom: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,0.95)", backdropFilter: "blur(12px)" }}>
+            <button onClick={() => setShowFollowers(null)} style={{ background: "rgba(90,152,227,0.1)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", padding: "7px 12px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600, fontFamily: "'DM Sans'" }}>
+              <ChevronLeft size={16} /> Back
+            </button>
+            <div style={{ flex: 1, display: "flex", gap: "6px" }}>
               {["followers", "following"].map(t => (
-                <button key={t} onClick={() => setShowFollowers(t)} style={{ flex: 1, padding: "8px", borderRadius: "10px", border: "none", background: showFollowers === t ? "rgba(90,152,227,0.15)" : "transparent", color: showFollowers === t ? "#5A98E3" : "#BDD6F4", fontSize: "13px", fontWeight: showFollowers === t ? 700 : 500, cursor: "pointer", fontFamily: "'DM Sans'", textTransform: "capitalize" }}>{t}</button>
+                <button key={t} onClick={() => setShowFollowers(t)} style={{ flex: 1, padding: "8px", borderRadius: "10px", border: "none", background: showFollowers === t ? "rgba(90,152,227,0.15)" : "transparent", color: showFollowers === t ? "#5A98E3" : "#BDD6F4", fontSize: "13px", fontWeight: showFollowers === t ? 700 : 500, cursor: "pointer", fontFamily: "'DM Sans'", textTransform: "capitalize" }}>
+                  {t} <span style={{ fontSize: "11px", opacity: 0.6 }}>({t === "followers" ? (followerCount ?? 0) : (followingCount ?? 0)})</span>
+                </button>
               ))}
             </div>
-            {/* Filters */}
-            <div style={{ display: "flex", gap: "6px", padding: "10px 16px 6px" }}>
-              {[["recent", "Recent"], ["area", "By Area"], ["interacted", "Most Interacted"]].map(([k, l]) => (
-                <button key={k} onClick={() => setFollowerFilter(k)} style={{ padding: "4px 10px", borderRadius: "8px", border: "none", background: followerFilter === k ? "rgba(90,152,227,0.2)" : "transparent", color: followerFilter === k ? "#5A98E3" : "#BDD6F4", fontSize: "10px", fontWeight: followerFilter === k ? 700 : 500, cursor: "pointer", fontFamily: "'DM Sans'" }}>{l}</button>
-              ))}
-            </div>
-            {/* User list */}
-            <div style={{ flex: 1, overflowY: "auto" }}>
-              {listLoading ? (
-                <div style={{ padding: "40px", textAlign: "center" }}>
-                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#5A98E3", margin: "0 auto", animation: "pulse 1s ease infinite" }} />
-                  <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4, marginTop: "10px" }}>Loading…</div>
+          </div>
+
+          {/* Filters */}
+          <div style={{ display: "flex", gap: "6px", padding: "10px 16px 8px", borderBottom: "1px solid rgba(90,152,227,0.07)" }}>
+            {[["recent", "Recent"], ["area", "By Area"], ["interacted", "Most Interacted"]].map(([k, l]) => (
+              <button key={k} onClick={() => setFollowerFilter(k)} style={{ padding: "5px 12px", borderRadius: "8px", border: "none", background: followerFilter === k ? "rgba(90,152,227,0.15)" : "rgba(90,152,227,0.05)", color: followerFilter === k ? "#5A98E3" : "#BDD6F4", fontSize: "11px", fontWeight: followerFilter === k ? 700 : 500, cursor: "pointer", fontFamily: "'DM Sans'" }}>{l}</button>
+            ))}
+          </div>
+
+          {/* User list */}
+          <div style={{ flex: 1, overflowY: "auto" }}>
+            {listLoading ? (
+              <div style={{ padding: "60px", textAlign: "center" }}>
+                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#5A98E3", margin: "0 auto", animation: "pulse 1s ease infinite" }} />
+                <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4, marginTop: "12px" }}>Loading…</div>
+              </div>
+            ) : (showFollowers === "followers" ? followerList : followingList).length === 0 ? (
+              <div style={{ padding: "60px 24px", textAlign: "center" }}>
+                <Users size={40} color="#5A98E3" style={{ opacity: 0.2, marginBottom: "16px" }} />
+                <div style={{ fontSize: "16px", fontWeight: 700, color: "#F8F8F8", marginBottom: "8px" }}>No {showFollowers} yet</div>
+                <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.4, lineHeight: 1.5 }}>
+                  {showFollowers === "followers" ? "When people follow you they'll appear here." : "Search for hikers and follow them to see their walks and summits."}
                 </div>
-              ) : (showFollowers === "followers" ? followerList : followingList).length === 0 ? (
-                <div style={{ padding: "40px 20px", textAlign: "center" }}>
-                  <Users size={32} color="#5A98E3" style={{ opacity: 0.25, marginBottom: "12px" }} />
-                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8", marginBottom: "6px" }}>No {showFollowers} yet</div>
-                  <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4 }}>
-                    {showFollowers === "followers" ? "When people follow you they'll appear here." : "Follow other hikers to see their walks and summits."}
+              </div>
+            ) : (showFollowers === "followers" ? followerList : followingList).map(u => (
+              <div key={u.id} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 16px", borderBottom: "1px solid rgba(90,152,227,0.07)" }}>
+                <div style={{ width: "46px", height: "46px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>
+                  {(u.username || u.full_name || "?")[0].toUpperCase()}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{u.full_name || u.username}</div>
+                  <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "2px" }}>
+                    {u.username ? `@${u.username}` : ""}{u.location ? ` · ${u.location}` : ""}
                   </div>
                 </div>
-              ) : (showFollowers === "followers" ? followerList : followingList).map(u => (
-                <div key={u.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderBottom: "1px solid rgba(90,152,227,0.07)" }}>
-                  <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "15px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>
-                    {(u.username || u.full_name || "?")[0].toUpperCase()}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{u.full_name || u.username}</div>
-                    <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>
-                      {u.username ? `@${u.username}` : ""}{u.location ? ` · ${u.location}` : ""}
-                    </div>
-                  </div>
-                  {u.id !== userId && (
-                    <button onClick={() => handleFollow(u.id)} style={{
-                      padding: "6px 14px", borderRadius: "8px", border: "none", cursor: "pointer",
-                      background: followingIds?.has(u.id) ? "rgba(90,152,227,0.12)" : "linear-gradient(135deg,#E85D3A,#d04a2a)",
-                      color: followingIds?.has(u.id) ? "#5A98E3" : "#F8F8F8",
-                      fontSize: "11px", fontWeight: 700, fontFamily: "'DM Sans'", flexShrink: 0,
-                      border: followingIds?.has(u.id) ? "1px solid rgba(90,152,227,0.2)" : "none",
-                    }}>
-                      {followingIds?.has(u.id) ? "Following" : "Follow"}
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
+                {u.id !== userId && (
+                  <button onClick={() => handleFollow(u.id)} style={{
+                    padding: "7px 16px", borderRadius: "10px", cursor: "pointer", flexShrink: 0,
+                    background: followingIds?.has(u.id) ? "transparent" : "linear-gradient(135deg,#E85D3A,#d04a2a)",
+                    color: followingIds?.has(u.id) ? "#5A98E3" : "#F8F8F8",
+                    fontSize: "12px", fontWeight: 700, fontFamily: "'DM Sans'",
+                    border: followingIds?.has(u.id) ? "1px solid rgba(90,152,227,0.3)" : "none",
+                  }}>
+                    {followingIds?.has(u.id) ? "Following" : "Follow"}
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}
