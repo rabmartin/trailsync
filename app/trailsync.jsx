@@ -952,7 +952,7 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 1: HOME
    ═══════════════════════════════════════════════════════════════════ */
-const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingIds, setFollowingCount }) => {
+const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingIds, setFollowingCount, headerSearch, setHeaderSearch }) => {
   const [wxOpen, setWxOpen] = useState(false);
   const [ff, setFf] = useState(initialFilter || "all");
   const [expandedArea, setExpandedArea] = useState(null);
@@ -966,6 +966,13 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchResults, setSearchResults] = useState({ posts: [], users: [] });
   const [searching, setSearching] = useState(false);
+
+  // Run search whenever headerSearch changes
+  useEffect(() => {
+    if (headerSearch !== undefined) {
+      handleSearch(headerSearch);
+    }
+  }, [headerSearch]);
 
   useEffect(() => {
     async function fetchPosts() {
@@ -1151,24 +1158,12 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
         <div style={{ fontSize: "15px", color: "#BDD6F4", marginTop: "4px", fontWeight: 400 }}>Where we exploring today?</div>
       </div>
 
-      {/* Social Search */}
+      {/* Social Search results — dropdown shown below header search */}
       <div style={{ marginBottom: "16px", position: "relative" }}>
-        <div style={{ background: "#0a2240", borderRadius: "12px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "8px", border: `1px solid ${searchFocused ? "rgba(90,152,227,0.3)" : "rgba(90,152,227,0.12)"}`, transition: "border .2s" }}>
-          <Search size={14} color="#BDD6F4" style={{ opacity: 0.5, flexShrink: 0 }} />
-          <input
-            type="text"
-            placeholder="Search people, walks, mountains…"
-            value={searchQuery}
-            onChange={e => handleSearch(e.target.value)}
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
-            style={{ flex: 1, background: "none", border: "none", outline: "none", color: "#F8F8F8", fontSize: "14px", fontFamily: "'DM Sans'" }}
-          />
-          {searchQuery && <button onClick={() => { setSearchQuery(""); setSearchResults({ posts: [], users: [] }); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#BDD6F4", padding: 0, display: "flex" }}><X size={14} /></button>}
-        </div>
+        <div style={{ display: "none" }} />
 
         {/* Search results dropdown */}
-        {searchFocused && searchQuery.length >= 2 && (
+        {headerSearch && headerSearch.length >= 2 && (searchResults.posts.length > 0 || searchResults.users.length > 0 || searching) && (
           <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, background: "rgba(4,30,61,0.98)", backdropFilter: "blur(16px)", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.2)", zIndex: 40, overflow: "hidden", maxHeight: "400px", overflowY: "auto" }}>
             {searching && <div style={{ padding: "14px", textAlign: "center", fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>Searching…</div>}
 
@@ -1220,7 +1215,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
             )}
 
             {!searching && searchResults.posts.length === 0 && searchResults.users.length === 0 && (
-              <div style={{ padding: "20px", textAlign: "center", fontSize: "12px", color: "#BDD6F4", opacity: 0.4 }}>No results for "{searchQuery}"</div>
+              <div style={{ padding: "20px", textAlign: "center", fontSize: "12px", color: "#BDD6F4", opacity: 0.4 }}>No results for "{headerSearch}"</div>
             )}
           </div>
         )}
@@ -1424,9 +1419,9 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
             border: "1px solid rgba(90,152,227,0.2)", borderBottom: "none",
             animation: "su .3s ease", maxHeight: "88vh", display: "flex", flexDirection: "column"
           }}>
-            {/* Drag handle */}
-            <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 4px" }}>
-              <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: "rgba(90,152,227,0.2)" }} />
+            {/* Drag handle — tap to close */}
+            <div onClick={() => setShowFollowers(null)} style={{ display: "flex", justifyContent: "center", padding: "12px 0 4px", cursor: "pointer" }}>
+              <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: "rgba(90,152,227,0.35)" }} />
             </div>
 
             {/* Header — always shown */}
@@ -3879,7 +3874,14 @@ export default function TrailSync() {
   // Start as loading, then resolve from Supabase session
   const [authState, setAuthState] = useState("loading");
   const [userName, setUserName] = useState("Alex");
-  const [tab, setTab] = useState("map");
+  const [tab, setTab] = useState(() => {
+    try { return sessionStorage.getItem("ts_tab") || "map"; } catch { return "map"; }
+  });
+
+  // Persist tab to sessionStorage on change
+  useEffect(() => {
+    try { sessionStorage.setItem("ts_tab", tab); } catch {}
+  }, [tab]);
 
   // Check Supabase session on mount
   useEffect(() => {
@@ -3914,6 +3916,7 @@ export default function TrailSync() {
   const [dbRoutes, setDbRoutes] = useState(null);
   const [gpxRoute, setGpxRoute] = useState(null); //
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [headerSearch, setHeaderSearch] = useState("");
   const [userCourseProgress, setUserCourseProgress] = useState({});
   const [userLocation, setUserLocation] = useState(null);
   const [userId, setUserId] = useState(null);
@@ -4249,7 +4252,9 @@ export default function TrailSync() {
 
       {/* Header */}
       {tab !== "map" && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", borderBottom: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,.92)", backdropFilter: "blur(12px)", zIndex: 30 }}>
+        <div style={{ borderBottom: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,.92)", backdropFilter: "blur(12px)", zIndex: 30 }}>
+          {/* Top row: logo + bell + avatar */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <div style={{ width: "32px", height: "32px", borderRadius: "9px", background: "linear-gradient(135deg,#E85D3A,#F49D37)", display: "flex", alignItems: "center", justifyContent: "center", animation: "glow 3s ease infinite" }}>
               <Mountain size={17} color="#F8F8F8" />
@@ -4293,12 +4298,29 @@ export default function TrailSync() {
               )}
             </div>
           </div>
+          </div>
+          {/* Search row — only on home tab */}
+          {tab === "home" && (
+            <div style={{ padding: "0 16px 10px" }}>
+              <div style={{ background: "#0a2240", borderRadius: "10px", padding: "8px 12px", display: "flex", alignItems: "center", gap: "8px", border: "1px solid rgba(90,152,227,0.15)" }}>
+                <Search size={13} color="#BDD6F4" style={{ opacity: 0.45, flexShrink: 0 }} />
+                <input
+                  type="text"
+                  placeholder="Search people, walks, mountains…"
+                  value={headerSearch}
+                  onChange={e => setHeaderSearch(e.target.value)}
+                  style={{ flex: 1, background: "none", border: "none", outline: "none", color: "#F8F8F8", fontSize: "13px", fontFamily: "'DM Sans'" }}
+                />
+                {headerSearch && <button onClick={() => setHeaderSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "#BDD6F4", padding: 0, display: "flex" }}><X size={13} /></button>}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {/* Content */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        {tab === "home" && <HomePage userName={userName} initialFilter={feedFilter} userId={userId} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowingCount={setFollowingCount} />}
+        {tab === "home" && <HomePage userName={userName} initialFilter={feedFilter} userId={userId} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowingCount={setFollowingCount} headerSearch={headerSearch} setHeaderSearch={setHeaderSearch} />}
         {tab === "routes" && <RoutesPage openRoute={openRouteOnMap} />}
         {tab === "map" && <MapPage goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={async (walk) => {
               setSavedWalks(prev => [walk, ...prev]);
