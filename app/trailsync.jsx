@@ -1,6 +1,4 @@
 "use client";
-import { useState, useEffect, useMemo, useRef } from "react";
-import { createClient } from "@supabase/supabase-js";
 import {
   MapPin, Mountain, Cloud, Users, Trophy, Search, X, ChevronDown, ChevronRight, ChevronLeft,
   Star, Wind, Droplets, Eye, Thermometer, Navigation, Download, Calendar, Clock,
@@ -9,7 +7,8 @@ import {
   BookOpen, Bell, User, Play, Pause, Route,
   Home, Map, UserCircle, ArrowRight, Camera,
   CloudRain, Sun, CloudSun, Snowflake, Settings, List, ArrowUpDown, Check, CircleDot,
-  Shield, Mail, Apple, Sparkles, Zap, Plus, Maximize2, Minimize2
+  Shield, Mail, Apple, Sparkles, Zap, Plus, Maximize2, Minimize2,
+  Trash2, WifiOff, Navigation2
 } from "lucide-react";
 
 /* Supabase client */
@@ -2821,10 +2820,9 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                     ["Time", (recording || paused) ? fmtTime(elapsed) : "00:00:00", Clock],
                     ["Elevation", currentAlt ? `${currentAlt}m` : `+${realElevDisplay}m`, TrendingUp],
                     ["Speed", `${realSpeedDisplay}kph`, Zap],
-                  ].map(([label, val, Icon]) => (
+                  ].map(([label, val]) => (
                     <div key={label} style={{ textAlign: "center", padding: "8px 4px", background: "#0a2240", borderRadius: "10px" }}>
-                      <Icon size={13} color="#BDD6F4" style={{ opacity: 0.5 }} />
-                      <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", marginTop: "2px", fontFamily: "'JetBrains Mono'" }}>{val}</div>
+                      <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
                       <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>{label}</div>
                     </div>
                   ))}
