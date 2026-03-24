@@ -1,0 +1,37 @@
+{
+  "name": "TrailSync",
+  "short_name": "TrailSync",
+  "description": "Summit · Track · Connect",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#041e3d",
+  "theme_color": "#041e3d",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["sports", "outdoors", "navigation"],
+  "shortcuts": [
+    {
+      "name": "Track Walk",
+      "url": "/?tab=map",
+      "description": "Start tracking a walk"
+    },
+    {
+      "name": "My Routes",
+      "url": "/?tab=routes",
+      "description": "Browse saved routes"
+    }
+  ]
+}

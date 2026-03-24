@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 import {
   MapPin, Mountain, Cloud, Users, Trophy, Search, X, ChevronDown, ChevronRight,
-  Star, Wind, Droplets, Eye, Thermometer, Navigation, Calendar, Clock,
+  Star, Wind, Droplets, Eye, Thermometer, Navigation, Download, Calendar, Clock,
   Heart, MessageCircle, Share2, Layers, AlertTriangle, Award,
   TrendingUp, Compass, CloudSnow, CheckCircle, Globe,
   BookOpen, Bell, User, Play, Pause, Route,
@@ -1818,6 +1818,51 @@ const RoutesClusterMap = ({ filtered, selRegion, setSelRegion, onMapReady }) => 
   );
 };
 
+/* ═══════════════════════════════════════════════════════════════════
+   OFFLINE BANNER
+   ═══════════════════════════════════════════════════════════════════ */
+const OfflineIndicator = () => {
+  const [offline, setOffline] = useState(!navigator.onLine);
+  useEffect(() => {
+    const go = () => setOffline(true);
+    const back = () => setOffline(false);
+    window.addEventListener("offline", go);
+    window.addEventListener("online", back);
+    return () => { window.removeEventListener("offline", go); window.removeEventListener("online", back); };
+  }, []);
+  if (!offline) return null;
+  return (
+    <div title="No internet connection" style={{ padding: "5px 8px", borderRadius: "7px", background: "rgba(244,157,55,0.12)", border: "1px solid rgba(244,157,55,0.25)", display: "flex", alignItems: "center", gap: "4px" }}>
+      <WifiOff size={13} color="#F49D37" />
+      <span style={{ fontSize: "10px", color: "#F49D37", fontWeight: 700, fontFamily: "'DM Sans'" }}>Offline</span>
+    </div>
+  );
+};
+
+const OfflineBanner = () => {
+  const [offline, setOffline] = useState(!navigator.onLine);
+  useEffect(() => {
+    const goOffline = () => setOffline(true);
+    const goOnline  = () => setOffline(false);
+    window.addEventListener("offline", goOffline);
+    window.addEventListener("online",  goOnline);
+    return () => {
+      window.removeEventListener("offline", goOffline);
+      window.removeEventListener("online",  goOnline);
+    };
+  }, []);
+  if (!offline) return null;
+  return (
+    <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(244,157,55,0.1)", border: "1px solid rgba(244,157,55,0.25)", display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px", animation: "fi .3s ease" }}>
+      <WifiOff size={14} color="#F49D37" />
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: "12px", fontWeight: 700, color: "#F49D37" }}>You're offline</div>
+        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, marginTop: "1px" }}>Cached routes and data are still available</div>
+      </div>
+    </div>
+  );
+};
+
 const RoutesPage = ({ openRoute }) => {
   const [cf, setCf] = useState(null);
   const [df, setDf] = useState(null);
@@ -1847,6 +1892,10 @@ const RoutesPage = ({ openRoute }) => {
         <div onClick={() => setSubTab("map")} style={{ fontSize: "24px", fontWeight: 800, color: subTab === "map" ? "#F8F8F8" : "#BDD6F4", fontFamily: "'Playfair Display',serif", cursor: "pointer", opacity: subTab === "map" ? 1 : 0.4, transition: "all .2s", display: "flex", alignItems: "center", gap: "8px" }}>
           Map
           <Map size={16} color={subTab === "map" ? "#5A98E3" : "#BDD6F4"} style={{ opacity: subTab === "map" ? 1 : 0.4 }} />
+        </div>
+        <div onClick={() => setSubTab("downloaded")} style={{ fontSize: "24px", fontWeight: 800, color: subTab === "downloaded" ? "#F8F8F8" : "#BDD6F4", fontFamily: "'Playfair Display',serif", cursor: "pointer", opacity: subTab === "downloaded" ? 1 : 0.4, transition: "all .2s", display: "flex", alignItems: "center", gap: "8px" }}>
+          Downloaded
+          <Download size={16} color={subTab === "downloaded" ? "#5A98E3" : "#BDD6F4"} style={{ opacity: subTab === "downloaded" ? 1 : 0.4 }} />
         </div>
       </div>
 
@@ -1965,6 +2014,72 @@ const RoutesPage = ({ openRoute }) => {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Downloaded tab */}
+      {subTab === "downloaded" && (
+        <div style={{ flex: 1, overflowY: "auto" }}>
+
+          {/* Offline status banner */}
+          <OfflineBanner />
+
+          {/* Coming in native app callout */}
+          <div style={{ margin: "16px 0", padding: "16px", borderRadius: "14px", background: "linear-gradient(135deg, rgba(90,152,227,0.08), rgba(90,152,227,0.04))", border: "1px solid rgba(90,152,227,0.15)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+              <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(90,152,227,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Download size={18} color="#5A98E3" />
+              </div>
+              <div>
+                <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>Offline Routes</div>
+                <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6 }}>Download routes to use without signal</div>
+              </div>
+            </div>
+            <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.7, lineHeight: 1.6, marginBottom: "12px" }}>
+              Full offline route downloads — including OS map tiles, GPX tracks and elevation data — are coming with the TrailSync native app. Routes you download will be available even in areas with no signal.
+            </div>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              {["OS Map tiles", "GPX tracks", "Elevation data", "Peak info", "Weather cache"].map(f => (
+                <span key={f} style={{ fontSize: "10px", padding: "3px 8px", borderRadius: "6px", background: "rgba(90,152,227,0.1)", color: "#5A98E3", fontWeight: 600 }}>{f}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Recently viewed — cached automatically */}
+          <div style={{ marginBottom: "14px" }}>
+            <div style={{ fontSize: "12px", fontWeight: 700, color: "#BDD6F4", opacity: 0.5, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "10px" }}>
+              Cached from recent browsing
+            </div>
+            <div style={{ background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.1)", overflow: "hidden" }}>
+              {ROUTES.filter(r => r.gpx_file).slice(0, 3).map((r, i) => (
+                <div key={r.id} style={{ padding: "12px 14px", display: "flex", alignItems: "center", gap: "12px", borderBottom: i < 2 ? "1px solid rgba(90,152,227,0.08)" : "none" }}>
+                  <div style={{ width: "36px", height: "36px", borderRadius: "9px", background: "rgba(107,203,119,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Map size={16} color="#6BCB77" />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
+                    <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{r.dist}km · {r.elev}m · Partial cache</div>
+                  </div>
+                  <div style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "5px", background: "rgba(107,203,119,0.1)", color: "#6BCB77", fontWeight: 600, flexShrink: 0 }}>Cached</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.35, marginTop: "6px", paddingLeft: "2px" }}>
+              Routes you've viewed are partially cached. Full offline download available in the native app.
+            </div>
+          </div>
+
+          {/* Storage info */}
+          <div style={{ padding: "12px 14px", borderRadius: "12px", background: "#0a2240", border: "1px solid rgba(90,152,227,0.1)", display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: "12px", fontWeight: 600, color: "#BDD6F4", marginBottom: "4px" }}>Cache storage</div>
+              <div style={{ height: "4px", borderRadius: "2px", background: "rgba(90,152,227,0.1)", overflow: "hidden" }}>
+                <div style={{ height: "100%", width: "18%", borderRadius: "2px", background: "linear-gradient(90deg,#5A98E3,#6BCB77)" }} />
+              </div>
+              <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4, marginTop: "4px" }}>~12 MB used of browser cache</div>
+            </div>
+          </div>
+
         </div>
       )}
     </div>
@@ -3888,6 +4003,15 @@ export default function TrailSync() {
     try { sessionStorage.setItem("ts_tab", tab); } catch {}
   }, [tab]);
 
+  // Register service worker for PWA offline support
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(err => {
+        console.log("SW registration failed:", err);
+      });
+    }
+  }, []);
+
   // Check Supabase session on mount
   useEffect(() => {
     // Use onAuthStateChange as single source of truth — handles all browsers including Safari
@@ -4267,6 +4391,7 @@ export default function TrailSync() {
             <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", letterSpacing: "-.3px" }}>TrailSync</div>
           </div>
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <OfflineIndicator />
             <button style={{ position: "relative", background: "#0a2240", border: "1px solid rgba(90,152,227,0.12)", borderRadius: "8px", padding: "6px", color: "#BDD6F4", cursor: "pointer" }}>
               <Bell size={16} />
               <div style={{ position: "absolute", top: 1, right: 1, width: "7px", height: "7px", borderRadius: "50%", background: "#E85D3A", border: "1px solid #041e3d" }} />
