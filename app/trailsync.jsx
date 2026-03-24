@@ -981,6 +981,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchResults, setSearchResults] = useState({ posts: [], users: [] });
   const [searching, setSearching] = useState(false);
+  const [confirmDeletePost, setConfirmDeletePost] = useState(null); // post id to delete
 
   // Run search whenever headerSearch changes
   useEffect(() => {
@@ -1532,6 +1533,32 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
         </div>
       )}
 
+      {/* ═══ POST DELETE CONFIRM ═══ */}
+      {confirmDeletePost && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 80, background: "rgba(4,30,61,0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", animation: "fi .15s ease" }}>
+          <div style={{ background: "#0a2240", borderRadius: "16px", border: "1px solid rgba(232,93,58,0.2)", padding: "24px", width: "100%", maxWidth: "320px", textAlign: "center" }}>
+            <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "rgba(232,93,58,0.1)", border: "1px solid rgba(232,93,58,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+              <Trash2 size={20} color="#E85D3A" />
+            </div>
+            <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", marginBottom: "8px" }}>Delete Post?</div>
+            <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, marginBottom: "20px" }}>This can't be undone.</div>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button onClick={() => setConfirmDeletePost(null)} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+                Cancel
+              </button>
+              <button onClick={async () => {
+                const postId = confirmDeletePost;
+                setConfirmDeletePost(null);
+                await supabase.from("posts").delete().eq("id", postId).eq("user_id", userId);
+                setLivePosts(prev => prev.filter(p => p.id !== postId));
+              }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* SAIS Alert - only shows Dec-Apr when forecasts are active */}
       {(() => {
         const month = new Date().getMonth(); // 0-indexed
@@ -1605,9 +1632,9 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
               <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><MessageCircle size={14} /> {p.comments || 0}</button>
               <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Share2 size={14} /></button>
               {p.user_id === userId && (
-                <button onClick={async (e) => {
+                <button onClick={(e) => {
                   e.stopPropagation();
-                  setConfirmDelete({ type: "post", id: p.id });
+                  setConfirmDeletePost(p.id);
                 }} style={{ background: "none", border: "none", color: "#E85D3A", opacity: 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'", marginLeft: "auto" }}><Trash2 size={13} /></button>
               )}
             </div>
@@ -3505,21 +3532,20 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             {/* Stats grid */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "14px" }}>
               {[
-                ["Distance", `${selWalk.dist}km`, Navigation],
-                ["Elevation", `${selWalk.elev}m`, TrendingUp],
-                ["Avg Speed", `${selWalk.avgSpeed}kph`, Zap],
-              ].map(([label, val, Icon]) => (
+                ["Distance", `${selWalk.dist ?? 0}km`],
+                ["Elev Gain", `${selWalk.elev ?? 0}m`],
+                ["Avg Speed", `${selWalk.avgSpeed ?? 0}kph`],
+              ].map(([label, val]) => (
                 <div key={label} style={{ textAlign: "center", padding: "12px 4px", background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.08)" }}>
-                  <Icon size={14} color="#BDD6F4" style={{ opacity: 0.5 }} />
-                  <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", marginTop: "4px", fontFamily: "'JetBrains Mono'" }}>{val}</div>
-                  <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>{label}</div>
+                  <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
+                  <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "4px" }}>{label}</div>
                 </div>
               ))}
             </div>
 
             {/* Time stats */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px" }}>
-              {[["Total Time", selWalk.time], ["Moving Time", selWalk.movingTime]].map(([label, val]) => (
+              {[["Total Time", selWalk.time || "--"], ["Moving Time", selWalk.movingTime || "--"]].map(([label, val]) => (
                 <div key={label} style={{ textAlign: "center", padding: "12px 4px", background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.08)" }}>
                   <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
                   <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>{label}</div>
@@ -3536,7 +3562,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             )}
 
             {/* Peaks */}
-            {selWalk.peaks && selWalk.peaks.length > 0 && (
+            {selWalk.peaks?.length > 0 && (
               <div style={{ padding: "12px 14px", background: "rgba(107,203,119,0.06)", borderRadius: "12px", border: "1px solid rgba(107,203,119,0.12)", marginBottom: "14px" }}>
                 <div style={{ fontSize: "11px", fontWeight: 700, color: "#6BCB77", marginBottom: "8px" }}>Peaks summited</div>
                 <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
@@ -4019,7 +4045,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                         <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "6px", background: "rgba(90,152,227,0.08)", color: "#BDD6F4", fontWeight: 500 }}>Moving: {w.movingTime}</span>
                       </div>
 
-                      {w.peaks && w.peaks.length > 0 && (
+                      {w.peaks?.length > 0 && (
                         <div style={{ display: "flex", gap: "4px" }}>
                           {w.peaks.map(pk => (
                             <span key={pk} style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "6px", background: "rgba(107,203,119,0.1)", color: "#6BCB77", fontWeight: 600 }}>⛰️ {pk}</span>
