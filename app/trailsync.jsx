@@ -331,7 +331,7 @@ const DISCOVER = [
   { id: 10, title: "Mountain Hares of the Cairngorms", cat: "Wildlife", region: "Cairngorms", peak: "Cairn Gorm", lat: 57.1, lng: -3.6, author: "Laura K.", excerpt: "They turn white in winter and blue-grey in summer. Spotting a mountain hare on the Cairngorm plateau is one of Scotland's great wildlife experiences.", read: "4 min", icon: "🐇" },
 ];
 
-const ME = { name: "Alex", user: "AlexOnTheHills", loc: "Dundee", frs: 127, fng: 89, walks: 78, dist: 620, elev: 24800, munros: { d: 41, t: 282 }, corbetts: { d: 12, t: 222 }, wainwrights: { d: 18, t: 214 }, hewitts: { d: 8, t: 525 }, donalds: { d: 5, t: 89 } };
+const ME = { name: "Explorer", user: "", loc: "", frs: 0, fng: 0, walks: 0, dist: 0, elev: 0, munros: { d: 0, t: 282 }, corbetts: { d: 0, t: 222 }, wainwrights: { d: 0, t: 214 }, hewitts: { d: 0, t: 525 }, donalds: { d: 0, t: 89 } };
 
 const BADGES = [
   { n: "First Summit", i: "🏔️", e: true }, { n: "10 Munros", i: "🔟", e: true },
@@ -952,8 +952,8 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 1: HOME
    ═══════════════════════════════════════════════════════════════════ */
-const HomePage = ({ userName, initialFilter, userId }) => {
-  const [wxOpen, setWxOpen] = useState(true);
+const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingIds, setFollowingCount }) => {
+  const [wxOpen, setWxOpen] = useState(false);
   const [ff, setFf] = useState(initialFilter || "all");
   const [expandedArea, setExpandedArea] = useState(null);
   const [showSAIS, setShowSAIS] = useState(false);
@@ -1017,6 +1017,23 @@ const HomePage = ({ userName, initialFilter, userId }) => {
     } else {
       await supabase.from("post_likes").insert({ post_id: postId, user_id: userId });
       await supabase.rpc("increment_likes", { post_id: postId });
+    }
+  };
+
+  const handleFollowInSearch = async (targetId) => {
+    if (!userId || !targetId) return;
+    const isFollowing = followingIds?.has(targetId);
+    setFollowingIds(prev => {
+      const next = new Set(prev);
+      isFollowing ? next.delete(targetId) : next.add(targetId);
+      return next;
+    });
+    if (!isFollowing) {
+      setFollowingCount && setFollowingCount(c => c + 1);
+      await supabase.from("follows").insert({ follower_id: userId, following_id: targetId });
+    } else {
+      setFollowingCount && setFollowingCount(c => Math.max(0, c - 1));
+      await supabase.from("follows").delete().eq("follower_id", userId).eq("following_id", targetId);
     }
   };
 
@@ -1160,14 +1177,25 @@ const HomePage = ({ userName, initialFilter, userId }) => {
               <div>
                 <div style={{ padding: "8px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>People</div>
                 {searchResults.users.map(u => (
-                  <div key={u.id} style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid rgba(90,152,227,0.06)", cursor: "pointer" }}>
+                  <div key={u.id} style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid rgba(90,152,227,0.06)" }}>
                     <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>
                       {(u.username || u.full_name || "?")[0].toUpperCase()}
                     </div>
-                    <div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{u.full_name || u.username}</div>
                       {u.username && <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>@{u.username}{u.location ? ` · ${u.location}` : ""}</div>}
                     </div>
+                    {u.id !== userId && (
+                      <button onClick={() => handleFollowInSearch(u.id)} style={{
+                        padding: "5px 12px", borderRadius: "8px", border: "none", cursor: "pointer", flexShrink: 0,
+                        background: followingIds?.has(u.id) ? "rgba(90,152,227,0.12)" : "linear-gradient(135deg,#E85D3A,#d04a2a)",
+                        color: followingIds?.has(u.id) ? "#5A98E3" : "#F8F8F8",
+                        fontSize: "11px", fontWeight: 700, fontFamily: "'DM Sans'",
+                        border: followingIds?.has(u.id) ? "1px solid rgba(90,152,227,0.2)" : "none",
+                      }}>
+                        {followingIds?.has(u.id) ? "Following" : "Follow"}
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -2285,6 +2313,78 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     };
   }, []);
 
+  // Live hikers overlay
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoadedRef.current) return;
+    const sourceId = "live-hikers";
+    const layerId = "live-hikers-layer";
+    if (!sh) {
+      if (map.getLayer(layerId)) map.removeLayer(layerId);
+      if (map.getSource(sourceId)) map.removeSource(sourceId);
+      return;
+    }
+    const geojson = {
+      type: "FeatureCollection",
+      features: HIKERS.map(h => ({
+        type: "Feature",
+        geometry: { type: "Point", coordinates: [h.lng, h.lat] },
+        properties: { name: h.name, pace: h.pace },
+      })),
+    };
+    if (map.getSource(sourceId)) {
+      map.getSource(sourceId).setData(geojson);
+    } else {
+      map.addSource(sourceId, { type: "geojson", data: geojson });
+      map.addLayer({
+        id: layerId, type: "circle", source: sourceId,
+        paint: {
+          "circle-radius": 8,
+          "circle-color": "#6BCB77",
+          "circle-stroke-color": "#fff",
+          "circle-stroke-width": 2,
+          "circle-opacity": 0.9,
+        },
+      });
+    }
+  }, [sh, mapLoadedRef.current]);
+
+  // Community walks overlay
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoadedRef.current) return;
+    const sourceId = "community-walks";
+    const layerId = "community-walks-layer";
+    if (!sc) {
+      if (map.getLayer(layerId)) map.removeLayer(layerId);
+      if (map.getSource(sourceId)) map.removeSource(sourceId);
+      return;
+    }
+    const geojson = {
+      type: "FeatureCollection",
+      features: C_WALKS.map(w => ({
+        type: "Feature",
+        geometry: { type: "LineString", coordinates: w.coords },
+        properties: { name: w.name, user: w.user },
+      })),
+    };
+    if (map.getSource(sourceId)) {
+      map.getSource(sourceId).setData(geojson);
+    } else {
+      map.addSource(sourceId, { type: "geojson", data: geojson });
+      map.addLayer({
+        id: `${layerId}-casing`, type: "line", source: sourceId,
+        layout: { "line-join": "round", "line-cap": "round" },
+        paint: { "line-color": "#fff", "line-width": 5, "line-opacity": 0.4 },
+      });
+      map.addLayer({
+        id: layerId, type: "line", source: sourceId,
+        layout: { "line-join": "round", "line-cap": "round" },
+        paint: { "line-color": "#5A98E3", "line-width": 3, "line-opacity": 0.7 },
+      });
+    }
+  }, [sc, mapLoadedRef.current]);
+
   // Draw GPX route when gpxRoute prop is set (or changes)
   useEffect(() => {
     if (!gpxRoute?.route?.gpx_file) return;
@@ -2334,14 +2434,89 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       standard: "mapbox://styles/mapbox/outdoors-v12",
       topo: "mapbox://styles/mapbox/outdoors-v12",
       satellite: "mapbox://styles/mapbox/satellite-streets-v12",
+      // Note: outdoors-v12 is Mapbox's best topo — includes contours, elevation, terrain
     };
-    mapRef.current.setStyle(styles[layer] || styles.standard);
+    const newStyle = styles[layer] || styles.standard;
+    mapRef.current.once("styledata", () => {
+      if (d3) applyTerrain(mapRef.current);
+      // Add contour lines for topo mode
+      if (layer === "topo") {
+        const map = mapRef.current;
+        if (!map.getSource("contours")) {
+          map.addSource("contours", {
+            type: "vector",
+            url: "mapbox://mapbox.mapbox-terrain-v2",
+          });
+          map.addLayer({
+            id: "contour-lines",
+            type: "line",
+            source: "contours",
+            "source-layer": "contour",
+            paint: {
+              "line-color": ["interpolate", ["linear"], ["get", "ele"],
+                0, "#4a7c59",
+                500, "#6b8f5e",
+                1000, "#8b6a3c",
+                2000, "#a0856b",
+              ],
+              "line-width": ["interpolate", ["linear"], ["get", "ele"],
+                0, 0.5,
+                500, 0.75,
+                1000, 1,
+              ],
+              "line-opacity": 0.6,
+            },
+          });
+          map.addLayer({
+            id: "contour-labels",
+            type: "symbol",
+            source: "contours",
+            "source-layer": "contour",
+            filter: ["==", ["%", ["get", "ele"], 100], 0],
+            layout: {
+              "symbol-placement": "line",
+              "text-field": ["concat", ["get", "ele"], "m"],
+              "text-size": 9,
+              "text-font": ["DIN Pro Regular", "Arial Unicode MS Regular"],
+            },
+            paint: { "text-color": "#6b5e4e", "text-halo-color": "#fff", "text-halo-width": 1 },
+          });
+        }
+      } else {
+        // Remove contours when switching away from topo
+        const map = mapRef.current;
+        ["contour-labels", "contour-lines"].forEach(l => { if (map.getLayer(l)) map.removeLayer(l); });
+        if (map.getSource("contours")) map.removeSource("contours");
+      }
+    });
+    mapRef.current.setStyle(newStyle);
   }, [layer]);
 
-  // Update 3D pitch
+  // 3D terrain toggle
+  const applyTerrain = (map) => {
+    if (!map) return;
+    if (!map.getSource("mapbox-dem")) {
+      map.addSource("mapbox-dem", {
+        type: "raster-dem",
+        url: "mapbox://mapbox.mapbox-terrain-dem-v1",
+        tileSize: 512,
+        maxzoom: 14,
+      });
+    }
+    map.setTerrain({ source: "mapbox-dem", exaggeration: 1.5 });
+    map.easeTo({ pitch: 55, duration: 600 });
+  };
+
+  const removeTerrain = (map) => {
+    if (!map) return;
+    map.setTerrain(null);
+    map.easeTo({ pitch: 0, duration: 600 });
+  };
+
   useEffect(() => {
     if (!mapRef.current) return;
-    mapRef.current.easeTo({ pitch: d3 ? 55 : 0, duration: 600 });
+    if (d3) applyTerrain(mapRef.current);
+    else removeTerrain(mapRef.current);
   }, [d3]);
 
   return (
@@ -2881,7 +3056,60 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 5: PROFILE
    ═══════════════════════════════════════════════════════════════════ */
-const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRoute, onSignOut, savedWalks, dbPeaks, userName, userLocation, setUserLocation }) => {
+const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRoute, onSignOut, savedWalks, dbPeaks, userName, userLocation, setUserLocation, followerCount, followingCount, followingIds, setFollowingIds, setFollowerCount, setFollowingCount, userId }) => {
+  const [showFollowers, setShowFollowers] = useState(null); // null | "followers" | "following"
+  const [followerFilter, setFollowerFilter] = useState("recent");
+  const [followerList, setFollowerList] = useState([]);
+  const [followingList, setFollowingList] = useState([]);
+  const [listLoading, setListLoading] = useState(false);
+
+  // Load followers/following list when modal opens
+  useEffect(() => {
+    if (!showFollowers || !userId) return;
+    setListLoading(true);
+    async function loadList() {
+      try {
+        if (showFollowers === "followers") {
+          const { data } = await supabase
+            .from("follows")
+            .select("follower_id, profiles!follows_follower_id_fkey(id, username, full_name, location)")
+            .eq("following_id", userId)
+            .order("created_at", { ascending: followerFilter === "recent" ? false : true });
+          setFollowerList((data || []).map(f => f.profiles).filter(Boolean));
+        } else {
+          const { data } = await supabase
+            .from("follows")
+            .select("following_id, profiles!follows_following_id_fkey(id, username, full_name, location)")
+            .eq("follower_id", userId)
+            .order("created_at", { ascending: followerFilter === "recent" ? false : true });
+          setFollowingList((data || []).map(f => f.profiles).filter(Boolean));
+        }
+      } catch (e) { console.error(e); }
+      finally { setListLoading(false); }
+    }
+    loadList();
+  }, [showFollowers, followerFilter, userId]);
+
+  // Follow / unfollow a user
+  const handleFollow = async (targetId) => {
+    if (!userId || !targetId || userId === targetId) return;
+    const isFollowing = followingIds?.has(targetId);
+    // Optimistic update
+    setFollowingIds(prev => {
+      const next = new Set(prev);
+      isFollowing ? next.delete(targetId) : next.add(targetId);
+      return next;
+    });
+    if (!isFollowing) {
+      setFollowingCount(c => c + 1);
+      await supabase.from("follows").insert({ follower_id: userId, following_id: targetId });
+    } else {
+      setFollowingCount(c => Math.max(0, c - 1));
+      await supabase.from("follows").delete().eq("follower_id", userId).eq("following_id", targetId);
+    }
+    // Refresh list
+    setFollowerList(prev => prev);
+  };
   const [sec, setSec] = useState(initialSec || "mountains");
 
   // Sync with parent when initialSec changes
@@ -3006,6 +3234,70 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
 
   return (
     <div style={{ padding: "0 16px 16px", overflowY: "auto", flex: 1 }}>
+
+      {/* ═══ FOLLOWERS / FOLLOWING MODAL ═══ */}
+      {showFollowers && (
+        <div onClick={() => setShowFollowers(null)} style={{ position: "fixed", inset: 0, zIndex: 60, background: "rgba(4,30,61,0.75)", backdropFilter: "blur(6px)", display: "flex", alignItems: "flex-end", animation: "fi .2s ease" }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: "480px", margin: "0 auto", background: "#0a2240", borderRadius: "20px 20px 0 0", border: "1px solid rgba(90,152,227,0.2)", borderBottom: "none", maxHeight: "75vh", display: "flex", flexDirection: "column", animation: "su .25s ease" }}>
+            <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 4px" }}>
+              <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: "rgba(90,152,227,0.2)" }} />
+            </div>
+            {/* Tabs */}
+            <div style={{ display: "flex", padding: "0 16px 12px", gap: "8px", borderBottom: "1px solid rgba(90,152,227,0.1)" }}>
+              {["followers", "following"].map(t => (
+                <button key={t} onClick={() => setShowFollowers(t)} style={{ flex: 1, padding: "8px", borderRadius: "10px", border: "none", background: showFollowers === t ? "rgba(90,152,227,0.15)" : "transparent", color: showFollowers === t ? "#5A98E3" : "#BDD6F4", fontSize: "13px", fontWeight: showFollowers === t ? 700 : 500, cursor: "pointer", fontFamily: "'DM Sans'", textTransform: "capitalize" }}>{t}</button>
+              ))}
+            </div>
+            {/* Filters */}
+            <div style={{ display: "flex", gap: "6px", padding: "10px 16px 6px" }}>
+              {[["recent", "Recent"], ["area", "By Area"], ["interacted", "Most Interacted"]].map(([k, l]) => (
+                <button key={k} onClick={() => setFollowerFilter(k)} style={{ padding: "4px 10px", borderRadius: "8px", border: "none", background: followerFilter === k ? "rgba(90,152,227,0.2)" : "transparent", color: followerFilter === k ? "#5A98E3" : "#BDD6F4", fontSize: "10px", fontWeight: followerFilter === k ? 700 : 500, cursor: "pointer", fontFamily: "'DM Sans'" }}>{l}</button>
+              ))}
+            </div>
+            {/* User list */}
+            <div style={{ flex: 1, overflowY: "auto" }}>
+              {listLoading ? (
+                <div style={{ padding: "40px", textAlign: "center" }}>
+                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#5A98E3", margin: "0 auto", animation: "pulse 1s ease infinite" }} />
+                  <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4, marginTop: "10px" }}>Loading…</div>
+                </div>
+              ) : (showFollowers === "followers" ? followerList : followingList).length === 0 ? (
+                <div style={{ padding: "40px 20px", textAlign: "center" }}>
+                  <Users size={32} color="#5A98E3" style={{ opacity: 0.25, marginBottom: "12px" }} />
+                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8", marginBottom: "6px" }}>No {showFollowers} yet</div>
+                  <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4 }}>
+                    {showFollowers === "followers" ? "When people follow you they'll appear here." : "Follow other hikers to see their walks and summits."}
+                  </div>
+                </div>
+              ) : (showFollowers === "followers" ? followerList : followingList).map(u => (
+                <div key={u.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderBottom: "1px solid rgba(90,152,227,0.07)" }}>
+                  <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "15px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>
+                    {(u.username || u.full_name || "?")[0].toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{u.full_name || u.username}</div>
+                    <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>
+                      {u.username ? `@${u.username}` : ""}{u.location ? ` · ${u.location}` : ""}
+                    </div>
+                  </div>
+                  {u.id !== userId && (
+                    <button onClick={() => handleFollow(u.id)} style={{
+                      padding: "6px 14px", borderRadius: "8px", border: "none", cursor: "pointer",
+                      background: followingIds?.has(u.id) ? "rgba(90,152,227,0.12)" : "linear-gradient(135deg,#E85D3A,#d04a2a)",
+                      color: followingIds?.has(u.id) ? "#5A98E3" : "#F8F8F8",
+                      fontSize: "11px", fontWeight: 700, fontFamily: "'DM Sans'", flexShrink: 0,
+                      border: followingIds?.has(u.id) ? "1px solid rgba(90,152,227,0.2)" : "none",
+                    }}>
+                      {followingIds?.has(u.id) ? "Following" : "Follow"}
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{ padding: "24px 0 16px", display: "flex", alignItems: "center", gap: "14px" }}>
         <div style={{ width: "58px", height: "58px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", fontWeight: 800, color: "#F8F8F8", border: "3px solid rgba(90,152,227,0.3)" }}>{(userName || "A")[0].toUpperCase()}</div>
         <div style={{ flex: 1 }}>
@@ -3025,8 +3317,8 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               )}
             </div>
           <div style={{ display: "flex", gap: "12px", marginTop: "4px" }}>
-            <span style={{ fontSize: "11px", color: "#BDD6F4" }}><strong style={{ color: "#F8F8F8" }}>{ME.frs}</strong> followers</span>
-            <span style={{ fontSize: "11px", color: "#BDD6F4" }}><strong style={{ color: "#F8F8F8" }}>{ME.fng}</strong> following</span>
+            <span onClick={() => setShowFollowers("followers")} style={{ fontSize: "11px", color: "#BDD6F4", cursor: "pointer" }}><strong style={{ color: "#F8F8F8" }}>{followerCount ?? 0}</strong> followers</span>
+            <span onClick={() => setShowFollowers("following")} style={{ fontSize: "11px", color: "#BDD6F4", cursor: "pointer" }}><strong style={{ color: "#F8F8F8" }}>{followingCount ?? 0}</strong> following</span>
           </div>
         </div>
         <div style={{ display: "flex", gap: "6px" }}>
@@ -3591,13 +3883,9 @@ export default function TrailSync() {
 
   // Check Supabase session on mount
   useEffect(() => {
-    const sessionTimeout = setTimeout(() => {
-      // Failsafe — if session check hangs for 5s, drop to login
-      setAuthState("login");
-    }, 5000);
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      clearTimeout(sessionTimeout);
+    // Use onAuthStateChange as single source of truth — handles all browsers including Safari
+    // INITIAL_SESSION fires immediately with either a session or null
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         const meta = session.user.user_metadata || {};
         const displayName = meta.username || meta.full_name?.split(" ")[0] || session.user.email?.split("@")[0] || "Explorer";
@@ -3606,24 +3894,12 @@ export default function TrailSync() {
         setUserId(session.user.id);
         setAuthState("app");
       } else {
+        // Covers INITIAL_SESSION with no session, SIGNED_OUT, TOKEN_REFRESH_FAILURE
         setAuthState("login");
-      }
-    }).catch(() => {
-      clearTimeout(sessionTimeout);
-      setAuthState("login");
-    });
-
-    // Listen for auth state changes (sign in / sign out)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        const meta = session.user.user_metadata || {};
-        const displayName = meta.username || meta.full_name?.split(" ")[0] || session.user.email?.split("@")[0] || "Explorer";
-        setUserName(displayName);
-        setUserLocation(meta.location || null);
-        setAuthState("app");
-      } else if (_event === "SIGNED_OUT") {
-        setAuthState("login");
-        setUserName("Alex");
+        if (_event === "SIGNED_OUT") {
+          setUserName("Alex");
+          setUserId(null);
+        }
       }
     });
     return () => subscription.unsubscribe();
@@ -3641,6 +3917,9 @@ export default function TrailSync() {
   const [userCourseProgress, setUserCourseProgress] = useState({});
   const [userLocation, setUserLocation] = useState(null);
   const [userId, setUserId] = useState(null);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [followingIds, setFollowingIds] = useState(new Set()); // set of user IDs this user follows
 
   // Navigate to main map and draw a GPX route
   // Accepts a full route object or just an id
@@ -3850,6 +4129,25 @@ export default function TrailSync() {
         courses.forEach(c => { courseMap[c.course_id] = c.lessons_completed; });
         setUserCourseProgress(courseMap);
       }
+
+      // Load follower/following counts + who this user follows
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("follower_count, following_count")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (profile) {
+        setFollowerCount(profile.follower_count || 0);
+        setFollowingCount(profile.following_count || 0);
+      }
+
+      const { data: followingList } = await supabase
+        .from("follows")
+        .select("following_id")
+        .eq("follower_id", user.id);
+      if (followingList) {
+        setFollowingIds(new Set(followingList.map(f => f.following_id)));
+      }
     }
 
     loadUserData();
@@ -4000,7 +4298,7 @@ export default function TrailSync() {
 
       {/* Content */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        {tab === "home" && <HomePage userName={userName} initialFilter={feedFilter} userId={userId} />}
+        {tab === "home" && <HomePage userName={userName} initialFilter={feedFilter} userId={userId} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowingCount={setFollowingCount} />}
         {tab === "routes" && <RoutesPage openRoute={openRouteOnMap} />}
         {tab === "map" && <MapPage goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={async (walk) => {
               setSavedWalks(prev => [walk, ...prev]);
@@ -4023,7 +4321,7 @@ export default function TrailSync() {
               } catch (e) { console.error("Failed to save walk:", e); }
             }} openRoute={openRouteOnMap} gpxRoute={gpxRoute} onCloseGpx={closeGpxRoute} />}
         {tab === "learn" && <LearnPage courseProgress={userCourseProgress} onCourseProgress={async (courseId, lessonsCompleted) => { setUserCourseProgress(prev => ({ ...prev, [courseId]: lessonsCompleted })); const { data: { user } } = await supabase.auth.getUser(); if (!user) return; await supabase.from("user_courses").upsert({ user_id: user.id, course_id: courseId, lessons_completed: lessonsCompleted, updated_at: new Date().toISOString() }, { onConflict: "user_id,course_id" }); }} />}
-        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} dbPeaks={dbPeaks} userName={userName} userLocation={userLocation} setUserLocation={setUserLocation} onSignOut={async () => {
+        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} dbPeaks={dbPeaks} userName={userName} userLocation={userLocation} setUserLocation={setUserLocation} followerCount={followerCount} followingCount={followingCount} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowerCount={setFollowerCount} setFollowingCount={setFollowingCount} userId={userId} onSignOut={async () => {
   await supabase.auth.signOut();
   try { localStorage.clear(); } catch {}
   setUserName("Alex");
