@@ -10,6 +10,8 @@ import {
   Shield, Mail, Apple, Sparkles, Zap, Plus, Maximize2, Minimize2,
   Trash2, WifiOff, Navigation2
 } from "lucide-react";
+import { createClient } from "@supabase/supabase-js";
+import { useState, useEffect, useRef, useMemo } from "react";
 
 /* Supabase client */
 // Safari-safe in-memory storage fallback
