@@ -3290,6 +3290,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
   }, [dbPeaks]);
   const [showCreate, setShowCreate] = useState(false);
   const [createType, setCreateType] = useState(null);
+  const [postText, setPostText] = useState("");
   const [evName, setEvName] = useState("");
   const [evDate, setEvDate] = useState("");
   const [evTime, setEvTime] = useState("");
@@ -3897,7 +3898,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               <button onClick={() => { setCreateType(null); setShowCreate(false); }} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "26px", height: "26px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><X size={12} /></button>
               <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>Create Post</div>
             </div>
-            <textarea id="post-text-input" placeholder="What's on your mind? Share a summit story, trail tip, or photo..." rows={3} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", resize: "none", marginBottom: "10px" }} />
+            <textarea placeholder="What's on your mind? Share a summit story, trail tip, or photo..." rows={3} value={postText} onChange={e => setPostText(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", resize: "none", marginBottom: "10px" }} />
             <div style={{ display: "flex", gap: "8px" }}>
               <button style={{ flex: 1, padding: "9px", borderRadius: "8px", border: "1px dashed rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Camera size={13} /> Photo</button>
               <button onClick={async () => {
@@ -3909,11 +3910,11 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                     username: meta.username || null,
                     full_name: meta.full_name || null,
                     type: "summit",
-                    text: document.querySelector("#post-text-input")?.value || "",
+                    text: postText,
                     peaks: [],
                   });
                 }
-                setCreateType(null); setShowCreate(false); if (goHome) goHome("all");
+                setCreateType(null); setShowCreate(false); setPostText(""); if (goHome) goHome("all");
               }} style={{ flex: 1, padding: "9px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Post</button>
             </div>
           </div>
