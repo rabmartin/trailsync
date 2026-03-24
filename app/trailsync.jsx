@@ -877,7 +877,13 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
           }
         }
       });
-      if (authError) { setError(authError.message || "Could not create account. Please try again."); return; }
+      if (authError) {
+        const msg = typeof authError?.message === "string" && authError.message
+          ? authError.message
+          : "Could not create account. Please try again.";
+        setError(msg);
+        return;
+      }
       if (data?.user) {
         // Supabase may require email confirmation — check
         if (data.session) {
@@ -887,9 +893,12 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
           // Email confirmation sent
           setError("Please check your email to confirm your account, then sign in.");
         }
+      } else {
+        setError("Could not create account. Please try again.");
       }
     } catch (e) {
-      setError("Something went wrong. Please try again.");
+      const msg = typeof e?.message === "string" && e.message ? e.message : "Something went wrong. Please try again.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -1019,11 +1028,6 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
             peaks: p.peaks || [],
           })));
         }
-        // Load user's liked posts
-        if (userId) {
-          const { data: likes } = await supabase.from("post_likes").select("post_id").eq("user_id", userId);
-          if (likes) setLikedPosts(new Set(likes.map(l => l.post_id)));
-        }
       } catch (e) {
         console.error("Failed to load posts:", e);
       } finally {
@@ -1031,6 +1035,20 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
       }
     }
     fetchPosts();
+  }, []); // fetch posts once on mount, independent of auth state
+
+  // Separately load liked posts once userId is known
+  useEffect(() => {
+    if (!userId) return;
+    async function fetchLikes() {
+      try {
+        const { data: likes } = await supabase.from("post_likes").select("post_id").eq("user_id", userId);
+        if (likes) setLikedPosts(new Set(likes.map(l => l.post_id)));
+      } catch (e) {
+        console.error("Failed to load liked posts:", e);
+      }
+    }
+    fetchLikes();
   }, [userId]);
 
   const handleLike = async (postId) => {
@@ -4081,9 +4099,15 @@ export default function TrailSync() {
 
   // Check Supabase session on mount
   useEffect(() => {
+    // Fallback: if INITIAL_SESSION hasn't fired within 4 s, drop to login screen
+    const loadingTimeout = setTimeout(() => {
+      setAuthState(prev => prev === "loading" ? "login" : prev);
+    }, 4000);
+
     // Use onAuthStateChange as single source of truth — handles all browsers including Safari
     // INITIAL_SESSION fires immediately with either a session or null
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      clearTimeout(loadingTimeout);
       if (session?.user) {
         const meta = session.user.user_metadata || {};
         const displayName = meta.username || meta.full_name?.split(" ")[0] || session.user.email?.split("@")[0] || "Explorer";
@@ -4100,7 +4124,7 @@ export default function TrailSync() {
         }
       }
     });
-    return () => subscription.unsubscribe();
+    return () => { clearTimeout(loadingTimeout); subscription.unsubscribe(); };
   }, []);
 
   // Auth state managed by Supabase session only — no localStorage sync needed
