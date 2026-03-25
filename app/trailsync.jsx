@@ -3759,6 +3759,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                   </div>
                 ))}
               </div>
+            </div>
             </div>}
           )}
         </div>
