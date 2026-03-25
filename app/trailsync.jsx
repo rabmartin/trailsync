@@ -982,7 +982,7 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 1: HOME
    ═══════════════════════════════════════════════════════════════════ */
-const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingIds, setFollowingCount, headerSearch, setHeaderSearch, openRoute }) => {
+const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingIds, setFollowingCount, headerSearch, setHeaderSearch, openRoute, searchResults, setSearchResults, searching, setSearching }) => {
   const [wxOpen, setWxOpen] = useState(false);
   const [ff, setFf] = useState(initialFilter || "all");
   const [expandedArea, setExpandedArea] = useState(null);
@@ -994,8 +994,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   const [likedPosts, setLikedPosts] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
-  const [searchResults, setSearchResults] = useState({ posts: [], users: [], routes: [], peaks: [] });
-  const [searching, setSearching] = useState(false);
+
   const [confirmDeletePost, setConfirmDeletePost] = useState(null); // post id to delete
 
   // Run search whenever headerSearch changes
@@ -4348,6 +4347,8 @@ export default function TrailSync() {
   const [gpxRoute, setGpxRoute] = useState(null); //
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [headerSearch, setHeaderSearch] = useState("");
+  const [searchResults, setSearchResults] = useState({ posts: [], users: [], routes: [], peaks: [] });
+  const [searching, setSearching] = useState(false);
 
   const [userCourseProgress, setUserCourseProgress] = useState({});
   const [userLocation, setUserLocation] = useState(null);
@@ -4810,7 +4811,7 @@ export default function TrailSync() {
 
       {/* Content */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        {tab === "home" && <HomePage userName={userName} initialFilter={feedFilter} userId={userId} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowingCount={setFollowingCount} headerSearch={headerSearch} setHeaderSearch={setHeaderSearch} openRoute={openRouteOnMap} />}
+        {tab === "home" && <HomePage userName={userName} initialFilter={feedFilter} userId={userId} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowingCount={setFollowingCount} headerSearch={headerSearch} setHeaderSearch={setHeaderSearch} openRoute={openRouteOnMap} searchResults={searchResults} setSearchResults={setSearchResults} searching={searching} setSearching={setSearching} />}
         {tab === "routes" && <RoutesPage openRoute={openRouteOnMap} />}
         {tab === "map" && <MapPage goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={async (walk) => {
               setSavedWalks(prev => [walk, ...prev]);
