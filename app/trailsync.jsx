@@ -1014,22 +1014,26 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
           .select("*")
           .order("created_at", { ascending: false })
           .limit(50);
-        if (data && data.length > 0) {
-          setLivePosts(data.map(p => ({
-            id: p.id,
-            user_id: p.user_id,
-            user: p.username || p.full_name || "TrailSyncer",
-            av: (p.username || p.full_name || "T")[0].toUpperCase(),
-            time: timeAgo(p.created_at),
-            type: p.type || "summit",
-            text: p.text,
-            likes: p.likes || 0,
-            comments: 0,
-            peaks: p.peaks || [],
-          })));
-        }
+        // Merge live Supabase posts with hardcoded FEED, deduplicating by id
+        const liveMapped = (data || []).map(p => ({
+          id: p.id,
+          user_id: p.user_id,
+          user: p.username || p.full_name || "TrailSyncer",
+          av: (p.username || p.full_name || "T")[0].toUpperCase(),
+          time: timeAgo(p.created_at),
+          type: p.type || "summit",
+          text: p.text,
+          likes: p.likes || 0,
+          comments: 0,
+          peaks: p.peaks || [],
+        }));
+        const liveIds = new Set(liveMapped.map(p => String(p.id)));
+        const hardcoded = FEED.filter(p => !liveIds.has(String(p.id)));
+        setLivePosts([...liveMapped, ...hardcoded]);
       } catch (e) {
         console.error("Failed to load posts:", e);
+        // On error, fall back to hardcoded feed
+        setLivePosts(FEED);
       } finally {
         setPostsLoading(false);
       }
