@@ -1097,7 +1097,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
     try {
       const [postsRes, usersRes] = await Promise.all([
         supabase.from("posts").select("*").or(`text.ilike.%${q}%,peaks.cs.{${q}}`).order("created_at", { ascending: false }).limit(10),
-        supabase.from("profiles").select("*").or(`username.ilike.%${q}%,full_name.ilike.%${q}%`).limit(8),
+        supabase.from("profiles").select("*").or(`username.ilike.%${q}%,name.ilike.%${q}%`).limit(8),
       ]);
       setSearchResults({
         posts: (postsRes.data || []).map(p => ({
@@ -1209,9 +1209,12 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
         <div style={{ display: "none" }} />
 
         {/* Search results dropdown */}
-        {headerSearch && headerSearch.length >= 2 && (searchResults.posts.length > 0 || searchResults.users.length > 0 || searching) && (
+        {headerSearch && headerSearch.length >= 2 && (searchResults.posts.length > 0 || searchResults.users.length > 0 || searching || (!searching && searchQuery.length >= 2)) && (
           <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, background: "rgba(4,30,61,0.98)", backdropFilter: "blur(16px)", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.2)", zIndex: 40, overflow: "hidden", maxHeight: "400px", overflowY: "auto" }}>
             {searching && <div style={{ padding: "14px", textAlign: "center", fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>Searching…</div>}
+            {!searching && searchResults.users.length === 0 && searchResults.posts.length === 0 && searchQuery.length >= 2 && (
+              <div style={{ padding: "20px 14px", textAlign: "center", fontSize: "12px", color: "#BDD6F4", opacity: 0.4 }}>No results for "{searchQuery}"</div>
+            )}
 
             {/* People */}
             {searchResults.users.length > 0 && (
@@ -1220,10 +1223,10 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                 {searchResults.users.map(u => (
                   <div key={u.id} style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid rgba(90,152,227,0.06)" }}>
                     <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>
-                      {(u.username || u.full_name || "?")[0].toUpperCase()}
+                      {(u.username || u.name || "?")[0].toUpperCase()}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{u.full_name || u.username}</div>
+                      <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{u.name || u.username}</div>
                       {u.username && <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>@{u.username}{u.location ? ` · ${u.location}` : ""}</div>}
                     </div>
                     {u.id !== userId && (
@@ -3473,10 +3476,10 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             ) : (showFollowers === "followers" ? followerList : followingList).map(u => (
               <div key={u.id} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 16px", borderBottom: "1px solid rgba(90,152,227,0.07)" }}>
                 <div style={{ width: "46px", height: "46px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>
-                  {(u.username || u.full_name || "?")[0].toUpperCase()}
+                  {(u.username || u.name || "?")[0].toUpperCase()}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{u.full_name || u.username}</div>
+                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{u.name || u.username}</div>
                   <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "2px" }}>
                     {u.username ? `@${u.username}` : ""}{u.location ? ` · ${u.location}` : ""}
                   </div>
