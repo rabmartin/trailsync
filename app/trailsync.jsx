@@ -3593,7 +3593,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
             <div style={{ display: "flex", gap: "4px" }}>
               <button onClick={() => setMtView("map")} style={{ padding: "5px 12px", borderRadius: "8px", border: "none", background: mtView === "map" ? "rgba(90,152,227,0.2)" : "#0a2240", color: mtView === "map" ? "#5A98E3" : "#BDD6F4", fontSize: "11px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'", opacity: mtView === "map" ? 1 : 0.5 }}><Map size={12} /> Map</button>
-              <button onClick={() => setMtView("list")} style={{ padding: "5px 12px", borderRadius: "8px", border: "none", background: mtView === "list" ? "rgba(90,152,227,0.2)" : "#0a2240", color: mtView === "list" ? "#5A98E3" : "#BDD6F4", fontSize: "11px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'", opacity: mtView === "list" ? 1 : 0.5 }}><List size={12} /> List</button>
+              <button onClick={() => { setMtView("list"); if (!mtCls) setMtCls("munros"); }} style={{ padding: "5px 12px", borderRadius: "8px", border: "none", background: mtView === "list" ? "rgba(90,152,227,0.2)" : "#0a2240", color: mtView === "list" ? "#5A98E3" : "#BDD6F4", fontSize: "11px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'", opacity: mtView === "list" ? 1 : 0.5 }}><List size={12} /> List</button>
             </div>
             <div style={{ fontSize: "10px", color: "#6BCB77", fontWeight: 600 }}>
               {(() => {
@@ -3712,7 +3712,14 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
           {/* ═══ LIST VIEW ═══ */}
           {mtView === "list" && (
             <div>
-              <div style={{ display: "flex", gap: "4px", marginBottom: "10px" }}>
+              {!mtCls && (
+                <div style={{ padding: "32px 16px", textAlign: "center", background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.1)", marginBottom: "10px" }}>
+                  <Mountain size={32} color="#5A98E3" style={{ opacity: 0.3, marginBottom: "12px" }} />
+                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8", marginBottom: "6px" }}>Select a classification</div>
+                  <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, lineHeight: 1.5 }}>Choose a classification above to browse peaks in list view — loading all peaks at once is too slow.</div>
+                </div>
+              )}
+              {mtCls && <div style={{ display: "flex", gap: "4px", marginBottom: "10px" }}>
                 {[["name", "A-Z"], ["height", "Height"], ["class", "Class"]].map(([k, l]) => (
                   <button key={k} onClick={() => setMtSort(k)} style={{ padding: "4px 10px", borderRadius: "8px", border: "none", background: mtSort === k ? "rgba(90,152,227,0.15)" : "#0a2240", color: mtSort === k ? "#5A98E3" : "#BDD6F4", fontSize: "10px", cursor: "pointer", fontWeight: 600, fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "3px", opacity: mtSort === k ? 1 : 0.5 }}>
                     <ArrowUpDown size={10} /> {l}
@@ -3751,7 +3758,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                   </div>
                 ))}
               </div>
-            </div>
+            </div>}
           )}
         </div>
       )}
