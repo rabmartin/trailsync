@@ -982,7 +982,7 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 1: HOME
    ═══════════════════════════════════════════════════════════════════ */
-const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingIds, setFollowingCount, headerSearch, setHeaderSearch }) => {
+const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingIds, setFollowingCount, headerSearch, setHeaderSearch, openRoute }) => {
   const [wxOpen, setWxOpen] = useState(false);
   const [ff, setFf] = useState(initialFilter || "all");
   const [expandedArea, setExpandedArea] = useState(null);
@@ -994,7 +994,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   const [likedPosts, setLikedPosts] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
-  const [searchResults, setSearchResults] = useState({ posts: [], users: [] });
+  const [searchResults, setSearchResults] = useState({ posts: [], users: [], routes: [], peaks: [] });
   const [searching, setSearching] = useState(false);
   const [confirmDeletePost, setConfirmDeletePost] = useState(null); // post id to delete
 
@@ -1092,21 +1092,57 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
 
   const handleSearch = async (q) => {
     setSearchQuery(q);
-    if (!q || q.length < 2) { setSearchResults({ posts: [], users: [] }); return; }
+    if (!q || q.length < 2) { setSearchResults({ posts: [], users: [], routes: [], peaks: [] }); return; }
     setSearching(true);
     try {
+      const ql = q.toLowerCase();
+
+      // Live DB queries — posts and people
       const [postsRes, usersRes] = await Promise.all([
-        supabase.from("posts").select("*").or(`text.ilike.%${q}%,peaks.cs.{${q}}`).order("created_at", { ascending: false }).limit(10),
-        supabase.from("profiles").select("*").or(`username.ilike.%${q}%,name.ilike.%${q}%`).limit(8),
+        supabase.from("posts").select("*").or(`text.ilike.%${q}%`).order("created_at", { ascending: false }).limit(8),
+        supabase.from("profiles").select("*").or(`username.ilike.%${q}%,name.ilike.%${q}%`).limit(6),
       ]);
+
+      // Also search hardcoded FEED posts (events, fundraisers, summits)
+      const feedMatches = FEED.filter(p =>
+        p.text?.toLowerCase().includes(ql) ||
+        p.user?.toLowerCase().includes(ql) ||
+        p.peaks?.some(pk => pk.toLowerCase().includes(ql)) ||
+        p.type?.toLowerCase().includes(ql)
+      );
+
+      // Search routes from ROUTES array
+      const routeMatches = ROUTES.filter(r =>
+        r.name?.toLowerCase().includes(ql) ||
+        r.reg?.toLowerCase().includes(ql) ||
+        r.peaks?.some(pk => pk.toLowerCase().includes(ql)) ||
+        r.cls?.toLowerCase().includes(ql)
+      ).slice(0, 6);
+
+      // Search peaks from PEAKS array
+      const peakMatches = PEAKS.filter(p =>
+        p.name?.toLowerCase().includes(ql) ||
+        p.reg?.toLowerCase().includes(ql) ||
+        p.cls?.toLowerCase().includes(ql)
+      ).slice(0, 5);
+
+      // Merge live + hardcoded posts, deduplicate by id
+      const livePostsMapped = (postsRes.data || []).map(p => ({
+        id: p.id, user: p.username || p.name || "TrailSyncer",
+        av: (p.username || p.name || "T")[0].toUpperCase(),
+        time: timeAgo(p.created_at), type: p.type || "summit",
+        text: p.text, likes: p.likes || 0, comments: 0, peaks: p.peaks || [],
+        isLive: true,
+      }));
+      const liveIds = new Set(livePostsMapped.map(p => String(p.id)));
+      const hardcodedMatches = feedMatches.filter(p => !liveIds.has(String(p.id)));
+      const allPosts = [...livePostsMapped, ...hardcodedMatches].slice(0, 10);
+
       setSearchResults({
-        posts: (postsRes.data || []).map(p => ({
-          id: p.id, user: p.username || p.full_name || "TrailSyncer",
-          av: (p.username || p.full_name || "T")[0].toUpperCase(),
-          time: timeAgo(p.created_at), type: p.type || "summit",
-          text: p.text, likes: p.likes || 0, comments: 0, peaks: p.peaks || [],
-        })),
+        posts: allPosts,
         users: usersRes.data || [],
+        routes: routeMatches,
+        peaks: peakMatches,
       });
     } catch (e) { console.error(e); }
     finally { setSearching(false); }
@@ -1209,19 +1245,26 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
         <div style={{ display: "none" }} />
 
         {/* Search results dropdown */}
-        {headerSearch && headerSearch.length >= 2 && (searchResults.posts.length > 0 || searchResults.users.length > 0 || searching || (!searching && searchQuery.length >= 2)) && (
-          <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, background: "rgba(4,30,61,0.98)", backdropFilter: "blur(16px)", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.2)", zIndex: 40, overflow: "hidden", maxHeight: "400px", overflowY: "auto" }}>
+        {headerSearch && headerSearch.length >= 2 && (
+          <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, background: "rgba(4,30,61,0.98)", backdropFilter: "blur(16px)", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.2)", zIndex: 40, overflow: "hidden", maxHeight: "480px", overflowY: "auto" }}>
+
+            {/* Searching indicator */}
             {searching && <div style={{ padding: "14px", textAlign: "center", fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>Searching…</div>}
-            {!searching && searchResults.users.length === 0 && searchResults.posts.length === 0 && searchQuery.length >= 2 && (
-              <div style={{ padding: "20px 14px", textAlign: "center", fontSize: "12px", color: "#BDD6F4", opacity: 0.4 }}>No results for "{searchQuery}"</div>
+
+            {/* No results */}
+            {!searching && searchResults.posts.length === 0 && searchResults.users.length === 0 && searchResults.routes.length === 0 && searchResults.peaks.length === 0 && (
+              <div style={{ padding: "24px 14px", textAlign: "center" }}>
+                <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.4, marginBottom: "4px" }}>No results for "{headerSearch}"</div>
+                <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.25 }}>Try a mountain name, person, or post topic</div>
+              </div>
             )}
 
-            {/* People */}
+            {/* ── PEOPLE ── */}
             {searchResults.users.length > 0 && (
               <div>
-                <div style={{ padding: "8px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>People</div>
+                <div style={{ padding: "10px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>People</div>
                 {searchResults.users.map(u => (
-                  <div key={u.id} style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid rgba(90,152,227,0.06)" }}>
+                  <div key={u.id} style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid rgba(90,152,227,0.06)", cursor: "pointer" }}>
                     <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>
                       {(u.username || u.name || "?")[0].toUpperCase()}
                     </div>
@@ -1231,7 +1274,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                     </div>
                     {u.id !== userId && (
                       <button onClick={() => handleFollowInSearch(u.id)} style={{
-                        padding: "5px 12px", borderRadius: "8px", border: "none", cursor: "pointer", flexShrink: 0,
+                        padding: "5px 12px", borderRadius: "8px", cursor: "pointer", flexShrink: 0,
                         background: followingIds?.has(u.id) ? "rgba(90,152,227,0.12)" : "linear-gradient(135deg,#E85D3A,#d04a2a)",
                         color: followingIds?.has(u.id) ? "#5A98E3" : "#F8F8F8",
                         fontSize: "11px", fontWeight: 700, fontFamily: "'DM Sans'",
@@ -1245,32 +1288,74 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
               </div>
             )}
 
-            {/* Posts */}
-            {searchResults.posts.length > 0 && (
+            {/* ── ROUTES ── */}
+            {searchResults.routes.length > 0 && (
               <div>
-                <div style={{ padding: "8px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Posts</div>
-                {searchResults.posts.map(p => (
-                  <div key={p.id} style={{ padding: "10px 14px", borderBottom: "1px solid rgba(90,152,227,0.06)", cursor: "pointer" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                      <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#264f80", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: "#F8F8F8" }}>{p.av}</div>
-                      <span style={{ fontSize: "11px", fontWeight: 700, color: "#F8F8F8" }}>{p.user}</span>
-                      <span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4 }}>{p.time}</span>
+                <div style={{ padding: "10px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Routes</div>
+                {searchResults.routes.map(r => (
+                  <div key={r.id} onClick={() => { setHeaderSearch(""); if (r.gpx_file) { /* open on map */ if (typeof openRoute === "function") openRoute(r, "search"); } }} style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid rgba(90,152,227,0.06)", cursor: r.gpx_file ? "pointer" : "default" }}>
+                    <div style={{ width: "34px", height: "34px", borderRadius: "10px", background: "rgba(232,93,58,0.1)", border: "1px solid rgba(232,93,58,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Route size={16} color="#E85D3A" />
                     </div>
-                    <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{p.text}</div>
-                    {p.peaks.length > 0 && <div style={{ display: "flex", gap: "4px", marginTop: "5px" }}>{p.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}</div>}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
+                      <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>{r.reg} · {r.dist}km · {r.diff}</div>
+                    </div>
+                    {r.gpx_file && <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "5px", background: "rgba(232,93,58,0.12)", color: "#E85D3A", fontWeight: 700, flexShrink: 0 }}>View on map →</span>}
                   </div>
                 ))}
               </div>
             )}
 
-            {!searching && searchResults.posts.length === 0 && searchResults.users.length === 0 && (
-              <div style={{ padding: "20px", textAlign: "center", fontSize: "12px", color: "#BDD6F4", opacity: 0.4 }}>No results for "{headerSearch}"</div>
+            {/* ── MOUNTAINS ── */}
+            {searchResults.peaks.length > 0 && (
+              <div>
+                <div style={{ padding: "10px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Mountains</div>
+                {searchResults.peaks.map(p => (
+                  <div key={p.id} style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid rgba(90,152,227,0.06)" }}>
+                    <div style={{ width: "34px", height: "34px", borderRadius: "10px", background: `${CLS[p.cls]?.color}15`, border: `1px solid ${CLS[p.cls]?.color}30`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Mountain size={16} color={CLS[p.cls]?.color || "#5A98E3"} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{p.name}</div>
+                      <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>{p.ht}m · {p.reg}</div>
+                    </div>
+                    <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "5px", background: `${CLS[p.cls]?.color}15`, color: CLS[p.cls]?.color, fontWeight: 700, flexShrink: 0 }}>{CLS[p.cls]?.name}</span>
+                  </div>
+                ))}
+              </div>
             )}
+
+            {/* ── POSTS / EVENTS / FUNDRAISERS ── */}
+            {searchResults.posts.length > 0 && (
+              <div>
+                <div style={{ padding: "10px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Posts & Events</div>
+                {searchResults.posts.map(p => (
+                  <div key={p.id} style={{ padding: "10px 14px", borderBottom: "1px solid rgba(90,152,227,0.06)", cursor: "pointer" }} onClick={() => setHeaderSearch("")}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "5px" }}>
+                      <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: p.type === "fundraiser" ? "rgba(107,203,119,0.15)" : p.type === "event" ? "rgba(90,152,227,0.15)" : "#264f80", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>
+                        {typeof p.av === "string" && p.av.length <= 2 ? p.av : p.av}
+                      </div>
+                      <span style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8" }}>{p.user}</span>
+                      <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", background: p.type === "fundraiser" ? "rgba(107,203,119,0.12)" : p.type === "event" ? "rgba(90,152,227,0.12)" : "rgba(232,93,58,0.1)", color: p.type === "fundraiser" ? "#6BCB77" : p.type === "event" ? "#5A98E3" : "#E85D3A", fontWeight: 600 }}>{p.type}</span>
+                      <span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.35, marginLeft: "auto" }}>{p.time}</span>
+                    </div>
+                    <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.45, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{p.text}</div>
+                    {p.peaks?.length > 0 && (
+                      <div style={{ display: "flex", gap: "4px", marginTop: "5px", flexWrap: "wrap" }}>
+                        {p.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
           </div>
         )}
       </div>
 
-      {/* Weather Engine */}
+            {/* Weather Engine */}
       <div style={{ marginBottom: "16px", animation: "su .4s ease .1s both" }}>
         <button onClick={() => setWxOpen(!wxOpen)} style={{ width: "100%", padding: "14px 16px", background: "linear-gradient(135deg, #264f80, #1a3a60)", border: "1px solid rgba(90,152,227,0.25)", borderRadius: wxOpen ? "14px 14px 0 0" : "14px", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", fontFamily: "'DM Sans',sans-serif", transition: "border-radius .2s" }}>
           <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -3258,6 +3343,69 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
   const [selWalk, setSelWalk] = useState(null);
   const [confirmDeleteWalk, setConfirmDeleteWalk] = useState(false);
   const [deletingWalk, setDeletingWalk] = useState(false);
+  // Walk photo uploads
+  const [walkPhotos, setWalkPhotos] = useState({}); // walkId -> [url, ...]
+  const [uploadingPhoto, setUploadingPhoto] = useState(null); // walkId uploading
+  // Walk comments (local for now)
+  const [walkComments, setWalkComments] = useState({}); // walkId -> comment text
+  // Profile photo
+  const [avatarUrl, setAvatarUrl] = useState(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  // Upload a photo for a walk to Supabase Storage
+  const handleWalkPhotoUpload = async (walkId, file) => {
+    if (!file || !userId) return;
+    setUploadingPhoto(walkId);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `walks/${userId}/${walkId}/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("walk-photos").upload(path, file, { upsert: true });
+      if (error) { console.error("Photo upload error:", error); return; }
+      const { data: { publicUrl } } = supabase.storage.from("walk-photos").getPublicUrl(path);
+      setWalkPhotos(prev => ({ ...prev, [walkId]: [...(prev[walkId] || []), publicUrl] }));
+    } catch (e) { console.error(e); }
+    finally { setUploadingPhoto(null); }
+  };
+
+  // Upload profile photo
+  const handleAvatarUpload = async (file) => {
+    if (!file || !userId) return;
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `avatars/${userId}.${ext}`;
+      const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (error) { console.error("Avatar upload error:", error); return; }
+      const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
+      setAvatarUrl(publicUrl);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.auth.updateUser({ data: { ...user.user_metadata, avatar_url: publicUrl } });
+        await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", userId);
+      }
+    } catch (e) { console.error(e); }
+    finally { setUploadingAvatar(false); }
+  };
+
+  // Load avatar on mount
+  useEffect(() => {
+    if (!userId) return;
+    supabase.from("profiles").select("avatar_url").eq("id", userId).maybeSingle()
+      .then(({ data }) => { if (data?.avatar_url) setAvatarUrl(data.avatar_url); });
+  }, [userId]);
+
+  // Load walk photos on mount
+  useEffect(() => {
+    if (!userId || !savedWalks?.length) return;
+    savedWalks.forEach(async (w) => {
+      if (!w.id) return;
+      const { data } = await supabase.storage.from("walk-photos").list(`walks/${userId}/${w.id}`);
+      if (data && data.length > 0) {
+        const urls = data.map(f => supabase.storage.from("walk-photos").getPublicUrl(`walks/${userId}/${w.id}/${f.name}`).data.publicUrl);
+        setWalkPhotos(prev => ({ ...prev, [w.id]: urls }));
+      }
+    });
+  }, [userId, savedWalks]);
 
   // Load followers/following list when modal opens
   useEffect(() => {
@@ -3504,7 +3652,17 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
 
 
       <div style={{ padding: "24px 0 16px", display: "flex", alignItems: "center", gap: "14px" }}>
-        <div style={{ width: "58px", height: "58px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", fontWeight: 800, color: "#F8F8F8", border: "3px solid rgba(90,152,227,0.3)" }}>{(userName || "A")[0].toUpperCase()}</div>
+        <div style={{ position: "relative", width: "58px", height: "58px", flexShrink: 0 }}>
+          <div style={{ width: "58px", height: "58px", borderRadius: "50%", background: avatarUrl ? "transparent" : "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", fontWeight: 800, color: "#F8F8F8", border: "3px solid rgba(90,152,227,0.3)", overflow: "hidden" }}>
+            {avatarUrl ? <img src={avatarUrl} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (userName || "A")[0].toUpperCase()}
+          </div>
+          {/* Camera overlay button */}
+          <label style={{ position: "absolute", bottom: 0, right: 0, width: "20px", height: "20px", borderRadius: "50%", background: "#E85D3A", border: "2px solid #041e3d", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+            <Camera size={10} color="#F8F8F8" />
+            <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { if (e.target.files?.[0]) handleAvatarUpload(e.target.files[0]); }} />
+          </label>
+          {uploadingAvatar && <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "rgba(4,30,61,0.7)", display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#5A98E3", animation: "pulse 1s ease infinite" }} /></div>}
+        </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: "20px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>{userName || ME.name}</div>
           <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "6px" }}>
@@ -3926,28 +4084,28 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             {savedWalks && savedWalks.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {savedWalks.map((w, i) => (
-                  <div key={i} onClick={() => setSelWalk(w)} style={{ background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.1)", overflow: "hidden", animation: `fi .3s ease ${i * .05}s both`, cursor: "pointer" }}>
+                  <div key={i} style={{ background: "#0a2240", borderRadius: "16px", border: "1px solid rgba(90,152,227,0.12)", overflow: "hidden", animation: `fi .3s ease ${i * .05}s both` }}>
                     <div style={{ height: "3px", background: "linear-gradient(90deg,#6BCB77,#5A98E3)" }} />
                     <div style={{ padding: "14px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "8px" }}>
-                        <div>
-                          <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{w.name}</div>
-                          <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5, marginTop: "2px" }}>{w.date}</div>
+
+                      {/* Header — avatar + name + date */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+                        <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: avatarUrl ? "transparent" : "linear-gradient(135deg,#264f80,#5A98E3)", overflow: "hidden", flexShrink: 0, border: "2px solid rgba(90,152,227,0.2)" }}>
+                          {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 800, color: "#F8F8F8" }}>{(userName||"A")[0].toUpperCase()}</div>}
                         </div>
-                        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                          {w.photos > 0 && <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "6px", background: "rgba(90,152,227,0.1)", color: "#5A98E3", fontWeight: 600 }}><Camera size={10} style={{ verticalAlign: "middle" }} /> {w.photos}</span>}
-                          <ChevronRight size={14} color="#BDD6F4" style={{ opacity: 0.4 }} />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{userName}</div>
+                          <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>{w.date} · Tracked walk</div>
                         </div>
+                        <button onClick={() => setSelWalk(w)} style={{ background: "rgba(90,152,227,0.08)", border: "1px solid rgba(90,152,227,0.15)", borderRadius: "8px", padding: "5px 10px", color: "#5A98E3", fontSize: "10px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>View</button>
                       </div>
 
-                      {w.desc && <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.5, marginBottom: "10px" }}>{w.desc}</div>}
+                      {/* Walk name */}
+                      <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", marginBottom: "4px" }}>{w.name}</div>
 
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px", marginBottom: "10px" }}>
-                        {[
-                          ["Distance", `${w.dist ?? 0}km`],
-                          ["Elevation", `${w.elev ?? 0}m`],
-                          ["Avg Speed", `${w.avgSpeed ?? 0}kph`],
-                        ].map(([label, val]) => (
+                      {/* Stats row */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px", marginBottom: "12px" }}>
+                        {[["Distance", `${w.dist ?? 0}km`], ["Elevation", `${w.elev ?? 0}m`], ["Moving", w.movingTime || "--"]].map(([label, val]) => (
                           <div key={label} style={{ textAlign: "center", padding: "8px 4px", background: "#041e3d", borderRadius: "8px" }}>
                             <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
                             <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>{label}</div>
@@ -3955,30 +4113,61 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                         ))}
                       </div>
 
-                      <div style={{ display: "flex", gap: "6px", marginBottom: "8px" }}>
-                        <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "6px", background: "rgba(90,152,227,0.08)", color: "#BDD6F4", fontWeight: 500 }}>Total: {w.time}</span>
-                        <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "6px", background: "rgba(90,152,227,0.08)", color: "#BDD6F4", fontWeight: 500 }}>Moving: {w.movingTime}</span>
-                      </div>
-
+                      {/* Peaks */}
                       {w.peaks?.length > 0 && (
-                        <div style={{ display: "flex", gap: "4px" }}>
-                          {w.peaks.map(pk => (
-                            <span key={pk} style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "6px", background: "rgba(107,203,119,0.1)", color: "#6BCB77", fontWeight: 600 }}>⛰️ {pk}</span>
-                          ))}
+                        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "12px" }}>
+                          {w.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "6px", background: "rgba(107,203,119,0.1)", color: "#6BCB77", fontWeight: 600 }}>⛰️ {pk}</span>)}
                         </div>
                       )}
 
-                      <div style={{ display: "flex", gap: "16px", marginTop: "10px", borderTop: "1px solid rgba(90,152,227,0.08)", paddingTop: "10px" }}>
-                        <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.4, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}>
-                          <Heart size={14} />
-                        </button>
-                        <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.4, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}>
-                          <MessageCircle size={14} />
-                        </button>
-                        <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.4, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}>
-                          <Share2 size={14} />
-                        </button>
+                      {/* Photo grid — uploaded photos + add more slots */}
+                      {(() => {
+                        const photos = walkPhotos[w.id] || [];
+                        const emptySlots = Math.max(0, 3 - photos.length);
+                        return (
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px", marginBottom: "12px" }}>
+                            {photos.map((url, pi) => (
+                              <div key={pi} style={{ aspectRatio: "1", borderRadius: "10px", overflow: "hidden", background: "#041e3d" }}>
+                                <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                              </div>
+                            ))}
+                            {Array.from({ length: emptySlots }).map((_, si) => (
+                              <label key={`slot-${si}`} style={{ aspectRatio: "1", borderRadius: "10px", border: "1.5px dashed rgba(90,152,227,0.25)", background: "rgba(90,152,227,0.04)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", gap: "4px" }}>
+                                {uploadingPhoto === w.id ? (
+                                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#5A98E3", animation: "pulse 1s ease infinite" }} />
+                                ) : (
+                                  <>
+                                    <div style={{ width: "28px", height: "28px", borderRadius: "8px", background: "rgba(90,152,227,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                      <Plus size={16} color="#5A98E3" />
+                                    </div>
+                                    <span style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4, fontWeight: 600 }}>Add photo</span>
+                                  </>
+                                )}
+                                <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { if (e.target.files?.[0] && w.id) handleWalkPhotoUpload(w.id, e.target.files[0]); }} />
+                              </label>
+                            ))}
+                          </div>
+                        );
+                      })()}
+
+                      {/* Comment box */}
+                      <div style={{ marginBottom: "12px" }}>
+                        <textarea
+                          placeholder="Add a note about this walk..."
+                          rows={2}
+                          value={walkComments[w.id] || w.desc || ""}
+                          onChange={e => setWalkComments(prev => ({ ...prev, [w.id]: e.target.value }))}
+                          style={{ width: "100%", padding: "10px 12px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", resize: "none", lineHeight: 1.5 }}
+                        />
                       </div>
+
+                      {/* Social actions */}
+                      <div style={{ display: "flex", gap: "16px", borderTop: "1px solid rgba(90,152,227,0.08)", paddingTop: "10px" }}>
+                        <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.45, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Heart size={14} /></button>
+                        <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.45, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><MessageCircle size={14} /></button>
+                        <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.45, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Share2 size={14} /></button>
+                      </div>
+
                     </div>
                   </div>
                 ))}
@@ -4652,7 +4841,7 @@ export default function TrailSync() {
 
       {/* Content */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        {tab === "home" && <HomePage userName={userName} initialFilter={feedFilter} userId={userId} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowingCount={setFollowingCount} headerSearch={headerSearch} setHeaderSearch={setHeaderSearch} />}
+        {tab === "home" && <HomePage userName={userName} initialFilter={feedFilter} userId={userId} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowingCount={setFollowingCount} headerSearch={headerSearch} setHeaderSearch={setHeaderSearch} openRoute={openRouteOnMap} />}
         {tab === "routes" && <RoutesPage openRoute={openRouteOnMap} />}
         {tab === "map" && <MapPage goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={async (walk) => {
               setSavedWalks(prev => [walk, ...prev]);
