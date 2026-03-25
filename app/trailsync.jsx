@@ -3712,55 +3712,40 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
           {/* ═══ LIST VIEW ═══ */}
           {mtView === "list" && (
             <div>
-              {!mtCls && (
+              {!mtCls ? (
                 <div style={{ padding: "32px 16px", textAlign: "center", background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.1)", marginBottom: "10px" }}>
                   <Mountain size={32} color="#5A98E3" style={{ opacity: 0.3, marginBottom: "12px" }} />
                   <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8", marginBottom: "6px" }}>Select a classification</div>
-                  <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, lineHeight: 1.5 }}>Choose a classification above to browse peaks in list view — loading all peaks at once is too slow.</div>
+                  <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, lineHeight: 1.5 }}>Choose a classification above to browse peaks in list view — loading all at once is too slow.</div>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ display: "flex", gap: "4px", marginBottom: "10px" }}>
+                    {[["name", "A-Z"], ["height", "Height"], ["class", "Class"]].map(([k, l]) => (
+                      <button key={k} onClick={() => setMtSort(k)} style={{ padding: "4px 10px", borderRadius: "8px", border: "none", background: mtSort === k ? "rgba(90,152,227,0.15)" : "#0a2240", color: mtSort === k ? "#5A98E3" : "#BDD6F4", fontSize: "10px", cursor: "pointer", fontWeight: 600, fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "3px", opacity: mtSort === k ? 1 : 0.5 }}>
+                        <ArrowUpDown size={10} /> {l}
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {filteredPeaks.map((pk, i) => (
+                      <div key={pk.id} onClick={() => { setSelPeak(pk); setMtView("map"); setLogging(false); }} style={{ background: "#0a2240", borderRadius: "10px", padding: "11px 12px", border: "1px solid rgba(90,152,227,0.08)", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px", animation: `fi .2s ease ${i * .02}s both` }}>
+                        <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: pk.done ? "#6BCB77" : "#E85D3A", border: "2px solid rgba(248,248,248,0.3)", boxShadow: `0 0 6px ${pk.done ? "rgba(107,203,119,0.3)" : "rgba(232,93,58,0.3)"}`, flexShrink: 0 }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{pk.name}</div>
+                          <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{pk.reg}</div>
+                        </div>
+                        <span style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "5px", background: `${CLS[pk.cls]?.color}12`, color: CLS[pk.cls]?.color, fontWeight: 600, flexShrink: 0 }}>{CLS[pk.cls]?.name}</span>
+                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#BDD6F4", opacity: 0.6, minWidth: "42px", textAlign: "right", fontFamily: "'JetBrains Mono'" }}>{pk.ht}m</div>
+                        <div style={{ width: "18px", height: "18px", borderRadius: "5px", background: pk.done ? "rgba(107,203,119,0.12)" : "rgba(232,93,58,0.08)", border: `1.5px solid ${pk.done ? "#6BCB77" : "rgba(232,93,58,0.25)"}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          {pk.done && <Check size={11} color="#6BCB77" strokeWidth={3} />}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
-              {mtCls && <div>
-                <div style={{ display: "flex", gap: "4px", marginBottom: "10px" }}>
-                {[["name", "A-Z"], ["height", "Height"], ["class", "Class"]].map(([k, l]) => (
-                  <button key={k} onClick={() => setMtSort(k)} style={{ padding: "4px 10px", borderRadius: "8px", border: "none", background: mtSort === k ? "rgba(90,152,227,0.15)" : "#0a2240", color: mtSort === k ? "#5A98E3" : "#BDD6F4", fontSize: "10px", cursor: "pointer", fontWeight: 600, fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "3px", opacity: mtSort === k ? 1 : 0.5 }}>
-                    <ArrowUpDown size={10} /> {l}
-                  </button>
-                ))}
-                </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                {filteredPeaks.map((pk, i) => (
-                  <div key={pk.id} onClick={() => { setSelPeak(pk); setMtView("map"); setLogging(false); }} style={{
-                    background: "#0a2240", borderRadius: "10px", padding: "11px 12px",
-                    border: "1px solid rgba(90,152,227,0.08)", cursor: "pointer",
-                    display: "flex", alignItems: "center", gap: "10px",
-                    animation: `fi .2s ease ${i * .02}s both`
-                  }}>
-                    <div style={{
-                      width: "12px", height: "12px", borderRadius: "50%",
-                      background: pk.done ? "#6BCB77" : "#E85D3A",
-                      border: "2px solid rgba(248,248,248,0.3)",
-                      boxShadow: `0 0 6px ${pk.done ? "rgba(107,203,119,0.3)" : "rgba(232,93,58,0.3)"}`,
-                      flexShrink: 0
-                    }} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{pk.name}</div>
-                      <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{pk.reg}</div>
-                    </div>
-                    <span style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "5px", background: `${CLS[pk.cls]?.color}12`, color: CLS[pk.cls]?.color, fontWeight: 600, flexShrink: 0 }}>{CLS[pk.cls]?.name}</span>
-                    <div style={{ fontSize: "12px", fontWeight: 700, color: "#BDD6F4", opacity: 0.6, minWidth: "42px", textAlign: "right", fontFamily: "'JetBrains Mono'" }}>{pk.ht}m</div>
-                    <div style={{
-                      width: "18px", height: "18px", borderRadius: "5px",
-                      background: pk.done ? "rgba(107,203,119,0.12)" : "rgba(232,93,58,0.08)",
-                      border: `1.5px solid ${pk.done ? "#6BCB77" : "rgba(232,93,58,0.25)"}`,
-                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
-                    }}>
-                      {pk.done && <Check size={11} color="#6BCB77" strokeWidth={3} />}
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
-            </div>}
           )}
         </div>
       )}
