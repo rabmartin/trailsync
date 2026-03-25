@@ -3719,13 +3719,14 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                   <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, lineHeight: 1.5 }}>Choose a classification above to browse peaks in list view — loading all peaks at once is too slow.</div>
                 </div>
               )}
-              {mtCls && <div style={{ display: "flex", gap: "4px", marginBottom: "10px" }}>
+              {mtCls && <div>
+                <div style={{ display: "flex", gap: "4px", marginBottom: "10px" }}>
                 {[["name", "A-Z"], ["height", "Height"], ["class", "Class"]].map(([k, l]) => (
                   <button key={k} onClick={() => setMtSort(k)} style={{ padding: "4px 10px", borderRadius: "8px", border: "none", background: mtSort === k ? "rgba(90,152,227,0.15)" : "#0a2240", color: mtSort === k ? "#5A98E3" : "#BDD6F4", fontSize: "10px", cursor: "pointer", fontWeight: 600, fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "3px", opacity: mtSort === k ? 1 : 0.5 }}>
                     <ArrowUpDown size={10} /> {l}
                   </button>
                 ))}
-              </div>
+                </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {filteredPeaks.map((pk, i) => (
                   <div key={pk.id} onClick={() => { setSelPeak(pk); setMtView("map"); setLogging(false); }} style={{
