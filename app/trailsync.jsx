@@ -1193,7 +1193,6 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   }, [expandedArea, wxDay, wxData]);
 
   return (
-    <>
     <div style={{ padding: "0 16px 16px", overflowY: "auto", flex: 1 }}>
       {/* Greeting */}
       <div style={{ padding: "24px 0 14px", animation: "fi .5s ease" }}>
@@ -3424,6 +3423,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
   };
 
   return (
+    <>
     <div style={{ padding: "0 16px 16px", overflowY: "auto", flex: 1 }}>
 
       {/* ═══ FOLLOWERS / FOLLOWING — FULL PAGE ═══ */}
