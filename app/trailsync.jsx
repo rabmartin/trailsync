@@ -295,10 +295,12 @@ const C_WALKS = [
 ];
 
 const HIKERS = [
-  { id: 1, name: "Jamie M.", peak: "Ben Nevis", st: "ascending", av: "🧑‍🦰" },
-  { id: 2, name: "Sarah K.", peak: "Buachaille Etive Mor", st: "summit", av: "👩" },
-  { id: 3, name: "Alistair D.", peak: "An Teallach", st: "ascending", av: "🧔" },
-  { id: 4, name: "Fiona R.", peak: "Liathach", st: "descending", av: "👩‍🦱" },
+  { id: 1, name: "Jamie M.", peak: "Ben Nevis", st: "ascending", av: "🧑‍🦰", lat: 56.797, lng: -5.004 },
+  { id: 2, name: "Sarah K.", peak: "Buachaille Etive Mor", st: "summit", av: "👩", lat: 56.652, lng: -4.954 },
+  { id: 3, name: "Alistair D.", peak: "An Teallach", st: "ascending", av: "🧔", lat: 57.806, lng: -5.238 },
+  { id: 4, name: "Fiona R.", peak: "Liathach", st: "descending", av: "👩‍🦱", lat: 57.581, lng: -5.468 },
+  { id: 5, name: "Craig B.", peak: "Ben Lomond", st: "ascending", av: "🧑", lat: 56.190, lng: -4.632 },
+  { id: 6, name: "Eilidh T.", peak: "Helvellyn", st: "summit", av: "👩‍🦰", lat: 54.527, lng: -3.016 },
 ];
 
 const FEED = [
@@ -2486,71 +2488,107 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     if (!map || !mapLoadedRef.current) return;
     const sourceId = "live-hikers";
     const layerId = "live-hikers-layer";
-    if (!sh) {
-      if (map.getLayer(layerId)) map.removeLayer(layerId);
-      if (map.getSource(sourceId)) map.removeSource(sourceId);
-      return;
-    }
+
+    if (map.getLayer(layerId)) map.removeLayer(layerId);
+    if (map.getSource(sourceId)) map.removeSource(sourceId);
+    if (!sh) return;
+
     const geojson = {
       type: "FeatureCollection",
       features: HIKERS.map(h => ({
         type: "Feature",
         geometry: { type: "Point", coordinates: [h.lng, h.lat] },
-        properties: { name: h.name, pace: h.pace },
+        properties: { name: h.name, peak: h.peak, st: h.st, av: h.av },
       })),
     };
-    if (map.getSource(sourceId)) {
-      map.getSource(sourceId).setData(geojson);
-    } else {
-      map.addSource(sourceId, { type: "geojson", data: geojson });
-      map.addLayer({
-        id: layerId, type: "circle", source: sourceId,
-        paint: {
-          "circle-radius": 8,
-          "circle-color": "#6BCB77",
-          "circle-stroke-color": "#fff",
-          "circle-stroke-width": 2,
-          "circle-opacity": 0.9,
-        },
-      });
-    }
+    map.addSource(sourceId, { type: "geojson", data: geojson });
+    map.addLayer({
+      id: layerId, type: "circle", source: sourceId,
+      paint: {
+        "circle-radius": 9,
+        "circle-color": ["case", ["==", ["get", "st"], "summit"], "#F49D37", "#6BCB77"],
+        "circle-stroke-color": "#fff",
+        "circle-stroke-width": 2.5,
+        "circle-opacity": 0.95,
+      },
+    });
+
+    // Click handler
+    const onHikerClick = (e) => {
+      const p = e.features[0].properties;
+      setSw({ type: "hiker", title: `${p.av} ${p.name}`, host: p.name, date: p.st === "summit" ? `At summit of ${p.peak}` : p.st === "descending" ? `Descending ${p.peak}` : `Ascending ${p.peak}`, time: "Live now", spots: null });
+    };
+    map.on("click", layerId, onHikerClick);
+    map.on("mouseenter", layerId, () => { map.getCanvas().style.cursor = "pointer"; });
+    map.on("mouseleave", layerId, () => { map.getCanvas().style.cursor = ""; });
+
+    return () => { map.off("click", layerId, onHikerClick); };
   }, [sh, mapLoadedRef.current]);
 
-  // Community walks overlay
+  // Community walks overlay — hardcoded C_WALKS + live events from Supabase
+  const [dbEvents, setDbEvents] = useState([]);
+  useEffect(() => {
+    // Fetch real community events from posts table
+    supabase.from("posts").select("*").eq("type", "event").limit(20)
+      .then(({ data }) => {
+        if (data) setDbEvents(data.filter(e => e.lat && e.lng));
+      });
+  }, []);
+
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoadedRef.current) return;
     const sourceId = "community-walks";
     const layerId = "community-walks-layer";
-    if (!sc) {
-      if (map.getLayer(layerId)) map.removeLayer(layerId);
-      if (map.getSource(sourceId)) map.removeSource(sourceId);
-      return;
-    }
+
+    // Remove existing
+    if (map.getLayer(layerId)) map.removeLayer(layerId);
+    if (map.getSource(sourceId)) map.removeSource(sourceId);
+
+    if (!sc) return;
+
+    // Merge hardcoded C_WALKS + live DB events into point markers
+    const allWalks = [
+      ...C_WALKS.map(w => ({ lat: w.lat, lng: w.lng, title: w.title, host: w.host, date: w.date, spots: w.spots, filled: w.filled, diff: w.diff })),
+      ...dbEvents.map(e => ({ lat: e.lat, lng: e.lng, title: e.text?.slice(0, 40) || "Community Walk", host: e.username || "TrailSync", date: "Upcoming", spots: null, filled: null, diff: null })),
+    ].filter(w => w.lat && w.lng);
+
+    if (allWalks.length === 0) return;
+
     const geojson = {
       type: "FeatureCollection",
-      features: C_WALKS.map(w => ({
+      features: allWalks.map((w, i) => ({
         type: "Feature",
-        geometry: { type: "LineString", coordinates: w.coords },
-        properties: { name: w.name, user: w.user },
+        geometry: { type: "Point", coordinates: [w.lng, w.lat] },
+        properties: { title: w.title, host: w.host, date: w.date, spots: w.spots, filled: w.filled, diff: w.diff, idx: i },
       })),
     };
-    if (map.getSource(sourceId)) {
-      map.getSource(sourceId).setData(geojson);
-    } else {
-      map.addSource(sourceId, { type: "geojson", data: geojson });
-      map.addLayer({
-        id: `${layerId}-casing`, type: "line", source: sourceId,
-        layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": "#fff", "line-width": 5, "line-opacity": 0.4 },
-      });
-      map.addLayer({
-        id: layerId, type: "line", source: sourceId,
-        layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": "#5A98E3", "line-width": 3, "line-opacity": 0.7 },
-      });
-    }
-  }, [sc, mapLoadedRef.current]);
+
+    map.addSource(sourceId, { type: "geojson", data: geojson });
+    map.addLayer({
+      id: layerId, type: "circle", source: sourceId,
+      paint: {
+        "circle-radius": 10,
+        "circle-color": "#5A98E3",
+        "circle-stroke-color": "#fff",
+        "circle-stroke-width": 2,
+        "circle-opacity": 0.9,
+      },
+    });
+
+    // Click handler for community walk markers
+    const onClick = (e) => {
+      const props = e.features[0].properties;
+      setSw({ type: "event", title: props.title, host: props.host, date: props.date, spots: props.spots, filled: props.filled, diff: props.diff });
+    };
+    map.on("click", layerId, onClick);
+    map.on("mouseenter", layerId, () => { map.getCanvas().style.cursor = "pointer"; });
+    map.on("mouseleave", layerId, () => { map.getCanvas().style.cursor = ""; });
+
+    return () => {
+      map.off("click", layerId, onClick);
+    };
+  }, [sc, dbEvents, mapLoadedRef.current]);
 
   // Draw GPX route when gpxRoute prop is set (or changes)
   useEffect(() => {
