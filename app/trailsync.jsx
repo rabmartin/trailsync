@@ -1093,7 +1093,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
       // Live DB queries — posts and people
       const [postsRes, usersRes] = await Promise.all([
         supabase.from("posts").select("*").or(`text.ilike.%${q}%`).order("created_at", { ascending: false }).limit(8),
-        supabase.from("profiles").select("*").or(`username.ilike.%${q}%,name.ilike.%${q}%`).limit(6),
+        supabase.from("profiles").select("*").or("username.ilike.%" + q + "%,name.ilike.%" + q + "%").limit(6),
       ]);
 
       // Also search hardcoded FEED posts (events, fundraisers, summits)
