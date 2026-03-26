@@ -3457,8 +3457,9 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
   // Load avatar on mount
   useEffect(() => {
     if (!userId) return;
-    supabase.from("profiles").select("avatar_url").eq("id", userId).maybeSingle()
-      .then(({ data }) => { if (data?.avatar_url) setAvatarUrl(data.avatar_url); });
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.user_metadata?.avatar_url) setAvatarUrl(user.user_metadata.avatar_url);
+    });
   }, [userId]);
 
   // Load walk photos on mount
@@ -4904,10 +4905,11 @@ export default function TrailSync() {
         setFollowingCount(profile.following_count || 0);
       }
 
-      const { data: followingList } = await supabase
+      const { data: followingList, error: followErr } = await supabase
         .from("follows")
         .select("following_id")
         .eq("follower_id", user.id);
+      if (followErr) console.error("FOLLOWING LOAD ERROR:", JSON.stringify(followErr));
       if (followingList) {
         setFollowingIds(new Set(followingList.map(f => f.following_id)));
         setFollowingCount(followingList.length);
