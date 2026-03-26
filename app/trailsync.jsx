@@ -4458,6 +4458,133 @@ const TutorialOverlay = ({ step, totalSteps, currentStep, onNext, onSkip }) => {
 };
 
 /* ═══════════════════════════════════════════════════════════════════
+   USER PROFILE MODAL
+   ═══════════════════════════════════════════════════════════════════ */
+const UserProfileModal = ({ user, userId, followingIds, onFollow, onClose }) => {
+  const [posts, setPosts] = useState([]);
+  const [walks, setWalks] = useState([]);
+  const [peakCount, setPeakCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [followerCount, setFollowerCount] = useState(user.follower_count || 0);
+  const [followingCount, setFollowingCount] = useState(user.following_count || 0);
+
+  useEffect(() => {
+    async function loadProfile() {
+      setLoading(true);
+      try {
+        // Load their posts
+        const { data: postData } = await supabase.from("posts").select("*")
+          .eq("user_id", user.id).order("created_at", { ascending: false }).limit(10);
+        if (postData) setPosts(postData);
+
+        // Load their walk count
+        const { data: walkData } = await supabase.from("user_walks").select("id")
+          .eq("user_id", user.id);
+        if (walkData) setWalks(walkData);
+
+        // Load their peak count
+        const { data: peakData } = await supabase.from("user_peaks").select("id")
+          .eq("user_id", user.id).eq("done", true);
+        if (peakData) setPeakCount(peakData.length);
+
+        // Load follower/following counts from profile
+        const { data: profileData } = await supabase.from("profiles")
+          .select("follower_count, following_count").eq("id", user.id).maybeSingle();
+        if (profileData) {
+          setFollowerCount(profileData.follower_count || 0);
+          setFollowingCount(profileData.following_count || 0);
+        }
+      } catch (e) { console.error(e); }
+      finally { setLoading(false); }
+    }
+    loadProfile();
+  }, [user.id]);
+
+  const isFollowing = followingIds?.has(user.id);
+  const isOwnProfile = userId === user.id;
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 80, background: "#041e3d", display: "flex", flexDirection: "column", animation: "fi .2s ease" }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 16px", borderBottom: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,0.95)", backdropFilter: "blur(12px)", flexShrink: 0 }}>
+        <button onClick={onClose} style={{ background: "rgba(90,152,227,0.1)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", padding: "7px 12px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600, fontFamily: "'DM Sans'" }}>
+          <ChevronLeft size={16} /> Back
+        </button>
+        <div style={{ flex: 1 }} />
+        {!isOwnProfile && (
+          <button onClick={() => onFollow(user.id)} style={{ padding: "8px 18px", borderRadius: "10px", border: isFollowing ? "1px solid rgba(90,152,227,0.3)" : "none", background: isFollowing ? "transparent" : "linear-gradient(135deg,#E85D3A,#d04a2a)", color: isFollowing ? "#5A98E3" : "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+            {isFollowing ? "Following" : "Follow"}
+          </button>
+        )}
+      </div>
+
+      {/* Body */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px" }}>
+        {/* Avatar + name */}
+        <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "20px" }}>
+          <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "26px", fontWeight: 800, color: "#F8F8F8", border: "3px solid rgba(90,152,227,0.3)", flexShrink: 0 }}>
+            {(user.username || user.name || "?")[0].toUpperCase()}
+          </div>
+          <div>
+            <div style={{ fontSize: "20px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>{user.name || user.username}</div>
+            {user.username && <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>@{user.username}</div>}
+            {user.location && <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>📍 {user.location}</div>}
+          </div>
+        </div>
+
+        {/* Stats row */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "20px" }}>
+          {[
+            [walks.length, "Walks"],
+            [peakCount, "Peaks"],
+            [followerCount, "Followers"],
+          ].map(([val, label]) => (
+            <div key={label} style={{ textAlign: "center", padding: "12px 4px", background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.1)" }}>
+              <div style={{ fontSize: "20px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
+              <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Their posts */}
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "40px" }}>
+            <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#5A98E3", margin: "0 auto", animation: "pulse 1s ease infinite" }} />
+            <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4, marginTop: "12px" }}>Loading…</div>
+          </div>
+        ) : posts.length > 0 ? (
+          <div>
+            <div style={{ fontSize: "11px", fontWeight: 700, color: "#BDD6F4", opacity: 0.4, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "10px" }}>Posts</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {posts.map(p => (
+                <div key={p.id} style={{ background: "#0a2240", borderRadius: "14px", padding: "14px", border: "1px solid rgba(90,152,227,0.1)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                    <span style={{ fontSize: "9px", padding: "1px 7px", borderRadius: "5px", background: p.type === "fundraiser" ? "rgba(107,203,119,0.12)" : p.type === "event" ? "rgba(90,152,227,0.12)" : "rgba(232,93,58,0.1)", color: p.type === "fundraiser" ? "#6BCB77" : p.type === "event" ? "#5A98E3" : "#E85D3A", fontWeight: 600 }}>{p.type || "post"}</span>
+                    <span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4 }}>{timeAgo(p.created_at)}</span>
+                  </div>
+                  <div style={{ fontSize: "13px", color: "#BDD6F4", lineHeight: 1.5 }}>{p.text}</div>
+                  {p.peaks?.length > 0 && (
+                    <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginTop: "8px" }}>
+                      {p.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "5px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div style={{ textAlign: "center", padding: "40px 20px" }}>
+            <Users size={36} color="#BDD6F4" style={{ opacity: 0.2, marginBottom: "12px" }} />
+            <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8", marginBottom: "6px" }}>No posts yet</div>
+            <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4 }}>{user.name || user.username} hasn't posted anything yet.</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════════════
    MAIN APP
    ═══════════════════════════════════════════════════════════════════ */
 export default function TrailSync() {
@@ -4524,6 +4651,7 @@ export default function TrailSync() {
   const [headerSearch, setHeaderSearch] = useState("");
   const [searchResults, setSearchResults] = useState({ posts: [], users: [], routes: [], peaks: [] });
   const [searching, setSearching] = useState(false);
+  const [viewingProfile, setViewingProfile] = useState(null); // { id, name, username, location }
 
   // Follow/unfollow from header search
   const handleFollowFromSearch = async (targetId) => {
@@ -4930,7 +5058,7 @@ export default function TrailSync() {
                     <div>
                       <div style={{ padding: "10px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>People</div>
                       {searchResults.users.map(u => (
-                        <div key={u.id} style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid rgba(90,152,227,0.06)", cursor: "pointer" }}>
+                        <div key={u.id} style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid rgba(90,152,227,0.06)", cursor: "pointer" }} onClick={() => { setViewingProfile(u); setHeaderSearch(""); }}>
                           <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>
                             {(u.username || u.name || "?")[0].toUpperCase()}
                           </div>
@@ -4939,7 +5067,7 @@ export default function TrailSync() {
                             {u.username && <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>@{u.username}{u.location ? ` · ${u.location}` : ""}</div>}
                           </div>
                           {u.id !== userId && (
-                            <button onClick={() => handleFollowFromSearch(u.id)} style={{ padding: "5px 12px", borderRadius: "8px", cursor: "pointer", flexShrink: 0, background: followingIds?.has(u.id) ? "rgba(90,152,227,0.12)" : "linear-gradient(135deg,#E85D3A,#d04a2a)", color: followingIds?.has(u.id) ? "#5A98E3" : "#F8F8F8", fontSize: "11px", fontWeight: 700, fontFamily: "'DM Sans'", border: followingIds?.has(u.id) ? "1px solid rgba(90,152,227,0.2)" : "none" }}>
+                            <button onClick={e => { e.stopPropagation(); handleFollowFromSearch(u.id); }} style={{ padding: "5px 12px", borderRadius: "8px", cursor: "pointer", flexShrink: 0, background: followingIds?.has(u.id) ? "rgba(90,152,227,0.12)" : "linear-gradient(135deg,#E85D3A,#d04a2a)", color: followingIds?.has(u.id) ? "#5A98E3" : "#F8F8F8", fontSize: "11px", fontWeight: 700, fontFamily: "'DM Sans'", border: followingIds?.has(u.id) ? "1px solid rgba(90,152,227,0.2)" : "none" }}>
                               {followingIds?.has(u.id) ? "Following" : "Follow"}
                             </button>
                           )}
@@ -5041,6 +5169,17 @@ export default function TrailSync() {
   setAuthState("login");
 }} />}
       </div>
+
+      {/* ── USER PROFILE VIEWER ── */}
+      {viewingProfile && (
+        <UserProfileModal
+          user={viewingProfile}
+          userId={userId}
+          followingIds={followingIds}
+          onFollow={handleFollowFromSearch}
+          onClose={() => setViewingProfile(null)}
+        />
+      )}
 
       {/* Tutorial overlay */}
       {authState === "tutorial" && (
