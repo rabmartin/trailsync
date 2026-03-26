@@ -3506,8 +3506,13 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             const ids = followData.map(f => f.following_id);
             const { data: profiles } = await supabase.from("profiles").select("id, username, name, location").in("id", ids);
             setFollowingList(profiles || []);
+            // Sync followingIds so Follow/Following buttons show correctly
+            setFollowingIds(new Set(ids));
+            setFollowingCount(ids.length);
           } else {
             setFollowingList([]);
+            setFollowingIds(new Set());
+            setFollowingCount(0);
           }
         }
       } catch (e) { console.error(e); }
@@ -4907,18 +4912,21 @@ export default function TrailSync() {
         setFollowingCount(profile.following_count || 0);
       }
 
-      // Small delay to ensure JWT is attached before RLS-protected query
-      await new Promise(resolve => setTimeout(resolve, 300));
-      const { data: followingList, error: followErr } = await supabase
-        .from("follows")
-        .select("following_id")
-        .eq("follower_id", user.id);
-      if (followErr) console.error("FOLLOWING LOAD ERROR:", JSON.stringify(followErr));
+      // Load following list - retry up to 3 times to handle auth timing
+      let followingList = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, attempt * 500));
+        const { data, error } = await supabase
+          .from("follows")
+          .select("following_id")
+          .eq("follower_id", user.id);
+        if (error) { console.error("FOLLOWING LOAD ERROR attempt", attempt, JSON.stringify(error)); continue; }
+        followingList = data;
+        break;
+      }
       if (followingList) {
         setFollowingIds(new Set(followingList.map(f => f.following_id)));
         setFollowingCount(followingList.length);
-      } else {
-        console.log("followingList was null/undefined, followErr:", followErr);
       }
     }
 
