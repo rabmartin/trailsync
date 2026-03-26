@@ -4905,6 +4905,8 @@ export default function TrailSync() {
         setFollowingCount(profile.following_count || 0);
       }
 
+      // Small delay to ensure JWT is attached before RLS-protected query
+      await new Promise(resolve => setTimeout(resolve, 300));
       const { data: followingList, error: followErr } = await supabase
         .from("follows")
         .select("following_id")
@@ -4913,6 +4915,8 @@ export default function TrailSync() {
       if (followingList) {
         setFollowingIds(new Set(followingList.map(f => f.following_id)));
         setFollowingCount(followingList.length);
+      } else {
+        console.log("followingList was null/undefined, followErr:", followErr);
       }
     }
 
