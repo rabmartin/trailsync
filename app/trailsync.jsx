@@ -4816,8 +4816,10 @@ export default function TrailSync() {
     if (authState !== "app") return;
 
     async function loadUserData() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      // Get session directly - more reliable than getUser() for RLS
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
+      if (!user) { console.log("loadUserData: no session user"); return; }
       // Clear previous user data before loading new user's data
       setSavedWalks([]);
       setDbPeaks(null);
