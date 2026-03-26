@@ -4664,10 +4664,21 @@ export default function TrailSync() {
     });
     if (!isFollowing) {
       setFollowingCount(c => c + 1);
-      await supabase.from("follows").insert({ follower_id: userId, following_id: targetId });
+      const { error } = await supabase.from("follows").insert({ follower_id: userId, following_id: targetId });
+      if (error) {
+        console.error("FOLLOW INSERT ERROR:", JSON.stringify(error));
+        // Revert on failure
+        setFollowingIds(prev => { const next = new Set(prev); next.delete(targetId); return next; });
+        setFollowingCount(c => Math.max(0, c - 1));
+      }
     } else {
       setFollowingCount(c => Math.max(0, c - 1));
-      await supabase.from("follows").delete().eq("follower_id", userId).eq("following_id", targetId);
+      const { error } = await supabase.from("follows").delete().eq("follower_id", userId).eq("following_id", targetId);
+      if (error) {
+        console.error("UNFOLLOW DELETE ERROR:", JSON.stringify(error));
+        setFollowingIds(prev => { const next = new Set(prev); next.add(targetId); return next; });
+        setFollowingCount(c => c + 1);
+      }
     }
   };
 
