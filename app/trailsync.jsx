@@ -842,7 +842,6 @@ const LoginScreen = ({ onLogin, onGoSignup }) => {
    ═══════════════════════════════════════════════════════════════════ */
 const SignupScreen = ({ onSignup, onGoLogin }) => {
   const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
   const [dob, setDob] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -851,7 +850,7 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const isValid = name && username && dob && email && password;
+  const isValid = name && dob && email && password;
 
   const handleSignup = async () => {
     if (!isValid) return;
@@ -871,7 +870,6 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
         options: {
           data: {
             full_name: name,
-            username: username.toLowerCase().replace(/\s+/g, "_"),
             date_of_birth: dob,
             location: location || null,
           }
@@ -921,12 +919,6 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
         <div style={{ marginBottom: "10px" }}>
           <label style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Full name</label>
           <input type="text" placeholder="Your name" value={name} onChange={e => setName(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'" }} />
-        </div>
-
-        {/* Username */}
-        <div style={{ marginBottom: "10px" }}>
-          <label style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Username</label>
-          <input type="text" placeholder="e.g. HighlandHiker" value={username} onChange={e => setUsername(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'" }} />
         </div>
 
         {/* Date of birth */}
@@ -2195,6 +2187,17 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
 
   const [trackMode, setTrackMode] = useState(false);
   const [recording, setRecording] = useState(false);
+  // Guided route walk state
+  const [gpxRouteActive, setGpxRouteActive] = useState(false);
+  const [gpxRouteCoords, setGpxRouteCoords] = useState(null); // parsed coords from GPX
+  const [gpxRouteDistDone, setGpxRouteDistDone] = useState(0);
+  const [gpxRouteProgress, setGpxRouteProgress] = useState(0);
+  const [gpxRouteElapsed, setGpxRouteElapsed] = useState("0:00");
+  const [gpxRouteEta, setGpxRouteEta] = useState("--");
+  const gpxRouteStartRef = useRef(null);
+  const gpxRouteWatchRef = useRef(null);
+  const gpxRouteElapsedRef = useRef(null);
+  const gpxUserMarkerRef = useRef(null);
   const [paused, setPaused] = useState(false);
   const [finished, setFinished] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -2565,6 +2568,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
         if (coords.length > 1) {
           drawGpxOnMap(map, route.id, coords, { color: "#E85D3A", fitBounds: true, fitPadding: 80 });
           mapGpxIdRef.current = route.id;
+          setGpxRouteCoords(coords); // store for guided walk
         }
       }).catch(err => console.error("GPX draw error:", err))
         .finally(() => setMapGpxLoading(false));
@@ -2589,6 +2593,111 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       removeGpxFromMap(mapRef.current, mapGpxIdRef.current);
       mapGpxIdRef.current = null;
     }
+  }, [gpxRoute]);
+
+  // ── Guided route walk: start/stop GPS tracking along GPX line ──
+  useEffect(() => {
+    if (!gpxRouteActive || !gpxRoute) {
+      // Stop tracking
+      if (gpxRouteWatchRef.current) navigator.geolocation.clearWatch(gpxRouteWatchRef.current);
+      if (gpxRouteElapsedRef.current) clearInterval(gpxRouteElapsedRef.current);
+      if (gpxUserMarkerRef.current) { gpxUserMarkerRef.current.remove(); gpxUserMarkerRef.current = null; }
+      gpxRouteWatchRef.current = null;
+      gpxRouteElapsedRef.current = null;
+      return;
+    }
+
+    // Parse coords from the already-drawn GPX (use stored coords)
+    const coords = gpxRouteCoords;
+    if (!coords || coords.length < 2) return;
+
+    gpxRouteStartRef.current = Date.now();
+
+    // Elapsed timer
+    gpxRouteElapsedRef.current = setInterval(() => {
+      const secs = Math.floor((Date.now() - gpxRouteStartRef.current) / 1000);
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      setGpxRouteElapsed(`${m}:${String(s).padStart(2, "0")}`);
+    }, 1000);
+
+    // Helper: haversine distance between two [lng,lat] points in km
+    const haversine = ([lng1, lat1], [lng2, lat2]) => {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    };
+
+    // Total route distance
+    let totalKm = 0;
+    for (let i = 1; i < coords.length; i++) totalKm += haversine(coords[i-1], coords[i]);
+
+    // Watch GPS position
+    gpxRouteWatchRef.current = navigator.geolocation.watchPosition(pos => {
+      const userLng = pos.coords.longitude;
+      const userLat = pos.coords.latitude;
+
+      // Find closest point on route
+      let minDist = Infinity, closestIdx = 0;
+      for (let i = 0; i < coords.length; i++) {
+        const d = haversine([userLng, userLat], coords[i]);
+        if (d < minDist) { minDist = d; closestIdx = i; }
+      }
+
+      // Distance done = sum of segments up to closest point
+      let donKm = 0;
+      for (let i = 1; i <= closestIdx; i++) donKm += haversine(coords[i-1], coords[i]);
+      setGpxRouteDistDone(donKm);
+      const pct = Math.min(100, Math.round((donKm / totalKm) * 100));
+      setGpxRouteProgress(pct);
+
+      // ETA
+      const elapsed = (Date.now() - gpxRouteStartRef.current) / 1000 / 60; // mins
+      const pace = donKm > 0.1 ? elapsed / donKm : null;
+      const remaining = totalKm - donKm;
+      if (pace && remaining > 0) {
+        const etaMins = Math.round(pace * remaining);
+        setGpxRouteEta(`${Math.floor(etaMins/60)}h ${etaMins%60}m`);
+      }
+
+      // Update user marker on map
+      if (mapRef.current) {
+        import("mapbox-gl").then(mod => {
+          const mapboxgl = mod.default;
+          if (gpxUserMarkerRef.current) {
+            gpxUserMarkerRef.current.setLngLat([userLng, userLat]);
+          } else {
+            const el = document.createElement("div");
+            el.style.cssText = "width:18px;height:18px;border-radius:50%;background:#5A98E3;border:3px solid #fff;box-shadow:0 0 0 3px rgba(90,152,227,0.3);animation:locationPulse 1.5s ease infinite;";
+            gpxUserMarkerRef.current = new mapboxgl.Marker({ element: el }).setLngLat([userLng, userLat]).addTo(mapRef.current);
+          }
+
+          // Grey out completed portion of route
+          if (closestIdx > 1 && mapGpxIdRef.current) {
+            const doneCoords = coords.slice(0, closestIdx + 1);
+            const doneSourceId = `gpx-${mapGpxIdRef.current}-done`;
+            if (mapRef.current.getSource(doneSourceId)) {
+              mapRef.current.getSource(doneSourceId).setData({ type: "Feature", geometry: { type: "LineString", coordinates: doneCoords }, properties: {} });
+            } else {
+              mapRef.current.addSource(doneSourceId, { type: "geojson", data: { type: "Feature", geometry: { type: "LineString", coordinates: doneCoords }, properties: {} } });
+              mapRef.current.addLayer({ id: `${doneSourceId}-line`, type: "line", source: doneSourceId, layout: { "line-join": "round", "line-cap": "round" }, paint: { "line-color": "#6B7280", "line-width": 4, "line-opacity": 0.7 } });
+            }
+          }
+        });
+      }
+    }, err => console.warn("GPS error:", err), { enableHighAccuracy: true, maximumAge: 3000 });
+
+    return () => {
+      if (gpxRouteWatchRef.current) navigator.geolocation.clearWatch(gpxRouteWatchRef.current);
+      if (gpxRouteElapsedRef.current) clearInterval(gpxRouteElapsedRef.current);
+    };
+  }, [gpxRouteActive, gpxRoute]);
+
+  // Store parsed GPX coords when route loads
+  useEffect(() => {
+    if (!gpxRoute) { setGpxRouteCoords(null); setGpxRouteActive(false); setGpxRouteDistDone(0); setGpxRouteProgress(0); setGpxRouteElapsed("0:00"); setGpxRouteEta("--"); return; }
   }, [gpxRoute]);
 
   // Update map style when layer changes
@@ -2776,6 +2885,40 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                 </div>
               </div>
             )}
+            {gpxRoute && !gpxRouteActive && (
+              <button onClick={() => setGpxRouteActive(true)} style={{ padding: "7px 14px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", flexShrink: 0, display: "flex", alignItems: "center", gap: "6px" }}>
+                <Play size={12} /> Start
+              </button>
+            )}
+            {gpxRoute && gpxRouteActive && (
+              <button onClick={() => setGpxRouteActive(false)} style={{ padding: "7px 14px", borderRadius: "10px", border: "1px solid rgba(232,93,58,0.3)", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", flexShrink: 0 }}>
+                Stop
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── GUIDED ROUTE STATS BAR ── */}
+      {gpxRoute && gpxRouteActive && (
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 24, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px 16px 0 0", border: "1px solid rgba(232,93,58,0.2)", borderBottom: "none", padding: "14px 16px 20px" }}>
+          <div style={{ height: "3px", borderRadius: "2px", background: "#0a2240", marginBottom: "14px", overflow: "hidden" }}>
+            <div style={{ height: "100%", background: "linear-gradient(90deg,#E85D3A,#F49D37)", borderRadius: "2px", width: `${gpxRouteProgress}%`, transition: "width 1s linear" }} />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "10px" }}>
+            {[
+              ["Distance", `${gpxRouteDistDone.toFixed(1)}/${gpxRoute.route.dist}km`],
+              ["Elapsed", gpxRouteElapsed],
+              ["Est. Left", gpxRouteEta],
+            ].map(([label, val]) => (
+              <div key={label} style={{ textAlign: "center", padding: "10px 4px", background: "#0a2240", borderRadius: "10px" }}>
+                <div style={{ fontSize: "13px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
+                <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4, marginTop: "3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4, textAlign: "center" }}>
+            Your position updates as you move · GPS must be enabled
           </div>
         </div>
       )}
@@ -4344,6 +4487,24 @@ export default function TrailSync() {
   const [searchResults, setSearchResults] = useState({ posts: [], users: [], routes: [], peaks: [] });
   const [searching, setSearching] = useState(false);
 
+  // Follow/unfollow from header search
+  const handleFollowFromSearch = async (targetId) => {
+    if (!userId || !targetId || userId === targetId) return;
+    const isFollowing = followingIds?.has(targetId);
+    setFollowingIds(prev => {
+      const next = new Set(prev);
+      isFollowing ? next.delete(targetId) : next.add(targetId);
+      return next;
+    });
+    if (!isFollowing) {
+      setFollowingCount(c => c + 1);
+      await supabase.from("follows").insert({ follower_id: userId, following_id: targetId });
+    } else {
+      setFollowingCount(c => Math.max(0, c - 1));
+      await supabase.from("follows").delete().eq("follower_id", userId).eq("following_id", targetId);
+    }
+  };
+
   const [userCourseProgress, setUserCourseProgress] = useState({});
   const [userLocation, setUserLocation] = useState(null);
   const [userId, setUserId] = useState(null);
@@ -4739,6 +4900,11 @@ export default function TrailSync() {
                             <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{u.name || u.username}</div>
                             {u.username && <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>@{u.username}{u.location ? ` · ${u.location}` : ""}</div>}
                           </div>
+                          {u.id !== userId && (
+                            <button onClick={() => handleFollowFromSearch(u.id)} style={{ padding: "5px 12px", borderRadius: "8px", cursor: "pointer", flexShrink: 0, background: followingIds?.has(u.id) ? "rgba(90,152,227,0.12)" : "linear-gradient(135deg,#E85D3A,#d04a2a)", color: followingIds?.has(u.id) ? "#5A98E3" : "#F8F8F8", fontSize: "11px", fontWeight: 700, fontFamily: "'DM Sans'", border: followingIds?.has(u.id) ? "1px solid rgba(90,152,227,0.2)" : "none" }}>
+                              {followingIds?.has(u.id) ? "Following" : "Follow"}
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>
