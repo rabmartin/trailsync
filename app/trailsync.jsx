@@ -3481,19 +3481,33 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
     async function loadList() {
       try {
         if (showFollowers === "followers") {
-          const { data } = await supabase
+          // Get follower IDs first, then fetch their profiles
+          const { data: followData } = await supabase
             .from("follows")
-            .select("follower_id, profiles(id, username, name, location)")
+            .select("follower_id")
             .eq("following_id", userId)
             .order("created_at", { ascending: followerFilter === "recent" ? false : true });
-          setFollowerList((data || []).map(f => f.profiles).filter(Boolean));
+          if (followData && followData.length > 0) {
+            const ids = followData.map(f => f.follower_id);
+            const { data: profiles } = await supabase.from("profiles").select("id, username, name, location").in("id", ids);
+            setFollowerList(profiles || []);
+          } else {
+            setFollowerList([]);
+          }
         } else {
-          const { data } = await supabase
+          // Get following IDs first, then fetch their profiles
+          const { data: followData } = await supabase
             .from("follows")
-            .select("following_id, profiles(id, username, name, location)")
+            .select("following_id")
             .eq("follower_id", userId)
             .order("created_at", { ascending: followerFilter === "recent" ? false : true });
-          setFollowingList((data || []).map(f => f.profiles).filter(Boolean));
+          if (followData && followData.length > 0) {
+            const ids = followData.map(f => f.following_id);
+            const { data: profiles } = await supabase.from("profiles").select("id, username, name, location").in("id", ids);
+            setFollowingList(profiles || []);
+          } else {
+            setFollowingList([]);
+          }
         }
       } catch (e) { console.error(e); }
       finally { setListLoading(false); }
