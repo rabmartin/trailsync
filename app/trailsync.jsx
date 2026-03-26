@@ -1076,7 +1076,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
     });
     if (!isFollowing) {
       setFollowingCount && setFollowingCount(c => c + 1);
-      await supabase.from("follows").upsert({ follower_id: userId, following_id: targetId }, { onConflict: "follower_id,following_id", ignoreDuplicates: true });
+      await supabase.from("follows").upsert({ follower_id: userId, following_id: targetId }, { onConflict: "follower_id,following_id" });
     } else {
       setFollowingCount && setFollowingCount(c => Math.max(0, c - 1));
       await supabase.from("follows").delete().eq("follower_id", userId).eq("following_id", targetId);
@@ -3483,14 +3483,14 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
         if (showFollowers === "followers") {
           const { data } = await supabase
             .from("follows")
-            .select("follower_id, profiles!follows_follower_id_fkey(id, username, full_name, location)")
+            .select("follower_id, profiles(id, username, name, location)")
             .eq("following_id", userId)
             .order("created_at", { ascending: followerFilter === "recent" ? false : true });
           setFollowerList((data || []).map(f => f.profiles).filter(Boolean));
         } else {
           const { data } = await supabase
             .from("follows")
-            .select("following_id, profiles!follows_following_id_fkey(id, username, full_name, location)")
+            .select("following_id, profiles(id, username, name, location)")
             .eq("follower_id", userId)
             .order("created_at", { ascending: followerFilter === "recent" ? false : true });
           setFollowingList((data || []).map(f => f.profiles).filter(Boolean));
@@ -3513,7 +3513,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
     });
     if (!isFollowing) {
       setFollowingCount(c => c + 1);
-      await supabase.from("follows").upsert({ follower_id: userId, following_id: targetId }, { onConflict: "follower_id,following_id", ignoreDuplicates: true });
+      await supabase.from("follows").upsert({ follower_id: userId, following_id: targetId }, { onConflict: "follower_id,following_id" });
     } else {
       setFollowingCount(c => Math.max(0, c - 1));
       await supabase.from("follows").delete().eq("follower_id", userId).eq("following_id", targetId);
@@ -4664,14 +4664,18 @@ export default function TrailSync() {
     });
     if (!isFollowing) {
       setFollowingCount(c => c + 1);
-      const { error } = await supabase.from("follows").upsert(
-        { follower_id: userId, following_id: targetId },
-        { onConflict: "follower_id,following_id", ignoreDuplicates: true }
+      const { error } = await supabase.from("follows").insert(
+        { follower_id: userId, following_id: targetId }
       );
       if (error) {
-        console.error("FOLLOW INSERT ERROR:", JSON.stringify(error));
-        setFollowingIds(prev => { const next = new Set(prev); next.delete(targetId); return next; });
-        setFollowingCount(c => Math.max(0, c - 1));
+        // Ignore duplicate key errors (already following)
+        if (error.code === "23505") {
+          console.log("Already following — row exists");
+        } else {
+          console.error("FOLLOW INSERT ERROR:", JSON.stringify(error));
+          setFollowingIds(prev => { const next = new Set(prev); next.delete(targetId); return next; });
+          setFollowingCount(c => Math.max(0, c - 1));
+        }
       }
     } else {
       setFollowingCount(c => Math.max(0, c - 1));
@@ -4892,6 +4896,7 @@ export default function TrailSync() {
         .eq("follower_id", user.id);
       if (followingList) {
         setFollowingIds(new Set(followingList.map(f => f.following_id)));
+        setFollowingCount(followingList.length);
       }
     }
 
