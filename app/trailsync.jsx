@@ -2474,6 +2474,91 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       if (!gpxRouteRef.current) {
         setTimeout(() => { try { geolocate.trigger(); } catch(e) {} }, 1000);
       }
+
+      // Add all peaks as a GeoJSON source with clustering
+      const peakGeojson = {
+        type: "FeatureCollection",
+        features: PEAKS.map(p => ({
+          type: "Feature",
+          geometry: { type: "Point", coordinates: [p.lng, p.lat] },
+          properties: { id: p.id, name: p.name, cls: p.cls, ht: p.ht, reg: p.reg, done: p.done || false },
+        })).filter(f => f.geometry.coordinates[0] && f.geometry.coordinates[1]),
+      };
+
+      map.addSource("peaks-all", {
+        type: "geojson",
+        data: peakGeojson,
+        cluster: true,
+        clusterMaxZoom: 10,
+        clusterRadius: 30,
+      });
+
+      // Cluster circles
+      map.addLayer({
+        id: "peaks-clusters",
+        type: "circle",
+        source: "peaks-all",
+        filter: ["has", "point_count"],
+        paint: {
+          "circle-color": "#264f80",
+          "circle-radius": ["step", ["get", "point_count"], 14, 10, 18, 50, 22],
+          "circle-opacity": 0.85,
+          "circle-stroke-width": 1.5,
+          "circle-stroke-color": "rgba(90,152,227,0.4)",
+        },
+      });
+
+      // Cluster count labels
+      map.addLayer({
+        id: "peaks-cluster-count",
+        type: "symbol",
+        source: "peaks-all",
+        filter: ["has", "point_count"],
+        layout: {
+          "text-field": ["get", "point_count_abbreviated"],
+          "text-font": ["DIN Pro Medium", "Arial Unicode MS Bold"],
+          "text-size": 11,
+        },
+        paint: { "text-color": "#F8F8F8" },
+      });
+
+      // Individual peak dots
+      map.addLayer({
+        id: "peaks-unclustered",
+        type: "circle",
+        source: "peaks-all",
+        filter: ["!", ["has", "point_count"]],
+        paint: {
+          "circle-radius": 7,
+          "circle-color": ["case", ["get", "done"], "#6BCB77", "#E85D3A"],
+          "circle-stroke-width": 1.5,
+          "circle-stroke-color": "rgba(255,255,255,0.7)",
+          "circle-opacity": 0.9,
+        },
+      });
+
+      // Click on individual peak
+      map.on("click", "peaks-unclustered", (e) => {
+        const p = e.features[0].properties;
+        setSp({ id: p.id, name: p.name, cls: p.cls, ht: p.ht, reg: p.reg, done: p.done,
+          w: { t: 0, f: 0, wi: 0, p: 0, v: "—", sn: false },
+          lat: e.lngLat.lat, lng: e.lngLat.lng });
+      });
+
+      // Click on cluster - zoom in
+      map.on("click", "peaks-clusters", (e) => {
+        const features = map.queryRenderedFeatures(e.point, { layers: ["peaks-clusters"] });
+        const clusterId = features[0].properties.cluster_id;
+        map.getSource("peaks-all").getClusterExpansionZoom(clusterId, (err, zoom) => {
+          if (err) return;
+          map.easeTo({ center: features[0].geometry.coordinates, zoom });
+        });
+      });
+
+      map.on("mouseenter", "peaks-unclustered", () => { map.getCanvas().style.cursor = "pointer"; });
+      map.on("mouseleave", "peaks-unclustered", () => { map.getCanvas().style.cursor = ""; });
+      map.on("mouseenter", "peaks-clusters", () => { map.getCanvas().style.cursor = "pointer"; });
+      map.on("mouseleave", "peaks-clusters", () => { map.getCanvas().style.cursor = ""; });
     });
 
     }); return () => {
@@ -2481,6 +2566,23 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       if (mapRef.current) mapRef.current.remove();
     };
   }, []);
+
+  // Update peak layer when dbPeaks loads or classification filter changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoadedRef.current) return;
+    const source = map.getSource("peaks-all");
+    if (!source) return;
+    const peaks = (dbPeaks || PEAKS).filter(p => !cf || p.cls === cf);
+    source.setData({
+      type: "FeatureCollection",
+      features: peaks.map(p => ({
+        type: "Feature",
+        geometry: { type: "Point", coordinates: [p.lng, p.lat] },
+        properties: { id: p.id, name: p.name, cls: p.cls, ht: p.ht, reg: p.reg, done: p.done || false },
+      })).filter(f => f.geometry.coordinates[0] && f.geometry.coordinates[1]),
+    });
+  }, [dbPeaks, cf, mapLoadedRef.current]);
 
   // Live hikers overlay
   useEffect(() => {
