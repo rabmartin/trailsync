@@ -1003,6 +1003,10 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   // Live posts
   const [livePosts, setLivePosts] = useState(FEED);
   const [postsLoading, setPostsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [pullY, setPullY] = useState(0);
+  const pullStartY = useRef(null);
+  const feedRef = useRef(null);
   const [likedPosts, setLikedPosts] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
@@ -1017,49 +1021,71 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   }, [headerSearch]);
 
   // Fetch posts once on mount — no auth needed, posts are public
-  useEffect(() => {
-    async function fetchPosts() {
-      try {
-        const { data, error: postsError } = await supabase
-          .from("posts")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(50);
-        if (postsError) console.error("POSTS FETCH ERROR:", JSON.stringify(postsError));
-        console.log("Posts fetched:", data?.length, "rows");
-        // Merge live Supabase posts with hardcoded FEED, deduplicating by id
-        const liveMapped = (data || []).map(p => ({
-          id: p.id,
-          user_id: p.user_id,
-          user: p.username || p.name || "TrailSyncer",
-          av: (p.username || p.name || "T")[0].toUpperCase(),
-          time: timeAgo(p.created_at),
-          type: p.type || "summit",
-          text: p.text,
-          likes: p.likes || 0,
-          comments: 0,
-          peaks: p.peaks || [],
-        }));
-        const liveIds = new Set(liveMapped.map(p => String(p.id)));
-        const hardcoded = FEED.filter(p => !liveIds.has(String(p.id)));
-        // Deduplicate live posts by id (in case of duplicate inserts)
-        const seen = new Set();
-        const deduped = liveMapped.filter(p => {
-          if (seen.has(p.id)) return false;
-          seen.add(p.id);
-          return true;
-        });
-        setLivePosts([...deduped, ...hardcoded]);
-      } catch (e) {
-        console.error("Failed to load posts:", e);
-        // On error, fall back to hardcoded feed
-        setLivePosts(FEED);
-      } finally {
-        setPostsLoading(false);
-      }
+  const fetchPosts = async () => {
+    try {
+      const { data, error: postsError } = await supabase
+        .from("posts")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (postsError) console.error("POSTS FETCH ERROR:", JSON.stringify(postsError));
+      const liveMapped = (data || []).map(p => ({
+        id: p.id,
+        user_id: p.user_id,
+        user: p.username || p.name || "TrailSyncer",
+        av: (p.username || p.name || "T")[0].toUpperCase(),
+        time: timeAgo(p.created_at),
+        type: p.type || "summit",
+        text: p.text,
+        likes: p.likes || 0,
+        comments: 0,
+        peaks: p.peaks || [],
+      }));
+      const liveIds = new Set(liveMapped.map(p => String(p.id)));
+      const hardcoded = FEED.filter(p => !liveIds.has(String(p.id)));
+      const seen = new Set();
+      const deduped = liveMapped.filter(p => {
+        if (seen.has(p.id)) return false;
+        seen.add(p.id);
+        return true;
+      });
+      setLivePosts([...deduped, ...hardcoded]);
+    } catch (e) {
+      console.error("Failed to load posts:", e);
+      setLivePosts(FEED);
+    } finally {
+      setPostsLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  useEffect(() => {
     fetchPosts();
   }, []);
+
+  // Pull to refresh handler
+  const handleTouchStart = (e) => {
+    if (feedRef.current?.scrollTop === 0) {
+      pullStartY.current = e.touches[0].clientY;
+    }
+  };
+  const handleTouchMove = (e) => {
+    if (pullStartY.current === null) return;
+    const dy = e.touches[0].clientY - pullStartY.current;
+    if (dy > 0 && dy < 100) setPullY(dy);
+  };
+  const handleTouchEnd = () => {
+    if (pullY > 60) {
+      setRefreshing(true);
+      setPostsLoading(true);
+      setPullY(0);
+      pullStartY.current = null;
+      fetchPosts();
+    } else {
+      setPullY(0);
+      pullStartY.current = null;
+    }
+  };
 
   // Separately load liked posts once userId is known
   useEffect(() => {
@@ -1253,7 +1279,29 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   }, [expandedArea, wxDay, wxData]);
 
   return (
-    <div style={{ padding: "0 16px 16px", overflowY: "auto", flex: 1 }}>
+    <div
+        ref={feedRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{ padding: "0 16px 16px", overflowY: "auto", flex: 1, position: "relative" }}>
+
+        {/* Pull to refresh indicator */}
+        <div style={{
+          display: "flex", justifyContent: "center", alignItems: "center",
+          height: refreshing ? "52px" : `${Math.min(pullY * 0.6, 52)}px`,
+          overflow: "hidden", transition: refreshing ? "none" : "height 0.2s ease",
+          opacity: refreshing ? 1 : Math.min(pullY / 60, 1),
+        }}>
+          <div style={{
+            width: "28px", height: "28px", borderRadius: "50%",
+            border: "2.5px solid rgba(90,152,227,0.2)",
+            borderTop: "2.5px solid #5A98E3",
+            animation: refreshing ? "spin 0.7s linear infinite" : "none",
+            transform: refreshing ? "none" : `rotate(${pullY * 3}deg)`,
+            transition: refreshing ? "none" : "transform 0.05s linear",
+          }} />
+        </div>
       {/* Greeting */}
       <div style={{ padding: "24px 0 14px", animation: "fi .5s ease" }}>
         <div style={{ fontSize: "17px", color: "#BDD6F4", fontWeight: 400 }}>{greet()}, <span style={{ fontWeight: 800, color: "#F8F8F8" }}>{userName}</span></div>
@@ -5088,7 +5136,7 @@ export default function TrailSync() {
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap');
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          @keyframes fi { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes fi { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
           @keyframes su { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
           @keyframes glow { 0%,100% { box-shadow: 0 0 8px rgba(232,93,58,.25); } 50% { box-shadow: 0 0 18px rgba(232,93,58,.45); } }
         `}</style>
