@@ -3502,7 +3502,7 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 5: PROFILE
    ═══════════════════════════════════════════════════════════════════ */
-const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRoute, onSignOut, savedWalks, setSavedWalks, dbPeaks, userName, userLocation, setUserLocation, followerCount, followingCount, followingIds, setFollowingIds, setFollowerCount, setFollowingCount, userId }) => {
+const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRoute, onSignOut, savedWalks, setSavedWalks, dbPeaks, userName, userLocation, setUserLocation, followerCount, followingCount, followingIds, setFollowingIds, setFollowerCount, setFollowingCount, userId, onViewProfile }) => {
   const [showFollowers, setShowFollowers] = useState(null); // null | "followers" | "following"
   const [followerFilter, setFollowerFilter] = useState("recent");
   const [followerList, setFollowerList] = useState([]);
@@ -3811,7 +3811,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                 </div>
               </div>
             ) : (showFollowers === "followers" ? followerList : followingList).map(u => (
-              <div key={u.id} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 16px", borderBottom: "1px solid rgba(90,152,227,0.07)" }}>
+              <div key={u.id} onClick={() => { setShowFollowers(null); if (onViewProfile) onViewProfile(u); }} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 16px", borderBottom: "1px solid rgba(90,152,227,0.07)", cursor: "pointer" }}>
                 <div style={{ width: "46px", height: "46px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>
                   {(u.username || u.name || "?")[0].toUpperCase()}
                 </div>
@@ -4749,6 +4749,14 @@ export default function TrailSync() {
         setUserLocation(meta.location || null);
         setUserId(session.user.id);
         setAuthState("app");
+        // Load followingIds immediately on auth so buttons show correctly
+        supabase.from("follows").select("following_id").eq("follower_id", session.user.id)
+          .then(({ data }) => {
+            if (data) {
+              setFollowingIds(new Set(data.map(f => f.following_id)));
+              setFollowingCount(data.length);
+            }
+          });
       } else {
         // Covers INITIAL_SESSION with no session, SIGNED_OUT, TOKEN_REFRESH_FAILURE
         setAuthState("login");
@@ -5310,7 +5318,7 @@ export default function TrailSync() {
               } catch (e) { console.error("Failed to save walk:", e); }
             }} openRoute={openRouteOnMap} gpxRoute={gpxRoute} onCloseGpx={closeGpxRoute} />}
         {tab === "learn" && <LearnPage courseProgress={userCourseProgress} onCourseProgress={async (courseId, lessonsCompleted) => { setUserCourseProgress(prev => ({ ...prev, [courseId]: lessonsCompleted })); const { data: { user } } = await supabase.auth.getUser(); if (!user) return; await supabase.from("user_courses").upsert({ user_id: user.id, course_id: courseId, lessons_completed: lessonsCompleted, updated_at: new Date().toISOString() }, { onConflict: "user_id,course_id" }); }} />}
-        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} setSavedWalks={setSavedWalks} dbPeaks={dbPeaks} userName={userName} userLocation={userLocation} setUserLocation={setUserLocation} followerCount={followerCount} followingCount={followingCount} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowerCount={setFollowerCount} setFollowingCount={setFollowingCount} userId={userId} onSignOut={async () => {
+        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} setSavedWalks={setSavedWalks} dbPeaks={dbPeaks} userName={userName} userLocation={userLocation} setUserLocation={setUserLocation} followerCount={followerCount} followingCount={followingCount} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowerCount={setFollowerCount} setFollowingCount={setFollowingCount} userId={userId} onViewProfile={setViewingProfile} onSignOut={async () => {
   await supabase.auth.signOut();
   try { localStorage.clear(); } catch {}
   setUserName("Alex");
