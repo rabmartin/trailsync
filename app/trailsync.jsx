@@ -583,27 +583,44 @@ const MiniMap = ({ height, center, zoom, markers, onMarkerClick, showGPS, onMapR
     return () => { clearTimeout(timer); if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
   }, []);
 
-  // Update markers when markers prop changes OR map becomes ready
+  // Update markers using GeoJSON layer for performance (no DOM elements per marker)
   useEffect(() => {
-    if (!mapReady || !mapInstance.current || !mapboxRef.current) return;
-    const mapboxgl = mapboxRef.current;
+    if (!mapReady || !mapInstance.current) return;
     const map = mapInstance.current;
 
-    // Remove old markers
-    markersRef.current.forEach(m => m.remove());
-    markersRef.current = [];
+    const geojson = {
+      type: "FeatureCollection",
+      features: (markers || []).filter(m => m.lat && m.lng).map((m, i) => ({
+        type: "Feature",
+        geometry: { type: "Point", coordinates: [m.lng, m.lat] },
+        properties: { color: m.color || "#E85D3A", idx: i, done: m.data?.done || false },
+      })),
+    };
 
-    // Add new markers
-    if (markers) {
-      markers.forEach((m, i) => {
-        const el = document.createElement("div");
-        el.style.cssText = m.style || `width:20px;height:20px;border-radius:50%;background:${m.color || "#E85D3A"};border:2px solid rgba(255,255,255,0.8);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);`;
-        if (m.label) el.textContent = m.label;
-        if (m.html) el.innerHTML = m.html;
-        if (onMarkerClick) el.addEventListener("click", () => onMarkerClick(m, i));
-        const marker = new mapboxgl.Marker({ element: el }).setLngLat([m.lng, m.lat]).addTo(map);
-        markersRef.current.push(marker);
+    if (map.getSource("minimap-markers")) {
+      map.getSource("minimap-markers").setData(geojson);
+    } else {
+      map.addSource("minimap-markers", { type: "geojson", data: geojson });
+      map.addLayer({
+        id: "minimap-markers-layer",
+        type: "circle",
+        source: "minimap-markers",
+        paint: {
+          "circle-radius": 7,
+          "circle-color": ["get", "color"],
+          "circle-stroke-width": 1.5,
+          "circle-stroke-color": "rgba(255,255,255,0.8)",
+          "circle-opacity": 0.95,
+        },
       });
+      if (onMarkerClick) {
+        map.on("click", "minimap-markers-layer", (e) => {
+          const idx = e.features[0].properties.idx;
+          if (markers && markers[idx]) onMarkerClick(markers[idx], idx);
+        });
+        map.on("mouseenter", "minimap-markers-layer", () => { map.getCanvas().style.cursor = "pointer"; });
+        map.on("mouseleave", "minimap-markers-layer", () => { map.getCanvas().style.cursor = ""; });
+      }
     }
   }, [markers, mapReady]);
 
