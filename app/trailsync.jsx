@@ -2564,41 +2564,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
         setTimeout(() => { try { geolocate.trigger(); } catch(e) {} }, 1000);
       }
 
-      // Add all peaks as a GeoJSON source with clustering
-      const peakGeojson = {
-        type: "FeatureCollection",
-        features: PEAKS.map(p => ({
-          type: "Feature",
-          geometry: { type: "Point", coordinates: [p.lng, p.lat] },
-          properties: { id: p.id, name: p.name, cls: p.cls, ht: p.ht, reg: p.reg, done: p.done || false },
-        })).filter(f => f.geometry.coordinates[0] && f.geometry.coordinates[1]),
-      };
 
-      map.addSource("peaks-all", { type: "geojson", data: peakGeojson });
-
-      // Peak dots — no clustering, simple dots only visible when zoomed in
-      map.addLayer({
-        id: "peaks-unclustered",
-        type: "circle",
-        source: "peaks-all",
-        minzoom: 8,
-        paint: {
-          "circle-radius": 5,
-          "circle-color": ["case", ["get", "done"], "#6BCB77", "#E85D3A"],
-          "circle-stroke-width": 1,
-          "circle-stroke-color": "rgba(255,255,255,0.7)",
-          "circle-opacity": 0.9,
-        },
-      });
-
-      map.on("click", "peaks-unclustered", (e) => {
-        const p = e.features[0].properties;
-        setSp({ id: p.id, name: p.name, cls: p.cls, ht: p.ht, reg: p.reg, done: p.done,
-          w: { t: 0, f: 0, wi: 0, p: 0, v: "—", sn: false },
-          lat: e.lngLat.lat, lng: e.lngLat.lng });
-      });
-      map.on("mouseenter", "peaks-unclustered", () => { map.getCanvas().style.cursor = "pointer"; });
-      map.on("mouseleave", "peaks-unclustered", () => { map.getCanvas().style.cursor = ""; });
     });
 
     }); return () => {
@@ -2607,22 +2573,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     };
   }, []);
 
-  // Update peak layer when dbPeaks loads or classification filter changes
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapLoadedRef.current) return;
-    const source = map.getSource("peaks-all");
-    if (!source) return;
-    const peaks = (dbPeaks || PEAKS).filter(p => !cf || p.cls === cf);
-    source.setData({
-      type: "FeatureCollection",
-      features: peaks.map(p => ({
-        type: "Feature",
-        geometry: { type: "Point", coordinates: [p.lng, p.lat] },
-        properties: { id: p.id, name: p.name, cls: p.cls, ht: p.ht, reg: p.reg, done: p.done || false },
-      })).filter(f => f.geometry.coordinates[0] && f.geometry.coordinates[1]),
-    });
-  }, [dbPeaks, cf, mapLoadedRef.current]);
+
 
   // Live hikers overlay
   useEffect(() => {
