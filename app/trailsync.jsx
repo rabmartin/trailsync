@@ -2323,7 +2323,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
         paint: { "line-color": "#fff", "line-width": 6, "line-opacity": 0.5 } });
       map.addLayer({ id: "live-track-line", type: "line", source: "live-track",
         layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": "#6BCB77", "line-width": 3.5, "line-opacity": 0.95 } });
+        paint: { "line-color": "#5A98E3", "line-width": 3.5, "line-opacity": 0.95 } });
     }
   };
 
