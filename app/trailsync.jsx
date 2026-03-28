@@ -593,7 +593,12 @@ const MiniMap = ({ height, center, zoom, markers, onMarkerClick, showGPS, onMapR
       features: (markers || []).filter(m => m.lat && m.lng).map((m, i) => ({
         type: "Feature",
         geometry: { type: "Point", coordinates: [m.lng, m.lat] },
-        properties: { color: m.color || "#E85D3A", idx: i, done: m.data?.done || false },
+        properties: {
+          color: m.color || "#E85D3A",
+          idx: i,
+          done: m.data?.done || false,
+          peakData: JSON.stringify(m.data || {}),
+        },
       })),
     };
 
@@ -601,22 +606,31 @@ const MiniMap = ({ height, center, zoom, markers, onMarkerClick, showGPS, onMapR
       map.getSource("minimap-markers").setData(geojson);
     } else {
       map.addSource("minimap-markers", { type: "geojson", data: geojson });
+      // Triangle dots via symbol layer using ▲ unicode
       map.addLayer({
         id: "minimap-markers-layer",
-        type: "circle",
+        type: "symbol",
         source: "minimap-markers",
+        layout: {
+          "text-field": "▲",
+          "text-size": 11,
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
+        },
         paint: {
-          "circle-radius": 7,
-          "circle-color": ["get", "color"],
-          "circle-stroke-width": 1.5,
-          "circle-stroke-color": "rgba(255,255,255,0.8)",
-          "circle-opacity": 0.95,
+          "text-color": ["get", "color"],
+          "text-halo-color": "rgba(255,255,255,0.6)",
+          "text-halo-width": 1,
         },
       });
       if (onMarkerClick) {
         map.on("click", "minimap-markers-layer", (e) => {
-          const idx = e.features[0].properties.idx;
-          if (markers && markers[idx]) onMarkerClick(markers[idx], idx);
+          const props = e.features[0].properties;
+          try {
+            const data = JSON.parse(props.peakData || "{}");
+            const coords = e.features[0].geometry.coordinates;
+            onMarkerClick({ lat: coords[1], lng: coords[0], color: props.color, data }, props.idx);
+          } catch(err) {}
         });
         map.on("mouseenter", "minimap-markers-layer", () => { map.getCanvas().style.cursor = "pointer"; });
         map.on("mouseleave", "minimap-markers-layer", () => { map.getCanvas().style.cursor = ""; });
@@ -1282,9 +1296,9 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
     <div
         ref={feedRef}
         onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
+        onTouchMove={(e) => { handleTouchMove(e); if (pullY > 0) e.preventDefault(); }}
         onTouchEnd={handleTouchEnd}
-        style={{ padding: "0 16px 16px", overflowY: "auto", flex: 1, position: "relative" }}>
+        style={{ padding: "0 16px 16px", overflowY: "auto", flex: 1, position: "relative", overscrollBehavior: "none" }}>
 
         {/* Pull to refresh indicator */}
         <div style={{
@@ -2560,80 +2574,31 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
         })).filter(f => f.geometry.coordinates[0] && f.geometry.coordinates[1]),
       };
 
-      map.addSource("peaks-all", {
-        type: "geojson",
-        data: peakGeojson,
-        cluster: true,
-        clusterMaxZoom: 10,
-        clusterRadius: 30,
-      });
+      map.addSource("peaks-all", { type: "geojson", data: peakGeojson });
 
-      // Cluster circles
-      map.addLayer({
-        id: "peaks-clusters",
-        type: "circle",
-        source: "peaks-all",
-        filter: ["has", "point_count"],
-        paint: {
-          "circle-color": "#264f80",
-          "circle-radius": ["step", ["get", "point_count"], 14, 10, 18, 50, 22],
-          "circle-opacity": 0.85,
-          "circle-stroke-width": 1.5,
-          "circle-stroke-color": "rgba(90,152,227,0.4)",
-        },
-      });
-
-      // Cluster count labels
-      map.addLayer({
-        id: "peaks-cluster-count",
-        type: "symbol",
-        source: "peaks-all",
-        filter: ["has", "point_count"],
-        layout: {
-          "text-field": ["get", "point_count_abbreviated"],
-          "text-font": ["DIN Pro Medium", "Arial Unicode MS Bold"],
-          "text-size": 11,
-        },
-        paint: { "text-color": "#F8F8F8" },
-      });
-
-      // Individual peak dots
+      // Peak dots — no clustering, simple dots only visible when zoomed in
       map.addLayer({
         id: "peaks-unclustered",
         type: "circle",
         source: "peaks-all",
-        filter: ["!", ["has", "point_count"]],
+        minzoom: 8,
         paint: {
-          "circle-radius": 7,
+          "circle-radius": 5,
           "circle-color": ["case", ["get", "done"], "#6BCB77", "#E85D3A"],
-          "circle-stroke-width": 1.5,
+          "circle-stroke-width": 1,
           "circle-stroke-color": "rgba(255,255,255,0.7)",
           "circle-opacity": 0.9,
         },
       });
 
-      // Click on individual peak
       map.on("click", "peaks-unclustered", (e) => {
         const p = e.features[0].properties;
         setSp({ id: p.id, name: p.name, cls: p.cls, ht: p.ht, reg: p.reg, done: p.done,
           w: { t: 0, f: 0, wi: 0, p: 0, v: "—", sn: false },
           lat: e.lngLat.lat, lng: e.lngLat.lng });
       });
-
-      // Click on cluster - zoom in
-      map.on("click", "peaks-clusters", (e) => {
-        const features = map.queryRenderedFeatures(e.point, { layers: ["peaks-clusters"] });
-        const clusterId = features[0].properties.cluster_id;
-        map.getSource("peaks-all").getClusterExpansionZoom(clusterId, (err, zoom) => {
-          if (err) return;
-          map.easeTo({ center: features[0].geometry.coordinates, zoom });
-        });
-      });
-
       map.on("mouseenter", "peaks-unclustered", () => { map.getCanvas().style.cursor = "pointer"; });
       map.on("mouseleave", "peaks-unclustered", () => { map.getCanvas().style.cursor = ""; });
-      map.on("mouseenter", "peaks-clusters", () => { map.getCanvas().style.cursor = "pointer"; });
-      map.on("mouseleave", "peaks-clusters", () => { map.getCanvas().style.cursor = ""; });
     });
 
     }); return () => {
