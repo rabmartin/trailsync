@@ -3669,7 +3669,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
   const [lbTime, setLbTime] = useState("all");
   const [mtView, setMtView] = useState("map");
   const [mtExpanded, setMtExpanded] = useState(false);
-  const [mtCls, setMtCls] = useState(null);
+  const [mtCls, setMtCls] = useState("munros");
   const [mtDone, setMtDone] = useState(null);
   const [mtSort, setMtSort] = useState("name");
   const [selPeak, setSelPeak] = useState(null);
@@ -3922,7 +3922,6 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
           {/* Classification dropdown */}
           <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
             <select value={mtCls || ""} onChange={e => setMtCls(e.target.value || null)} style={{ padding: "7px 12px", borderRadius: "10px", fontSize: "11px", fontWeight: 600, background: mtCls ? `${CLS[mtCls]?.color}15` : "#0a2240", border: `1px solid ${mtCls ? CLS[mtCls]?.color : "rgba(90,152,227,0.12)"}`, color: mtCls ? CLS[mtCls]?.color : "#BDD6F4", outline: "none", cursor: "pointer", fontFamily: "'DM Sans'" }}>
-              <option value="">All Classifications</option>
               {Object.entries(CLS).filter(([k]) => k !== "non-mountain").map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
             </select>
           </div>
@@ -3954,13 +3953,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               )}
               <div style={mtExpanded ? { flex: 1, position: "relative", display: "flex", flexDirection: "column" } : { position: "relative" }}>
                 {!mtExpanded && <button onClick={() => setMtExpanded(true)} style={{ position: "absolute", top: 10, right: 10, zIndex: 22, background: "rgba(4,30,61,0.88)", backdropFilter: "blur(8px)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "8px", padding: "6px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><Maximize2 size={14} /></button>}
-              {!mtCls && (
-                <div style={{ position: "absolute", inset: 0, zIndex: 21, background: "rgba(4,30,61,0.85)", backdropFilter: "blur(8px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "10px" }}>
-                  <Mountain size={28} color="#5A98E3" style={{ opacity: 0.5 }} />
-                  <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", textAlign: "center" }}>Select a classification</div>
-                  <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, textAlign: "center", maxWidth: "200px", lineHeight: 1.5 }}>Choose Munros, Wainwrights etc. above to load peaks on the map</div>
-                </div>
-              )}
+
               {mtActiveGpxId && (
                 <button onClick={() => { removeGpxFromMap(mtMapRef.current, mtActiveGpxId); setMtActiveGpxId(null); }}
                   style={{ position: "absolute", top: 10, left: 10, zIndex: 22, background: "rgba(4,30,61,0.88)", backdropFilter: "blur(8px)",
