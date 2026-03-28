@@ -1011,8 +1011,8 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
         const liveMapped = (data || []).map(p => ({
           id: p.id,
           user_id: p.user_id,
-          user: p.username || p.full_name || "TrailSyncer",
-          av: (p.username || p.full_name || "T")[0].toUpperCase(),
+          user: p.username || p.name || "TrailSyncer",
+          av: (p.username || p.name || "T")[0].toUpperCase(),
           time: timeAgo(p.created_at),
           type: p.type || "summit",
           text: p.text,
