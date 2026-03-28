@@ -613,7 +613,7 @@ const MiniMap = ({ height, center, zoom, markers, onMarkerClick, showGPS, onMapR
         source: "minimap-markers",
         layout: {
           "text-field": "▲",
-          "text-size": 18,
+          "text-size": 26,
           "text-allow-overlap": true,
           "text-ignore-placement": true,
         },
