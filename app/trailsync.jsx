@@ -1003,11 +1003,13 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   useEffect(() => {
     async function fetchPosts() {
       try {
-        const { data } = await supabase
+        const { data, error: postsError } = await supabase
           .from("posts")
           .select("*")
           .order("created_at", { ascending: false })
           .limit(50);
+        if (postsError) console.error("POSTS FETCH ERROR:", JSON.stringify(postsError));
+        console.log("Posts fetched:", data?.length, "rows");
         // Merge live Supabase posts with hardcoded FEED, deduplicating by id
         const liveMapped = (data || []).map(p => ({
           id: p.id,
@@ -2145,7 +2147,7 @@ const RoutesPage = ({ openRoute }) => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 3: MAP
    ═══════════════════════════════════════════════════════════════════ */
-const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGpx }) => {
+const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGpx, dbPeaks }) => {
   const [layer, setLayer] = useState("standard");
   const [lm, setLm] = useState(false);
   const [wo, setWo] = useState(null);
@@ -5305,7 +5307,7 @@ export default function TrailSync() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {tab === "home" && <HomePage userName={userName} initialFilter={feedFilter} userId={userId} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowingCount={setFollowingCount} headerSearch={headerSearch} setHeaderSearch={setHeaderSearch} openRoute={openRouteOnMap} searchResults={searchResults} setSearchResults={setSearchResults} searching={searching} setSearching={setSearching} />}
         {tab === "routes" && <RoutesPage openRoute={openRouteOnMap} />}
-        {tab === "map" && <MapPage goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={async (walk) => {
+        {tab === "map" && <MapPage dbPeaks={dbPeaks} goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={async (walk) => {
               setSavedWalks(prev => [walk, ...prev]);
               try {
                 const { data: { user } } = await supabase.auth.getUser();
