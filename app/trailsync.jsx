@@ -1022,7 +1022,14 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
         }));
         const liveIds = new Set(liveMapped.map(p => String(p.id)));
         const hardcoded = FEED.filter(p => !liveIds.has(String(p.id)));
-        setLivePosts([...liveMapped, ...hardcoded]);
+        // Deduplicate live posts by id (in case of duplicate inserts)
+        const seen = new Set();
+        const deduped = liveMapped.filter(p => {
+          if (seen.has(p.id)) return false;
+          seen.add(p.id);
+          return true;
+        });
+        setLivePosts([...deduped, ...hardcoded]);
       } catch (e) {
         console.error("Failed to load posts:", e);
         // On error, fall back to hardcoded feed
