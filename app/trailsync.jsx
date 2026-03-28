@@ -3954,6 +3954,13 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               )}
               <div style={mtExpanded ? { flex: 1, position: "relative", display: "flex", flexDirection: "column" } : { position: "relative" }}>
                 {!mtExpanded && <button onClick={() => setMtExpanded(true)} style={{ position: "absolute", top: 10, right: 10, zIndex: 22, background: "rgba(4,30,61,0.88)", backdropFilter: "blur(8px)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "8px", padding: "6px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><Maximize2 size={14} /></button>}
+              {!mtCls && (
+                <div style={{ position: "absolute", inset: 0, zIndex: 21, background: "rgba(4,30,61,0.85)", backdropFilter: "blur(8px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+                  <Mountain size={28} color="#5A98E3" style={{ opacity: 0.5 }} />
+                  <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", textAlign: "center" }}>Select a classification</div>
+                  <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, textAlign: "center", maxWidth: "200px", lineHeight: 1.5 }}>Choose Munros, Wainwrights etc. above to load peaks on the map</div>
+                </div>
+              )}
               {mtActiveGpxId && (
                 <button onClick={() => { removeGpxFromMap(mtMapRef.current, mtActiveGpxId); setMtActiveGpxId(null); }}
                   style={{ position: "absolute", top: 10, left: 10, zIndex: 22, background: "rgba(4,30,61,0.88)", backdropFilter: "blur(8px)",
@@ -3971,7 +3978,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                   <span style={{ fontSize: "10px", fontWeight: 600, color: "#BDD6F4", fontFamily: "'DM Sans'" }}>Loading route…</span>
                 </div>
               )}
-                <MiniMap key={mtExpanded ? "expanded" : "compact"} height={mtExpanded ? "100%" : "340px"} showGPS={true} onMapReady={map => { mtMapRef.current = map; }} markers={filteredPeaks.map(pk => ({ lat: pk.lat, lng: pk.lng, color: pk.done ? "#6BCB77" : "#E85D3A", data: pk, style: `width:14px;height:14px;border-radius:50%;background:${pk.done ? "#6BCB77" : "#E85D3A"};border:2px solid rgba(255,255,255,0.5);cursor:pointer;box-shadow:0 0 6px ${pk.done ? "rgba(107,203,119,0.4)" : "rgba(232,93,58,0.4)"};` }))} onMarkerClick={(m) => { setSelPeak(m.data); setLogging(false); if (mtActiveGpxId) { removeGpxFromMap(mtMapRef.current, mtActiveGpxId); setMtActiveGpxId(null); } }}>
+                <MiniMap key={mtExpanded ? "expanded" : "compact"} height={mtExpanded ? "100%" : "340px"} showGPS={true} onMapReady={map => { mtMapRef.current = map; }} markers={filteredPeaks.filter(pk => pk.lat && pk.lng).slice(0, 400).map(pk => ({ lat: pk.lat, lng: pk.lng, color: pk.done ? "#6BCB77" : "#E85D3A", data: pk, style: `width:14px;height:14px;border-radius:50%;background:${pk.done ? "#6BCB77" : "#E85D3A"};border:2px solid rgba(255,255,255,0.5);cursor:pointer;box-shadow:0 0 6px ${pk.done ? "rgba(107,203,119,0.4)" : "rgba(232,93,58,0.4)"};` }))} onMarkerClick={(m) => { setSelPeak(m.data); setLogging(false); if (mtActiveGpxId) { removeGpxFromMap(mtMapRef.current, mtActiveGpxId); setMtActiveGpxId(null); } }}>
                 {selPeak && (
                   <div style={{ position: "absolute", bottom: 10, left: 10, right: 10, zIndex: 20, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.15)", animation: "su .25s ease", overflow: "hidden" }}>
                     <div style={{ height: "3px", background: selPeak.done ? "linear-gradient(90deg,#6BCB77,transparent)" : "linear-gradient(90deg,#E85D3A,transparent)" }} />
