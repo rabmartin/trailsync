@@ -2280,6 +2280,53 @@ const RoutesPage = ({ openRoute }) => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 3: MAP
    ═══════════════════════════════════════════════════════════════════ */
+const RouteWeatherPanel = ({ routeWeather, elevProfile }) => {
+  const [wxOpen, setWxOpen] = useState(false);
+  return (
+    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 24, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px 16px 0 0", border: "1px solid rgba(90,152,227,0.15)", borderBottom: "none" }}>
+      <div onClick={() => setWxOpen(o => !o)} style={{ padding: "12px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ width: "32px", height: "3px", borderRadius: "2px", background: "rgba(90,152,227,0.3)", position: "absolute", top: "6px", left: "50%", transform: "translateX(-50%)" }} />
+        <div style={{ display: "flex", gap: "12px", flex: 1, marginTop: "4px" }}>
+          <span style={{ fontSize: "12px", color: "#BDD6F4" }}>📏 {routeWeather.totalKm}km</span>
+          <span style={{ fontSize: "12px", color: "#BDD6F4" }}>⏱️ {routeWeather.totalHours}h</span>
+          <span style={{ fontSize: "12px", color: "#BDD6F4" }}>⛰️ {routeWeather.totalAscent}m</span>
+          {routeWeather.timeline[0] && <span style={{ fontSize: "12px", color: "#BDD6F4", marginLeft: "auto" }}>{routeWeather.timeline[0].icon} {routeWeather.timeline[0].temp !== undefined ? `${Math.round(routeWeather.timeline[0].temp)}°` : ""}</span>}
+        </div>
+        <div style={{ color: "#BDD6F4", opacity: 0.4, fontSize: "10px", flexShrink: 0 }}>{wxOpen ? "▼" : "▲"}</div>
+      </div>
+      {wxOpen && (
+        <div style={{ padding: "0 16px 16px", maxHeight: "40vh", overflowY: "auto" }}>
+          {elevProfile && (
+            <div style={{ marginBottom: "12px" }}>
+              <div style={{ height: "44px", display: "flex", alignItems: "flex-end", gap: "1px", background: "#0a2240", borderRadius: "8px", padding: "4px 6px", overflow: "hidden" }}>
+                {(() => { const mn = Math.min(...elevProfile), mx = Math.max(...elevProfile), rng = mx - mn || 1; return elevProfile.map((e, i) => (<div key={i} style={{ flex: 1, background: "linear-gradient(to top,#E85D3A,#F49D37)", borderRadius: "2px 2px 0 0", height: `${Math.max(3, ((e-mn)/rng)*34)}px`, opacity: 0.85 }} />)); })()}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2px" }}>
+                <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>{Math.min(...elevProfile)}m</div>
+                <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>Elevation</div>
+                <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>{Math.max(...elevProfile)}m</div>
+              </div>
+            </div>
+          )}
+          <div style={{ display: "flex", gap: "5px", overflowX: "auto", paddingBottom: "4px" }}>
+            {routeWeather.timeline.map((pt, i) => (
+              <div key={i} style={{ flexShrink: 0, width: "56px", textAlign: "center", background: "#0a2240", borderRadius: "10px", padding: "7px 3px", border: "1px solid rgba(90,152,227,0.08)" }}>
+                <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginBottom: "3px" }}>{i === 0 ? "Now" : `+${i}h`}</div>
+                <div style={{ fontSize: "16px", marginBottom: "2px" }}>{pt.icon || "🌤️"}</div>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "#F8F8F8" }}>{pt.temp !== undefined ? `${Math.round(pt.temp)}°` : "—"}</div>
+                <div style={{ fontSize: "8px", color: "#5A98E3", marginTop: "1px" }}>{pt.wind !== undefined ? `${Math.round(pt.wind)}` : ""}kph</div>
+                <div style={{ fontSize: "8px", color: pt.precip > 50 ? "#E85D3A" : "#BDD6F4", opacity: 0.6 }}>{pt.precip !== undefined ? `${pt.precip}%` : ""}</div>
+                <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.3 }}>{pt.ele}m</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.25, textAlign: "center", marginTop: "8px" }}>Naismith timing · Open-Meteo</div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGpx, dbPeaks }) => {
   const [layer, setLayer] = useState("standard");
   const [lm, setLm] = useState(false);
@@ -3212,57 +3259,9 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
           <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5 }}>Calculating route forecast…</div>
         </div>
       )}
-      {gpxRoute && !gpxRouteActive && routeWeather && (() => {
-        const [wxOpen, setWxOpen] = React.useState(false);
-        return (
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 24, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px 16px 0 0", border: "1px solid rgba(90,152,227,0.15)", borderBottom: "none" }}>
-            {/* Collapsed handle — always visible */}
-            <div onClick={() => setWxOpen(o => !o)} style={{ padding: "12px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px" }}>
-              <div style={{ width: "32px", height: "3px", borderRadius: "2px", background: "rgba(90,152,227,0.3)", margin: "0 auto", position: "absolute", top: "6px", left: "50%", transform: "translateX(-50%)" }} />
-              <div style={{ display: "flex", gap: "12px", flex: 1, marginTop: "4px" }}>
-                <span style={{ fontSize: "12px", color: "#BDD6F4" }}>📏 {routeWeather.totalKm}km</span>
-                <span style={{ fontSize: "12px", color: "#BDD6F4" }}>⏱️ {routeWeather.totalHours}h</span>
-                <span style={{ fontSize: "12px", color: "#BDD6F4" }}>⛰️ {routeWeather.totalAscent}m</span>
-                {routeWeather.timeline[0] && <span style={{ fontSize: "12px", color: "#BDD6F4", marginLeft: "auto" }}>{routeWeather.timeline[0].icon} {routeWeather.timeline[0].temp !== undefined ? `${Math.round(routeWeather.timeline[0].temp)}°` : ""}</span>}
-              </div>
-              <div style={{ color: "#BDD6F4", opacity: 0.4, fontSize: "10px", flexShrink: 0 }}>{wxOpen ? "▼" : "▲"}</div>
-            </div>
-
-            {/* Expanded content */}
-            {wxOpen && (
-              <div style={{ padding: "0 16px 16px", maxHeight: "40vh", overflowY: "auto" }}>
-                {/* Elevation profile */}
-                {elevProfile && (
-                  <div style={{ marginBottom: "12px" }}>
-                    <div style={{ height: "44px", display: "flex", alignItems: "flex-end", gap: "1px", background: "#0a2240", borderRadius: "8px", padding: "4px 6px", overflow: "hidden" }}>
-                      {(() => { const mn = Math.min(...elevProfile), mx = Math.max(...elevProfile), rng = mx - mn || 1; return elevProfile.map((e, i) => (<div key={i} style={{ flex: 1, background: "linear-gradient(to top,#E85D3A,#F49D37)", borderRadius: "2px 2px 0 0", height: `${Math.max(3, ((e-mn)/rng)*34)}px`, opacity: 0.85 }} />)); })()}
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2px" }}>
-                      <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>{Math.min(...elevProfile)}m</div>
-                      <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>Elevation</div>
-                      <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>{Math.max(...elevProfile)}m</div>
-                    </div>
-                  </div>
-                )}
-                {/* Hourly weather */}
-                <div style={{ display: "flex", gap: "5px", overflowX: "auto", paddingBottom: "4px" }}>
-                  {routeWeather.timeline.map((pt, i) => (
-                    <div key={i} style={{ flexShrink: 0, width: "56px", textAlign: "center", background: "#0a2240", borderRadius: "10px", padding: "7px 3px", border: "1px solid rgba(90,152,227,0.08)" }}>
-                      <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginBottom: "3px" }}>{i === 0 ? "Now" : `+${i}h`}</div>
-                      <div style={{ fontSize: "16px", marginBottom: "2px" }}>{pt.icon || "🌤️"}</div>
-                      <div style={{ fontSize: "11px", fontWeight: 700, color: "#F8F8F8" }}>{pt.temp !== undefined ? `${Math.round(pt.temp)}°` : "—"}</div>
-                      <div style={{ fontSize: "8px", color: "#5A98E3", marginTop: "1px" }}>{pt.wind !== undefined ? `${Math.round(pt.wind)}` : ""}kph</div>
-                      <div style={{ fontSize: "8px", color: pt.precip > 50 ? "#E85D3A" : "#BDD6F4", opacity: 0.6 }}>{pt.precip !== undefined ? `${pt.precip}%` : ""}</div>
-                      <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.3 }}>{pt.ele}m</div>
-                    </div>
-                  ))}
-                </div>
-                <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.25, textAlign: "center", marginTop: "8px" }}>Naismith timing · Open-Meteo</div>
-              </div>
-            )}
-          </div>
-        );
-      })()}
+      {gpxRoute && !gpxRouteActive && routeWeather && (
+        <RouteWeatherPanel routeWeather={routeWeather} elevProfile={elevProfile} />
+      )}
       {/* ── ROUTE HOVER TOOLTIP ── */}
       {routeHoverTooltip && gpxRoute && !gpxRouteActive && (
         <div style={{ position: "absolute", left: routeHoverTooltip.x + 12, top: routeHoverTooltip.y - 70, zIndex: 30, background: "rgba(4,30,61,0.95)", backdropFilter: "blur(10px)", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.2)", padding: "8px 12px", pointerEvents: "none", boxShadow: "0 4px 16px rgba(0,0,0,0.4)", minWidth: "100px" }}>
