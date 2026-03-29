@@ -613,7 +613,7 @@ const MiniMap = ({ height, center, zoom, markers, onMarkerClick, showGPS, onMapR
         source: "minimap-markers",
         layout: {
           "text-field": "▲",
-          "text-size": 26,
+          "text-size": 30,
           "text-allow-overlap": true,
           "text-ignore-placement": true,
         },
@@ -1022,6 +1022,9 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   const pullStartY = useRef(null);
   const feedRef = useRef(null);
   const [likedPosts, setLikedPosts] = useState(new Set());
+  const [commentOpen, setCommentOpen] = useState(null); // postId
+  const [commentText, setCommentText] = useState("");
+  const [postComments, setPostComments] = useState({}); // { postId: [{user, text, time}] }
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
 
@@ -1118,18 +1121,22 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   const handleLike = async (postId) => {
     if (!userId) return;
     const liked = likedPosts.has(postId);
+    // Optimistic update
     setLikedPosts(prev => {
       const next = new Set(prev);
       liked ? next.delete(postId) : next.add(postId);
       return next;
     });
-    setLivePosts(prev => prev.map(p => p.id === postId ? { ...p, likes: p.likes + (liked ? -1 : 1) } : p));
+    setLivePosts(prev => prev.map(p => p.id === postId ? { ...p, likes: Math.max(0, p.likes + (liked ? -1 : 1)) } : p));
     if (liked) {
       await supabase.from("post_likes").delete().eq("post_id", postId).eq("user_id", userId);
-      await supabase.from("posts").update({ likes: supabase.rpc("decrement", { x: 1 }) }).eq("id", postId);
+      // Get current likes then decrement
+      const { data: post } = await supabase.from("posts").select("likes").eq("id", postId).single();
+      if (post) await supabase.from("posts").update({ likes: Math.max(0, (post.likes || 0) - 1) }).eq("id", postId);
     } else {
       await supabase.from("post_likes").insert({ post_id: postId, user_id: userId });
-      await supabase.rpc("increment_likes", { post_id: postId });
+      const { data: post } = await supabase.from("posts").select("likes").eq("id", postId).single();
+      if (post) await supabase.from("posts").update({ likes: (post.likes || 0) + 1 }).eq("id", postId);
     }
   };
 
@@ -1695,9 +1702,9 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
             border: "1px solid rgba(90,152,227,0.1)", animation: `su .3s ease ${.35 + i * .05}s both`
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
-              <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#264f80", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "17px" }}>{p.av}</div>
+              <div onClick={() => p.user_id && onViewProfile && onViewProfile({ id: p.user_id, name: p.user, username: p.user })} style={{ width: "36px", height: "36px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "17px", fontWeight: 700, color: "#F8F8F8", cursor: p.user_id ? "pointer" : "default", flexShrink: 0 }}>{p.av}</div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{p.user}</div>
+                <div onClick={() => p.user_id && onViewProfile && onViewProfile({ id: p.user_id, name: p.user, username: p.user })} style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", cursor: p.user_id ? "pointer" : "default", display: "inline-block" }}>{p.user}</div>
                 <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>{p.time}</div>
               </div>
               {p.type === "event" && <span style={{ fontSize: "9px", padding: "2px 8px", borderRadius: "6px", background: "rgba(90,152,227,0.15)", color: "#5A98E3", fontWeight: 700 }}>EVENT</span>}
@@ -1713,7 +1720,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
             {p.peaks.length > 0 && <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginTop: "10px" }}>{p.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "6px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}</div>}
             <div style={{ display: "flex", gap: "16px", marginTop: "12px" }}>
               <button onClick={() => handleLike(p.id)} style={{ background: "none", border: "none", color: likedPosts.has(p.id) ? "#E85D3A" : "#BDD6F4", opacity: likedPosts.has(p.id) ? 1 : 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Heart size={14} fill={likedPosts.has(p.id) ? "#E85D3A" : "none"} /> {p.likes}</button>
-              <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><MessageCircle size={14} /> {p.comments || 0}</button>
+              <button onClick={() => setCommentOpen(commentOpen === p.id ? null : p.id)} style={{ background: "none", border: "none", color: commentOpen === p.id ? "#5A98E3" : "#BDD6F4", opacity: commentOpen === p.id ? 1 : 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><MessageCircle size={14} /> {(postComments[p.id] || []).length || p.comments || 0}</button>
               <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Share2 size={14} /></button>
               {p.user_id === userId && (
                 <button onClick={(e) => {
@@ -1721,7 +1728,44 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                   setConfirmDeletePost(p.id);
                 }} style={{ background: "none", border: "none", color: "#E85D3A", opacity: 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'", marginLeft: "auto" }}><Trash2 size={13} /></button>
               )}
-            </div>
+
+            {/* Comment section */}
+            {commentOpen === p.id && (
+              <div style={{ marginTop: "10px", borderTop: "1px solid rgba(90,152,227,0.08)", paddingTop: "10px" }}>
+                {(postComments[p.id] || []).map((c, ci) => (
+                  <div key={ci} style={{ display: "flex", gap: "8px", marginBottom: "8px", alignItems: "flex-start" }}>
+                    <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>{c.av}</div>
+                    <div style={{ flex: 1, background: "rgba(90,152,227,0.06)", borderRadius: "10px", padding: "7px 10px" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 700, color: "#5A98E3", marginBottom: "2px" }}>{c.user}</div>
+                      <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.4 }}>{c.text}</div>
+                    </div>
+                  </div>
+                ))}
+                <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "6px" }}>
+                  <input
+                    value={commentText}
+                    onChange={e => setCommentText(e.target.value)}
+                    onKeyDown={async e => {
+                      if (e.key === "Enter" && commentText.trim()) {
+                        const txt = commentText.trim();
+                        setPostComments(prev => ({ ...prev, [p.id]: [...(prev[p.id] || []), { user: userName, av: (userName||"U")[0].toUpperCase(), text: txt }] }));
+                        setCommentText("");
+                        await supabase.from("post_comments").insert({ post_id: p.id, user_id: userId, username: userName, text: txt }).catch(() => {});
+                      }
+                    }}
+                    placeholder="Add a comment…"
+                    style={{ flex: 1, padding: "8px 12px", borderRadius: "20px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#F8F8F8", fontSize: "12px", fontFamily: "'DM Sans'", outline: "none" }}
+                  />
+                  <button onClick={async () => {
+                    if (!commentText.trim()) return;
+                    const txt = commentText.trim();
+                    setPostComments(prev => ({ ...prev, [p.id]: [...(prev[p.id] || []), { user: userName, av: (userName||"U")[0].toUpperCase(), text: txt }] }));
+                    setCommentText("");
+                    await supabase.from("post_comments").insert({ post_id: p.id, user_id: userId, username: userName, text: txt }).catch(() => {});
+                  }} style={{ padding: "8px 14px", borderRadius: "20px", border: "none", background: "linear-gradient(135deg,#5A98E3,#264f80)", color: "#F8F8F8", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", flexShrink: 0 }}>Post</button>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -4698,6 +4742,34 @@ const UserProfileModal = ({ user, userId, followingIds, onFollow, onClose }) => 
 };
 
 /* ═══════════════════════════════════════════════════════════════════
+   PWA INSTALL BANNER
+   ═══════════════════════════════════════════════════════════════════ */
+const PWAInstallBanner = ({ onDismiss }) => (
+  <div style={{ position: "fixed", bottom: 80, left: 12, right: 12, zIndex: 90, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px", border: "1px solid rgba(90,152,227,0.25)", padding: "14px 16px", boxShadow: "0 8px 32px rgba(0,0,0,0.4)", animation: "su .3s ease" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+      <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <Mountain size={22} color="#F8F8F8" />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: "13px", fontWeight: 800, color: "#F8F8F8", marginBottom: "2px" }}>Add TrailSync to your home screen</div>
+        <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.4 }}>Works better as an app — faster, offline-ready, full screen</div>
+      </div>
+      <button onClick={onDismiss} style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.4, cursor: "pointer", padding: "4px", flexShrink: 0 }}><X size={16} /></button>
+    </div>
+    <div style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
+      <div style={{ flex: 1, background: "rgba(90,152,227,0.08)", borderRadius: "10px", padding: "10px 12px" }}>
+        <div style={{ fontSize: "10px", fontWeight: 700, color: "#5A98E3", marginBottom: "4px" }}>📱 iPhone / iPad</div>
+        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.5 }}>Tap <strong style={{ color: "#F8F8F8" }}>Share</strong> then <strong style={{ color: "#F8F8F8" }}>Add to Home Screen</strong></div>
+      </div>
+      <div style={{ flex: 1, background: "rgba(90,152,227,0.08)", borderRadius: "10px", padding: "10px 12px" }}>
+        <div style={{ fontSize: "10px", fontWeight: 700, color: "#5A98E3", marginBottom: "4px" }}>🤖 Android</div>
+        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.5 }}>Tap <strong style={{ color: "#F8F8F8" }}>⋮ Menu</strong> then <strong style={{ color: "#F8F8F8" }}>Add to Home Screen</strong></div>
+      </div>
+    </div>
+  </div>
+);
+
+/* ═══════════════════════════════════════════════════════════════════
    MAIN APP
    ═══════════════════════════════════════════════════════════════════ */
 export default function TrailSync() {
@@ -4773,6 +4845,16 @@ export default function TrailSync() {
   const [searchResults, setSearchResults] = useState({ posts: [], users: [], routes: [], peaks: [] });
   const [searching, setSearching] = useState(false);
   const [viewingProfile, setViewingProfile] = useState(null); // { id, name, username, location }
+  const [showPWABanner, setShowPWABanner] = useState(false);
+
+  // Show PWA install banner if not already installed and not dismissed
+  useEffect(() => {
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+    const dismissed = localStorage.getItem("pwa-banner-dismissed");
+    if (!isStandalone && !dismissed) {
+      setTimeout(() => setShowPWABanner(true), 3000); // show after 3s
+    }
+  }, []);
 
   // Follow/unfollow from header search
   const handleFollowFromSearch = async (targetId) => {
@@ -5286,7 +5368,7 @@ export default function TrailSync() {
 
       {/* Content */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        {tab === "home" && <HomePage userName={userName} initialFilter={feedFilter} userId={userId} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowingCount={setFollowingCount} headerSearch={headerSearch} setHeaderSearch={setHeaderSearch} openRoute={openRouteOnMap} searchResults={searchResults} setSearchResults={setSearchResults} searching={searching} setSearching={setSearching} />}
+        {tab === "home" && <HomePage userName={userName} initialFilter={feedFilter} userId={userId} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowingCount={setFollowingCount} headerSearch={headerSearch} setHeaderSearch={setHeaderSearch} openRoute={openRouteOnMap} searchResults={searchResults} setSearchResults={setSearchResults} searching={searching} setSearching={setSearching} onViewProfile={setViewingProfile} />}
         {tab === "routes" && <RoutesPage openRoute={openRouteOnMap} />}
         {tab === "map" && <MapPage dbPeaks={dbPeaks} goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={async (walk) => {
               setSavedWalks(prev => [walk, ...prev]);
@@ -5318,6 +5400,14 @@ export default function TrailSync() {
   setAuthState("login");
 }} />}
       </div>
+
+      {/* ── PWA INSTALL BANNER ── */}
+      {showPWABanner && authState === "app" && (
+        <PWAInstallBanner onDismiss={() => {
+          setShowPWABanner(false);
+          localStorage.setItem("pwa-banner-dismissed", "1");
+        }} />
+      )}
 
       {/* ── USER PROFILE VIEWER ── */}
       {viewingProfile && (
