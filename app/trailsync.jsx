@@ -585,57 +585,63 @@ const MiniMap = ({ height, center, zoom, markers, onMarkerClick, showGPS, onMapR
     return () => { clearTimeout(timer); if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
   }, []);
 
-  // Update markers using GeoJSON layer for performance (no DOM elements per marker)
+  // Update markers — use DOM markers if html prop present (Learn page icons),
+  // otherwise use fast GeoJSON triangle layer (mountain tracker)
   useEffect(() => {
     if (!mapReady || !mapInstance.current) return;
     const map = mapInstance.current;
+    const hasHtml = markers && markers.some(m => m.html);
 
-    const geojson = {
-      type: "FeatureCollection",
-      features: (markers || []).filter(m => m.lat && m.lng).map((m, i) => ({
-        type: "Feature",
-        geometry: { type: "Point", coordinates: [m.lng, m.lat] },
-        properties: {
-          color: m.color || "#E85D3A",
-          idx: i,
-          done: m.data?.done || false,
-          peakData: JSON.stringify(m.data || {}),
-        },
-      })),
-    };
-
-    if (map.getSource("minimap-markers")) {
-      map.getSource("minimap-markers").setData(geojson);
-    } else {
-      map.addSource("minimap-markers", { type: "geojson", data: geojson });
-      // Triangle dots via symbol layer using ▲ unicode
-      map.addLayer({
-        id: "minimap-markers-layer",
-        type: "symbol",
-        source: "minimap-markers",
-        layout: {
-          "text-field": "▲",
-          "text-size": 30,
-          "text-allow-overlap": true,
-          "text-ignore-placement": true,
-        },
-        paint: {
-          "text-color": ["get", "color"],
-          "text-halo-color": "rgba(255,255,255,0.6)",
-          "text-halo-width": 1,
-        },
-      });
-      if (onMarkerClick) {
-        map.on("click", "minimap-markers-layer", (e) => {
-          const props = e.features[0].properties;
-          try {
-            const data = JSON.parse(props.peakData || "{}");
-            const coords = e.features[0].geometry.coordinates;
-            onMarkerClick({ lat: coords[1], lng: coords[0], color: props.color, data }, props.idx);
-          } catch(err) {}
+    if (hasHtml) {
+      // DOM markers for emoji/html icons (Learn page)
+      import("mapbox-gl").then(mod => {
+        const mapboxgl = mod.default;
+        // Remove old markers
+        if (map._minimapMarkers) { map._minimapMarkers.forEach(m => m.remove()); }
+        map._minimapMarkers = [];
+        // Remove GeoJSON layer if exists
+        if (map.getLayer("minimap-markers-layer")) map.removeLayer("minimap-markers-layer");
+        if (map.getSource("minimap-markers")) map.removeSource("minimap-markers");
+        (markers || []).filter(m => m.lat && m.lng).forEach((m, i) => {
+          const el = document.createElement("div");
+          el.style.cssText = m.style || "width:36px;height:36px;border-radius:50%;background:#264f80;border:2px solid rgba(90,152,227,0.3);cursor:pointer;display:flex;align-items:center;justify-content:center;";
+          if (m.html) el.innerHTML = m.html;
+          if (onMarkerClick) el.addEventListener("click", () => onMarkerClick(m, i));
+          const marker = new mapboxgl.Marker({ element: el }).setLngLat([m.lng, m.lat]).addTo(map);
+          map._minimapMarkers.push(marker);
         });
-        map.on("mouseenter", "minimap-markers-layer", () => { map.getCanvas().style.cursor = "pointer"; });
-        map.on("mouseleave", "minimap-markers-layer", () => { map.getCanvas().style.cursor = ""; });
+      });
+    } else {
+      // GeoJSON triangle layer for peak markers (mountain tracker)
+      const geojson = {
+        type: "FeatureCollection",
+        features: (markers || []).filter(m => m.lat && m.lng).map((m, i) => ({
+          type: "Feature",
+          geometry: { type: "Point", coordinates: [m.lng, m.lat] },
+          properties: { color: m.color || "#E85D3A", idx: i, peakData: JSON.stringify(m.data || {}) },
+        })),
+      };
+      if (map.getSource("minimap-markers")) {
+        map.getSource("minimap-markers").setData(geojson);
+      } else {
+        map.addSource("minimap-markers", { type: "geojson", data: geojson });
+        map.addLayer({
+          id: "minimap-markers-layer", type: "symbol", source: "minimap-markers",
+          layout: { "text-field": "▲", "text-size": 30, "text-allow-overlap": true, "text-ignore-placement": true },
+          paint: { "text-color": ["get", "color"], "text-halo-color": "rgba(255,255,255,0.6)", "text-halo-width": 1 },
+        });
+        if (onMarkerClick) {
+          map.on("click", "minimap-markers-layer", (e) => {
+            const props = e.features[0].properties;
+            try {
+              const data = JSON.parse(props.peakData || "{}");
+              const coords = e.features[0].geometry.coordinates;
+              onMarkerClick({ lat: coords[1], lng: coords[0], color: props.color, data }, props.idx);
+            } catch(err) {}
+          });
+          map.on("mouseenter", "minimap-markers-layer", () => { map.getCanvas().style.cursor = "pointer"; });
+          map.on("mouseleave", "minimap-markers-layer", () => { map.getCanvas().style.cursor = ""; });
+        }
       }
     }
   }, [markers, mapReady]);
