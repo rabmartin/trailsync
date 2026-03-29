@@ -2298,8 +2298,25 @@ const RouteWeatherPanel = ({ routeWeather, elevProfile }) => {
         <div style={{ padding: "0 16px 16px", maxHeight: "40vh", overflowY: "auto" }}>
           {elevProfile && (
             <div style={{ marginBottom: "12px" }}>
-              <div style={{ height: "44px", display: "flex", alignItems: "flex-end", gap: "1px", background: "#0a2240", borderRadius: "8px", padding: "4px 6px", overflow: "hidden" }}>
-                {(() => { const mn = Math.min(...elevProfile), mx = Math.max(...elevProfile), rng = mx - mn || 1; return elevProfile.map((e, i) => (<div key={i} style={{ flex: 1, background: "linear-gradient(to top,#E85D3A,#F49D37)", borderRadius: "2px 2px 0 0", height: `${Math.max(3, ((e-mn)/rng)*34)}px`, opacity: 0.85 }} />)); })()}
+              <div style={{ height: "48px", background: "#0a2240", borderRadius: "8px", overflow: "hidden", position: "relative" }}>
+                {(() => {
+                  const mn = Math.min(...elevProfile), mx = Math.max(...elevProfile), rng = mx - mn || 1;
+                  const w = 100, h = 40;
+                  const pts = elevProfile.map((e, i) => `${(i / (elevProfile.length - 1)) * w},${h - ((e - mn) / rng) * h}`).join(" ");
+                  const fill = `${pts} ${w},${h} 0,${h}`;
+                  return (
+                    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ width: "100%", height: "100%", display: "block" }}>
+                      <defs>
+                        <linearGradient id="elevGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#F49D37" stopOpacity="0.4" />
+                          <stop offset="100%" stopColor="#E85D3A" stopOpacity="0.05" />
+                        </linearGradient>
+                      </defs>
+                      <polygon points={fill} fill="url(#elevGrad)" />
+                      <polyline points={pts} fill="none" stroke="#F49D37" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+                    </svg>
+                  );
+                })()}
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2px" }}>
                 <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>{Math.min(...elevProfile)}m</div>
