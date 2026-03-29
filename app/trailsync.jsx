@@ -288,6 +288,7 @@ let ROUTES = [
   { id: 19, name: "Buachaille Etive Mor - Curved Ridge", cls: "munros", reg: "Glen Coe", diff: "Expert", dist: 10.5, elev: 1020, time: "5-7h", peaks: ["Buachaille Etive Mor"], rat: 4.9, rev: 67, start: "Altnafeadh Layby", src: "community" },
   { id: 20, name: "Cairngorms Lairig Ghru Through-Walk", cls: "non-mountain", reg: "Cairngorms", diff: "Hard", dist: 30, elev: 640, time: "10-12h", peaks: [], rat: 4.7, rev: 45, start: "Linn of Dee Car Park", src: "community" },
   { id: 22, name: "Ben Challum", cls: "munros", reg: "Southern Highlands", diff: "Moderate", dist: 13.5, elev: 1025, time: "5-6h", peaks: ["Ben Challum"], rat: 4.6, rev: 38, start: "Kirkton Farm, Tyndrum", src: "ts", gpx_file: "https://mferkdgzpaaxixqlanzm.supabase.co/storage/v1/object/public/gpx-files/Ben_Challum.gpx" },
+  { id: 23, name: "Stob Bàn & Mullach nan Coirean", cls: "munros", reg: "Ben Nevis & Mamores", diff: "Hard", dist: 16.5, elev: 1350, time: "6-8h", peaks: ["Stob Bàn", "Mullach nan Coirean"], rat: 4.8, rev: 52, start: "Glen Nevis Car Park", src: "ts", gpx_file: "https://mferkdgzpaaxixqlanzm.supabase.co/storage/v1/object/public/gpx-files/Stob_Ban_%26_Mullach_nan_Coirean.gpx" },
 ];
 
 const C_WALKS = [
