@@ -5124,6 +5124,23 @@ export default function TrailSync() {
     loadUserData();
   }, [authState]);
 
+  // Re-fetch follows when browser tab becomes visible — fixes Safari/browser session staleness
+  useEffect(() => {
+    if (!userId) return;
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      supabase.from("follows").select("following_id").eq("follower_id", userId)
+        .then(({ data }) => {
+          if (data) {
+            setFollowingIds(new Set(data.map(f => f.following_id)));
+            setFollowingCount(data.length);
+          }
+        });
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [userId]);
+
   const handleTutNext = () => {
     if (tutStep >= TUTORIAL_STEPS.length - 1) {
       setAuthState("app");
