@@ -285,7 +285,7 @@ let ROUTES = [
   { id: 17, name: "Great Glen Way", cls: "non-mountain", reg: "Ben Nevis & Mamores", diff: "Moderate", dist: 127, elev: 2200, time: "5-6 days", peaks: [], rat: 4.5, rev: 345, start: "Fort William", src: "ts" },
   { id: 18, name: "Trossachs Trail - Loch Katrine", cls: "non-mountain", reg: "Southern Highlands", diff: "Easy", dist: 21, elev: 280, time: "5-6h", peaks: [], rat: 4.3, rev: 178, start: "Trossachs Pier", src: "ts" },
   { id: 21, name: "The Five Sisters of Kintail", cls: "munros", reg: "Kintail", diff: "Expert", dist: 15.0, elev: 1775, time: "8-10h", peaks: ["Sgùrr na Ciste Duibhe", "Sgùrr na Càrnach", "Sgùrr Fhuaran"], rat: 4.8, rev: 156, start: "Shiel Bridge Car Park", src: "ts" },
-  { id: 19, name: "Buachaille Etive Mor - South Ridge Variation", cls: "munros", reg: "Glen Coe", diff: "Expert", dist: 12.5, elev: 1100, time: "6-8h", peaks: ["Buachaille Etive Mor"], rat: 4.6, rev: 23, start: "Altnafeadh Layby", src: "community" },
+  { id: 19, name: "Buachaille Etive Mor - Curved Ridge", cls: "munros", reg: "Glen Coe", diff: "Expert", dist: 10.5, elev: 1020, time: "5-7h", peaks: ["Buachaille Etive Mor"], rat: 4.9, rev: 67, start: "Altnafeadh Layby", src: "community" },
   { id: 20, name: "Cairngorms Lairig Ghru Through-Walk", cls: "non-mountain", reg: "Cairngorms", diff: "Hard", dist: 30, elev: 640, time: "10-12h", peaks: [], rat: 4.7, rev: 45, start: "Linn of Dee Car Park", src: "community" },
   { id: 22, name: "Ben Challum", cls: "munros", reg: "Southern Highlands", diff: "Moderate", dist: 13.5, elev: 1025, time: "5-6h", peaks: ["Ben Challum"], rat: 4.6, rev: 38, start: "Kirkton Farm, Tyndrum", src: "ts", gpx_file: "https://mferkdgzpaaxixqlanzm.supabase.co/storage/v1/object/public/gpx-files/Ben_Challum.gpx" },
 ];
@@ -2343,6 +2343,9 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   const gpxRouteWatchRef = useRef(null);
   const gpxRouteElapsedRef = useRef(null);
   const gpxUserMarkerRef = useRef(null);
+  const [routeWeather, setRouteWeather] = useState(null); // hourly weather along route
+  const [routeWeatherLoading, setRouteWeatherLoading] = useState(false);
+  const [elevProfile, setElevProfile] = useState(null); // elevation points for chart
   const [paused, setPaused] = useState(false);
   const [finished, setFinished] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -2880,10 +2883,84 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     };
   }, [gpxRouteActive, gpxRoute]);
 
-  // Store parsed GPX coords when route loads
+  // Store parsed GPX coords when route loads + fetch weather timeline
   useEffect(() => {
-    if (!gpxRoute) { setGpxRouteCoords(null); setGpxRouteActive(false); setGpxRouteDistDone(0); setGpxRouteProgress(0); setGpxRouteElapsed("0:00"); setGpxRouteEta("--"); return; }
+    if (!gpxRoute) {
+      setGpxRouteCoords(null); setGpxRouteActive(false); setGpxRouteDistDone(0);
+      setGpxRouteProgress(0); setGpxRouteElapsed("0:00"); setGpxRouteEta("--");
+      setRouteWeather(null); setElevProfile(null);
+      return;
+    }
   }, [gpxRoute]);
+
+  // Fetch weather timeline when coords are parsed
+  useEffect(() => {
+    if (!gpxRouteCoords || gpxRouteCoords.length < 2) return;
+    setRouteWeatherLoading(true);
+
+    const haversine = ([lng1, lat1], [lng2, lat2]) => {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    };
+
+    // Build elevation profile (sample every ~50 points)
+    const step = Math.max(1, Math.floor(gpxRouteCoords.length / 80));
+    const elevPoints = gpxRouteCoords.filter((_, i) => i % step === 0).map(c => c[2] || 0);
+    setElevProfile(elevPoints);
+
+    // Calculate total distance and ascent for Naismith's rule
+    let totalKm = 0, totalAscentM = 0;
+    for (let i = 1; i < gpxRouteCoords.length; i++) {
+      totalKm += haversine(gpxRouteCoords[i-1], gpxRouteCoords[i]);
+      const dElev = (gpxRouteCoords[i][2] || 0) - (gpxRouteCoords[i-1][2] || 0);
+      if (dElev > 0) totalAscentM += dElev;
+    }
+
+    // Naismith: 5km/h flat + 10min per 100m ascent
+    const flatHours = totalKm / 5;
+    const ascentHours = (totalAscentM / 100) * (10/60);
+    const totalHours = flatHours + ascentHours;
+
+    // Sample 1 point per hour along route
+    const now = new Date();
+    const hourlyPoints = [];
+    for (let h = 0; h <= Math.ceil(totalHours); h++) {
+      const frac = Math.min(h / totalHours, 1);
+      const targetDist = frac * totalKm;
+      let cumDist = 0, idx = 0;
+      for (let i = 1; i < gpxRouteCoords.length; i++) {
+        cumDist += haversine(gpxRouteCoords[i-1], gpxRouteCoords[i]);
+        if (cumDist >= targetDist) { idx = i; break; }
+      }
+      const pt = gpxRouteCoords[idx];
+      hourlyPoints.push({ hour: h, lat: pt[1], lng: pt[0], ele: Math.round(pt[2] || 0), time: new Date(now.getTime() + h * 3600000) });
+    }
+
+    // Fetch Open-Meteo for start point with hourly forecast
+    const startLat = gpxRouteCoords[0][1];
+    const startLng = gpxRouteCoords[0][0];
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${startLat}&longitude=${startLng}&hourly=temperature_2m,precipitation_probability,windspeed_10m,weathercode&wind_speed_unit=kmh&timezone=Europe%2FLondon&forecast_days=2`;
+
+    fetch(url).then(r => r.json()).then(data => {
+      const hours = data.hourly;
+      const nowHour = now.getHours();
+      const wxMap = {};
+      hours.time.forEach((t, i) => { wxMap[t] = { temp: hours.temperature_2m[i], precip: hours.precipitation_probability[i], wind: hours.windspeed_10m[i], code: hours.weathercode[i] }; });
+
+      const timeline = hourlyPoints.map(pt => {
+        const tKey = pt.time.toISOString().slice(0, 13) + ":00";
+        const wx = wxMap[tKey] || {};
+        const icon = wx.code === 0 ? "☀️" : wx.code <= 2 ? "🌤️" : wx.code <= 48 ? "☁️" : wx.code <= 67 ? "🌧️" : "🌨️";
+        return { ...pt, temp: wx.temp, precip: wx.precip, wind: wx.wind, icon };
+      });
+
+      setRouteWeather({ timeline, totalKm: Math.round(totalKm * 10) / 10, totalHours: Math.round(totalHours * 10) / 10, totalAscent: Math.round(totalAscentM) });
+      setRouteWeatherLoading(false);
+    }).catch(() => setRouteWeatherLoading(false));
+  }, [gpxRouteCoords]);
 
   // Update map style when layer changes
   useEffect(() => {
@@ -3084,6 +3161,54 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
         </div>
       )}
 
+      {/* ── ROUTE WEATHER TIMELINE ── */}
+      {gpxRoute && !gpxRouteActive && routeWeather && (
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 24, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px 16px 0 0", border: "1px solid rgba(90,152,227,0.15)", borderBottom: "none", padding: "14px 16px 20px", maxHeight: "55vh", overflowY: "auto" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "14px" }}>
+            {[["📏", `${routeWeather.totalKm}km`, "Distance"], ["⏱️", `${routeWeather.totalHours}h`, "Est. Time"], ["⛰️", `${routeWeather.totalAscent}m`, "Ascent"]].map(([icon, val, label]) => (
+              <div key={label} style={{ textAlign: "center", background: "#0a2240", borderRadius: "10px", padding: "10px 4px", border: "1px solid rgba(90,152,227,0.1)" }}>
+                <div style={{ fontSize: "16px", marginBottom: "2px" }}>{icon}</div>
+                <div style={{ fontSize: "14px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
+                <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4, textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
+              </div>
+            ))}
+          </div>
+          {elevProfile && (
+            <div style={{ marginBottom: "14px" }}>
+              <div style={{ fontSize: "10px", fontWeight: 600, color: "#BDD6F4", opacity: 0.4, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>Elevation Profile</div>
+              <div style={{ height: "48px", display: "flex", alignItems: "flex-end", gap: "1px", background: "#0a2240", borderRadius: "8px", padding: "4px 6px", overflow: "hidden" }}>
+                {(() => { const mn = Math.min(...elevProfile), mx = Math.max(...elevProfile), rng = mx - mn || 1; return elevProfile.map((e, i) => (<div key={i} style={{ flex: 1, background: "linear-gradient(to top,#E85D3A,#F49D37)", borderRadius: "2px 2px 0 0", height: `${Math.max(4, ((e-mn)/rng)*36)}px`, opacity: 0.8 }} />)); })()}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: "3px" }}>
+                <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4 }}>{Math.min(...elevProfile)}m</div>
+                <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4 }}>{Math.max(...elevProfile)}m</div>
+              </div>
+            </div>
+          )}
+          <div style={{ marginBottom: "14px" }}>
+            <div style={{ fontSize: "10px", fontWeight: 600, color: "#BDD6F4", opacity: 0.4, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Weather Along Route</div>
+            <div style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "4px" }}>
+              {routeWeather.timeline.map((pt, i) => (
+                <div key={i} style={{ flexShrink: 0, width: "60px", textAlign: "center", background: "#0a2240", borderRadius: "10px", padding: "8px 4px", border: "1px solid rgba(90,152,227,0.08)" }}>
+                  <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginBottom: "4px" }}>{i === 0 ? "Start" : `+${i}h`}</div>
+                  <div style={{ fontSize: "18px", marginBottom: "3px" }}>{pt.icon || "🌤️"}</div>
+                  <div style={{ fontSize: "11px", fontWeight: 700, color: "#F8F8F8" }}>{pt.temp !== undefined ? `${Math.round(pt.temp)}°` : "—"}</div>
+                  <div style={{ fontSize: "9px", color: "#5A98E3", marginTop: "2px" }}>{pt.wind !== undefined ? `${Math.round(pt.wind)}km/h` : ""}</div>
+                  <div style={{ fontSize: "9px", color: pt.precip > 50 ? "#E85D3A" : "#BDD6F4", opacity: 0.6, marginTop: "1px" }}>{pt.precip !== undefined ? `${pt.precip}%` : ""}</div>
+                  <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.3, marginTop: "2px" }}>{pt.ele}m</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.3, textAlign: "center" }}>Naismith timing · Open-Meteo weather</div>
+        </div>
+      )}
+      {gpxRoute && !gpxRouteActive && routeWeatherLoading && (
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 24, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px 16px 0 0", border: "1px solid rgba(90,152,227,0.15)", borderBottom: "none", padding: "20px 16px", textAlign: "center" }}>
+          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#5A98E3", margin: "0 auto 10px", animation: "pulse 1s ease infinite" }} />
+          <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>Calculating route forecast…</div>
+        </div>
+      )}
       {/* ── GUIDED ROUTE STATS BAR ── */}
       {gpxRoute && gpxRouteActive && (
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 24, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px 16px 0 0", border: "1px solid rgba(232,93,58,0.2)", borderBottom: "none", padding: "14px 16px 20px" }}>
