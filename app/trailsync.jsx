@@ -96,7 +96,7 @@ const WX_REGIONS = [
 ];
 
 // Keep WX_AREAS as alias for backward compat with any refs
-let WX_AREAS = WX_REGIONS.map(r => ({ ...r, score: 70, temp: 5, feels: 0, wind: 20, precip: 1, vis: "moderate", ic: "cloudsun" }));
+const WX_AREAS = WX_REGIONS.map(r => ({ ...r, score: 70, temp: 5, feels: 0, wind: 20, precip: 1, vis: "moderate", ic: "cloudsun" }));
 
 /* ═══════════════════════════════════════════════════════════════════
    WEATHER ENGINE — Open-Meteo (free, no key required)
@@ -262,7 +262,8 @@ const PEAKS_FALLBACK = [
   { id: 22, name: "Sgùrr Fhuaran",         cls: "munros",      ht: 1067, reg: "Kintail",              lat: 57.199, lng: -5.349, done: false },
 ];
 // PEAKS will be populated from Supabase in the main app component
-let PEAKS = PEAKS_FALLBACK;
+let PEAKS;
+PEAKS = PEAKS_FALLBACK;
 
 // ROUTES populated from Supabase on mount; fallback hardcoded data kept as default
 let ROUTES = [
