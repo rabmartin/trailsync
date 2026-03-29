@@ -1079,9 +1079,8 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   };
 
   useEffect(() => {
-    // Fetch posts once auth is confirmed - fixes browser session timing
-    if (userId) fetchPosts();
-  }, [userId]);
+    fetchPosts();
+  }, []);
 
   // Pull to refresh handler
   const handleTouchStart = (e) => {
@@ -4853,16 +4852,23 @@ export default function TrailSync() {
 
   // Show PWA install banner if not already installed and not dismissed
   useEffect(() => {
-    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
-    const dismissed = localStorage.getItem("pwa-banner-dismissed");
-    if (!isStandalone && !dismissed) {
-      setTimeout(() => setShowPWABanner(true), 3000); // show after 3s
-    }
+    try {
+      const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+      const dismissed = localStorage.getItem("pwa-banner-dismissed");
+      if (!isStandalone && !dismissed) {
+        setTimeout(() => setShowPWABanner(true), 3000);
+      }
+    } catch(e) {}
   }, []);
 
-  // Follow/unfollow from header search
-  // visibilitychange handler removed for debugging
+  const [userCourseProgress, setUserCourseProgress] = useState({});
+  const [userLocation, setUserLocation] = useState(null);
+  const [userId, setUserId] = useState(null);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [followingIds, setFollowingIds] = useState(new Set()); // set of user IDs this user follows
 
+  // Follow/unfollow from header search
   const handleFollowFromSearch = async (targetId) => {
     if (!userId || !targetId || userId === targetId) return;
     const isFollowing = followingIds?.has(targetId);
@@ -4897,12 +4903,6 @@ export default function TrailSync() {
     }
   };
 
-  const [userCourseProgress, setUserCourseProgress] = useState({});
-  const [userLocation, setUserLocation] = useState(null);
-  const [userId, setUserId] = useState(null);
-  const [followerCount, setFollowerCount] = useState(0);
-  const [followingCount, setFollowingCount] = useState(0);
-  const [followingIds, setFollowingIds] = useState(new Set()); // set of user IDs this user follows
 
   // Navigate to main map and draw a GPX route
   // Accepts a full route object or just an id
