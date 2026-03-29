@@ -5014,10 +5014,12 @@ export default function TrailSync() {
       setDbPeaks(null);
 
       // Fetch all peaks from Supabase
-      const { data: allPeaks } = await supabase
-        .from("peaks")
-        .select("id, name, classification, height, region, latitude, longitude")
-        .order("name");
+      // Fetch all peaks in two batches to bypass the 1000 row default limit
+      const [batch1, batch2] = await Promise.all([
+        supabase.from("peaks").select("id, name, classification, height, region, latitude, longitude").order("name").range(0, 999),
+        supabase.from("peaks").select("id, name, classification, height, region, latitude, longitude").order("name").range(1000, 1999),
+      ]);
+      const allPeaks = [...(batch1.data || []), ...(batch2.data || [])];
 
       // Fetch this user's logged peaks
       const { data: userPeaks } = await supabase
