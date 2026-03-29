@@ -2343,6 +2343,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   const gpxRouteWatchRef = useRef(null);
   const gpxRouteElapsedRef = useRef(null);
   const gpxUserMarkerRef = useRef(null);
+  const [routeHoverTooltip, setRouteHoverTooltip] = useState(null); // {x, y, hour, icon, temp, wind, precip, ele}
   const [routeWeather, setRouteWeather] = useState(null); // hourly weather along route
   const [routeWeatherLoading, setRouteWeatherLoading] = useState(false);
   const [elevProfile, setElevProfile] = useState(null); // elevation points for chart
@@ -2893,6 +2894,49 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     }
   }, [gpxRoute]);
 
+  // Hover tooltip on GPX route line
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !gpxRouteCoords || !routeWeather) return;
+
+    const haversine = ([lng1, lat1], [lng2, lat2]) => {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    };
+
+    let totalKm = 0;
+    const cumDists = [0];
+    for (let i = 1; i < gpxRouteCoords.length; i++) {
+      totalKm += haversine(gpxRouteCoords[i-1], gpxRouteCoords[i]);
+      cumDists.push(totalKm);
+    }
+
+    const onMove = (e) => {
+      const lngLat = e.lngLat;
+      // Find nearest point on route
+      let minDist = Infinity, nearestIdx = 0;
+      for (let i = 0; i < gpxRouteCoords.length; i++) {
+        const d = haversine([lngLat.lng, lngLat.lat], gpxRouteCoords[i]);
+        if (d < minDist) { minDist = d; nearestIdx = i; }
+      }
+      // Only show tooltip if within 300m of route
+      if (minDist > 0.3) { setRouteHoverTooltip(null); return; }
+      const frac = cumDists[nearestIdx] / totalKm;
+      const hourIdx = Math.min(Math.round(frac * routeWeather.totalHours), routeWeather.timeline.length - 1);
+      const wx = routeWeather.timeline[hourIdx] || {};
+      const pt = map.project([gpxRouteCoords[nearestIdx][0], gpxRouteCoords[nearestIdx][1]]);
+      setRouteHoverTooltip({ x: pt.x, y: pt.y, hourIdx, icon: wx.icon, temp: wx.temp, wind: wx.wind, precip: wx.precip, ele: gpxRouteCoords[nearestIdx][2] || 0 });
+    };
+    const onLeave = () => setRouteHoverTooltip(null);
+
+    map.on("mousemove", onMove);
+    map.on("mouseleave", onLeave);
+    return () => { map.off("mousemove", onMove); map.off("mouseleave", onLeave); };
+  }, [gpxRouteCoords, routeWeather]);
+
   // Fetch weather timeline when coords are parsed
   useEffect(() => {
     if (!gpxRouteCoords || gpxRouteCoords.length < 2) return;
@@ -3162,53 +3206,81 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       )}
 
       {/* ── ROUTE WEATHER TIMELINE ── */}
-      {gpxRoute && !gpxRouteActive && routeWeather && (
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 24, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px 16px 0 0", border: "1px solid rgba(90,152,227,0.15)", borderBottom: "none", padding: "14px 16px 20px", maxHeight: "55vh", overflowY: "auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "14px" }}>
-            {[["📏", `${routeWeather.totalKm}km`, "Distance"], ["⏱️", `${routeWeather.totalHours}h`, "Est. Time"], ["⛰️", `${routeWeather.totalAscent}m`, "Ascent"]].map(([icon, val, label]) => (
-              <div key={label} style={{ textAlign: "center", background: "#0a2240", borderRadius: "10px", padding: "10px 4px", border: "1px solid rgba(90,152,227,0.1)" }}>
-                <div style={{ fontSize: "16px", marginBottom: "2px" }}>{icon}</div>
-                <div style={{ fontSize: "14px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
-                <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4, textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
-              </div>
-            ))}
-          </div>
-          {elevProfile && (
-            <div style={{ marginBottom: "14px" }}>
-              <div style={{ fontSize: "10px", fontWeight: 600, color: "#BDD6F4", opacity: 0.4, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>Elevation Profile</div>
-              <div style={{ height: "48px", display: "flex", alignItems: "flex-end", gap: "1px", background: "#0a2240", borderRadius: "8px", padding: "4px 6px", overflow: "hidden" }}>
-                {(() => { const mn = Math.min(...elevProfile), mx = Math.max(...elevProfile), rng = mx - mn || 1; return elevProfile.map((e, i) => (<div key={i} style={{ flex: 1, background: "linear-gradient(to top,#E85D3A,#F49D37)", borderRadius: "2px 2px 0 0", height: `${Math.max(4, ((e-mn)/rng)*36)}px`, opacity: 0.8 }} />)); })()}
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginTop: "3px" }}>
-                <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4 }}>{Math.min(...elevProfile)}m</div>
-                <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4 }}>{Math.max(...elevProfile)}m</div>
-              </div>
-            </div>
-          )}
-          <div style={{ marginBottom: "14px" }}>
-            <div style={{ fontSize: "10px", fontWeight: 600, color: "#BDD6F4", opacity: 0.4, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Weather Along Route</div>
-            <div style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "4px" }}>
-              {routeWeather.timeline.map((pt, i) => (
-                <div key={i} style={{ flexShrink: 0, width: "60px", textAlign: "center", background: "#0a2240", borderRadius: "10px", padding: "8px 4px", border: "1px solid rgba(90,152,227,0.08)" }}>
-                  <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginBottom: "4px" }}>{i === 0 ? "Start" : `+${i}h`}</div>
-                  <div style={{ fontSize: "18px", marginBottom: "3px" }}>{pt.icon || "🌤️"}</div>
-                  <div style={{ fontSize: "11px", fontWeight: 700, color: "#F8F8F8" }}>{pt.temp !== undefined ? `${Math.round(pt.temp)}°` : "—"}</div>
-                  <div style={{ fontSize: "9px", color: "#5A98E3", marginTop: "2px" }}>{pt.wind !== undefined ? `${Math.round(pt.wind)}km/h` : ""}</div>
-                  <div style={{ fontSize: "9px", color: pt.precip > 50 ? "#E85D3A" : "#BDD6F4", opacity: 0.6, marginTop: "1px" }}>{pt.precip !== undefined ? `${pt.precip}%` : ""}</div>
-                  <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.3, marginTop: "2px" }}>{pt.ele}m</div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.3, textAlign: "center" }}>Naismith timing · Open-Meteo weather</div>
-        </div>
-      )}
       {gpxRoute && !gpxRouteActive && routeWeatherLoading && (
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 24, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px 16px 0 0", border: "1px solid rgba(90,152,227,0.15)", borderBottom: "none", padding: "20px 16px", textAlign: "center" }}>
-          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#5A98E3", margin: "0 auto 10px", animation: "pulse 1s ease infinite" }} />
-          <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>Calculating route forecast…</div>
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 24, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px 16px 0 0", border: "1px solid rgba(90,152,227,0.15)", borderBottom: "none", padding: "14px 16px", textAlign: "center" }}>
+          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#5A98E3", margin: "0 auto 8px", animation: "pulse 1s ease infinite" }} />
+          <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5 }}>Calculating route forecast…</div>
         </div>
       )}
+      {gpxRoute && !gpxRouteActive && routeWeather && (() => {
+        const [wxOpen, setWxOpen] = React.useState(false);
+        return (
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 24, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px 16px 0 0", border: "1px solid rgba(90,152,227,0.15)", borderBottom: "none" }}>
+            {/* Collapsed handle — always visible */}
+            <div onClick={() => setWxOpen(o => !o)} style={{ padding: "12px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{ width: "32px", height: "3px", borderRadius: "2px", background: "rgba(90,152,227,0.3)", margin: "0 auto", position: "absolute", top: "6px", left: "50%", transform: "translateX(-50%)" }} />
+              <div style={{ display: "flex", gap: "12px", flex: 1, marginTop: "4px" }}>
+                <span style={{ fontSize: "12px", color: "#BDD6F4" }}>📏 {routeWeather.totalKm}km</span>
+                <span style={{ fontSize: "12px", color: "#BDD6F4" }}>⏱️ {routeWeather.totalHours}h</span>
+                <span style={{ fontSize: "12px", color: "#BDD6F4" }}>⛰️ {routeWeather.totalAscent}m</span>
+                {routeWeather.timeline[0] && <span style={{ fontSize: "12px", color: "#BDD6F4", marginLeft: "auto" }}>{routeWeather.timeline[0].icon} {routeWeather.timeline[0].temp !== undefined ? `${Math.round(routeWeather.timeline[0].temp)}°` : ""}</span>}
+              </div>
+              <div style={{ color: "#BDD6F4", opacity: 0.4, fontSize: "10px", flexShrink: 0 }}>{wxOpen ? "▼" : "▲"}</div>
+            </div>
+
+            {/* Expanded content */}
+            {wxOpen && (
+              <div style={{ padding: "0 16px 16px", maxHeight: "40vh", overflowY: "auto" }}>
+                {/* Elevation profile */}
+                {elevProfile && (
+                  <div style={{ marginBottom: "12px" }}>
+                    <div style={{ height: "44px", display: "flex", alignItems: "flex-end", gap: "1px", background: "#0a2240", borderRadius: "8px", padding: "4px 6px", overflow: "hidden" }}>
+                      {(() => { const mn = Math.min(...elevProfile), mx = Math.max(...elevProfile), rng = mx - mn || 1; return elevProfile.map((e, i) => (<div key={i} style={{ flex: 1, background: "linear-gradient(to top,#E85D3A,#F49D37)", borderRadius: "2px 2px 0 0", height: `${Math.max(3, ((e-mn)/rng)*34)}px`, opacity: 0.85 }} />)); })()}
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2px" }}>
+                      <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>{Math.min(...elevProfile)}m</div>
+                      <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>Elevation</div>
+                      <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>{Math.max(...elevProfile)}m</div>
+                    </div>
+                  </div>
+                )}
+                {/* Hourly weather */}
+                <div style={{ display: "flex", gap: "5px", overflowX: "auto", paddingBottom: "4px" }}>
+                  {routeWeather.timeline.map((pt, i) => (
+                    <div key={i} style={{ flexShrink: 0, width: "56px", textAlign: "center", background: "#0a2240", borderRadius: "10px", padding: "7px 3px", border: "1px solid rgba(90,152,227,0.08)" }}>
+                      <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginBottom: "3px" }}>{i === 0 ? "Now" : `+${i}h`}</div>
+                      <div style={{ fontSize: "16px", marginBottom: "2px" }}>{pt.icon || "🌤️"}</div>
+                      <div style={{ fontSize: "11px", fontWeight: 700, color: "#F8F8F8" }}>{pt.temp !== undefined ? `${Math.round(pt.temp)}°` : "—"}</div>
+                      <div style={{ fontSize: "8px", color: "#5A98E3", marginTop: "1px" }}>{pt.wind !== undefined ? `${Math.round(pt.wind)}` : ""}kph</div>
+                      <div style={{ fontSize: "8px", color: pt.precip > 50 ? "#E85D3A" : "#BDD6F4", opacity: 0.6 }}>{pt.precip !== undefined ? `${pt.precip}%` : ""}</div>
+                      <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.3 }}>{pt.ele}m</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.25, textAlign: "center", marginTop: "8px" }}>Naismith timing · Open-Meteo</div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+      {/* ── ROUTE HOVER TOOLTIP ── */}
+      {routeHoverTooltip && gpxRoute && !gpxRouteActive && (
+        <div style={{ position: "absolute", left: routeHoverTooltip.x + 12, top: routeHoverTooltip.y - 70, zIndex: 30, background: "rgba(4,30,61,0.95)", backdropFilter: "blur(10px)", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.2)", padding: "8px 12px", pointerEvents: "none", boxShadow: "0 4px 16px rgba(0,0,0,0.4)", minWidth: "100px" }}>
+          <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginBottom: "4px" }}>{routeHoverTooltip.hourIdx === 0 ? "At start" : `~${routeHoverTooltip.hourIdx}h in`}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ fontSize: "20px" }}>{routeHoverTooltip.icon || "🌤️"}</span>
+            <div>
+              <div style={{ fontSize: "14px", fontWeight: 800, color: "#F8F8F8" }}>{routeHoverTooltip.temp !== undefined ? `${Math.round(routeHoverTooltip.temp)}°C` : "—"}</div>
+              <div style={{ fontSize: "9px", color: "#5A98E3" }}>{routeHoverTooltip.wind !== undefined ? `${Math.round(routeHoverTooltip.wind)}kph wind` : ""}</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+            <span style={{ fontSize: "9px", color: routeHoverTooltip.precip > 50 ? "#E85D3A" : "#BDD6F4", opacity: 0.7 }}>{routeHoverTooltip.precip !== undefined ? `🌧 ${routeHoverTooltip.precip}%` : ""}</span>
+            <span style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5 }}>⛰️ {Math.round(routeHoverTooltip.ele)}m</span>
+          </div>
+        </div>
+      )}
+
       {/* ── GUIDED ROUTE STATS BAR ── */}
       {gpxRoute && gpxRouteActive && (
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 24, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px 16px 0 0", border: "1px solid rgba(232,93,58,0.2)", borderBottom: "none", padding: "14px 16px 20px" }}>
