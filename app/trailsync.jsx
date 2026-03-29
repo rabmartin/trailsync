@@ -27,6 +27,7 @@ const safariFallbackStorage = (() => {
 })();
 
 const storageAdapter = (() => {
+  if (typeof window === "undefined") return safariFallbackStorage;
   try {
     localStorage.setItem("_ts_test", "1");
     localStorage.removeItem("_ts_test");
