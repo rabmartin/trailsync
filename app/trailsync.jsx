@@ -1,5 +1,6 @@
 "use client";
 // TrailSync v126 - build 2026-03-28
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import {
   MapPin, Mountain, Cloud, Users, Trophy, Search, X, ChevronDown, ChevronRight, ChevronLeft,
   Star, Wind, Droplets, Eye, Thermometer, Navigation, Download, Calendar, Clock,
@@ -5453,6 +5454,7 @@ export default function TrailSync() {
           );
         })}
       </div>
+    <SpeedInsights />
     </div>
   );
 }
