@@ -1078,8 +1078,9 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   };
 
   useEffect(() => {
-    fetchPosts();
-  }, []);
+    // Fetch posts once auth is confirmed - fixes browser session timing
+    if (userId) fetchPosts();
+  }, [userId]);
 
   // Pull to refresh handler
   const handleTouchStart = (e) => {
@@ -4859,6 +4860,20 @@ export default function TrailSync() {
   }, []);
 
   // Follow/unfollow from header search
+  // Re-fetch followingIds when browser tab regains focus (fixes Safari session timing)
+  useEffect(() => {
+    const onFocus = async () => {
+      if (!userId) return;
+      const { data } = await supabase.from("follows").select("following_id").eq("follower_id", userId);
+      if (data && data.length > 0) {
+        setFollowingIds(new Set(data.map(f => f.following_id)));
+        setFollowingCount(data.length);
+      }
+    };
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") onFocus(); });
+    return () => document.removeEventListener("visibilitychange", onFocus);
+  }, [userId]);
+
   const handleFollowFromSearch = async (targetId) => {
     if (!userId || !targetId || userId === targetId) return;
     const isFollowing = followingIds?.has(targetId);
