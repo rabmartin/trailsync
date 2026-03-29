@@ -2390,7 +2390,8 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   const gpxRouteWatchRef = useRef(null);
   const gpxRouteElapsedRef = useRef(null);
   const gpxUserMarkerRef = useRef(null);
-  const [routeHoverTooltip, setRouteHoverTooltip] = useState(null); // {x, y, hour, icon, temp, wind, precip, ele}
+  const [routeHoverTooltip, setRouteHoverTooltip] = useState(null); // {lngLat, hourIdx, icon, temp, wind, precip, ele}
+  const routePopupRef = useRef(null);
   const [routeWeather, setRouteWeather] = useState(null); // hourly weather along route
   const [routeWeatherLoading, setRouteWeatherLoading] = useState(false);
   const [elevProfile, setElevProfile] = useState(null); // elevation points for chart
@@ -2941,10 +2942,13 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     }
   }, [gpxRoute]);
 
-  // Hover tooltip on GPX route line
+  // Hover tooltip on GPX route — uses Mapbox Popup so it moves with the map
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !gpxRouteCoords || !routeWeather) return;
+    if (!map || !gpxRouteCoords || !routeWeather) {
+      if (routePopupRef.current) { routePopupRef.current.remove(); routePopupRef.current = null; }
+      return;
+    }
 
     const haversine = ([lng1, lat1], [lng2, lat2]) => {
       const R = 6371;
@@ -2961,27 +2965,67 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       cumDists.push(totalKm);
     }
 
-    const onMove = (e) => {
-      const lngLat = e.lngLat;
-      // Find nearest point on route
-      let minDist = Infinity, nearestIdx = 0;
-      for (let i = 0; i < gpxRouteCoords.length; i++) {
-        const d = haversine([lngLat.lng, lngLat.lat], gpxRouteCoords[i]);
-        if (d < minDist) { minDist = d; nearestIdx = i; }
-      }
-      // Only show tooltip if within 300m of route
-      if (minDist > 0.3) { setRouteHoverTooltip(null); return; }
-      const frac = cumDists[nearestIdx] / totalKm;
-      const hourIdx = Math.min(Math.round(frac * routeWeather.totalHours), routeWeather.timeline.length - 1);
-      const wx = routeWeather.timeline[hourIdx] || {};
-      const pt = map.project([gpxRouteCoords[nearestIdx][0], gpxRouteCoords[nearestIdx][1]]);
-      setRouteHoverTooltip({ x: pt.x, y: pt.y, hourIdx, icon: wx.icon, temp: wx.temp, wind: wx.wind, precip: wx.precip, ele: gpxRouteCoords[nearestIdx][2] || 0 });
-    };
-    const onLeave = () => setRouteHoverTooltip(null);
+    import("mapbox-gl").then(mod => {
+      const mapboxgl = mod.default;
 
-    map.on("mousemove", onMove);
-    map.on("mouseleave", onLeave);
-    return () => { map.off("mousemove", onMove); map.off("mouseleave", onLeave); };
+      const onMove = (e) => {
+        const lngLat = e.lngLat;
+        let minDist = Infinity, nearestIdx = 0;
+        for (let i = 0; i < gpxRouteCoords.length; i++) {
+          const d = haversine([lngLat.lng, lngLat.lat], gpxRouteCoords[i]);
+          if (d < minDist) { minDist = d; nearestIdx = i; }
+        }
+        if (minDist > 0.3) {
+          if (routePopupRef.current) { routePopupRef.current.remove(); routePopupRef.current = null; }
+          return;
+        }
+        const frac = cumDists[nearestIdx] / totalKm;
+        const hourIdx = Math.min(Math.round(frac * routeWeather.totalHours), routeWeather.timeline.length - 1);
+        const wx = routeWeather.timeline[hourIdx] || {};
+        const coord = gpxRouteCoords[nearestIdx];
+        const ele = Math.round(coord[2] || 0);
+        const label = hourIdx === 0 ? "At start" : `~${hourIdx}h in`;
+        const precip = wx.precip !== undefined ? wx.precip : null;
+        const precipColor = precip > 50 ? "#E85D3A" : "#BDD6F4";
+
+        const html = `<div style="background:rgba(4,30,61,0.97);border:1px solid rgba(90,152,227,0.25);border-radius:12px;padding:10px 13px;font-family:'DM Sans',sans-serif;min-width:110px;box-shadow:0 4px 20px rgba(0,0,0,0.5)">
+          <div style="font-size:9px;color:#BDD6F4;opacity:0.5;margin-bottom:5px">${label}</div>
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
+            <span style="font-size:22px">${wx.icon || "🌤️"}</span>
+            <div>
+              <div style="font-size:15px;font-weight:800;color:#F8F8F8">${wx.temp !== undefined ? Math.round(wx.temp) + "°C" : "—"}</div>
+              <div style="font-size:9px;color:#5A98E3">${wx.wind !== undefined ? Math.round(wx.wind) + "kph wind" : ""}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            ${precip !== null ? `<span style="font-size:9px;color:${precipColor};opacity:0.8">🌧 ${precip}%</span>` : ""}
+            <span style="font-size:9px;color:#BDD6F4;opacity:0.5">⛰️ ${ele}m</span>
+          </div>
+        </div>`;
+
+        if (!routePopupRef.current) {
+          routePopupRef.current = new mapboxgl.Popup({ closeButton: false, closeOnClick: false, className: "route-wx-popup", maxWidth: "none" })
+            .setLngLat([coord[0], coord[1]])
+            .setHTML(html)
+            .addTo(map);
+        } else {
+          routePopupRef.current.setLngLat([coord[0], coord[1]]).setHTML(html);
+        }
+      };
+
+      const onLeave = () => {
+        if (routePopupRef.current) { routePopupRef.current.remove(); routePopupRef.current = null; }
+      };
+
+      map.on("mousemove", onMove);
+      map.on("mouseleave", onLeave);
+
+      return () => {
+        map.off("mousemove", onMove);
+        map.off("mouseleave", onLeave);
+        if (routePopupRef.current) { routePopupRef.current.remove(); routePopupRef.current = null; }
+      };
+    });
   }, [gpxRouteCoords, routeWeather]);
 
   // Fetch weather timeline when coords are parsed
@@ -3262,24 +3306,6 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       {gpxRoute && !gpxRouteActive && routeWeather && (
         <RouteWeatherPanel routeWeather={routeWeather} elevProfile={elevProfile} />
       )}
-      {/* ── ROUTE HOVER TOOLTIP ── */}
-      {routeHoverTooltip && gpxRoute && !gpxRouteActive && (
-        <div style={{ position: "absolute", left: routeHoverTooltip.x + 12, top: routeHoverTooltip.y - 70, zIndex: 30, background: "rgba(4,30,61,0.95)", backdropFilter: "blur(10px)", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.2)", padding: "8px 12px", pointerEvents: "none", boxShadow: "0 4px 16px rgba(0,0,0,0.4)", minWidth: "100px" }}>
-          <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginBottom: "4px" }}>{routeHoverTooltip.hourIdx === 0 ? "At start" : `~${routeHoverTooltip.hourIdx}h in`}</div>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ fontSize: "20px" }}>{routeHoverTooltip.icon || "🌤️"}</span>
-            <div>
-              <div style={{ fontSize: "14px", fontWeight: 800, color: "#F8F8F8" }}>{routeHoverTooltip.temp !== undefined ? `${Math.round(routeHoverTooltip.temp)}°C` : "—"}</div>
-              <div style={{ fontSize: "9px", color: "#5A98E3" }}>{routeHoverTooltip.wind !== undefined ? `${Math.round(routeHoverTooltip.wind)}kph wind` : ""}</div>
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
-            <span style={{ fontSize: "9px", color: routeHoverTooltip.precip > 50 ? "#E85D3A" : "#BDD6F4", opacity: 0.7 }}>{routeHoverTooltip.precip !== undefined ? `🌧 ${routeHoverTooltip.precip}%` : ""}</span>
-            <span style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5 }}>⛰️ {Math.round(routeHoverTooltip.ele)}m</span>
-          </div>
-        </div>
-      )}
-
       {/* ── GUIDED ROUTE STATS BAR ── */}
       {gpxRoute && gpxRouteActive && (
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 24, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px 16px 0 0", border: "1px solid rgba(232,93,58,0.2)", borderBottom: "none", padding: "14px 16px 20px" }}>
@@ -5436,6 +5462,8 @@ export default function TrailSync() {
         @keyframes glow { 0%,100% { box-shadow: 0 0 8px rgba(232,93,58,.25); } 50% { box-shadow: 0 0 18px rgba(232,93,58,.45); } }
         @keyframes pulse { 0%,100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.08); } }
         @keyframes locationPulse { 0% { transform: translate(-50%,-50%) scale(0.5); opacity: 0.8; } 100% { transform: translate(-50%,-50%) scale(2.5); opacity: 0; } }
+        .route-wx-popup .mapboxgl-popup-content { background: transparent !important; padding: 0 !important; box-shadow: none !important; border-radius: 0 !important; }
+        .route-wx-popup .mapboxgl-popup-tip { display: none !important; }
       `}</style>
 
       {/* Header */}
