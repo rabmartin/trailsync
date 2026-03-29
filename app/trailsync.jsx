@@ -2281,7 +2281,7 @@ const RoutesPage = ({ openRoute }) => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 3: MAP
    ═══════════════════════════════════════════════════════════════════ */
-const RouteWeatherPanel = ({ routeWeather, elevProfile, onElevClick }) => {
+const RouteWeatherPanel = ({ routeWeather, elevProfile, onElevHover }) => {
   const [wxOpen, setWxOpen] = useState(false);
   return (
     <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 24, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px 16px 0 0", border: "1px solid rgba(90,152,227,0.15)", borderBottom: "none" }}>
@@ -2299,21 +2299,24 @@ const RouteWeatherPanel = ({ routeWeather, elevProfile, onElevClick }) => {
         <div style={{ padding: "0 16px 16px", maxHeight: "40vh", overflowY: "auto" }}>
           {elevProfile && (
             <div style={{ marginBottom: "12px" }}>
-              <div style={{ height: "48px", background: "#0a2240", borderRadius: "8px", overflow: "hidden", position: "relative", cursor: "crosshair" }}>
+              <div style={{ height: "48px", background: "#0a2240", borderRadius: "8px", overflow: "hidden", position: "relative", cursor: "ew-resize" }}>
                 {(() => {
                   const mn = Math.min(...elevProfile), mx = Math.max(...elevProfile), rng = mx - mn || 1;
                   const w = 100, h = 40;
                   const pts = elevProfile.map((e, i) => `${(i / (elevProfile.length - 1)) * w},${h - ((e - mn) / rng) * h}`).join(" ");
                   const fill = `${pts} ${w},${h} 0,${h}`;
-                  const handleClick = (e) => {
-                    if (!onElevClick) return;
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const frac = (e.clientX - rect.left) / rect.width;
-                    const hourIdx = Math.min(Math.round(frac * (routeWeather.totalHours)), routeWeather.timeline.length - 1);
-                    onElevClick(Math.max(0, hourIdx), frac);
+                  const getFrac = (clientX, el) => {
+                    const rect = el.getBoundingClientRect();
+                    const frac = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+                    const hourIdx = Math.min(Math.round(frac * routeWeather.totalHours), routeWeather.timeline.length - 1);
+                    if (onElevHover) onElevHover(Math.max(0, hourIdx), frac);
                   };
+                  const handleMove = (e) => getFrac(e.clientX, e.currentTarget);
+                  const handleLeave = () => { if (onElevHover) onElevHover(null, null); };
+                  const handleTouchMove = (e) => { e.preventDefault(); getFrac(e.touches[0].clientX, e.currentTarget); };
+                  const handleTouchEnd = () => { if (onElevHover) onElevHover(null, null); };
                   return (
-                    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ width: "100%", height: "100%", display: "block" }} onClick={handleClick}>
+                    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ width: "100%", height: "100%", display: "block", touchAction: "none" }} onMouseMove={handleMove} onMouseLeave={handleLeave} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} onTouchCancel={handleTouchEnd}>
                       <defs>
                         <linearGradient id="elevGrad" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor="#F49D37" stopOpacity="0.4" />
@@ -2417,7 +2420,8 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   const gpxUserMarkerRef = useRef(null);
   const [routeHoverTooltip, setRouteHoverTooltip] = useState(null);
   const routePopupRef = useRef(null);
-  const routePinnedPopupRef = useRef(null); // pinned from elevation click
+  const routeElevPopupRef = useRef(null); // from elevation hover
+  const [elevHoverActive, setElevHoverActive] = useState(false);
   const [routeWeather, setRouteWeather] = useState(null); // hourly weather along route
   const [routeWeatherLoading, setRouteWeatherLoading] = useState(false);
   const [elevProfile, setElevProfile] = useState(null); // elevation points for chart
@@ -3001,7 +3005,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
           const d = haversine([lngLat.lng, lngLat.lat], gpxRouteCoords[i]);
           if (d < minDist) { minDist = d; nearestIdx = i; }
         }
-        if (minDist > 0.3) {
+        if (minDist > 0.3 || elevHoverActive) {
           if (routePopupRef.current) { routePopupRef.current.remove(); routePopupRef.current = null; }
           return;
         }
@@ -3330,8 +3334,9 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
         </div>
       )}
       {gpxRoute && !gpxRouteActive && routeWeather && (
-        <RouteWeatherPanel routeWeather={routeWeather} elevProfile={elevProfile} onElevClick={(hourIdx, frac) => {
-          if (!gpxRouteCoords || !routeWeather) return;
+        <RouteWeatherPanel routeWeather={routeWeather} elevProfile={elevProfile} onElevHover={(hourIdx, frac) => {
+          if (hourIdx === null || !gpxRouteCoords || !routeWeather) return;
+          setElevHoverActive(true);
           // Find the coordinate at this fraction along the route
           const targetIdx = Math.round(frac * (gpxRouteCoords.length - 1));
           const coord = gpxRouteCoords[Math.min(targetIdx, gpxRouteCoords.length - 1)];
@@ -3357,13 +3362,20 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
           </div>`;
           import("mapbox-gl").then(mod => {
             const mapboxgl = mod.default;
-            if (routePinnedPopupRef.current) { routePinnedPopupRef.current.remove(); }
-            routePinnedPopupRef.current = new mapboxgl.Popup({ closeButton: false, closeOnClick: true, className: "route-wx-popup", maxWidth: "none" })
-              .setLngLat([coord[0], coord[1]])
-              .setHTML(html)
-              .addTo(mapRef.current);
-            mapRef.current.easeTo({ center: [coord[0], coord[1]], duration: 600 });
+            if (!routeElevPopupRef.current) {
+              routeElevPopupRef.current = new mapboxgl.Popup({ closeButton: false, closeOnClick: false, className: "route-wx-popup", maxWidth: "none" })
+                .setLngLat([coord[0], coord[1]])
+                .setHTML(html)
+                .addTo(mapRef.current);
+            } else {
+              routeElevPopupRef.current.setLngLat([coord[0], coord[1]]).setHTML(html);
+            }
           });
+        } else {
+          // mouseleave — remove popup
+          if (routeElevPopupRef.current) { routeElevPopupRef.current.remove(); routeElevPopupRef.current = null; }
+          setElevHoverActive(false);
+        }
         }} />
       )}
       {/* ── GUIDED ROUTE STATS BAR ── */}
