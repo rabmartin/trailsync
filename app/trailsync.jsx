@@ -1728,6 +1728,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                   setConfirmDeletePost(p.id);
                 }} style={{ background: "none", border: "none", color: "#E85D3A", opacity: 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'", marginLeft: "auto" }}><Trash2 size={13} /></button>
               )}
+            </div>
 
             {/* Comment section */}
             {commentOpen === p.id && (
