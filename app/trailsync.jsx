@@ -2003,7 +2003,7 @@ const RoutesClusterMap = ({ filtered, selRegion, setSelRegion, onMapReady }) => 
    OFFLINE BANNER
    ═══════════════════════════════════════════════════════════════════ */
 const OfflineIndicator = () => {
-  const [offline, setOffline] = useState(!navigator.onLine);
+  const [offline, setOffline] = useState(false); // set properly in useEffect
   useEffect(() => {
     const go = () => setOffline(true);
     const back = () => setOffline(false);
@@ -2021,7 +2021,7 @@ const OfflineIndicator = () => {
 };
 
 const OfflineBanner = () => {
-  const [offline, setOffline] = useState(!navigator.onLine);
+  const [offline, setOffline] = useState(false);
   useEffect(() => {
     const goOffline = () => setOffline(true);
     const goOnline  = () => setOffline(false);
@@ -4781,7 +4781,7 @@ export default function TrailSync() {
   const [authState, setAuthState] = useState("loading");
   const [userName, setUserName] = useState("Alex");
   const [tab, setTab] = useState(() => {
-    try { return sessionStorage.getItem("ts_tab") || "map"; } catch { return "map"; }
+    try { return (typeof window !== "undefined" ? sessionStorage.getItem("ts_tab") : null) || "map"; } catch { return "map"; }
   });
 
   // Persist tab to sessionStorage on change
