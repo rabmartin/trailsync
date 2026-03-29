@@ -287,6 +287,7 @@ let ROUTES = [
   { id: 21, name: "The Five Sisters of Kintail", cls: "munros", reg: "Kintail", diff: "Expert", dist: 15.0, elev: 1775, time: "8-10h", peaks: ["Sgùrr na Ciste Duibhe", "Sgùrr na Càrnach", "Sgùrr Fhuaran"], rat: 4.8, rev: 156, start: "Shiel Bridge Car Park", src: "ts" },
   { id: 19, name: "Buachaille Etive Mor - South Ridge Variation", cls: "munros", reg: "Glen Coe", diff: "Expert", dist: 12.5, elev: 1100, time: "6-8h", peaks: ["Buachaille Etive Mor"], rat: 4.6, rev: 23, start: "Altnafeadh Layby", src: "community" },
   { id: 20, name: "Cairngorms Lairig Ghru Through-Walk", cls: "non-mountain", reg: "Cairngorms", diff: "Hard", dist: 30, elev: 640, time: "10-12h", peaks: [], rat: 4.7, rev: 45, start: "Linn of Dee Car Park", src: "community" },
+  { id: 22, name: "Ben Challum", cls: "munros", reg: "Southern Highlands", diff: "Moderate", dist: 13.5, elev: 1025, time: "5-6h", peaks: ["Ben Challum"], rat: 4.6, rev: 38, start: "Kirkton Farm, Tyndrum", src: "community", gpx_file: "https://mferkdgzpaaxixqlanzm.supabase.co/storage/v1/object/public/gpx-routes/Ben_Challum.gpx" },
 ];
 
 const C_WALKS = [
