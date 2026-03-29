@@ -262,8 +262,7 @@ const PEAKS_FALLBACK = [
   { id: 22, name: "Sgùrr Fhuaran",         cls: "munros",      ht: 1067, reg: "Kintail",              lat: 57.199, lng: -5.349, done: false },
 ];
 // PEAKS will be populated from Supabase in the main app component
-let PEAKS;
-PEAKS = PEAKS_FALLBACK;
+let PEAKS = PEAKS_FALLBACK;
 
 // ROUTES populated from Supabase on mount; fallback hardcoded data kept as default
 let ROUTES = [
@@ -1852,7 +1851,7 @@ const RoutesClusterMap = ({ filtered, selRegion, setSelRegion, onMapReady }) => 
           // Build GeoJSON from routes with small offsets so they spread when zoomed
           const features = filtered.map((r, i) => {
             // Use first matched peak coords for accuracy, fall back to region centre
-            const peakMatch = PEAKS.find(p => r.peaks && r.peaks.includes(p.name));
+            const peakMatch = (typeof PEAKS !== "undefined" ? PEAKS : []).find(p => r.peaks && r.peaks.includes(p.name));
             const region = ROUTE_REGIONS.find(rr => rr.name === r.reg);
             const baseLat = peakMatch?.lat ?? region?.lat ?? 56.5;
             const baseLng = peakMatch?.lng ?? region?.lng ?? -4.5;
@@ -1956,7 +1955,7 @@ const RoutesClusterMap = ({ filtered, selRegion, setSelRegion, onMapReady }) => 
     if (!source) return;
 
     const features = filtered.map((r, i) => {
-      const peakMatch = PEAKS.find(p => r.peaks && r.peaks.includes(p.name));
+      const peakMatch = (typeof PEAKS !== "undefined" ? PEAKS : []).find(p => r.peaks && r.peaks.includes(p.name));
       const region = ROUTE_REGIONS.find(rr => rr.name === r.reg);
       const baseLat = peakMatch?.lat ?? region?.lat ?? 56.5;
       const baseLng = peakMatch?.lng ?? region?.lng ?? -4.5;
@@ -4782,7 +4781,7 @@ export default function TrailSync() {
   const [authState, setAuthState] = useState("loading");
   const [userName, setUserName] = useState("Alex");
   const [tab, setTab] = useState(() => {
-    try { return (typeof window !== "undefined" ? sessionStorage.getItem("ts_tab") : null) || "map"; } catch { return "map"; }
+    try { return (typeof window !== "undefined" ? sessionStorage.getItem("ts_tab") : null) || "home"; } catch { return "home"; }
   });
 
   // Persist tab to sessionStorage on change
@@ -4862,19 +4861,7 @@ export default function TrailSync() {
   }, []);
 
   // Follow/unfollow from header search
-  // Re-fetch followingIds when browser tab regains focus (fixes Safari session timing)
-  useEffect(() => {
-    const onFocus = async () => {
-      if (!userId) return;
-      const { data } = await supabase.from("follows").select("following_id").eq("follower_id", userId);
-      if (data && data.length > 0) {
-        setFollowingIds(new Set(data.map(f => f.following_id)));
-        setFollowingCount(data.length);
-      }
-    };
-    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") onFocus(); });
-    return () => document.removeEventListener("visibilitychange", onFocus);
-  }, [userId]);
+  // visibilitychange handler removed for debugging
 
   const handleFollowFromSearch = async (targetId) => {
     if (!userId || !targetId || userId === targetId) return;
@@ -5191,7 +5178,7 @@ export default function TrailSync() {
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&family=Playfair+Display:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          @keyframes fi { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes fi { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
           @keyframes su { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
           @keyframes glow { 0%,100% { box-shadow: 0 0 8px rgba(232,93,58,.25); } 50% { box-shadow: 0 0 18px rgba(232,93,58,.45); } }
         `}</style>
@@ -5206,7 +5193,7 @@ export default function TrailSync() {
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&family=Playfair+Display:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          @keyframes fi { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes fi { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
           @keyframes su { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
           @keyframes glow { 0%,100% { box-shadow: 0 0 8px rgba(232,93,58,.25); } 50% { box-shadow: 0 0 18px rgba(232,93,58,.45); } }
         `}</style>
@@ -5223,7 +5210,7 @@ export default function TrailSync() {
         input, select, textarea { font-size: 16px !important; }
         ::-webkit-scrollbar { width: 3px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(90,152,227,.15); border-radius: 4px; }
         select option { background: #0a2240; color: #F8F8F8; }
-        @keyframes fi { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fi { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes su { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fl { 0%,100% { transform: translate(-50%,-50%) scale(1); } 50% { transform: translate(-50%,-50%) scale(1.04); } }
         @keyframes glow { 0%,100% { box-shadow: 0 0 8px rgba(232,93,58,.25); } 50% { box-shadow: 0 0 18px rgba(232,93,58,.45); } }
