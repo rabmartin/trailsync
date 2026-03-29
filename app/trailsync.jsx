@@ -2281,7 +2281,7 @@ const RoutesPage = ({ openRoute }) => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 3: MAP
    ═══════════════════════════════════════════════════════════════════ */
-const RouteWeatherPanel = ({ routeWeather, elevProfile, onElevHover }) => {
+const RouteWeatherPanel = ({ routeWeather, elevProfile, onElevHover, onElevLeave }) => {
   const [wxOpen, setWxOpen] = useState(false);
   return (
     <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 24, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px 16px 0 0", border: "1px solid rgba(90,152,227,0.15)", borderBottom: "none" }}>
@@ -2312,9 +2312,9 @@ const RouteWeatherPanel = ({ routeWeather, elevProfile, onElevHover }) => {
                     if (onElevHover) onElevHover(Math.max(0, hourIdx), frac);
                   };
                   const handleMove = (e) => getFrac(e.clientX, e.currentTarget);
-                  const handleLeave = () => { if (onElevHover) onElevHover(null, null); };
+                  const handleLeave = () => { if (onElevLeave) onElevLeave(); };
                   const handleTouchMove = (e) => { e.preventDefault(); getFrac(e.touches[0].clientX, e.currentTarget); };
-                  const handleTouchEnd = () => { if (onElevHover) onElevHover(null, null); };
+                  const handleTouchEnd = () => { if (onElevLeave) onElevLeave(); };
                   return (
                     <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ width: "100%", height: "100%", display: "block", touchAction: "none" }} onMouseMove={handleMove} onMouseLeave={handleLeave} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} onTouchCancel={handleTouchEnd}>
                       <defs>
@@ -3335,7 +3335,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       )}
       {gpxRoute && !gpxRouteActive && routeWeather && (
         <RouteWeatherPanel routeWeather={routeWeather} elevProfile={elevProfile} onElevHover={(hourIdx, frac) => {
-          if (hourIdx === null || !gpxRouteCoords || !routeWeather) return;
+          if (!gpxRouteCoords || !routeWeather) return;
           setElevHoverActive(true);
           // Find the coordinate at this fraction along the route
           const targetIdx = Math.round(frac * (gpxRouteCoords.length - 1));
@@ -3371,11 +3371,9 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
               routeElevPopupRef.current.setLngLat([coord[0], coord[1]]).setHTML(html);
             }
           });
-        } else {
-          // mouseleave — remove popup
+        }} onElevLeave={() => {
           if (routeElevPopupRef.current) { routeElevPopupRef.current.remove(); routeElevPopupRef.current = null; }
           setElevHoverActive(false);
-        }
         }} />
       )}
       {/* ── GUIDED ROUTE STATS BAR ── */}
