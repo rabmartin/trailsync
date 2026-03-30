@@ -1090,7 +1090,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
 
   useEffect(() => {
     fetchPosts();
-  }, []);
+  }, [userId]);
 
   // Pull to refresh handler
   const handleTouchStart = (e) => {
@@ -5428,11 +5428,10 @@ export default function TrailSync() {
     loadUserData();
   }, [authState]);
 
-  // Re-fetch follows when browser tab becomes visible — fixes Safari/browser session staleness
+  // Re-fetch follows when userId becomes available or browser tab becomes visible
   useEffect(() => {
     if (!userId) return;
-    const onVisible = () => {
-      if (document.visibilityState !== "visible") return;
+    const fetchFollows = () => {
       supabase.from("follows").select("following_id").eq("follower_id", userId)
         .then(({ data }) => {
           if (data) {
@@ -5440,6 +5439,11 @@ export default function TrailSync() {
             setFollowingCount(data.length);
           }
         });
+    };
+    fetchFollows(); // run immediately when userId is first set (fixes browser vs PWA timing)
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      fetchFollows();
     };
     document.addEventListener("visibilitychange", onVisible);
     return () => document.removeEventListener("visibilitychange", onVisible);
