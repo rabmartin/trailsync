@@ -1023,6 +1023,8 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   const [ff, setFf] = useState(initialFilter || "all");
   const [expandedArea, setExpandedArea] = useState(null);
   const [showSAIS, setShowSAIS] = useState(false);
+  const [windUnit, setWindUnit] = useState("mph");
+  const fmtWind = (mph) => windUnit === "mph" ? Math.round(mph) : Math.round(mph * 1.60934);
 
   // Live posts
   const [livePosts, setLivePosts] = useState(FEED);
@@ -1371,11 +1373,14 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                   }}>{label}</button>
                 ))}
               </div>
-              {wxUpdated && !wxLoading && (
-                <span style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4 }}>
-                  {wxUpdated.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
-                </span>
-              )}
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <button onClick={() => setWindUnit(u => u === "mph" ? "kph" : "mph")} style={{ padding: "3px 8px", borderRadius: "6px", border: "1px solid rgba(90,152,227,0.2)", background: "rgba(90,152,227,0.08)", color: "#5A98E3", fontSize: "10px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>{windUnit}</button>
+                {wxUpdated && !wxLoading && (
+                  <span style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4 }}>
+                    {wxUpdated.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                )}
+              </div>
             </div>
             <div style={{ padding: "0 14px 4px", fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>
               Ranked: wind 30% · feels-like 25% · precip 25% · vis 20% · summit altitude adjusted
@@ -1434,8 +1439,8 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                             <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.5 }}>feels</div>
                           </div>
                           <div style={{ textAlign: "right", minWidth: "36px" }}>
-                            <div style={{ fontSize: "12px", fontWeight: 700, color: a.wind > 35 ? "#E85D3A" : a.wind >= 20 ? "#F49D37" : "#F8F8F8" }}>{a.wind}</div>
-                            <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.5 }}>mph</div>
+                            <div style={{ fontSize: "12px", fontWeight: 700, color: a.wind > 35 ? "#E85D3A" : a.wind >= 20 ? "#F49D37" : "#F8F8F8" }}>{fmtWind(a.wind)}</div>
+                            <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.5 }}>{windUnit}</div>
                           </div>
                         </>
                       )}
@@ -1452,7 +1457,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                           <span>Temp: {a.temp}°</span>
                           <span>Precip: {a.precip}mm</span>
                           <span>Vis: {a.vis}</span>
-                          <span>Wind: {a.wind}mph</span>
+                          <span>Wind: {fmtWind(a.wind)}{windUnit}</span>
                         </div>
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -1499,7 +1504,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                                   <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.4 }}>feels</div>
                                 </div>
                                 <div style={{ textAlign: "center" }}>
-                                  <div style={{ fontSize: "11px", fontWeight: 700, color: lw.wi > 35 ? "#E85D3A" : lw.wi >= 20 ? "#F49D37" : "#F8F8F8" }}>{lw.wi}<span style={{ fontSize: "8px" }}>mph</span></div>
+                                  <div style={{ fontSize: "11px", fontWeight: 700, color: lw.wi > 35 ? "#E85D3A" : lw.wi >= 20 ? "#F49D37" : "#F8F8F8" }}>{fmtWind(lw.wi)}<span style={{ fontSize: "8px" }}>{windUnit}</span></div>
                                   <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.4 }}>wind</div>
                                 </div>
                                 {lw.sn && <Snowflake size={12} color="#BDD6F4" />}
@@ -1584,8 +1589,8 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                   {/* Stats grid */}
                   <div style={{ padding: "14px 18px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
                     {[
-                      ["Wind", `${selPeakWx.wx.wi}mph`, selPeakWx.wx.wi > 35 ? "#E85D3A" : selPeakWx.wx.wi >= 20 ? "#F49D37" : "#F8F8F8"],
-                      ["Gusts", `${selPeakWx.wx.gusts}mph`, selPeakWx.wx.gusts > 50 ? "#E85D3A" : selPeakWx.wx.gusts > 30 ? "#F49D37" : "#F8F8F8"],
+                      ["Wind", `${fmtWind(selPeakWx.wx.wi)}${windUnit}`, selPeakWx.wx.wi > 35 ? "#E85D3A" : selPeakWx.wx.wi >= 20 ? "#F49D37" : "#F8F8F8"],
+                      ["Gusts", `${fmtWind(selPeakWx.wx.gusts)}${windUnit}`, selPeakWx.wx.gusts > 50 ? "#E85D3A" : selPeakWx.wx.gusts > 30 ? "#F49D37" : "#F8F8F8"],
                       ["Rain %", `${selPeakWx.wx.pct}%`, selPeakWx.wx.pct > 70 ? "#5A98E3" : "#F8F8F8"],
                       ["Precip", `${selPeakWx.wx.p}mm`, "#5A98E3"],
                       ["Sunrise", selPeakWx.wx.sunrise, "#F49D37"],
@@ -1617,7 +1622,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                             </div>
                             <WI type={wxIcon(h.code)} size={16} />
                             <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8", marginTop: "5px" }}>{h.temp}°</div>
-                            <div style={{ fontSize: "9px", fontWeight: 600, color: h.wind > 35 ? "#E85D3A" : h.wind >= 20 ? "#F49D37" : "#BDD6F4", marginTop: "3px" }}>{h.wind}mph</div>
+                            <div style={{ fontSize: "9px", fontWeight: 600, color: h.wind > 35 ? "#E85D3A" : h.wind >= 20 ? "#F49D37" : "#BDD6F4", marginTop: "3px" }}>{fmtWind(h.wind)}{windUnit}</div>
                             <div style={{ fontSize: "8px", color: "#5A98E3", marginTop: "2px" }}>{h.precip}%</div>
                           </div>
                         ))}
@@ -2342,7 +2347,7 @@ const RouteWeatherPanel = ({ routeWeather, elevProfile, onElevHover, onElevLeave
                 <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginBottom: "3px" }}>{i === 0 ? "Now" : `+${i}h`}</div>
                 <div style={{ fontSize: "16px", marginBottom: "2px" }}>{pt.icon || "🌤️"}</div>
                 <div style={{ fontSize: "11px", fontWeight: 700, color: "#F8F8F8" }}>{pt.temp !== undefined ? `${Math.round(pt.temp)}°` : "—"}</div>
-                <div style={{ fontSize: "8px", color: "#5A98E3", marginTop: "1px" }}>{pt.wind !== undefined ? `${Math.round(pt.wind)}` : ""}kph</div>
+                <div style={{ fontSize: "8px", color: "#5A98E3", marginTop: "1px" }}>{pt.wind !== undefined ? `${Math.round(pt.wind)}mph` : ""}</div>
                 <div style={{ fontSize: "8px", color: pt.precip > 50 ? "#E85D3A" : "#BDD6F4", opacity: 0.6 }}>{pt.precip !== undefined ? `${pt.precip}%` : ""}</div>
                 <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.3 }}>{pt.ele}m</div>
               </div>
@@ -3024,7 +3029,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
             <span style="font-size:22px">${wx.icon || "🌤️"}</span>
             <div>
               <div style="font-size:15px;font-weight:800;color:#F8F8F8">${wx.temp !== undefined ? Math.round(wx.temp) + "°C" : "—"}</div>
-              <div style="font-size:9px;color:#5A98E3">${wx.wind !== undefined ? Math.round(wx.wind) + "kph wind" : ""}</div>
+              <div style="font-size:9px;color:#5A98E3">${wx.wind !== undefined ? Math.round(wx.wind) + "mph wind" : ""}</div>
             </div>
           </div>
           <div style="display:flex;gap:8px">
@@ -3351,7 +3356,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
               <span style="font-size:22px">${wx.icon || "🌤️"}</span>
               <div>
                 <div style="font-size:15px;font-weight:800;color:#F8F8F8">${wx.temp !== undefined ? Math.round(wx.temp) + "°C" : "—"}</div>
-                <div style="font-size:9px;color:#5A98E3">${wx.wind !== undefined ? Math.round(wx.wind) + "kph wind" : ""}</div>
+                <div style="font-size:9px;color:#5A98E3">${wx.wind !== undefined ? Math.round(wx.wind) + "mph wind" : ""}</div>
               </div>
             </div>
             <div style="display:flex;gap:8px">
@@ -4219,7 +4224,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "16px" }}>
-        {[[ME.walks, "Walks", "#E85D3A"], [`${ME.dist}km`, "Distance", "#5A98E3"], [`${(ME.elev / 1000).toFixed(1)}km`, "Elevation", "#6BCB77"]].map(([v, l, c]) => <div key={l} style={{ background: "#0a2240", borderRadius: "12px", padding: "14px", textAlign: "center", border: "1px solid rgba(90,152,227,0.1)" }}><div style={{ fontSize: "20px", fontWeight: 800, color: c, fontFamily: "'JetBrains Mono'" }}>{v}</div><div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5, marginTop: "3px" }}>{l}</div></div>)}
+        {[[ME.walks, "Walks", "#E85D3A"], [`${ME.dist}km`, "Distance", "#5A98E3"], [`${(ME.elev / 1000).toFixed(1)}km`, "Elevation", "#6BCB77"]].map(([v, l, c]) => <div key={l} style={{ background: "#0a2240", borderRadius: "10px", padding: "10px 6px", textAlign: "center", border: "1px solid rgba(90,152,227,0.1)" }}><div style={{ fontSize: "17px", fontWeight: 800, color: c, fontFamily: "'JetBrains Mono'" }}>{v}</div><div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginTop: "2px" }}>{l}</div></div>)}
       </div>
 
       <div style={{ display: "flex", gap: "3px", marginBottom: "14px", background: "#0a2240", borderRadius: "12px", padding: "3px" }}>
@@ -4298,7 +4303,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                   <span style={{ fontSize: "10px", fontWeight: 600, color: "#BDD6F4", fontFamily: "'DM Sans'" }}>Loading route…</span>
                 </div>
               )}
-                <MiniMap key={mtExpanded ? "expanded" : "compact"} height={mtExpanded ? "100%" : "340px"} showGPS={true} onMapReady={map => { mtMapRef.current = map; }} markers={filteredPeaks.filter(pk => pk.lat && pk.lng).slice(0, 400).map(pk => ({ lat: pk.lat, lng: pk.lng, color: pk.done ? "#6BCB77" : "#E85D3A", data: pk, style: `width:14px;height:14px;border-radius:50%;background:${pk.done ? "#6BCB77" : "#E85D3A"};border:2px solid rgba(255,255,255,0.5);cursor:pointer;box-shadow:0 0 6px ${pk.done ? "rgba(107,203,119,0.4)" : "rgba(232,93,58,0.4)"};` }))} onMarkerClick={(m) => { setSelPeak(m.data); setLogging(false); if (mtActiveGpxId) { removeGpxFromMap(mtMapRef.current, mtActiveGpxId); setMtActiveGpxId(null); } }}>
+                <MiniMap key={mtExpanded ? "expanded" : "compact"} height={mtExpanded ? "100%" : "340px"} showGPS={true} onMapReady={map => { mtMapRef.current = map; }} markers={filteredPeaks.filter(pk => pk.lat && pk.lng).slice(0, 400).map(pk => ({ lat: pk.lat, lng: pk.lng, color: pk.done ? "#1a7a2e" : "#E85D3A", data: pk, style: `width:14px;height:14px;border-radius:50%;background:${pk.done ? "#1a7a2e" : "#E85D3A"};border:2px solid rgba(255,255,255,0.5);cursor:pointer;box-shadow:0 0 6px ${pk.done ? "rgba(26,122,46,0.5)" : "rgba(232,93,58,0.4)"};` }))} onMarkerClick={(m) => { setSelPeak(m.data); setLogging(false); if (mtActiveGpxId) { removeGpxFromMap(mtMapRef.current, mtActiveGpxId); setMtActiveGpxId(null); } }}>
                 {selPeak && (
                   <div style={{ position: "absolute", bottom: 10, left: 10, right: 10, zIndex: 20, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.15)", animation: "su .25s ease", overflow: "hidden" }}>
                     <div style={{ height: "3px", background: selPeak.done ? "linear-gradient(90deg,#6BCB77,transparent)" : "linear-gradient(90deg,#E85D3A,transparent)" }} />
@@ -5477,7 +5482,7 @@ export default function TrailSync() {
 
   if (authState === "loading") {
     return (
-      <div style={{ width: "100%", height: "100vh", background: "#041e3d", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ width: "100%", height: "100dvh", background: "#041e3d", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ textAlign: "center" }}>
           <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "linear-gradient(135deg,#E85D3A,#F49D37)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", animation: "glow 3s ease infinite" }}>
             <Mountain size={24} color="#F8F8F8" />
@@ -5490,7 +5495,7 @@ export default function TrailSync() {
 
   if (authState === "login") {
     return (
-      <div style={{ width: "100%", height: "100vh", background: "#041e3d", fontFamily: "'DM Sans',system-ui,sans-serif", overflow: "hidden" }}>
+      <div style={{ width: "100%", height: "100dvh", background: "#041e3d", fontFamily: "'DM Sans',system-ui,sans-serif", overflow: "hidden" }}>
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&family=Playfair+Display:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
           * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -5505,7 +5510,7 @@ export default function TrailSync() {
 
   if (authState === "signup") {
     return (
-      <div style={{ width: "100%", height: "100vh", background: "#041e3d", fontFamily: "'DM Sans',system-ui,sans-serif", overflow: "hidden" }}>
+      <div style={{ width: "100%", height: "100dvh", background: "#041e3d", fontFamily: "'DM Sans',system-ui,sans-serif", overflow: "hidden" }}>
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&family=Playfair+Display:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
           * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -5519,7 +5524,7 @@ export default function TrailSync() {
   }
 
   return (
-    <div style={{ width: "100%", height: "100vh", display: "flex", flexDirection: "column", background: "#041e3d", color: "#F8F8F8", fontFamily: "'DM Sans',system-ui,sans-serif", overflow: "hidden" }}>
+    <div style={{ width: "100%", height: "100dvh", display: "flex", flexDirection: "column", background: "#041e3d", color: "#F8F8F8", fontFamily: "'DM Sans',system-ui,sans-serif", overflow: "hidden" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&family=Playfair+Display:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
