@@ -45,7 +45,7 @@ const supabase = createClient(
       storage: storageAdapter,
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: false,
+      detectSessionInUrl: true,
     },
   }
 );
