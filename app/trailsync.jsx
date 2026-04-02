@@ -4061,7 +4061,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
   const [statView, setStatView] = useState("weekly");
   const [statMetric, setStatMetric] = useState("elevation");
   const [statOffset, setStatOffset] = useState(0);
-  const [statCompare, setStatCompare] = useState(false);
+  const [statCompareOffset, setStatCompareOffset] = useState(null); // null = off, number = comparison period offset
 
   const ST_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   const ST_MONTH_MAP = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
@@ -4490,7 +4490,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
 
       {sec === "stats" && (() => {
         const statBars = stBuildBars(statView, statOffset, statMetric, savedWalks);
-        const statCompareBars = statCompare ? stBuildBars(statView, statOffset - 1, statMetric, savedWalks) : null;
+        const statCompareBars = statCompareOffset !== null ? stBuildBars(statView, statCompareOffset, statMetric, savedWalks) : null;
         const statMax = Math.max(1, ...statBars.map(b => b.value), ...(statCompareBars || []).map(b => b.value));
         const statTotal = statBars.reduce((a, b) => a + b.value, 0);
         const statCompareTotal = statCompareBars ? statCompareBars.reduce((a, b) => a + b.value, 0) : 0;
@@ -4513,7 +4513,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             {/* View toggle */}
             <div style={{ display: "flex", gap: "4px", marginBottom: "12px" }}>
               {[["weekly","Weekly"],["monthly","Monthly"],["yearly","Yearly"]].map(([k,l]) => (
-                <button key={k} onClick={() => { setStatView(k); setStatOffset(0); }} style={{ flex: 1, padding: "7px", borderRadius: "10px", border: "none", background: statView === k ? "rgba(90,152,227,0.15)" : "#0a2240", color: statView === k ? "#5A98E3" : "#BDD6F4", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: statView === k ? 1 : 0.5 }}>{l}</button>
+                <button key={k} onClick={() => { setStatView(k); setStatOffset(0); setStatCompareOffset(null); }} style={{ flex: 1, padding: "7px", borderRadius: "10px", border: "none", background: statView === k ? "rgba(90,152,227,0.15)" : "#0a2240", color: statView === k ? "#5A98E3" : "#BDD6F4", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: statView === k ? 1 : 0.5 }}>{l}</button>
               ))}
             </div>
 
@@ -4559,28 +4559,52 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               </div>
             </div>
 
-            {/* Compare toggle + legend */}
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px", flexWrap: "wrap" }}>
-              <button onClick={() => setStatCompare(v => !v)} style={{ padding: "6px 14px", borderRadius: "20px", border: `1px solid ${statCompare ? CMP_COL : "rgba(90,152,227,0.2)"}`, background: statCompare ? "rgba(232,93,58,0.1)" : "#0a2240", color: statCompare ? CMP_COL : "#BDD6F4", fontSize: "10px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "5px" }}>
-                {statCompare ? "✕" : "+"} Compare
-              </button>
-              {statCompare && (
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "9px", color: "#BDD6F4", opacity: 0.7 }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: "3px" }}><span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "2px", background: MAIN_COL }} />{stPeriodTitle(statView, statOffset)}</span>
-                  <span style={{ display: "flex", alignItems: "center", gap: "3px" }}><span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "2px", background: CMP_COL }} />{stPeriodTitle(statView, statOffset - 1)}</span>
+            {/* Compare dropdown */}
+            {(() => {
+              const cmpOptions = (() => {
+                const opts = [{ label: "Compare to…", value: "" }];
+                if (statView === "weekly") {
+                  for (let i = 1; i <= 8; i++) {
+                    const off = statOffset - i;
+                    opts.push({ label: i === 1 ? `Last week (${stPeriodTitle("weekly", off)})` : `${i} weeks ago (${stPeriodTitle("weekly", off)})`, value: String(off) });
+                  }
+                } else if (statView === "monthly") {
+                  for (let i = 1; i <= 12; i++) {
+                    const off = statOffset - i;
+                    opts.push({ label: i === 1 ? `Last month (${stPeriodTitle("monthly", off)})` : stPeriodTitle("monthly", off), value: String(off) });
+                  }
+                } else {
+                  for (let i = 1; i <= 5; i++) {
+                    const off = statOffset - i;
+                    opts.push({ label: i === 1 ? `Last year (${stPeriodTitle("yearly", off)})` : stPeriodTitle("yearly", off), value: String(off) });
+                  }
+                }
+                return opts;
+              })();
+              return (
+                <div style={{ marginBottom: "14px" }}>
+                  <select value={statCompareOffset === null ? "" : String(statCompareOffset)} onChange={e => setStatCompareOffset(e.target.value === "" ? null : parseInt(e.target.value))} style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: `1px solid ${statCompareOffset !== null ? CMP_COL : "rgba(90,152,227,0.2)"}`, background: statCompareOffset !== null ? "rgba(232,93,58,0.06)" : "#0a2240", color: statCompareOffset !== null ? CMP_COL : "#BDD6F4", fontSize: "12px", fontWeight: 600, fontFamily: "'DM Sans'", outline: "none", cursor: "pointer", appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23BDD6F4' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}>
+                    {cmpOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                  {statCompareOffset !== null && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "9px", color: "#BDD6F4", opacity: 0.7, marginTop: "6px", paddingLeft: "2px" }}>
+                      <span style={{ display: "flex", alignItems: "center", gap: "3px" }}><span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "2px", background: MAIN_COL }} />{stPeriodTitle(statView, statOffset)}</span>
+                      <span style={{ display: "flex", alignItems: "center", gap: "3px" }}><span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "2px", background: CMP_COL }} />{stPeriodTitle(statView, statCompareOffset)}</span>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              );
+            })()}
 
             {/* Summary cards */}
-            {statCompare ? (
+            {statCompareOffset !== null ? (
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                 <div style={{ background: "rgba(90,152,227,0.08)", borderRadius: "12px", padding: "14px 10px", textAlign: "center", border: "1px solid rgba(90,152,227,0.15)" }}>
                   <div style={{ fontSize: "8px", color: MAIN_COL, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>{stPeriodTitle(statView, statOffset)}</div>
                   <div style={{ fontSize: "22px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{stFmtVal(statTotal, statMetric)}</div>
                 </div>
                 <div style={{ background: "rgba(232,93,58,0.08)", borderRadius: "12px", padding: "14px 10px", textAlign: "center", border: "1px solid rgba(232,93,58,0.15)" }}>
-                  <div style={{ fontSize: "8px", color: CMP_COL, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>{stPeriodTitle(statView, statOffset - 1)}</div>
+                  <div style={{ fontSize: "8px", color: CMP_COL, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>{stPeriodTitle(statView, statCompareOffset)}</div>
                   <div style={{ fontSize: "22px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{stFmtVal(statCompareTotal, statMetric)}</div>
                   {statCompareTotal > 0 && <div style={{ fontSize: "10px", color: statTotal >= statCompareTotal ? "#6BCB77" : CMP_COL, marginTop: "4px", fontWeight: 700 }}>{statTotal >= statCompareTotal ? "▲" : "▼"} {Math.round(Math.abs((statTotal - statCompareTotal) / statCompareTotal * 100))}%</div>}
                 </div>
