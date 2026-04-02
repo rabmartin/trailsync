@@ -4062,6 +4062,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
   const [statMetric, setStatMetric] = useState("elevation");
   const [statOffset, setStatOffset] = useState(0);
   const [statCompareOffset, setStatCompareOffset] = useState(null); // null = off, number = comparison period offset
+  const [showAllBadges, setShowAllBadges] = useState(false);
 
   const ST_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   const ST_MONTH_MAP = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
@@ -4500,21 +4501,22 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
         const now = new Date();
         return (
           <div>
-            {/* Metric selector */}
-            <div style={{ marginBottom: "12px" }}>
-              <select value={statMetric} onChange={e => setStatMetric(e.target.value)} style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "13px", fontWeight: 600, fontFamily: "'DM Sans'", outline: "none", cursor: "pointer", appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23BDD6F4' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}>
-                <option value="elevation">Elevation Gain</option>
-                <option value="distance">Distance</option>
-                <option value="time">Time Spent</option>
-                <option value="walks">Activities</option>
-              </select>
-            </div>
-
             {/* View toggle */}
             <div style={{ display: "flex", gap: "4px", marginBottom: "12px" }}>
               {[["weekly","Weekly"],["monthly","Monthly"],["yearly","Yearly"]].map(([k,l]) => (
                 <button key={k} onClick={() => { setStatView(k); setStatOffset(0); setStatCompareOffset(null); }} style={{ flex: 1, padding: "7px", borderRadius: "10px", border: "none", background: statView === k ? "rgba(90,152,227,0.15)" : "#0a2240", color: statView === k ? "#5A98E3" : "#BDD6F4", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: statView === k ? 1 : 0.5 }}>{l}</button>
               ))}
+            </div>
+
+            {/* Compact metric dropdown */}
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+              <span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5, fontWeight: 600, whiteSpace: "nowrap" }}>Showing</span>
+              <select value={statMetric} onChange={e => setStatMetric(e.target.value)} style={{ padding: "5px 28px 5px 10px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "11px", fontWeight: 600, fontFamily: "'DM Sans'", outline: "none", cursor: "pointer", appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23BDD6F4' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center" }}>
+                <option value="elevation">Elevation Gain</option>
+                <option value="distance">Distance</option>
+                <option value="time">Time Spent</option>
+                <option value="walks">Activities</option>
+              </select>
             </div>
 
             {/* Period navigation */}
@@ -4626,10 +4628,13 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             )}
             {/* Badges */}
             <div style={{ marginTop: "20px" }}>
-              <div style={{ fontSize: "11px", fontWeight: 700, color: "#BDD6F4", opacity: 0.5, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "10px" }}>Badges</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "#BDD6F4", opacity: 0.5, textTransform: "uppercase", letterSpacing: "0.8px" }}>Badges</div>
+                <button onClick={() => setShowAllBadges(true)} style={{ fontSize: "11px", fontWeight: 600, color: "#5A98E3", background: "none", border: "none", cursor: "pointer", fontFamily: "'DM Sans'", padding: 0 }}>View all →</button>
+              </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                {BADGES.map((b, i) => (
-                  <div key={i} style={{ background: b.e ? "rgba(107,203,119,0.05)" : "#0a2240", borderRadius: "12px", padding: "14px", textAlign: "center", border: `1px solid ${b.e ? "rgba(107,203,119,0.12)" : "rgba(90,152,227,0.1)"}`, opacity: b.e ? 1 : .75, animation: `fi .3s ease ${i * .04}s both` }}>
+                {BADGES.slice(0, 4).map((b, i) => (
+                  <div key={i} style={{ background: b.e ? "rgba(107,203,119,0.05)" : "#0a2240", borderRadius: "12px", padding: "14px", textAlign: "center", border: `1px solid ${b.e ? "rgba(107,203,119,0.12)" : "rgba(90,152,227,0.1)"}`, opacity: b.e ? 1 : .75 }}>
                     <div style={{ fontSize: "30px", marginBottom: "4px" }}>{b.i}</div>
                     <div style={{ fontSize: "11px", fontWeight: 700, color: "#F8F8F8" }}>{b.n}</div>
                     {b.e ? <div style={{ fontSize: "9px", color: "#6BCB77", fontWeight: 600, marginTop: "6px" }}><CheckCircle size={10} style={{ verticalAlign: "middle" }} /> Earned</div>
@@ -4638,6 +4643,31 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                 ))}
               </div>
             </div>
+
+            {/* All badges modal */}
+            {showAllBadges && (
+              <div style={{ position: "fixed", inset: 0, zIndex: 60, background: "#041e3d", display: "flex", flexDirection: "column", animation: "fi .2s ease" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 16px", borderBottom: "1px solid rgba(90,152,227,0.1)" }}>
+                  <button onClick={() => setShowAllBadges(false)} style={{ background: "rgba(90,152,227,0.1)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", padding: "7px 12px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600, fontFamily: "'DM Sans'" }}>
+                    <ChevronLeft size={16} /> Back
+                  </button>
+                  <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8" }}>All Badges</div>
+                  <div style={{ marginLeft: "auto", fontSize: "11px", color: "#6BCB77", fontWeight: 600 }}>{BADGES.filter(b => b.e).length}/{BADGES.length} earned</div>
+                </div>
+                <div style={{ overflowY: "auto", flex: 1, padding: "16px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                    {BADGES.map((b, i) => (
+                      <div key={i} style={{ background: b.e ? "rgba(107,203,119,0.05)" : "#0a2240", borderRadius: "14px", padding: "16px", textAlign: "center", border: `1px solid ${b.e ? "rgba(107,203,119,0.15)" : "rgba(90,152,227,0.1)"}`, opacity: b.e ? 1 : .75, animation: `fi .3s ease ${i * .04}s both` }}>
+                        <div style={{ fontSize: "34px", marginBottom: "6px" }}>{b.i}</div>
+                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8" }}>{b.n}</div>
+                        {b.e ? <div style={{ fontSize: "9px", color: "#6BCB77", fontWeight: 600, marginTop: "8px" }}><CheckCircle size={10} style={{ verticalAlign: "middle" }} /> Earned</div>
+                        : <div style={{ marginTop: "10px" }}><div style={{ height: "4px", borderRadius: "4px", background: "#264f80" }}><div style={{ width: `${b.p}%`, height: "100%", borderRadius: "4px", background: "#5A98E3" }} /></div><div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginTop: "4px" }}>{b.p}% complete</div></div>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       })()}
