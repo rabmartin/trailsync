@@ -4495,7 +4495,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
         const statMax = Math.max(1, ...statBars.map(b => b.value), ...(statCompareBars || []).map(b => b.value));
         const statTotal = statBars.reduce((a, b) => a + b.value, 0);
         const statCompareTotal = statCompareBars ? statCompareBars.reduce((a, b) => a + b.value, 0) : 0;
-        const CHART_H = 140;
+        const CHART_H = 180;
         const MAIN_COL = "#5A98E3";
         const CMP_COL = "#E85D3A";
         const now = new Date();
@@ -4509,9 +4509,9 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             </div>
 
             {/* Compact metric dropdown */}
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-              <span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5, fontWeight: 600, whiteSpace: "nowrap" }}>Showing</span>
-              <select value={statMetric} onChange={e => setStatMetric(e.target.value)} style={{ padding: "5px 28px 5px 10px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "11px", fontWeight: 600, fontFamily: "'DM Sans'", outline: "none", cursor: "pointer", appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23BDD6F4' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
+              <span style={{ fontSize: "13px", color: "#F8F8F8", fontWeight: 700, whiteSpace: "nowrap" }}>Showing</span>
+              <select value={statMetric} onChange={e => setStatMetric(e.target.value)} style={{ padding: "6px 26px 6px 10px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.25)", background: "rgba(90,152,227,0.08)", color: "#5A98E3", fontSize: "10px", fontWeight: 700, fontFamily: "'DM Sans'", outline: "none", cursor: "pointer", appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%235A98E3' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center" }}>
                 <option value="elevation">Elevation Gain</option>
                 <option value="distance">Distance</option>
                 <option value="time">Time Spent</option>
@@ -5382,7 +5382,7 @@ export default function TrailSync() {
       clearTimeout(loadingTimeout);
       if (session?.user) {
         const meta = session.user.user_metadata || {};
-        const displayName = meta.username || meta.full_name?.split(" ")[0] || session.user.email?.split("@")[0] || "Explorer";
+        const displayName = meta.full_name?.split(" ")[0] || meta.username || session.user.email?.split("@")[0] || "Explorer";
         setUserName(displayName);
         setUserLocation(meta.location || null);
         setUserId(session.user.id);
