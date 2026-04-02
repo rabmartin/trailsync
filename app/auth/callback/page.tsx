@@ -1,10 +1,9 @@
 "use client";
 import { Suspense, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
 function CallbackHandler() {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -15,10 +14,10 @@ function CallbackHandler() {
     );
     if (code) {
       supabase.auth.exchangeCodeForSession(code)
-        .then(() => router.replace("/"))
-        .catch(() => router.replace("/"));
+        .then(() => { window.location.href = "/"; })
+        .catch(() => { window.location.href = "/"; });
     } else {
-      router.replace("/");
+      window.location.href = "/";
     }
   }, []);
 
