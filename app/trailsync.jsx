@@ -798,7 +798,7 @@ const LoginScreen = ({ onLogin, onGoSignup }) => {
     setError("");
     const { error: authError } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: "https://trailsync-zeta.vercel.app" },
+      options: { redirectTo: "https://trailsync-zeta.vercel.app/auth/callback" },
     });
     if (authError) { setError(authError.message); setOauthLoading(null); }
     // On success browser redirects away — auth listener in parent handles the rest
