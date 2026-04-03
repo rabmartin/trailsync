@@ -4078,6 +4078,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
   const [showAllBadges, setShowAllBadges] = useState(false);
 
   const ST_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const ST_MONTHS_FULL = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   const ST_MONTH_MAP = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
   const ST_DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
@@ -4160,7 +4161,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
       const ws = stWeekStart(offset); const we = new Date(ws); we.setDate(ws.getDate() + 6);
       return `${ws.getDate()} ${ST_MONTHS[ws.getMonth()]} – ${we.getDate()} ${ST_MONTHS[we.getMonth()]}`;
     }
-    if (view === "monthly") { const ms = stMonthStart(offset); return `${ST_MONTHS[ms.getMonth()]} ${ms.getFullYear()}`; }
+    if (view === "monthly") { const ms = stMonthStart(offset); return `${ST_MONTHS_FULL[ms.getMonth()]} ${ms.getFullYear()}`; }
     return String(stYearStart(offset).getFullYear());
   };
 
@@ -4576,22 +4577,22 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
 
             {/* Compare pill */}
             {(() => {
-              const cmpLabel = statView === "weekly" ? "Compare weeks" : "Compare months";
-              const cmpPeriods = (() => {
-                const opts = [];
-                if (statView === "weekly") {
-                  for (let i = 1; i <= 8; i++) {
-                    const off = statOffset - i;
-                    opts.push({ label: i === 1 ? `Last week · ${stPeriodTitle("weekly", off)}` : `${i} weeks ago · ${stPeriodTitle("weekly", off)}`, value: off });
-                  }
-                } else {
-                  for (let i = 1; i <= 12; i++) {
-                    const off = statOffset - i;
-                    opts.push({ label: i === 1 ? `Last month · ${stPeriodTitle("monthly", off)}` : stPeriodTitle("monthly", off), value: off });
-                  }
+              const isWeekly = statView === "weekly";
+              const cmpLabel = isWeekly ? "Compare weeks" : "Compare months";
+              // Always generate options relative to now (offset 0), not statOffset
+              const cmpPeriods = [];
+              if (isWeekly) {
+                for (let i = 1; i <= 12; i++) {
+                  const off = -i;
+                  cmpPeriods.push({ label: i === 1 ? `Last week · ${stPeriodTitle("weekly", off)}` : `${i} weeks ago · ${stPeriodTitle("weekly", off)}`, value: off });
                 }
-                return opts;
-              })();
+              } else {
+                for (let i = 1; i <= 24; i++) {
+                  const off = -i;
+                  cmpPeriods.push({ label: stPeriodTitle("monthly", off), value: off });
+                }
+              }
+              const cmpView = isWeekly ? "weekly" : "monthly";
               return (
                 <div style={{ marginBottom: "14px" }}>
                   {statCompareOffset === null ? (
@@ -4606,12 +4607,12 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "4px 8px 4px 10px", borderRadius: "20px", border: `1px solid ${CMP_COL}`, background: "rgba(232,93,58,0.08)" }}>
-                        <span style={{ fontSize: "9px", fontWeight: 400, color: CMP_COL, fontFamily: "'DM Sans'" }}>{stPeriodTitle(statView === "weekly" ? "weekly" : "monthly", statCompareOffset)}</span>
+                        <span style={{ fontSize: "9px", fontWeight: 400, color: CMP_COL, fontFamily: "'DM Sans'" }}>{stPeriodTitle(cmpView, statCompareOffset)}</span>
                         <button onClick={() => setStatCompareOffset(null)} style={{ background: "none", border: "none", cursor: "pointer", color: CMP_COL, display: "flex", alignItems: "center", padding: "1px", fontSize: "11px", lineHeight: 1 }}>✕</button>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "9px", color: "#BDD6F4", opacity: 0.5 }}>
                         <span style={{ display: "flex", alignItems: "center", gap: "3px" }}><span style={{ display: "inline-block", width: "7px", height: "7px", borderRadius: "2px", background: MAIN_COL }} />{stPeriodTitle(statView, statOffset)}</span>
-                        <span style={{ display: "flex", alignItems: "center", gap: "3px" }}><span style={{ display: "inline-block", width: "7px", height: "7px", borderRadius: "2px", background: CMP_COL }} />{stPeriodTitle(statView === "weekly" ? "weekly" : "monthly", statCompareOffset)}</span>
+                        <span style={{ display: "flex", alignItems: "center", gap: "3px" }}><span style={{ display: "inline-block", width: "7px", height: "7px", borderRadius: "2px", background: CMP_COL }} />{stPeriodTitle(cmpView, statCompareOffset)}</span>
                       </div>
                     </div>
                   )}
