@@ -4548,7 +4548,8 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               <div style={{ display: "flex", alignItems: "flex-end", gap: statView === "monthly" ? "1px" : "4px", height: `${CHART_H}px` }}>
                 {statBars.map((bar, i) => {
                   const bH = statMax > 0 ? Math.max(bar.value > 0 ? 4 : 0, Math.round((bar.value / statMax) * CHART_H)) : 0;
-                  const cH = statCompareBars ? (statMax > 0 ? Math.max(statCompareBars[i].value > 0 ? 4 : 0, Math.round((statCompareBars[i].value / statMax) * CHART_H)) : 0) : 0;
+                  const cmpBar = statCompareBars ? statCompareBars[i] : null;
+                  const cH = cmpBar ? (statMax > 0 ? Math.max(cmpBar.value > 0 ? 4 : 0, Math.round((cmpBar.value / statMax) * CHART_H)) : 0) : 0;
                   const isNow = (() => {
                     if (statView === "weekly" || statView === "monthly") {
                       const t = new Date(); t.setHours(0,0,0,0);
@@ -4599,7 +4600,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                     <select
                       value=""
                       onChange={e => { if (e.target.value !== "") setStatCompareOffset(parseInt(e.target.value)); }}
-                      style={{ width: "100%", padding: "6px 24px 6px 14px", borderRadius: "20px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "10px", fontWeight: 400, fontFamily: "'DM Sans'", outline: "none", cursor: "pointer", appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%23BDD6F4' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 10px center", opacity: 0.5 }}
+                      style={{ width: "100%", padding: "6px 24px 6px 14px", borderRadius: "20px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "8px", fontWeight: 400, fontFamily: "'DM Sans'", outline: "none", cursor: "pointer", appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%23BDD6F4' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 10px center", opacity: 0.5 }}
                     >
                       <option value="">{cmpLabel}</option>
                       {cmpPeriods.map(o => <option key={o.value} value={String(o.value)}>{o.label}</option>)}
@@ -4607,7 +4608,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "4px 8px 4px 10px", borderRadius: "20px", border: `1px solid ${CMP_COL}`, background: "rgba(232,93,58,0.08)" }}>
-                        <span style={{ fontSize: "9px", fontWeight: 400, color: CMP_COL, fontFamily: "'DM Sans'" }}>{stPeriodTitle(cmpView, statCompareOffset)}</span>
+                        <span style={{ fontSize: "11px", fontWeight: 400, color: CMP_COL, fontFamily: "'DM Sans'" }}>{stPeriodTitle(cmpView, statCompareOffset)}</span>
                         <button onClick={() => setStatCompareOffset(null)} style={{ background: "none", border: "none", cursor: "pointer", color: CMP_COL, display: "flex", alignItems: "center", padding: "1px", fontSize: "11px", lineHeight: 1 }}>✕</button>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "9px", color: "#BDD6F4", opacity: 0.5 }}>
