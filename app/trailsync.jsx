@@ -46,6 +46,7 @@ const supabase = createClient(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
+      flowType: "implicit",
     },
   }
 );
@@ -798,7 +799,7 @@ const LoginScreen = ({ onLogin, onGoSignup }) => {
     setError("");
     const { error: authError } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: "https://trailsync-zeta.vercel.app/auth/callback" },
+      options: { redirectTo: "https://trailsync-zeta.vercel.app" },
     });
     if (authError) { setError(authError.message); setOauthLoading(null); }
     // On success browser redirects away — auth listener in parent handles the rest
@@ -4573,37 +4574,47 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               </div>
             </div>
 
-            {/* Compare dropdown */}
+            {/* Compare pill */}
             {(() => {
-              const cmpOptions = (() => {
-                const opts = [{ label: "Compare to…", value: "" }];
+              const cmpLabel = statView === "weekly" ? "Compare weeks" : "Compare months";
+              const cmpPeriods = (() => {
+                const opts = [];
                 if (statView === "weekly") {
                   for (let i = 1; i <= 8; i++) {
                     const off = statOffset - i;
-                    opts.push({ label: i === 1 ? `Last week (${stPeriodTitle("weekly", off)})` : `${i} weeks ago (${stPeriodTitle("weekly", off)})`, value: String(off) });
-                  }
-                } else if (statView === "monthly") {
-                  for (let i = 1; i <= 12; i++) {
-                    const off = statOffset - i;
-                    opts.push({ label: i === 1 ? `Last month (${stPeriodTitle("monthly", off)})` : stPeriodTitle("monthly", off), value: String(off) });
+                    opts.push({ label: i === 1 ? `Last week · ${stPeriodTitle("weekly", off)}` : `${i} weeks ago · ${stPeriodTitle("weekly", off)}`, value: off });
                   }
                 } else {
-                  for (let i = 1; i <= 5; i++) {
+                  for (let i = 1; i <= 12; i++) {
                     const off = statOffset - i;
-                    opts.push({ label: i === 1 ? `Last year (${stPeriodTitle("yearly", off)})` : stPeriodTitle("yearly", off), value: String(off) });
+                    opts.push({ label: i === 1 ? `Last month · ${stPeriodTitle("monthly", off)}` : stPeriodTitle("monthly", off), value: off });
                   }
                 }
                 return opts;
               })();
               return (
                 <div style={{ marginBottom: "14px" }}>
-                  <select value={statCompareOffset === null ? "" : String(statCompareOffset)} onChange={e => setStatCompareOffset(e.target.value === "" ? null : parseInt(e.target.value))} style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: `1px solid ${statCompareOffset !== null ? CMP_COL : "rgba(90,152,227,0.2)"}`, background: statCompareOffset !== null ? "rgba(232,93,58,0.06)" : "#0a2240", color: statCompareOffset !== null ? CMP_COL : "#BDD6F4", fontSize: "12px", fontWeight: 600, fontFamily: "'DM Sans'", outline: "none", cursor: "pointer", appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23BDD6F4' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}>
-                    {cmpOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
-                  {statCompareOffset !== null && (
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "9px", color: "#BDD6F4", opacity: 0.7, marginTop: "6px", paddingLeft: "2px" }}>
-                      <span style={{ display: "flex", alignItems: "center", gap: "3px" }}><span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "2px", background: MAIN_COL }} />{stPeriodTitle(statView, statOffset)}</span>
-                      <span style={{ display: "flex", alignItems: "center", gap: "3px" }}><span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "2px", background: CMP_COL }} />{stPeriodTitle(statView, statCompareOffset)}</span>
+                  {statCompareOffset === null ? (
+                    <div style={{ position: "relative", display: "inline-block" }}>
+                      <select
+                        value=""
+                        onChange={e => { if (e.target.value !== "") setStatCompareOffset(parseInt(e.target.value)); }}
+                        style={{ padding: "4px 24px 4px 10px", borderRadius: "20px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "10px", fontWeight: 600, fontFamily: "'DM Sans'", outline: "none", cursor: "pointer", appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='%23BDD6F4' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center", opacity: 0.6 }}
+                      >
+                        <option value="">{cmpLabel}</option>
+                        {cmpPeriods.map(o => <option key={o.value} value={String(o.value)}>{o.label}</option>)}
+                      </select>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "4px 6px 4px 10px", borderRadius: "20px", border: `1px solid ${CMP_COL}`, background: "rgba(232,93,58,0.08)" }}>
+                        <span style={{ fontSize: "10px", fontWeight: 600, color: CMP_COL, fontFamily: "'DM Sans'" }}>{stPeriodTitle(statView === "weekly" ? "weekly" : "monthly", statCompareOffset)}</span>
+                        <button onClick={() => setStatCompareOffset(null)} style={{ background: "none", border: "none", cursor: "pointer", color: CMP_COL, display: "flex", alignItems: "center", padding: "1px", fontSize: "12px", lineHeight: 1 }}>✕</button>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "9px", color: "#BDD6F4", opacity: 0.6 }}>
+                        <span style={{ display: "flex", alignItems: "center", gap: "3px" }}><span style={{ display: "inline-block", width: "7px", height: "7px", borderRadius: "2px", background: MAIN_COL }} />{stPeriodTitle(statView, statOffset)}</span>
+                        <span style={{ display: "flex", alignItems: "center", gap: "3px" }}><span style={{ display: "inline-block", width: "7px", height: "7px", borderRadius: "2px", background: CMP_COL }} />{stPeriodTitle(statView === "weekly" ? "weekly" : "monthly", statCompareOffset)}</span>
+                      </div>
                     </div>
                   )}
                 </div>
