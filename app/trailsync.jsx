@@ -4075,6 +4075,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
   const [statMetric, setStatMetric] = useState("elevation");
   const [statOffset, setStatOffset] = useState(0);
   const [statCompareOffset, setStatCompareOffset] = useState(null); // null = off, number = comparison period offset
+  const [statSelectedBar, setStatSelectedBar] = useState(null); // { label, value, cmpValue }
   const [showAllBadges, setShowAllBadges] = useState(false);
 
   const ST_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -4518,7 +4519,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             {/* View toggle */}
             <div style={{ display: "flex", gap: "4px", marginBottom: "12px" }}>
               {[["weekly","Weekly"],["monthly","Monthly"],["yearly","Yearly"]].map(([k,l]) => (
-                <button key={k} onClick={() => { setStatView(k); setStatOffset(0); setStatCompareOffset(null); }} style={{ flex: 1, padding: "7px", borderRadius: "10px", border: "none", background: statView === k ? "rgba(90,152,227,0.15)" : "#0a2240", color: statView === k ? "#5A98E3" : "#BDD6F4", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: statView === k ? 1 : 0.5 }}>{l}</button>
+                <button key={k} onClick={() => { setStatView(k); setStatOffset(0); setStatCompareOffset(null); setStatSelectedBar(null); }} style={{ flex: 1, padding: "7px", borderRadius: "10px", border: "none", background: statView === k ? "rgba(90,152,227,0.15)" : "#0a2240", color: statView === k ? "#5A98E3" : "#BDD6F4", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: statView === k ? 1 : 0.5 }}>{l}</button>
               ))}
             </div>
 
@@ -4543,16 +4544,24 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
 
             {/* Period navigation */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
-              <button onClick={() => setStatOffset(o => o - 1)} style={{ width: "32px", height: "32px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#BDD6F4", cursor: "pointer", fontSize: "20px", lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif" }}>‹</button>
+              <button onClick={() => { setStatOffset(o => o - 1); setStatSelectedBar(null); }} style={{ width: "32px", height: "32px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#BDD6F4", cursor: "pointer", fontSize: "20px", lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif" }}>‹</button>
               <div style={{ textAlign: "center", flex: 1, padding: "0 8px" }}>
                 <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{stPeriodTitle(statView, statOffset)}</div>
                 {statOffset !== 0 && <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>tap › for current</div>}
               </div>
-              <button onClick={() => setStatOffset(o => Math.min(0, o + 1))} disabled={statOffset >= 0} style={{ width: "32px", height: "32px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: statOffset >= 0 ? "#264f80" : "#BDD6F4", cursor: statOffset >= 0 ? "default" : "pointer", fontSize: "20px", lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif" }}>›</button>
+              <button onClick={() => { setStatOffset(o => Math.min(0, o + 1)); setStatSelectedBar(null); }} disabled={statOffset >= 0} style={{ width: "32px", height: "32px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: statOffset >= 0 ? "#264f80" : "#BDD6F4", cursor: statOffset >= 0 ? "default" : "pointer", fontSize: "20px", lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif" }}>›</button>
             </div>
 
             {/* Bar chart */}
             <div style={{ background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.1)", padding: "14px 10px 24px", marginBottom: "12px", position: "relative" }}>
+              {/* Horizontal grid lines */}
+              <div style={{ position: "absolute", top: "14px", left: "10px", right: "10px", height: `${CHART_H}px`, pointerEvents: "none" }}>
+                {[0.25, 0.5, 0.75, 1].map(pct => (
+                  <div key={pct} style={{ position: "absolute", bottom: `${pct * CHART_H}px`, left: 0, right: 0 }}>
+                    <div style={{ width: "100%", height: "1px", background: "rgba(90,152,227,0.1)" }} />
+                  </div>
+                ))}
+              </div>
               <div style={{ display: "flex", alignItems: "flex-end", gap: statView === "monthly" ? "1px" : "4px", height: `${CHART_H}px` }}>
                 {statBars.map((bar, i) => {
                   const bH = statMax > 0 ? Math.max(bar.value > 0 ? 4 : 0, Math.round((bar.value / statMax) * CHART_H)) : 0;
@@ -4567,22 +4576,39 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                     return bar.date.getMonth() === now.getMonth() && bar.date.getFullYear() === now.getFullYear();
                   })();
                   const showLabel = statView !== "monthly" || i === 0 || (i + 1) % 7 === 0 || i === statBars.length - 1;
+                  const isSelected = statSelectedBar?.index === i;
                   return (
-                    <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", height: "100%" }}>
+                    <div key={i} onClick={() => setStatSelectedBar(isSelected ? null : { index: i, label: bar.label, value: bar.value, cmpValue: cmpBar?.value ?? null, date: bar.date })} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", height: "100%", cursor: "pointer" }}>
                       <div style={{ width: "100%", display: "flex", alignItems: "flex-end", gap: "1px", justifyContent: "center", height: "100%" }}>
                         {statCompareBars && (
-                          <div style={{ flex: 1, height: `${cH}px`, background: CMP_COL, borderRadius: "3px 3px 0 0", opacity: 0.6, maxWidth: statView === "monthly" ? "4px" : "14px", transition: "height .25s ease" }} />
+                          <div style={{ flex: 1, height: `${cH}px`, background: CMP_COL, borderRadius: "3px 3px 0 0", opacity: isSelected ? 1 : 0.6, maxWidth: statView === "monthly" ? "4px" : "14px", transition: "height .25s ease" }} />
                         )}
-                        <div style={{ flex: 1, height: `${bH}px`, background: bar.value > 0 ? (isNow ? "#6BCB77" : MAIN_COL) : "rgba(90,152,227,0.07)", borderRadius: "3px 3px 0 0", maxWidth: statView === "monthly" ? "4px" : "14px", transition: "height .25s ease" }} />
+                        <div style={{ flex: 1, height: `${bH}px`, background: bar.value > 0 ? (isNow ? "#6BCB77" : isSelected ? "#89c4ff" : MAIN_COL) : "rgba(90,152,227,0.07)", borderRadius: "3px 3px 0 0", maxWidth: statView === "monthly" ? "4px" : "14px", transition: "height .25s ease" }} />
                       </div>
                       {showLabel && (
-                        <div style={{ position: "absolute", bottom: "-18px", fontSize: statView === "monthly" ? "7px" : "8px", color: isNow ? "#6BCB77" : "#BDD6F4", opacity: isNow ? 1 : 0.45, fontWeight: isNow ? 700 : 400, whiteSpace: "nowrap", transform: "translateX(-50%)", left: "50%" }}>{bar.label}</div>
+                        <div style={{ position: "absolute", bottom: "-18px", fontSize: statView === "monthly" ? "7px" : "8px", color: isNow ? "#6BCB77" : isSelected ? "#89c4ff" : "#BDD6F4", opacity: isNow || isSelected ? 1 : 0.45, fontWeight: isNow || isSelected ? 700 : 400, whiteSpace: "nowrap", transform: "translateX(-50%)", left: "50%" }}>{bar.label}</div>
                       )}
                     </div>
                   );
                 })}
               </div>
             </div>
+
+            {/* Selected bar info card */}
+            {statSelectedBar && (
+              <div style={{ background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.15)", padding: "12px 14px", marginBottom: "12px", display: "flex", alignItems: "center", justifyContent: "space-between", animation: "fi .15s ease" }}>
+                <div>
+                  <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, fontWeight: 600, marginBottom: "2px" }}>{statSelectedBar.label}{statView === "monthly" ? ` ${stPeriodTitle("monthly", statOffset).split(" ")[0]}` : ""}</div>
+                  <div style={{ fontSize: "20px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{stFmtVal(statSelectedBar.value, statMetric)}</div>
+                  {statSelectedBar.cmpValue !== null && (
+                    <div style={{ fontSize: "10px", color: statSelectedBar.value >= statSelectedBar.cmpValue ? "#6BCB77" : CMP_COL, fontWeight: 600, marginTop: "2px" }}>
+                      {statSelectedBar.value >= statSelectedBar.cmpValue ? "▲" : "▼"} vs {stFmtVal(statSelectedBar.cmpValue, statMetric)}
+                    </div>
+                  )}
+                </div>
+                <button onClick={() => setStatSelectedBar(null)} style={{ background: "rgba(90,152,227,0.1)", border: "none", borderRadius: "50%", width: "24px", height: "24px", cursor: "pointer", color: "#BDD6F4", fontSize: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+              </div>
+            )}
 
             {/* Compare pill */}
             {(() => {
