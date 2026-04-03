@@ -4598,14 +4598,14 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                     <select
                       value=""
                       onChange={e => { if (e.target.value !== "") setStatCompareOffset(parseInt(e.target.value)); }}
-                      style={{ width: "100%", padding: "6px 24px 6px 14px", borderRadius: "20px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "9px", fontWeight: 400, fontFamily: "'DM Sans'", outline: "none", cursor: "pointer", appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%23BDD6F4' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 10px center", opacity: 0.5, textAlign: "center" }}
+                      style={{ width: "100%", padding: "6px 24px 6px 14px", borderRadius: "20px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "10px", fontWeight: 400, fontFamily: "'DM Sans'", outline: "none", cursor: "pointer", appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%23BDD6F4' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 10px center", opacity: 0.5 }}
                     >
                       <option value="">{cmpLabel}</option>
                       {cmpPeriods.map(o => <option key={o.value} value={String(o.value)}>{o.label}</option>)}
                     </select>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "6px 10px 6px 14px", borderRadius: "20px", border: `1px solid ${CMP_COL}`, background: "rgba(232,93,58,0.08)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "4px 8px 4px 10px", borderRadius: "20px", border: `1px solid ${CMP_COL}`, background: "rgba(232,93,58,0.08)" }}>
                         <span style={{ fontSize: "9px", fontWeight: 400, color: CMP_COL, fontFamily: "'DM Sans'" }}>{stPeriodTitle(statView === "weekly" ? "weekly" : "monthly", statCompareOffset)}</span>
                         <button onClick={() => setStatCompareOffset(null)} style={{ background: "none", border: "none", cursor: "pointer", color: CMP_COL, display: "flex", alignItems: "center", padding: "1px", fontSize: "11px", lineHeight: 1 }}>✕</button>
                       </div>
