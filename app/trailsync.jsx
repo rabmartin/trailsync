@@ -4525,12 +4525,20 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             {/* Compact metric dropdown */}
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
               <span style={{ fontSize: "13px", color: "#F8F8F8", fontWeight: 700, whiteSpace: "nowrap" }}>Showing</span>
-              <select value={statMetric} onChange={e => setStatMetric(e.target.value)} style={{ padding: "6px 26px 6px 10px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.25)", background: "rgba(90,152,227,0.08)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, fontFamily: "'DM Sans'", outline: "none", cursor: "pointer", appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23F8F8F8' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center" }}>
-                <option value="elevation">Elevation Gain</option>
-                <option value="distance">Distance</option>
-                <option value="time">Time Spent</option>
-                <option value="walks">Activities</option>
-              </select>
+              <div style={{ position: "relative" }}>
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", paddingLeft: "10px", paddingRight: "26px", pointerEvents: "none", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.25)", background: "rgba(90,152,227,0.08)", gap: "6px" }}>
+                  <span style={{ fontSize: "13px", fontWeight: 700, fontFamily: "'DM Sans'", color: "#F8F8F8", whiteSpace: "nowrap" }}>
+                    {{"elevation":"Elevation Gain","distance":"Distance","time":"Time Spent","walks":"Activities"}[statMetric]}
+                  </span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#F8F8F8" strokeWidth="2.5" style={{ flexShrink: 0, marginLeft: "auto" }}><path d="m6 9 6 6 6-6"/></svg>
+                </div>
+                <select value={statMetric} onChange={e => setStatMetric(e.target.value)} style={{ padding: "6px 26px 6px 10px", borderRadius: "8px", border: "1px solid transparent", background: "transparent", color: "transparent", fontSize: "13px", fontFamily: "'DM Sans'", outline: "none", cursor: "pointer", opacity: 0, position: "relative", zIndex: 1 }}>
+                  <option value="elevation">Elevation Gain</option>
+                  <option value="distance">Distance</option>
+                  <option value="time">Time Spent</option>
+                  <option value="walks">Activities</option>
+                </select>
+              </div>
             </div>
 
             {/* Period navigation */}
