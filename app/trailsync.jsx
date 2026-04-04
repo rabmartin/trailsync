@@ -2462,6 +2462,7 @@ const RoutesPage = ({ openRoute }) => {
         </div>
       )}
     </div>
+    </>
   );
 };
 
@@ -3870,7 +3871,6 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
         </div>
       )}
     </div>
-    </>
   );
 };
 
