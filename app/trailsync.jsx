@@ -2289,7 +2289,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
 
     {/* ═══ FULL-SCREEN ROUTES MAP OVERLAY ═══ */}
     {subTab === "map" && (
-      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "calc(76px + env(safe-area-inset-bottom, 0px))", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "62px", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
         {/* Back chevron */}
         <button
           onClick={() => { setSubTab("list"); setSelRegion(null); }}
@@ -3479,7 +3479,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   }, [d3]);
 
   return (
-    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "calc(76px + env(safe-area-inset-bottom, 0px))", zIndex: 0 }}>
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "62px", zIndex: 0 }}>
       {/* Real Mapbox Map */}
       <div ref={mapContainer} style={{ position: "absolute", inset: 0 }} />
 
@@ -4171,7 +4171,7 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
 
     {/* ═══ FULL-SCREEN DISCOVER MAP OVERLAY ═══ */}
     {subTab === "discover" && discView === "map" && (
-      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "calc(76px + env(safe-area-inset-bottom, 0px))", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "62px", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
         {/* Back button */}
         <button
           onClick={() => { setDiscView("list"); setSelArticle(null); }}
@@ -7229,8 +7229,8 @@ export default function TrailSync() {
         />
       )}
 
-      {/* Bottom nav — always pinned to screen bottom regardless of layout */}
-      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 60, display: "flex", alignItems: "center", justifyContent: "space-around", paddingTop: "10px", paddingBottom: "max(env(safe-area-inset-bottom, 14px), 14px)", paddingLeft: "6px", paddingRight: "6px", borderTop: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,.96)", backdropFilter: "blur(12px)" }}>
+      {/* Bottom nav */}
+      <div style={{ position: "relative", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "space-around", padding: "4px 6px 10px", borderTop: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,.96)", backdropFilter: "blur(12px)" }}>
         {tabs.map((t, i) => {
           const I = t.icon; const a = tab === t.id; const ctr = i === 2;
           return (
