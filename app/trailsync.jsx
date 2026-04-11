@@ -380,59 +380,6 @@ const BADGES = [
   { n: "Munro Compleatist", i: "🏆", e: false, p: 14 }, { n: "Ridge Runner", i: "⛰️", e: false, p: 40 },
 ];
 
-const LB_DATA = {
-  daily: [
-    { n: "FellRunner_Tom", d: 28, e: 1240, pts: 85, av: "🏃" },
-    { n: "You", d: 14, e: 890, pts: 52, av: "⭐", u: true },
-    { n: "MountainMeg", d: 12, e: 780, pts: 45, av: "🥾" },
-    { n: "HighlandHiker", d: 0, e: 0, pts: 10, av: "🧗" },
-    { n: "WinterSummits", d: 0, e: 0, pts: 5, av: "❄️" },
-    { n: "ScotWalks", d: 0, e: 0, pts: 0, av: "🏔️" },
-  ],
-  weekly: [
-    { n: "FellRunner_Tom", d: 82, e: 4200, pts: 340, av: "🏃" },
-    { n: "MountainMeg", d: 45, e: 3100, pts: 210, av: "🥾" },
-    { n: "HighlandHiker", d: 38, e: 2800, pts: 195, av: "🧗" },
-    { n: "CairnGormCarl", d: 35, e: 2600, pts: 180, av: "🏔️" },
-    { n: "You", d: 22, e: 1450, pts: 120, av: "⭐", u: true },
-    { n: "WinterSummits", d: 18, e: 1200, pts: 95, av: "❄️" },
-  ],
-  monthly: [
-    { n: "FellRunner_Tom", d: 320, e: 18500, pts: 1420, av: "🏃" },
-    { n: "HighlandHiker", d: 245, e: 14200, pts: 1180, av: "🧗" },
-    { n: "MountainMeg", d: 189, e: 12100, pts: 950, av: "🥾" },
-    { n: "RidgeWalker_Jen", d: 178, e: 11800, pts: 890, av: "⛰️" },
-    { n: "ScotWalks", d: 156, e: 9500, pts: 780, av: "🏔️" },
-    { n: "You", d: 62, e: 4800, pts: 340, av: "⭐", u: true },
-  ],
-  "6month": [
-    { n: "FellRunner_Tom", d: 1800, e: 62000, pts: 3200, av: "🏃" },
-    { n: "HighlandHiker", d: 1400, e: 52000, pts: 2800, av: "🧗" },
-    { n: "MountainMeg", d: 1050, e: 41000, pts: 2200, av: "🥾" },
-    { n: "ScotWalks", d: 980, e: 38000, pts: 2050, av: "🏔️" },
-    { n: "WinterSummits", d: 890, e: 35000, pts: 1800, av: "❄️" },
-    { n: "TorridonTrek", d: 720, e: 28000, pts: 1500, av: "🥾" },
-    { n: "You", d: 380, e: 15200, pts: 820, av: "⭐", u: true },
-  ],
-  yearly: [
-    { n: "FellRunner_Tom", d: 3200, e: 95600, pts: 5100, av: "🏃" },
-    { n: "HighlandHiker", d: 2450, e: 89200, pts: 4820, av: "🧗" },
-    { n: "ScotWalks", d: 2100, e: 68500, pts: 3780, av: "🏔️" },
-    { n: "MountainMeg", d: 1890, e: 72100, pts: 3950, av: "🥾" },
-    { n: "WinterSummits", d: 1560, e: 62300, pts: 3200, av: "❄️" },
-    { n: "SkywalkSarah", d: 1320, e: 48000, pts: 2600, av: "🌤️" },
-    { n: "You", d: 620, e: 24800, pts: 1340, av: "⭐", u: true },
-  ],
-  all: [
-    { n: "FellRunner_Tom", d: 8400, e: 245000, pts: 12800, av: "🏃" },
-    { n: "HighlandHiker", d: 6800, e: 198000, pts: 10500, av: "🧗" },
-    { n: "ScotWalks", d: 5200, e: 162000, pts: 8900, av: "🏔️" },
-    { n: "MountainMeg", d: 4500, e: 148000, pts: 7800, av: "🥾" },
-    { n: "WinterSummits", d: 3800, e: 128000, pts: 6500, av: "❄️" },
-    { n: "OldSchoolHill", d: 3200, e: 112000, pts: 5800, av: "🧭" },
-    { n: "You", d: 620, e: 24800, pts: 1340, av: "⭐", u: true },
-  ],
-};
 
 /* ═══════════════════════════════════════════════════════════════════
    HELPERS
@@ -4882,6 +4829,71 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
   };
   const [lbm, setLbm] = useState("d");
   const [lbTime, setLbTime] = useState("all");
+  const [lbScope, setLbScope] = useState("global"); // "global" | "friends"
+  const [lbData, setLbData] = useState([]);
+  const [lbLoading, setLbLoading] = useState(false);
+
+  // Fetch leaderboard data from user_walks whenever time/scope changes
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    async function fetchLeaderboard() {
+      setLbLoading(true);
+      try {
+        // Date cutoff based on time filter
+        const now = new Date();
+        let since = null;
+        if (lbTime === "daily") { since = new Date(now); since.setHours(0,0,0,0); }
+        else if (lbTime === "weekly") { since = new Date(now); since.setDate(now.getDate() - 7); }
+        else if (lbTime === "monthly") { since = new Date(now); since.setMonth(now.getMonth() - 1); }
+        else if (lbTime === "6month") { since = new Date(now); since.setMonth(now.getMonth() - 6); }
+        else if (lbTime === "yearly") { since = new Date(now); since.setFullYear(now.getFullYear() - 1); }
+
+        // Build query — get all walks in time window
+        let q = supabase.from("user_walks").select("user_id, distance_km, elevation_m, duration");
+        if (since) q = q.gte("date_walked", since.toISOString().split("T")[0]);
+
+        // Friends scope: only walks from users I follow + myself
+        if (lbScope === "friends") {
+          const { data: follows } = await supabase.from("follows").select("following_id").eq("follower_id", userId);
+          const friendIds = [userId, ...(follows || []).map(f => f.following_id)];
+          q = q.in("user_id", friendIds);
+        }
+
+        const { data: walks, error } = await q;
+        if (error || !walks || cancelled) { setLbLoading(false); return; }
+
+        // Aggregate per user
+        const byUser = {};
+        for (const w of walks) {
+          if (!byUser[w.user_id]) byUser[w.user_id] = { user_id: w.user_id, d: 0, e: 0 };
+          byUser[w.user_id].d += parseFloat(w.distance_km) || 0;
+          byUser[w.user_id].e += parseInt(w.elevation_m) || 0;
+        }
+
+        // Fetch display names for these user ids
+        const userIds = Object.keys(byUser);
+        if (userIds.length === 0) { setLbData([]); setLbLoading(false); return; }
+        const { data: profiles } = await supabase.from("profiles").select("id, username, name").in("id", userIds);
+        const profileMap = {};
+        for (const p of profiles || []) profileMap[p.id] = p.username || p.name || "Hiker";
+
+        const rows = userIds.map(uid => ({
+          uid,
+          n: profileMap[uid] || "Hiker",
+          d: Math.round(byUser[uid].d * 10) / 10,
+          e: Math.round(byUser[uid].e),
+          pts: Math.round(byUser[uid].d * 2 + byUser[uid].e / 100),
+          isMe: uid === userId,
+        }));
+
+        if (!cancelled) setLbData(rows);
+      } catch(e) { console.error("Leaderboard fetch error:", e); }
+      if (!cancelled) setLbLoading(false);
+    }
+    fetchLeaderboard();
+    return () => { cancelled = true; };
+  }, [lbTime, lbScope, userId]);
   const [mtView, setMtView] = useState("map");
   const [mtExpanded, setMtExpanded] = useState(false);
   const [mtCls, setMtCls] = useState("munros");
@@ -5620,27 +5632,56 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
         );
       })()}
 
-      {sec === "leaderboard" && <div>
-        {/* Time period filter */}
-        <div style={{ display: "flex", gap: "3px", marginBottom: "10px", background: "#0a2240", borderRadius: "10px", padding: "3px", overflowX: "auto" }}>
-          {[["daily", "Day"], ["weekly", "Week"], ["monthly", "Month"], ["6month", "6 Month"], ["yearly", "Year"], ["all", "All Time"]].map(([k, l]) => <button key={k} onClick={() => setLbTime(k)} style={{ padding: "5px 10px", borderRadius: "8px", border: "none", background: lbTime === k ? "rgba(90,152,227,0.2)" : "transparent", color: lbTime === k ? "#5A98E3" : "#BDD6F4", fontSize: "10px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'", opacity: lbTime === k ? 1 : 0.4, whiteSpace: "nowrap" }}>{l}</button>)}
-        </div>
-        {/* Metric filter */}
-        <div style={{ display: "flex", gap: "4px", marginBottom: "10px" }}>
-          {[["d", "Distance"], ["e", "Elevation"], ["pts", "Points"]].map(([k, l]) => <button key={k} onClick={() => setLbm(k)} style={{ padding: "6px 14px", borderRadius: "10px", fontSize: "10px", cursor: "pointer", background: lbm === k ? "rgba(90,152,227,0.2)" : "#0a2240", border: `1px solid ${lbm === k ? "rgba(90,152,227,0.3)" : "rgba(90,152,227,0.1)"}`, color: lbm === k ? "#5A98E3" : "#BDD6F4", fontWeight: 700, fontFamily: "'DM Sans'" }}>{l}</button>)}
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          {[...(LB_DATA[lbTime] || LB_DATA.all)].sort((a, b) => b[lbm] - a[lbm]).map((u, i) => <div key={u.n} style={{ background: u.u ? "rgba(90,152,227,0.08)" : "#0a2240", borderRadius: "10px", padding: "10px 12px", border: `1px solid ${u.u ? "rgba(90,152,227,0.2)" : "rgba(90,152,227,0.08)"}`, display: "flex", alignItems: "center", gap: "10px", animation: `fi .3s ease ${i * .04}s both` }}>
-            <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: i < 3 ? `${["#FFD700","#C0C0C0","#CD7F32"][i]}15` : "#264f80", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 800, color: i < 3 ? ["#FFD700","#C0C0C0","#CD7F32"][i] : "#BDD6F4" }}>{i + 1}</div>
-            <span style={{ fontSize: "16px" }}>{u.av}</span>
-            <div style={{ flex: 1 }}><div style={{ fontSize: "12px", fontWeight: 700, color: u.u ? "#5A98E3" : "#F8F8F8" }}>{u.n}</div></div>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: "14px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{lbm === "d" ? `${u[lbm]}km` : lbm === "e" ? `${(u[lbm] / 1000).toFixed(1)}km` : u[lbm].toLocaleString()}</div>
-              <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>{lbm === "d" ? "distance" : lbm === "e" ? "elevation" : "points"}</div>
+      {sec === "leaderboard" && (() => {
+        const sorted = [...lbData].sort((a, b) => b[lbm] - a[lbm]);
+        return (
+          <div>
+            {/* Global / Friends toggle */}
+            <div style={{ display: "flex", gap: "3px", marginBottom: "10px", background: "#0a2240", borderRadius: "10px", padding: "3px" }}>
+              {[["global", "Global"], ["friends", "Friends"]].map(([k, l]) => (
+                <button key={k} onClick={() => setLbScope(k)} style={{ flex: 1, padding: "6px", borderRadius: "8px", border: "none", background: lbScope === k ? "rgba(90,152,227,0.2)" : "transparent", color: lbScope === k ? "#5A98E3" : "#BDD6F4", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>{l}</button>
+              ))}
             </div>
-          </div>)}
-        </div>
-      </div>}
+            {/* Time period filter */}
+            <div style={{ display: "flex", gap: "3px", marginBottom: "10px", background: "#0a2240", borderRadius: "10px", padding: "3px", overflowX: "auto" }}>
+              {[["daily", "Day"], ["weekly", "Week"], ["monthly", "Month"], ["6month", "6 Mo"], ["yearly", "Year"], ["all", "All Time"]].map(([k, l]) => (
+                <button key={k} onClick={() => setLbTime(k)} style={{ padding: "5px 10px", borderRadius: "8px", border: "none", background: lbTime === k ? "rgba(90,152,227,0.2)" : "transparent", color: lbTime === k ? "#5A98E3" : "#BDD6F4", fontSize: "10px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'", opacity: lbTime === k ? 1 : 0.4, whiteSpace: "nowrap" }}>{l}</button>
+              ))}
+            </div>
+            {/* Metric filter */}
+            <div style={{ display: "flex", gap: "4px", marginBottom: "10px" }}>
+              {[["d", "Distance"], ["e", "Elevation"], ["pts", "Points"]].map(([k, l]) => (
+                <button key={k} onClick={() => setLbm(k)} style={{ padding: "6px 14px", borderRadius: "10px", fontSize: "10px", cursor: "pointer", background: lbm === k ? "rgba(90,152,227,0.2)" : "#0a2240", border: `1px solid ${lbm === k ? "rgba(90,152,227,0.3)" : "rgba(90,152,227,0.1)"}`, color: lbm === k ? "#5A98E3" : "#BDD6F4", fontWeight: 700, fontFamily: "'DM Sans'" }}>{l}</button>
+              ))}
+            </div>
+            {lbLoading && <div style={{ padding: "28px", textAlign: "center", fontSize: "12px", color: "#BDD6F4", opacity: 0.4 }}>Loading…</div>}
+            {!lbLoading && sorted.length === 0 && (
+              <div style={{ padding: "32px 16px", textAlign: "center" }}>
+                <div style={{ fontSize: "28px", marginBottom: "10px" }}>🏔️</div>
+                <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.5, marginBottom: "4px" }}>No activity yet</div>
+                <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.3 }}>{lbScope === "friends" ? "Follow people to see their stats here" : "Record a walk to appear on the leaderboard"}</div>
+              </div>
+            )}
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              {sorted.map((u, i) => (
+                <div key={u.uid} style={{ background: u.isMe ? "rgba(90,152,227,0.08)" : "#0a2240", borderRadius: "10px", padding: "10px 12px", border: `1px solid ${u.isMe ? "rgba(90,152,227,0.2)" : "rgba(90,152,227,0.08)"}`, display: "flex", alignItems: "center", gap: "10px", animation: `fi .3s ease ${i * .04}s both` }}>
+                  <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: i < 3 ? `${["#FFD700","#C0C0C0","#CD7F32"][i]}15` : "#264f80", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 800, color: i < 3 ? ["#FFD700","#C0C0C0","#CD7F32"][i] : "#BDD6F4", flexShrink: 0 }}>{i + 1}</div>
+                  <div style={{ width: "30px", height: "30px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>{(u.n || "?")[0].toUpperCase()}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "12px", fontWeight: 700, color: u.isMe ? "#5A98E3" : "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.n}{u.isMe ? " (you)" : ""}</div>
+                  </div>
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    <div style={{ fontSize: "14px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>
+                      {lbm === "d" ? `${u.d}km` : lbm === "e" ? `${u.e >= 1000 ? (u.e/1000).toFixed(1)+"km" : u.e+"m"}` : u.pts.toLocaleString()}
+                    </div>
+                    <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>{lbm === "d" ? "distance" : lbm === "e" ? "elevation" : "points"}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {sec === "posts" && <div>
         {/* Create button */}
