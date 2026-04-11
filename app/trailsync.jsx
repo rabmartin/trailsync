@@ -1227,7 +1227,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
       // Live DB queries — posts and people
       const [postsRes, usersRes] = await Promise.all([
         supabase.from("posts").select("*").ilike("text", `%${q}%`).order("created_at", { ascending: false }).limit(8),
-        supabase.from("profiles").select("*").or(`username.ilike.%${q}%,full_name.ilike.%${q}%`).limit(6),
+        supabase.from("profiles").select("id, username, name, location, follower_count").or(`username.ilike.%${q}%,name.ilike.%${q}%`).limit(6),
       ]);
 
       // Also search hardcoded FEED posts (events, fundraisers, summits)
@@ -7005,7 +7005,7 @@ export default function TrailSync() {
 
       {/* Search dropdown — fixed overlay that floats below header regardless of parent overflow */}
       {tab === "home" && headerSearch && headerSearch.length >= 2 && (
-        <div style={{ position: "fixed", top: "60px", left: "16px", right: "16px", zIndex: 200, background: "rgba(4,30,61,0.99)", backdropFilter: "blur(20px)", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.25)", overflow: "hidden", maxHeight: "70vh", overflowY: "auto", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
+        <div style={{ position: "fixed", top: "calc(60px + env(safe-area-inset-top, 0px))", left: "16px", right: "16px", zIndex: 200, background: "rgba(4,30,61,0.99)", backdropFilter: "blur(20px)", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.25)", overflow: "hidden", maxHeight: "70vh", overflowY: "auto", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
           {searching && <div style={{ padding: "14px", textAlign: "center", fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>Searching…</div>}
           {!searching && searchResults.posts.length === 0 && searchResults.users.length === 0 && searchResults.routes.length === 0 && searchResults.peaks.length === 0 && (
             <div style={{ padding: "24px 14px", textAlign: "center" }}>
