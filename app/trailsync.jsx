@@ -2289,7 +2289,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
 
     {/* ═══ FULL-SCREEN ROUTES MAP OVERLAY ═══ */}
     {subTab === "map" && (
-      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "62px", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "54px", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
         {/* Back chevron */}
         <button
           onClick={() => { setSubTab("list"); setSelRegion(null); }}
@@ -3479,7 +3479,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   }, [d3]);
 
   return (
-    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "62px", zIndex: 0 }}>
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "54px", zIndex: 0 }}>
       {/* Real Mapbox Map */}
       <div ref={mapContainer} style={{ position: "absolute", inset: 0 }} />
 
@@ -4171,7 +4171,7 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
 
     {/* ═══ FULL-SCREEN DISCOVER MAP OVERLAY ═══ */}
     {subTab === "discover" && discView === "map" && (
-      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "62px", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "54px", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
         {/* Back button */}
         <button
           onClick={() => { setDiscView("list"); setSelArticle(null); }}
@@ -7140,7 +7140,7 @@ export default function TrailSync() {
       )}
 
       {/* Content — fills between header and tab bar using fixed positioning */}
-      <div style={{ position: "fixed", top: tab === "map" ? 0 : "calc(52px + env(safe-area-inset-top, 0px))", left: 0, right: 0, bottom: "62px", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div style={{ position: "fixed", top: tab === "map" ? 0 : "calc(52px + env(safe-area-inset-top, 0px))", left: 0, right: 0, bottom: "54px", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {tab === "home" && <HomePage userName={userName} initialFilter={feedFilter} userId={userId} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowingCount={setFollowingCount} headerSearch={headerSearch} setHeaderSearch={setHeaderSearch} openRoute={openRouteOnMap} searchResults={searchResults} setSearchResults={setSearchResults} searching={searching} setSearching={setSearching} onViewProfile={setViewingProfile} />}
         {tab === "routes" && <RoutesPage openRoute={openRouteOnMap} pendingRouteDetail={pendingRouteDetail} onClearPendingRoute={() => setPendingRouteDetail(null)} />}
         {tab === "map" && <MapPage dbPeaks={dbPeaks} goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={async (walk) => {
@@ -7230,13 +7230,13 @@ export default function TrailSync() {
       )}
 
       {/* Bottom nav — fixed to physical screen bottom, never affected by layout */}
-      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 60, display: "flex", alignItems: "center", justifyContent: "space-around", padding: "4px 6px 10px", borderTop: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,.96)", backdropFilter: "blur(12px)" }}>
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 60, display: "flex", alignItems: "center", justifyContent: "space-around", padding: "4px 6px 4px", borderTop: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,.96)", backdropFilter: "blur(12px)" }}>
         {tabs.map((t, i) => {
           const I = t.icon; const a = tab === t.id; const ctr = i === 2;
           return (
             <button key={t.id} onClick={() => setTab(t.id)} style={{ background: "none", border: "none", padding: ctr ? "0" : "4px 10px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", color: a ? (ctr ? "#F8F8F8" : "#E85D3A") : "#BDD6F4", transition: "color .2s", opacity: a ? 1 : 0.45 }}>
               {ctr ? (
-                <div style={{ width: "46px", height: "46px", borderRadius: "50%", background: a ? "linear-gradient(135deg,#E85D3A,#d04a2a)" : "#264f80", display: "flex", alignItems: "center", justifyContent: "center", marginTop: "-12px", border: `2px solid ${a ? "#E85D3A" : "rgba(90,152,227,0.2)"}`, boxShadow: a ? "0 4px 16px rgba(232,93,58,.35)" : "none", transition: "all .2s" }}>
+                <div style={{ width: "46px", height: "46px", borderRadius: "50%", background: a ? "linear-gradient(135deg,#E85D3A,#d04a2a)" : "#264f80", display: "flex", alignItems: "center", justifyContent: "center", marginTop: "-6px", border: `2px solid ${a ? "#E85D3A" : "rgba(90,152,227,0.2)"}`, boxShadow: a ? "0 4px 16px rgba(232,93,58,.35)" : "none", transition: "all .2s" }}>
                   <I size={20} color="#F8F8F8" />
                 </div>
               ) : (
