@@ -63,7 +63,7 @@ function CallbackHandler({ onError }: { onError: (msg: string) => void }) {
             return;
           }
         } else {
-          onError("No code or token in URL");
+          onError(`No code or token in URL\n\nFull URL: ${window.location.href}`);
           return;
         }
       } catch (e: unknown) {
