@@ -2342,7 +2342,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
 
     {/* ═══ FULL-SCREEN ROUTES MAP OVERLAY ═══ */}
     {subTab === "map" && (
-      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "62px", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "70px", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
         {/* Back chevron */}
         <button
           onClick={() => { setSubTab("list"); setSelRegion(null); }}
@@ -3532,7 +3532,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   }, [d3]);
 
   return (
-    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "62px", zIndex: 0 }}>
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "70px", zIndex: 0 }}>
       {/* Real Mapbox Map */}
       <div ref={mapContainer} style={{ position: "absolute", inset: 0 }} />
 
@@ -4224,7 +4224,7 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
 
     {/* ═══ FULL-SCREEN DISCOVER MAP OVERLAY ═══ */}
     {subTab === "discover" && discView === "map" && (
-      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "62px", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "70px", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
         {/* Back button */}
         <button
           onClick={() => { setDiscView("list"); setSelArticle(null); }}
@@ -6871,7 +6871,7 @@ export default function TrailSync() {
   }
 
   return (
-    <div style={{ width: "100%", height: "100dvh", display: "flex", flexDirection: "column", background: "#041e3d", color: "#F8F8F8", fontFamily: "'DM Sans',system-ui,sans-serif", overflow: "hidden" }}>
+    <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", background: "#041e3d", color: "#F8F8F8", fontFamily: "'DM Sans',system-ui,sans-serif", overflow: "hidden" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&family=Playfair+Display:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -7173,7 +7173,7 @@ export default function TrailSync() {
       )}
 
       {/* Bottom nav */}
-      <div style={{ position: "relative", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "space-around", padding: "4px 6px 10px", borderTop: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,.96)", backdropFilter: "blur(12px)" }}>
+      <div style={{ position: "relative", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "space-around", padding: "8px 6px 14px", borderTop: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,.96)", backdropFilter: "blur(12px)" }}>
         {tabs.map((t, i) => {
           const I = t.icon; const a = tab === t.id; const ctr = i === 2;
           return (
