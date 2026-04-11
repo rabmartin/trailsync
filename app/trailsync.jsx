@@ -7139,8 +7139,8 @@ export default function TrailSync() {
         </div>
       )}
 
-      {/* Content — flex:1 fills between header and tab bar */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      {/* Content — fills between header and tab bar using fixed positioning */}
+      <div style={{ position: "fixed", top: tab === "map" ? 0 : "calc(52px + env(safe-area-inset-top, 0px))", left: 0, right: 0, bottom: "62px", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {tab === "home" && <HomePage userName={userName} initialFilter={feedFilter} userId={userId} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowingCount={setFollowingCount} headerSearch={headerSearch} setHeaderSearch={setHeaderSearch} openRoute={openRouteOnMap} searchResults={searchResults} setSearchResults={setSearchResults} searching={searching} setSearching={setSearching} onViewProfile={setViewingProfile} />}
         {tab === "routes" && <RoutesPage openRoute={openRouteOnMap} pendingRouteDetail={pendingRouteDetail} onClearPendingRoute={() => setPendingRouteDetail(null)} />}
         {tab === "map" && <MapPage dbPeaks={dbPeaks} goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={async (walk) => {
