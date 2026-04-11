@@ -5634,6 +5634,27 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
 
       {sec === "leaderboard" && (() => {
         const sorted = [...lbData].sort((a, b) => b[lbm] - a[lbm]);
+        const top20 = sorted.slice(0, 20);
+        const myRank = sorted.findIndex(u => u.isMe);
+        const meOutside = myRank >= 20; // true if I'm not in the top 20
+        const meRow = myRank >= 0 ? sorted[myRank] : null;
+
+        const renderRow = (u, rank, extra = {}) => (
+          <div key={u.uid} style={{ background: u.isMe ? "rgba(90,152,227,0.08)" : "#0a2240", borderRadius: "10px", padding: "10px 12px", border: `1px solid ${u.isMe ? "rgba(90,152,227,0.3)" : "rgba(90,152,227,0.08)"}`, display: "flex", alignItems: "center", gap: "10px", animation: `fi .3s ease ${Math.min(rank, 20) * .04}s both`, ...extra }}>
+            <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: rank < 3 ? `${["#FFD700","#C0C0C0","#CD7F32"][rank]}15` : "#264f80", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 800, color: rank < 3 ? ["#FFD700","#C0C0C0","#CD7F32"][rank] : "#BDD6F4", flexShrink: 0 }}>{rank + 1}</div>
+            <div style={{ width: "30px", height: "30px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>{(u.n || "?")[0].toUpperCase()}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: "12px", fontWeight: 700, color: u.isMe ? "#5A98E3" : "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.n}{u.isMe ? " (you)" : ""}</div>
+            </div>
+            <div style={{ textAlign: "right", flexShrink: 0 }}>
+              <div style={{ fontSize: "14px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>
+                {lbm === "d" ? `${u.d}km` : lbm === "e" ? `${u.e >= 1000 ? (u.e/1000).toFixed(1)+"km" : u.e+"m"}` : u.pts.toLocaleString()}
+              </div>
+              <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>{lbm === "d" ? "distance" : lbm === "e" ? "elevation" : "points"}</div>
+            </div>
+          </div>
+        );
+
         return (
           <div>
             {/* Global / Friends toggle */}
@@ -5663,21 +5684,16 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               </div>
             )}
             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              {sorted.map((u, i) => (
-                <div key={u.uid} style={{ background: u.isMe ? "rgba(90,152,227,0.08)" : "#0a2240", borderRadius: "10px", padding: "10px 12px", border: `1px solid ${u.isMe ? "rgba(90,152,227,0.2)" : "rgba(90,152,227,0.08)"}`, display: "flex", alignItems: "center", gap: "10px", animation: `fi .3s ease ${i * .04}s both` }}>
-                  <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: i < 3 ? `${["#FFD700","#C0C0C0","#CD7F32"][i]}15` : "#264f80", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 800, color: i < 3 ? ["#FFD700","#C0C0C0","#CD7F32"][i] : "#BDD6F4", flexShrink: 0 }}>{i + 1}</div>
-                  <div style={{ width: "30px", height: "30px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>{(u.n || "?")[0].toUpperCase()}</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: "12px", fontWeight: 700, color: u.isMe ? "#5A98E3" : "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.n}{u.isMe ? " (you)" : ""}</div>
-                  </div>
-                  <div style={{ textAlign: "right", flexShrink: 0 }}>
-                    <div style={{ fontSize: "14px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>
-                      {lbm === "d" ? `${u.d}km` : lbm === "e" ? `${u.e >= 1000 ? (u.e/1000).toFixed(1)+"km" : u.e+"m"}` : u.pts.toLocaleString()}
-                    </div>
-                    <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>{lbm === "d" ? "distance" : lbm === "e" ? "elevation" : "points"}</div>
-                  </div>
+              {top20.map((u, i) => renderRow(u, i))}
+              {/* If current user is outside top 20, show a separator then their row */}
+              {meOutside && meRow && <>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "4px 0" }}>
+                  <div style={{ flex: 1, height: "1px", background: "rgba(90,152,227,0.12)" }} />
+                  <span style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.3, fontWeight: 600 }}>YOUR RANK</span>
+                  <div style={{ flex: 1, height: "1px", background: "rgba(90,152,227,0.12)" }} />
                 </div>
-              ))}
+                {renderRow(meRow, myRank)}
+              </>}
             </div>
           </div>
         );
