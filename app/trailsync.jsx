@@ -7229,8 +7229,8 @@ export default function TrailSync() {
         />
       )}
 
-      {/* Bottom nav */}
-      <div style={{ position: "relative", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "space-around", padding: "4px 6px 10px", borderTop: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,.96)", backdropFilter: "blur(12px)" }}>
+      {/* Bottom nav — fixed to physical screen bottom, never affected by layout */}
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 60, display: "flex", alignItems: "center", justifyContent: "space-around", padding: "4px 6px 10px", borderTop: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,.96)", backdropFilter: "blur(12px)" }}>
         {tabs.map((t, i) => {
           const I = t.icon; const a = tab === t.id; const ctr = i === 2;
           return (
