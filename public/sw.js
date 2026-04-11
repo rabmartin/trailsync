@@ -1,8 +1,8 @@
-// TrailSync Service Worker v5
+// TrailSync Service Worker v6
 // Network-first for app shell, cache-first for map tiles
 
-const CACHE_NAME = "trailsync-v5";
-const TILE_CACHE = "trailsync-tiles-v5";
+const CACHE_NAME = "trailsync-v6";
+const TILE_CACHE = "trailsync-tiles-v6";
 
 // Minimal app shell — only static public files
 const APP_SHELL = ["/", "/manifest.json", "/icon-192.png", "/icon-512.png"];
