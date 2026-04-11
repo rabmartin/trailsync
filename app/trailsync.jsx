@@ -46,7 +46,7 @@ const supabase = createClient(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      flowType: "implicit",
+      flowType: "pkce",
     },
   }
 );
@@ -328,16 +328,46 @@ const MODULES = [
 ];
 
 const DISCOVER = [
-  { id: 1, title: "The Lost Observatory of Ben Nevis", cat: "History", region: "Ben Nevis & Mamores", peak: "Ben Nevis", lat: 56.797, lng: -5.004, author: "Rachel M.", excerpt: "For twenty years, a team of scientists lived and worked at the summit of Britain's highest mountain, recording weather data that changed our understanding of Atlantic storms forever.", read: "8 min", icon: "🏛️" },
-  { id: 2, title: "The Massacre of Glen Coe", cat: "History", region: "Glen Coe", peak: "Bidean nam Bian", lat: 56.652, lng: -5.1, author: "Rachel M.", excerpt: "On a frozen February morning in 1692, soldiers turned on the families who had sheltered them. The glen still carries the weight of that betrayal.", read: "10 min", icon: "⚔️" },
-  { id: 3, title: "Torridon: Walking on the Oldest Rock in the World", cat: "Geology", region: "Torridon", peak: "Liathach", lat: 57.581, lng: -5.468, author: "Laura K.", excerpt: "The sandstone beneath your boots on Liathach is three billion years old. Before complex life, before oxygen, this rock was already ancient.", read: "6 min", icon: "🪨" },
-  { id: 4, title: "The Grey Man of Ben Macdui", cat: "Folklore", region: "Cairngorms", peak: "Ben Macdui", lat: 57.070, lng: -3.669, author: "Rachel M.", excerpt: "Experienced mountaineers have reported footsteps behind them, a towering shadow in the mist, and an overwhelming urge to flee from the summit plateau.", read: "7 min", icon: "👻" },
-  { id: 5, title: "Eagles Above Kintail", cat: "Wildlife", region: "Kintail & Affric", peak: "The Five Sisters", lat: 57.22, lng: -5.35, author: "Laura K.", excerpt: "The golden eagles that soar above the Five Sisters have hunted these ridges for thousands of years. Here's how to spot them without disturbing them.", read: "5 min", icon: "🦅" },
-  { id: 6, title: "The Fairy Pools of Skye", cat: "Folklore", region: "Skye Cuillin", peak: "Sgurr nan Gillean", lat: 57.254, lng: -6.196, author: "Rachel M.", excerpt: "Crystal clear pools at the foot of the Black Cuillin, where legend says the fairy folk would bathe. The water is still ice cold, and the magic hasn't faded.", read: "5 min", icon: "🧚" },
-  { id: 7, title: "How Striding Edge Was Formed", cat: "Geology", region: "Lake District", peak: "Helvellyn", lat: 54.527, lng: -3.016, author: "Laura K.", excerpt: "Two glaciers carved the mountain from both sides, leaving behind a knife-edge ridge that draws thousands of walkers each year.", read: "6 min", icon: "🧊" },
-  { id: 8, title: "The Drovers' Roads of Galloway", cat: "History", region: "Galloway Hills", peak: "Merrick", lat: 55.146, lng: -4.615, author: "Rachel M.", excerpt: "Long before tarmac, cattle were driven through these hills on ancient paths. Some of our best walking routes follow their footsteps.", read: "7 min", icon: "🐄" },
-  { id: 9, title: "Snowdon's Mining Heritage", cat: "History", region: "Snowdonia", peak: "Snowdon", lat: 53.068, lng: -4.076, author: "Laura K.", excerpt: "Copper mines once riddled the slopes of Snowdon. The ruins still stand as a reminder of the communities that lived and worked in these mountains.", read: "8 min", icon: "⛏️" },
-  { id: 10, title: "Mountain Hares of the Cairngorms", cat: "Wildlife", region: "Cairngorms", peak: "Cairn Gorm", lat: 57.1, lng: -3.6, author: "Laura K.", excerpt: "They turn white in winter and blue-grey in summer. Spotting a mountain hare on the Cairngorm plateau is one of Scotland's great wildlife experiences.", read: "4 min", icon: "🐇" },
+  { id: 1, title: "The Lost Observatory of Ben Nevis", cat: "History", region: "Ben Nevis & Mamores", peak: "Ben Nevis", lat: 56.797, lng: -5.004, author: "Rachel M.", excerpt: "For twenty years, a team of scientists lived and worked at the summit of Britain's highest mountain, recording weather data that changed our understanding of Atlantic storms forever.", read: "8 min", icon: "🏛️",
+    body: ["In 1883, the Scottish Meteorological Society completed one of the most ambitious scientific projects in Victorian Britain: a permanent weather observatory on the summit of Ben Nevis, 1,344 metres above sea level. The building sat metres from the cliff edge of the north face, buffeted by winds exceeding 100 mph and buried under snow for months at a time.", "The observatory was staffed year-round by rotating observers who lived on the summit for weeks at a stretch. Their stone accommodation was connected by a hand-rail rope to the observatory itself, which they followed blind in whiteout conditions. In winter, they recorded temperatures of -17°C with ferocious winds — some of the harshest conditions ever measured in Britain.", "The twenty years of data collected here transformed meteorological science. The observers made four readings every day without exception, building an unbroken record that revealed how Atlantic storms develop and intensify before hitting mainland Britain. Their findings directly influenced the development of modern weather forecasting across Europe.", "The observatory closed in 1904, a victim of funding cuts. The equipment was removed but the stone walls were left standing. Today the ruins — a low rectangle of frost-shattered masonry just east of the summit cairn — are visible to every walker who reaches the top. Look for the emergency shelter nearby, and spare a thought for the men who lived here through Highland winters.", "A small museum in Fort William tells the full story, including the personal diaries of the observers. Their accounts of months of isolation, storms that shook the building, and eerie winter sunrises above the cloud layer make extraordinary reading — one of Scotland's great untold stories."] },
+  { id: 2, title: "The Massacre of Glen Coe", cat: "History", region: "Glen Coe", peak: "Bidean nam Bian", lat: 56.652, lng: -5.1, author: "Rachel M.", excerpt: "On a frozen February morning in 1692, soldiers turned on the families who had sheltered them. The glen still carries the weight of that betrayal.", read: "10 min", icon: "⚔️",
+    body: ["In the early hours of 13 February 1692, soldiers who had been billeted for twelve days with the MacDonald clan of Glencoe rose and murdered their hosts. At least 38 men, women and children were killed outright. Others fled into the mountains in a February blizzard — many dying of exposure. The soldiers were mostly Campbells acting on orders from the Crown.", "The political context was the Jacobite conflicts. King William III demanded Highland clan chiefs swear an oath of loyalty by 1 January 1692. Alasdair MacIain, chief of the Glencoe MacDonalds, arrived late to sign — only to be redirected to Inveraray, arriving after the deadline. Officials in Edinburgh saw their opportunity.", "Orders to 'fall upon the rebels and put all to the sword under seventy' were signed by Secretary of State Sir John Dalrymple. What made the massacre infamous was not merely the killing, but the betrayal — soldiers murdering the very people whose food and warmth they had shared. This violated the sacred Highland code of hospitality in a way that Scottish culture has never forgotten.", "The glen bears its memory quietly. A small museum in Glencoe village tells the story with genuine care. Walking the glen on a grey winter day, with low cloud in the corries and the dark peaks pressing in, the events of that February morning feel surprisingly close.", "Glencoe remains one of the most dramatic landscapes in Scotland. Its character runs deeper than scenery — every walker who passes through takes something of that history with them, whether they know it or not."] },
+  { id: 3, title: "Torridon: Walking on the Oldest Rock in the World", cat: "Geology", region: "Torridon", peak: "Liathach", lat: 57.581, lng: -5.468, author: "Laura K.", excerpt: "The sandstone beneath your boots on Liathach is three billion years old. Before complex life, before oxygen, this rock was already ancient.", read: "6 min", icon: "🪨",
+    body: ["The reddish-brown sandstone that forms the great bulk of Liathach, Beinn Eighe and Beinn Alligin is Torridonian sandstone — laid down as river delta sediment approximately 750 million to one billion years ago, on top of Lewisian gneiss that is itself 2.5 to 3 billion years old. When you put your hand on the bare rock, you are touching some of the oldest surface geology in the world.", "The Lewisian gneiss — the grey, streaked basement rock you see at low level — was formed deep in the earth's crust during a time before complex life existed, before the oceans had significant oxygen. It was metamorphosed by immense heat and pressure, then eroded flat by ancient glaciers over hundreds of millions of years before the Torridonian sediments were deposited on top.", "What makes Torridon visually extraordinary is the contrast between these two rock types. The massive red sandstone towers rise abruptly from a flat, boggy landscape underlain by ancient gneiss, capped in places by bright white quartzite — a third rock type, 600 million years old, forming the distinctive scree-covered summits of Beinn Eighe.", "Beinn Eighe was designated Britain's first National Nature Reserve in 1951, partly in recognition of its geological importance. The Beinn Eighe Mountain Trail gives access to the quartzite ridges and extraordinary views over Loch Maree. Torridon village is the base for most walks in the area.", "Walking in Torridon is a genuinely humbling experience. On a clear day, looking across the ancient landscape from the ridge of Liathach, it is possible to grasp, briefly and imperfectly, just how small and brief human existence is relative to the rock beneath your boots."] },
+  { id: 4, title: "The Grey Man of Ben Macdui", cat: "Folklore", region: "Cairngorms", peak: "Ben Macdui", lat: 57.070, lng: -3.669, author: "Rachel M.", excerpt: "Experienced mountaineers have reported footsteps behind them, a towering shadow in the mist, and an overwhelming urge to flee from the summit plateau.", read: "7 min", icon: "👻",
+    body: ["In 1925, Professor Norman Collie, an experienced and respected mountaineer, stood up at the annual general meeting of the Cairngorm Club and described something remarkable. He said that in 1891, while descending Ben Macdui alone in mist, he had heard footsteps behind him — one step for every three or four of his own. When he stopped, the steps stopped. When he moved, they resumed. Eventually, overcome with an inexplicable terror, he ran for four miles without looking back.", "Collie was not alone. James Kellas, a pioneering Himalayan mountaineer, and several other credible witnesses reported similar experiences — a looming presence in the mist, footsteps that shouldn't be there, an overwhelming sense of dread that sent them running from the summit plateau. In Gaelic tradition, the entity is called Am Fear Liath Mòr — the Big Grey Man.", "The scientific explanation most commonly offered is the Brocken spectre — a meteorological phenomenon in which your shadow is cast onto mist or cloud below you, magnified and surrounded by a halo of light. When you move, the spectre moves. When you stop, it stops. On a featureless, mist-wrapped plateau, this can be deeply disorientating.", "Whether or not the Grey Man exists in any literal sense, the feeling it describes — that particular, irrational unease that the high, featureless Cairngorm plateau can produce in bad weather — is familiar to many experienced hillwalkers. The plateau is vast and monotonous, navigation is genuinely difficult in poor visibility, and the scale of the landscape overwhelms normal human reference points.", "Ben Macdui, at 1,309m, is Britain's second-highest mountain. Most walkers approach via Cairngorm Mountain and the ski infrastructure, crossing the featureless plateau to the summit. Go on a clear day for extraordinary views. Go in mist if you want to understand the legend from the inside."] },
+  { id: 5, title: "Eagles Above Kintail", cat: "Wildlife", region: "Kintail & Affric", peak: "The Five Sisters", lat: 57.22, lng: -5.35, author: "Laura K.", excerpt: "The golden eagles that soar above the Five Sisters have hunted these ridges for thousands of years. Here's how to spot them without disturbing them.", read: "5 min", icon: "🦅",
+    body: ["The golden eagle is Britain's largest bird of prey — a wingspan of up to 2.2 metres, weighing up to 6.5 kg, capable of stooping at 150 mph on prey spotted from half a mile away. Scotland holds around 500 pairs, the entire British population. Kintail, with its remote glens and high ridges, is among the best places in the country to see them.", "Golden eagles mate for life and are deeply territorial, holding ranges of up to 60 square kilometres. They are most active in late winter and early spring when they perform spectacular aerial displays over their territories — flying in wide circles, then suddenly folding their wings and diving, then recovering. This behaviour is most visible from ridgelines like the Five Sisters of Kintail.", "The best time to spot eagles is early morning, when thermals are beginning to develop, or late afternoon. Look for a large, broad-winged bird holding a ridge on spread, slightly upswept wings — unlike buzzards, which tilt side to side, eagles hold a stable 'V' profile. Their size is the key tell: even at great distance they look unmistakably large relative to anything else in the sky.", "Eagles were systematically persecuted through the Victorian era by gamekeepers and landowners, driven to extinction in England and Wales and reduced to a remnant Scottish population. Their slow recovery through the 20th century is one of conservation's great stories — but they remain vulnerable to illegal poisoning and habitat loss.", "If you spot a golden eagle, stay still, keep quiet, and watch from distance. Eagles are sensitive to disturbance at the nest. The RSPB operates a number of watch points in the Highlands during the breeding season — these are the best places for guaranteed sightings."] },
+  { id: 6, title: "The Fairy Pools of Skye", cat: "Folklore", region: "Skye Cuillin", peak: "Sgurr nan Gillean", lat: 57.254, lng: -6.196, author: "Rachel M.", excerpt: "Crystal clear pools at the foot of the Black Cuillin, where legend says the fairy folk would bathe. The water is still ice cold, and the magic hasn't faded.", read: "5 min", icon: "🧚",
+    body: ["The Fairy Pools lie at the foot of the Black Cuillin above Glen Brittle, where the Allt Coir' a' Mhadaidh tumbles down a series of cascades into a succession of turquoise pools so clear you can see every pebble on the bottom from the surface. The water is glacial melt — ice cold even in summer, never above about 10°C — and the colour comes from the pure basalt rock through which it flows.", "In Gaelic tradition, the pools were bathing places of the fairy folk — the Sìth, beings who lived in the hills and underworld of the Scottish imagination and who were known to lure, reward, or punish humans who crossed into their realm. Leaving offerings at the pools was once considered wise. The association has faded, but the pools still carry an otherworldly atmosphere, particularly in morning mist.", "The Black Cuillin forms the backdrop — a jagged ridge of gabbro rising to 993 metres at Sgurr Dearg, the whole ridge darkening and brightening as cloud shadow moves across the peaks. It is one of the most dramatic mountain backdrops in Britain, and it gives the Fairy Pools walk a scale and grandeur that simple waterfall walks rarely achieve.", "The walk from the Glen Brittle car park is approximately 5km return, with minimal ascent. The best time to visit is early morning, before the crowds, when the pools are mirror-still and the light from the east catches the cascades. Many people swim here — understand that the water is extremely cold and there are no lifeguards.", "Skye is reached via the Skye Bridge from Kyle of Lochalsh, or by ferry from Mallaig to Armadale. The island has excellent walking infrastructure, and the Fairy Pools are one of Scotland's most visited natural sites — for good reason."] },
+  { id: 7, title: "How Striding Edge Was Formed", cat: "Geology", region: "Lake District", peak: "Helvellyn", lat: 54.527, lng: -3.016, author: "Laura K.", excerpt: "Two glaciers carved the mountain from both sides, leaving behind a knife-edge ridge that draws thousands of walkers each year.", read: "6 min", icon: "🧊",
+    body: ["Striding Edge is an arête — a narrow ridge formed when two glaciers erode a mountain from opposite sides. During the last ice age, glaciers occupied both Red Tarn corrie to the north and Nethermost corrie to the south of the ridge. Over thousands of years they quarried rock from the headwalls of the corries, gradually steepening and narrowing the ridge between them until what remained was the thin blade of rock that exists today.", "The last major glaciation of the Lake District ended approximately 10,000 years ago. The ice retreated, the corries were revealed, and Red Tarn filled with meltwater to form the high-altitude lake that sits beneath the Edge today. The lake is held in its corrie basin by a moraine — a ridge of glacial debris deposited at the glacier's snout as it retreated.", "The rock of Striding Edge is Skiddaw Slate — fine-grained, dark-coloured, and relatively hard. It has weathered into blocks and ledges that make the ridge walkable, if narrow. The hardness of the rock is why the Edge has survived at all — softer rocks would have been eroded away by weathering in the 10,000 years since the ice retreated.", "The traverse of Striding Edge is one of the most popular mountain routes in England, and has been since the Victorian era. Wordsworth walked it. The scale of the exposure — with steep drops on both sides — makes it feel genuinely serious, though most scramblers find the difficulties straightforward in good conditions. In winter, with ice, it requires full winter gear.", "The view from the summit of Helvellyn on a clear day takes in most of the Lake District fells, with Red Tarn far below and the full sweep of Striding Edge visible as a thin line against the sky. It is one of the great views in English walking."] },
+  { id: 8, title: "The Drovers' Roads of Galloway", cat: "History", region: "Galloway Hills", peak: "Merrick", lat: 55.146, lng: -4.615, author: "Rachel M.", excerpt: "Long before tarmac, cattle were driven through these hills on ancient paths. Some of our best walking routes follow their footsteps.", read: "7 min", icon: "🐄",
+    body: ["For centuries before the railways, the only way to move cattle from the Highland and Galloway grazing grounds to the markets of central Scotland and England was on the hoof. Tens of thousands of cattle walked these routes each year, driven by small teams of drovers who knew every pass, every stance (overnight stopping place), and every tolerable river crossing from memory.", "The drove roads didn't follow valleys — they followed ridgelines and high ground to avoid the boggy, forested lowlands and the toll roads. Cattle were driven for up to 20 miles a day, rested at regular stances, and then walked on. The drovers themselves slept rough, wrapped in their plaids, eating oatmeal, cheese, and blood mixed from the cattle. It was a hard, highly skilled trade.", "Galloway was one of the great cattle-producing regions of Scotland, and its drove roads threaded through the hills from Castle Douglas northwards towards Ayr and eventually Edinburgh. The Merrick, at 843 metres the highest point in southern Scotland, stands at the heart of this network. Many hill paths in the area follow old drove lines.", "The drove trade collapsed almost overnight when the railways arrived in the 1840s and 50s. Cattle could be loaded at market and transported direct. The drovers' roads fell silent, returned to grass, and became the walking routes that hillwalkers now use — often without knowing what they're following.", "The Southern Upland Way, which crosses the Galloway Hills, passes through former drove country. The long, grassy ridgelines that make Galloway so pleasant to walk are partly a legacy of centuries of cattle grazing. The landscape carries its history in its bones, even where the surface has healed."] },
+  { id: 9, title: "Snowdon's Mining Heritage", cat: "History", region: "Snowdonia", peak: "Snowdon", lat: 53.068, lng: -4.076, author: "Laura K.", excerpt: "Copper mines once riddled the slopes of Snowdon. The ruins still stand as a reminder of the communities that lived and worked in these mountains.", read: "8 min", icon: "⛏️",
+    body: ["People have extracted copper from the slopes of Snowdon since the Bronze Age — perhaps 3,500 years ago. The Llanberis copper mines at the head of the Llanberis Pass were among the most productive in Britain during the late 18th and early 19th centuries, employing hundreds of men who lived in tight-knit communities in the surrounding valleys.", "The Britannia Copper Mines, visible from the Miners' Track as rectangular ruins beside Glaslyn lake at 600 metres, were the high-water mark of Snowdon's industrial period. At their peak in the 1820s, they processed thousands of tons of ore annually, using water power from Glaslyn to drive the crushing and smelting machinery. The ruins of the barracks, offices, and ore-processing buildings still stand.", "Life for the miners was brutal by modern standards. Men worked 12-hour shifts underground in wet, poorly ventilated tunnels, exposed to silica dust that caused fatal lung disease within years. Pay was low, accidents were frequent, and the communities had almost no healthcare. Yet the mining culture produced strong traditions of choral singing, chapel attendance, and political radicalism that shaped Welsh identity.", "The mines closed progressively through the late 19th century as ore grades fell and cheaper copper became available from Chile and the American West. The valleys depopulated, the chapels emptied, and the mountains returned to silence. The ruins at Glaslyn are some of the most evocative industrial remains in Wales.", "The Miners' Track from Pen-y-Pass follows the original route used by mine workers and is now one of the most popular ascents of Snowdon. Glaslyn's extraordinary blue-green colour is partly a result of residual copper compounds in the water — a chemical legacy of the mining that ended over a century ago."] },
+  { id: 10, title: "Mountain Hares of the Cairngorms", cat: "Wildlife", region: "Cairngorms", peak: "Cairn Gorm", lat: 57.1, lng: -3.6, author: "Laura K.", excerpt: "They turn white in winter and blue-grey in summer. Spotting a mountain hare on the Cairngorm plateau is one of Scotland's great wildlife experiences.", read: "4 min", icon: "🐇",
+    body: ["The mountain hare is Britain's only native hare species — a survivor of the last ice age that has adapted to the extreme conditions of the Scottish high tops. Unlike the introduced brown hare, mountain hares change colour with the seasons: blue-grey in summer, pure white in winter. The moult is triggered by day length, not temperature — which means that in mild winters, white hares can sit on snowless hillsides, conspicuous to everything.", "Cairngorms National Park holds the largest population of mountain hares in Britain — perhaps 35,000 animals. They are most concentrated on the high, heather-covered slopes and boulder fields between 600 and 900 metres, where they shelter in forms — shallow depressions scraped in the vegetation. In heavy snow they burrow into snowdrifts to stay warm.", "Mountain hares are most active around dawn and dusk and will often sit very still, relying on camouflage, before bolting with extraordinary speed if approached. In summer, look for the blue-grey animals on open hillsides. In winter, scan snow-free ground carefully — a white hare on bare brown heather stands out like a signal.", "The species faces a serious conservation challenge. Culling on grouse moors — where hares are shot to reduce tick burdens on red grouse — has been controversial. Some Cairngorm estates have voluntarily ceased culling, and the species is showing signs of recovery in these areas. Climate change, which reduces snow cover, also threatens their camouflage advantage.", "The plateau above Cairngorm Mountain ski area is excellent mountain hare habitat and is easily accessed via the funicular railway (summer) or a walk from the car park at Coire Cas. Early morning in late winter, with snow still on the ground, is the best time for sightings."] },
+  { id: 11, title: "The Ptarmigan: Scotland's Mountain Chameleon", cat: "Wildlife", region: "Cairngorms", peak: "Cairn Gorm", lat: 57.12, lng: -3.65, author: "Laura K.", excerpt: "Three times a year it changes colour to match its surroundings. The ptarmigan is the only bird that lives year-round on Scotland's highest peaks.", read: "5 min", icon: "🐦",
+    body: ["The ptarmigan is a grouse of the high Arctic — and Scotland's high tops are the southernmost part of its range in Britain. It is the only British bird that turns white in winter, moulting through three distinct plumages across the year: white in winter, grey-brown in spring, and brown-and-buff in summer. Each plumage provides near-perfect camouflage for its season.", "Ptarmigan live above 800 metres year-round, among boulder fields and short alpine vegetation. They are extraordinarily cold-hardy — their feet are feathered to the toes, providing insulation in snow, and they can survive temperatures of -25°C by sheltering in snowdrifts. They do not migrate and do not descend to lower ground in winter.", "Finding ptarmigan requires both altitude and patience. Walk to the summit plateau of any Cairngorm above 900 metres and look carefully at the boulderfields — in winter, white birds on white snow are nearly invisible until they move. In summer, they crouch motionless and can be approached to within a few metres, relying on camouflage rather than flight.", "The ptarmigan population is a sensitive indicator of climate change. As winters become milder and snow cover decreases, the species spends more time in its white winter plumage on snowless ground — exposed and vulnerable to predators. Population monitoring on the Cairngorm plateau shows concerning declines over the past two decades.", "The Cairngorm Mountain funicular gives relatively easy access to ptarmigan habitat without a long ascent. Look for them on the walk between the top station and the summit of Cairn Gorm. They are most visible in late autumn, when the contrast between their whitening plumage and the still-brown hillside makes them stand out."] },
+  { id: 12, title: "How Ice Shaped Scotland", cat: "Geology", region: "Cairngorms", peak: "Ben Macdui", lat: 57.0, lng: -3.8, author: "Laura K.", excerpt: "Eighteen thousand years ago, Scotland lay beneath an ice sheet over a kilometre thick. Everything you walk through today was carved by glaciers.", read: "7 min", icon: "🧊",
+    body: ["At the peak of the last glaciation, approximately 18,000 years ago, Scotland was buried under an ice sheet up to 1,800 metres thick. Only the very highest summits — nunataks — projected above the ice. The weight of the ice was so great that it depressed the land by hundreds of metres; Scotland is still slowly rebounding today, a process called isostatic uplift measurable by GPS.", "As glaciers moved, they carried enormous quantities of rock frozen into their base, using it to grind and polish the bedrock beneath. This is why so many Scottish mountains have smooth, rounded profiles on one side and steep, shattered cliffs on the other — the smooth side faced the advancing glacier; the cliff face is where ice plucked rock away as it flowed over the summit. This asymmetry is called a roche moutonnée.", "The great glens — Glen Coe, Glen Nevis, Glen More, Glen Affric — were carved by valley glaciers following existing river valleys. Glaciers are far more powerful erosive agents than rivers: they deepened the valleys by hundreds of metres, steepened the sides to cliff angles, and left characteristic U-shaped profiles. The sea lochs of the west coast are glacial fjords, drowned when sea levels rose after the ice retreated.", "As the glaciers finally retreated, approximately 10,000 years ago, they left behind their moraines — ridges and hummocks of rock debris deposited at their snouts. These are visible as the hummocky ground at the mouths of many Highland glens. Erratic boulders — rocks of a different type to the bedrock on which they rest — were plucked from their source and transported tens of kilometres before being dropped as the ice melted.", "Scotland is geologically young in the sense that the ice retreated so recently. The soils are thin, the vegetation is simple, and the mountains are still in the process of being shaped by weather, frost action, and the slow but relentless movement of water. Every walk in the Scottish hills is a walk through an actively evolving landscape."] },
+  { id: 13, title: "Reading Mountain Weather: What the Clouds Tell You", cat: "Safety", region: "Ben Nevis & Mamores", peak: "Ben Nevis", lat: 56.8, lng: -4.9, author: "Rachel M.", excerpt: "The summit forecast said clear. By the time you reached the ridge, you were in a whiteout. Mountain weather is different — here's how to read it.", read: "9 min", icon: "⛈️",
+    body: ["Mountain weather behaves differently to valley weather because mountains force air upward. When moist air rises, it cools, and cloud forms when it reaches the dew point temperature. This process — orographic lift — can create dense summit cloud when the valley below is sunny and clear. The forecast for the nearest town is almost useless for planning a high-level route; always use a dedicated mountain weather service.", "The Mountain Weather Information Service (MWIS) provides detailed forecasts for specific mountain areas of the UK, updated twice daily. The Met Office also produces a Mountain Forecast for specific summits. Both services include summit temperature, wind speed, and cloud base height — the last of these tells you whether the summit will be in cloud or above it. Make these your standard pre-walk check.", "Cloud types give you advance warning of what's coming. High, thin cirrus cloud — the streaky, wispy formations — often precede a frontal system by 24-48 hours. Lenticular clouds, the lens-shaped formations that form over summits in strong winds, indicate violent turbulence above the ridge. Cumulonimbus — the anvil-shaped thunderstorm cloud — should prompt immediate descent from any exposed ground.", "Wind speed increases dramatically with altitude, and temperature drops approximately 1°C for every 100 metres of ascent. On a 15°C day in the valley, the summit of Ben Nevis is likely to be around 2°C — before accounting for wind chill. Wind chill at 60 mph wind speed reduces the effective temperature by a further 15°C. People have died of hypothermia on Scottish mountains in summer.", "The rule of thumb is: if you're unsure, don't go. The mountain will be there next week. Turning around is not failure — it is good judgement. The most experienced hillwalkers in Scotland have long lists of days when they turned around, and they are alive to talk about it precisely because of that habit."] },
+  { id: 14, title: "Navigation Without Signal: The Art of the Map", cat: "Safety", region: "Cairngorms", peak: "Cairn Gorm", lat: 57.05, lng: -3.7, author: "Laura K.", excerpt: "Your phone will die. GPS will fail. Fog will descend. The only reliable navigation tool in the mountains is one that doesn't need a battery.", read: "8 min", icon: "🗺️",
+    body: ["A smartphone GPS is a remarkable navigation tool in fine weather. It is also a liability in mountains, for several reasons: batteries drain fast in cold, screens become invisible in bright sunlight, and the glass fails if dropped. More fundamentally, a phone gives you a blue dot on a map — it does not teach you to understand the landscape around you. That understanding, the thing that keeps you safe when the phone dies, comes only from learning to read a paper map.", "Contour lines are the language of maps. Each line connects points of equal altitude. Where contours are close together, the ground is steep. Where they are spread apart, the ground is gentle. Contours that form a V shape pointing uphill indicate a valley or stream. Contours that form a V pointing downhill indicate a ridge or spur. A ring of contours indicates a summit. If you can read contours fluently, you can construct the entire three-dimensional landscape from a two-dimensional map.", "Taking a compass bearing is the foundational navigation skill. Place the compass on the map between your current position and your destination. Rotate the housing until the orienting lines align with the map's north lines. Hold the compass level, rotate your body until the needle aligns with the orienting arrow — and walk in the direction the travel arrow points. Practise this at home until it is automatic, not in mist on a high plateau.", "Two techniques make navigation significantly safer in poor visibility. Aiming off is deliberately navigating to a point to one side of your destination, so you know which way to turn when you hit a feature. Handrailing means following a linear feature — a fence, a stream, a ridge edge — rather than navigating across featureless ground. Combining these techniques with careful timing and pacing makes navigation in cloud genuinely manageable.", "The OS Explorer maps (1:25,000) are the standard for most hill walking. Carry a map and compass on every mountain walk above the snow line or in conditions where cloud is forecast. A dedicated GPS device is a useful backup; a phone should be a tertiary option. The skill of map reading is one of the best investments any hillwalker can make."] },
+  { id: 15, title: "The Red Deer Rut", cat: "Wildlife", region: "Kintail & Affric", peak: "The Five Sisters", lat: 57.15, lng: -5.2, author: "Laura K.", excerpt: "Every October, Britain's largest land mammal fills the Highland glens with sound. The red deer rut is one of nature's great spectacles, happening right here.", read: "6 min", icon: "🦌",
+    body: ["The red deer rut begins in late September and peaks through October, when stags that have spent the summer feeding and growing their antlers come down from the high ground to compete for hinds. A mature Highland stag weighs up to 190 kg and carries antlers that can span a metre across. During the rut, they roar almost continuously — a deep, hoarse bellowing that carries for kilometres across open glens.", "Dominance is established primarily through roaring contests and parallel walking. Fights — the full clash of antlers — are relatively rare because they are costly; a stag can lose an eye, break an antler, or be fatally injured. Most confrontations are resolved before they escalate. The winning stag gathers a herd of hinds, constantly herding them, chasing off rivals, and barely eating for the duration of the rut.", "Red deer are legally the property of the landowner across most of Scotland. The stalking season runs from 1 July to 20 October for stags and 21 October to 15 February for hinds. During the stalking season, some hill paths can be temporarily closed or require asking permission at the estate before walking. Check the Heading for the Scottish Hills website before visiting during these periods.", "The rut is audible from valley level — you can often hear the roaring long before you see the deer. To watch without disturbing the animals, stay downwind, move slowly, and observe from 200 metres or more. Disturbing rutting deer can disrupt the breeding cycle and stress animals that are already physically depleted.", "Kintail, Glen Affric, and the Cairngorms are among the best places to witness the rut from open hill. The glens around Torridon and Assynt in the northwest are also exceptional. Go at dawn or dusk, when deer are most active, and bring binoculars — this is wildlife watching at its most primally impressive."] },
+  { id: 16, title: "Sir Hugh Munro and His Tables", cat: "History", region: "Cairngorms", peak: "Ben Macdui", lat: 57.0, lng: -3.7, author: "Rachel M.", excerpt: "In 1891, a Scottish aristocrat published a list of mountains. It created a sporting obsession that has consumed hundreds of thousands of hillwalkers ever since.", read: "7 min", icon: "📋",
+    body: ["Sir Hugh Thomas Munro was a founding member of the Scottish Mountaineering Club and a man of independent means who spent much of his life walking the Scottish hills. In 1891, after years of systematic survey, he published his Tables of Heights over 3,000 Feet in the Scottish Mountaineering Club Journal — a list of 283 separate summits and 255 tops (subsidiary summits) that met his criteria for a distinct mountain.", "Munro never completed his own list. He died in 1919 with three peaks unclimbed, including the Inaccessible Pinnacle on Skye — a technical rock climb requiring a rope — which he had repeatedly deferred. The first person to complete the list was the Reverend Archibald Robertson, in 1901. The second completion came 22 years later. By the year 2000, over 3,000 completions had been recorded. Today the number is over 10,000.", "The list has been revised multiple times as survey techniques improved. The current official list, maintained by the SMC, stands at 282 Munros following revisions in 2012. Mountains have been added, removed, and reclassified as better height data became available. Beinn Tarsuinn was added in 1997 when its true height was confirmed; Ruadh Stac Mòr was briefly a Munro before being reclassified.", "Completing all the Munros — 'compleating' in the preferred spelling — has become one of Scotland's most significant sporting achievements. Many people walk the hills for decades to finish; some do it in a single long journey. The fastest known time for an unsupported completion is under 40 days. The oldest person to compleat was in their 80s. The youngest was a child walked up by their parents.", "The Munros have shaped Scottish hill culture profoundly. They brought walkers to remote areas that might otherwise have seen very few visitors, created communities of hillwalkers, and established standards of mountain craft. Whether you're chasing the list or simply out for the day, the Munros give Scotland's hills a particular texture that goes beyond simple appreciation of scenery."] },
+  { id: 17, title: "River Otters: Scotland's Secret Resident", cat: "Wildlife", region: "Kintail & Affric", peak: "The Five Sisters", lat: 57.1, lng: -5.3, author: "Laura K.", excerpt: "The Eurasian otter is one of Scotland's great conservation success stories. With patience and timing, you can watch them fish in the same rivers where they were nearly wiped out.", read: "5 min", icon: "🦦",
+    body: ["The Eurasian otter was driven to near-extinction in England and Wales through the 20th century by hunting, pesticide contamination of waterways, and habitat loss. Scotland's clean, fast-flowing Highland rivers provided a refuge, and Scottish otter populations have remained strong — today Scotland holds the largest otter population in Britain, with an estimated 8,000 animals.", "Otters are largely crepuscular — most active around dawn and dusk — and spend much of the day resting in holts (dens) among tree roots, rock cavities, or dense vegetation beside rivers and lochs. They are equally comfortable in fresh and salt water; the west coast sea lochs and tidal rivers are excellent otter habitat, where fish are plentiful and disturbance is low.", "Spotting an otter requires patience and the right approach. Walk slowly along a riverbank in the early morning, staying downwind (otters have an excellent sense of smell). Look for fish-scale and crab-shell remains at spraints (otter droppings) marked on prominent rocks — fresh spraint indicates recent activity. Once you've found spraint, sit quietly and wait.", "The sound of an otter surfacing — a soft splash, then vigorous chewing — often precedes the sighting. They dive repeatedly, typically for 15-20 seconds, surfacing to eat smaller fish on the spot and bringing larger prey ashore. Watching an otter eat a sea trout on a riverside boulder is one of the great wildlife moments Scotland offers.", "The Isle of Skye, Kintail, Torridon, and the Argyll coast are all outstanding otter habitat. The RSPB's Loch Garten reserve in the Cairngorms has regular sightings along the River Spey. Binoculars are essential, and 6am is usually the best time. Dress in muted colours, move slowly, and speak in whispers — the otter will come."] },
+  { id: 18, title: "The Cairngorm Plateau in Winter", cat: "Seasonal", region: "Cairngorms", peak: "Cairn Gorm", lat: 57.1, lng: -3.65, author: "Rachel M.", excerpt: "In winter the Cairngorm plateau becomes a sub-Arctic wilderness. Wind speeds above 100 mph are not unusual. It is also one of the most beautiful places in Britain.", read: "8 min", icon: "❄️",
+    body: ["The Cairngorm plateau — the high ground above 1,000 metres between Cairn Gorm, Ben Macdui, Braeriach, and Cairn Toul — has a climate closer to the Arctic than to the rest of Britain. Average January temperatures on the plateau are around -7°C, but wind chill regularly pushes effective temperatures below -20°C. Annual snowfall can exceed 5 metres. The ski area at Cairngorm Mountain exists because of this snowfall, which can persist on north-facing slopes into June.", "What makes the plateau remarkable in winter is not just the conditions but the landscape they create. The snow is sculpted by persistent westerly winds into sastrugi — ridged, wave-like formations — and the light on clear winter days has a clarity found nowhere else in Britain. Ptarmigan in white plumage dot the boulderfields. Red grouse, impossible to spot against the heather in summer, are suddenly visible against white snow. The silence, broken only by wind, is absolute.", "Planning a winter plateau walk requires more preparation than any summer hill walk. Full winter clothing — insulated and waterproof layers — is essential. A rope, ice axe, and crampons are needed for any route that crosses steep ground or has the potential for icy cornices. Navigation on the featureless plateau in cloud requires absolute compass competence. Many experienced hillwalkers take a winter mountain skills course before venturing onto the plateau in full winter conditions.", "The reward for this preparation is access to one of the most extraordinary experiences in British walking. A clear winter day on the plateau — blue sky, white snow, ptarmigan, and views stretching to the Cairngorm peaks in every direction — is genuinely unforgettable. The low winter sun gives the snow a golden colour in the late afternoon that no photograph quite captures.", "The ski road to the Cairngorm Mountain car park at 635 metres gives a significant head start on the ascent. The funicular to 1,080 metres is available in winter (with appropriate safety restrictions). From the top, the summit of Cairn Gorm is a 30-minute walk in good visibility. Always check the avalanche forecast from the Scottish Avalanche Information Service before heading out."] },
+  { id: 19, title: "Spring Comes Late to the Scottish Hills", cat: "Seasonal", region: "Ben Nevis & Mamores", peak: "Ben Nevis", lat: 56.75, lng: -4.95, author: "Laura K.", excerpt: "While gardens bloom in April, the high tops of Scotland are still in winter. Spring above 800 metres is brief, violet-coloured, and extraordinary.", read: "5 min", icon: "🌸",
+    body: ["Spring at sea level in Scotland typically arrives in March and April. Spring above 800 metres arrives in May and sometimes June — and even then it is conditional, liable to be interrupted by snow showers into late spring. The mountains move through winter on their own schedule, indifferent to the calendar.", "The first sign of alpine spring is purple saxifrage — a small, vivid purple flower that blooms on exposed ledges while snow still covers the surrounding hillside. It is one of only a handful of plants tough enough to flower at altitude in Scotland, and it does so on rock faces and cliff ledges that catch any available warmth from the low spring sun. Seeing purple saxifrage in flower against a snow backdrop is one of the most striking botanical sights in Britain.", "Ptarmigan begin their spring moult in April, transitioning from winter white through a brown-and-white mottled intermediate plumage before reaching their summer colouration. Mountain hares go through a similar change. For a few weeks in spring, both species are highly visible — their mottled coats stand out against both snow and bare ground.", "Waterfalls are at their most spectacular in spring, when snowmelt adds enormous volume to every burn and river. The Falls of Glomach in Kintail — one of Britain's highest waterfalls at 113 metres — are most powerful in May, when the plateau above is still shedding its winter snow. Many routes that are dry scrambles in summer become proper watercourse walks in spring.", "If you can walk only one season in the Scottish hills, consider spring. The midges have not yet emerged. The daylight is rapidly lengthening. Snow lingering in the north-facing corries gives a sense of winter's scale. And the first flowers on the rock faces remind you that life, persistent and tough, finds a way at every altitude."] },
+  { id: 20, title: "Ben Nevis in Winter: What Changes Above the Cloud", cat: "Routes", region: "Ben Nevis & Mamores", peak: "Ben Nevis", lat: 56.797, lng: -5.003, author: "Rachel M.", excerpt: "The Mountain Track in summer is a strenuous but straightforward walk. In winter, the same path becomes one of the most serious mountain routes in Britain.", read: "9 min", icon: "🏔️",
+    body: ["Ben Nevis in winter is a different mountain. The Mountain Track — a clear, wide path in summer — becomes buried under metres of snow. The summit plateau acquires cornices: overhanging lips of wind-packed snow that extend invisibly beyond the cliff edge. Every year, walkers have been killed on Ben Nevis by stepping through cornices they didn't know existed, falling onto the north face 300 metres below.", "The winter-specific hazards on Ben Nevis include: corniced plateau edges in all directions from the summit; the abseil posts (emergency descent markers) being buried by drifting snow; a descent route onto the Pony Track that can be mistaken for the descent into Five Finger Gully (fatal in avalanche or slide conditions); and wind speeds that routinely exceed 80 mph on the summit. The Ben Nevis and Carn Mòr Dearg massif generates its own weather systems.", "The minimum equipment for a winter ascent of the Mountain Track includes: ice axe, crampons, full winter clothing, a compass and paper map, a headtorch, emergency bivouac equipment, and sufficient food and water. The ability to self-arrest — stop yourself during a slide on steep snow using an ice axe — is essential and should be practised with an instructor before you need it in earnest.", "The north face of Ben Nevis — the vast cliff that you cannot see from the tourist path — contains some of the most serious winter climbing routes in Britain: Tower Ridge, Observatory Ridge, Zero Gully, Point Five Gully. These are technical routes requiring full winter mountaineering skills. Looking down the north face in winter conditions is a profoundly serious experience. Do not approach the summit plateau edge without knowing exactly where you are.", "A winter ascent of Ben Nevis on a clear day, with proper preparation, is one of the finest mountain experiences in Britain. The views from the summit across an entirely white landscape, the low winter sun casting long shadows across the snow, the silence broken only by wind — these are things that people who climb Ben Nevis in summer do not get to see. If you want to do it, take a winter skills course first. Guides Scotland and Glenmore Lodge both run excellent winter mountain courses."] },
 ];
 
 const ME = { name: "Explorer", user: "", loc: "", frs: 0, fng: 0, walks: 0, dist: 0, elev: 0, munros: { d: 0, t: 282 }, corbetts: { d: 0, t: 222 }, wainwrights: { d: 0, t: 214 }, hewitts: { d: 0, t: 525 }, donalds: { d: 0, t: 89 } };
@@ -799,7 +829,7 @@ const LoginScreen = ({ onLogin, onGoSignup }) => {
     setError("");
     const { error: authError } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: "https://trailsync-zeta.vercel.app" },
+      options: { redirectTo: "https://trailsync-zeta.vercel.app/auth/callback" },
     });
     if (authError) { setError(authError.message); setOauthLoading(null); }
     // On success browser redirects away — auth listener in parent handles the rest
@@ -1031,7 +1061,7 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 1: HOME
    ═══════════════════════════════════════════════════════════════════ */
-const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingIds, setFollowingCount, headerSearch, setHeaderSearch, openRoute, searchResults, setSearchResults, searching, setSearching }) => {
+const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingIds, setFollowingCount, headerSearch, setHeaderSearch, openRoute, searchResults, setSearchResults, searching, setSearching, onViewProfile }) => {
   const [wxOpen, setWxOpen] = useState(false);
   const [ff, setFf] = useState(initialFilter || "all");
   const [expandedArea, setExpandedArea] = useState(null);
@@ -1068,6 +1098,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   // Fetch posts once on mount — no auth needed, posts are public
   const fetchPosts = async () => {
     try {
+      await supabase.auth.getSession();
       const { data, error: postsError } = await supabase
         .from("posts")
         .select("*")
@@ -1085,6 +1116,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
         likes: p.likes || 0,
         comments: 0,
         peaks: p.peaks || [],
+        route: p.route_points || null,
       }));
       const liveIds = new Set(liveMapped.map(p => String(p.id)));
       const hardcoded = FEED.filter(p => !liveIds.has(String(p.id)));
@@ -1194,8 +1226,8 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
 
       // Live DB queries — posts and people
       const [postsRes, usersRes] = await Promise.all([
-        supabase.from("posts").select("*").or(`text.ilike.%${q}%`).order("created_at", { ascending: false }).limit(8),
-        supabase.from("profiles").select("*").or("username.ilike.%" + q + "%,name.ilike.%" + q + "%").limit(6),
+        supabase.from("posts").select("*").ilike("text", `%${q}%`).order("created_at", { ascending: false }).limit(8),
+        supabase.from("profiles").select("*").or(`username.ilike.%${q}%,full_name.ilike.%${q}%`).limit(6),
       ]);
 
       // Also search hardcoded FEED posts (events, fundraisers, summits)
@@ -1227,6 +1259,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
         av: (p.username || p.name || "T")[0].toUpperCase(),
         time: timeAgo(p.created_at), type: p.type || "summit",
         text: p.text, likes: p.likes || 0, comments: 0, peaks: p.peaks || [],
+        route: p.route_points || null,
         isLive: true,
       }));
       const liveIds = new Set(livePostsMapped.map(p => String(p.id)));
@@ -1357,14 +1390,14 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
         <div style={{ fontSize: "15px", color: "#BDD6F4", marginTop: "4px", fontWeight: 400 }}>Where we exploring today?</div>
       </div>
 
-      {/* Quick create post bar */}
-      <div style={{ marginBottom: "14px", animation: "su .35s ease .05s both" }}>
-        {!feedPostOpen ? (
-          <button onClick={() => setFeedPostOpen(true)} style={{ width: "100%", padding: "10px 14px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#BDD6F4", fontSize: "13px", cursor: "pointer", textAlign: "left", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>{(userName||"U")[0].toUpperCase()}</div>
-            <span style={{ opacity: 0.45, fontWeight: 400 }}>Share a summit, conditions update, trail tip…</span>
-          </button>
-        ) : (
+      {/* Floating create post button — fixed bottom right above tab bar */}
+      {!feedPostOpen && (
+        <button onClick={() => setFeedPostOpen(true)} style={{ position: "fixed", bottom: "82px", right: "16px", width: "52px", height: "52px", borderRadius: "50%", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "26px", fontWeight: 300, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, boxShadow: "0 4px 16px rgba(232,93,58,0.45)", lineHeight: 1 }}>+</button>
+      )}
+
+      {/* Expanded create post form */}
+      {feedPostOpen && (
+        <div style={{ marginBottom: "14px", animation: "fi .15s ease" }}>
           <div style={{ background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.2)", padding: "12px", animation: "fi .15s ease" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
               <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>{(userName||"U")[0].toUpperCase()}</div>
@@ -1389,8 +1422,8 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
               </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Weather Engine */}
       <div style={{ marginBottom: "16px", animation: "su .4s ease .1s both" }}>
@@ -1747,25 +1780,31 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
         );
       })()}
 
-      {/* Feed filters */}
-      <div style={{ display: "flex", gap: "6px", marginBottom: "12px", animation: "su .4s ease .3s both" }}>
-        {[["all", "For You"], ["summits", "Summits"], ["events", "Events"], ["news", "News"], ["fundraiser", "Fundraiser"]].map(([k, l]) => (
-          <button key={k} onClick={() => setFf(k)} style={{
-            padding: "6px 14px", borderRadius: "20px", fontSize: "12px", cursor: "pointer",
-            background: ff === k ? "rgba(90,152,227,0.2)" : "#0a2240",
-            border: `1px solid ${ff === k ? "rgba(90,152,227,0.4)" : "rgba(90,152,227,0.12)"}`,
-            color: ff === k ? "#5A98E3" : "#BDD6F4", fontWeight: ff === k ? 700 : 500,
-            fontFamily: "'DM Sans'"
-          }}>{l}</button>
-        ))}
+      {/* Feed filter dropdown */}
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px", animation: "su .4s ease .3s both" }}>
+        <select value={ff} onChange={e => setFf(e.target.value)} style={{
+          background: "#0a2240", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "20px",
+          color: ff === "all" ? "#BDD6F4" : "#5A98E3", fontSize: "12px", fontFamily: "'DM Sans'",
+          fontWeight: ff === "all" ? 500 : 700, padding: "6px 30px 6px 14px", cursor: "pointer",
+          outline: "none", WebkitAppearance: "none", appearance: "none",
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%235A98E3' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+          backgroundRepeat: "no-repeat", backgroundPosition: "right 10px center"
+        }}>
+          <option value="all">For You</option>
+          <option value="summits">Summits</option>
+          <option value="events">Events</option>
+          <option value="news">News</option>
+          <option value="fundraiser">Fundraiser</option>
+        </select>
       </div>
 
       {/* Feed */}
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         {livePosts.filter(p => ff === "all" || (ff === "summits" && (p.type === "summit" || p.type === "walk")) || (ff === "events" && p.type === "event") || (ff === "news" && p.type === "news") || (ff === "fundraiser" && p.type === "fundraiser")).map((p, i) => (
-          <div key={p.id} style={{
+          <div key={p.id} onClick={() => setCommentOpen(commentOpen === p.id ? null : p.id)} style={{
             background: "#0a2240", borderRadius: "14px", padding: "14px",
-            border: "1px solid rgba(90,152,227,0.1)", animation: `su .3s ease ${.35 + i * .05}s both`
+            border: `1px solid ${commentOpen === p.id ? "rgba(90,152,227,0.25)" : "rgba(90,152,227,0.1)"}`,
+            animation: `su .3s ease ${.35 + i * .05}s both`, cursor: "pointer"
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
               <div onClick={() => p.user_id && onViewProfile && onViewProfile({ id: p.user_id, name: p.user, username: p.user })} style={{ width: "36px", height: "36px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "17px", fontWeight: 700, color: "#F8F8F8", cursor: p.user_id ? "pointer" : "default", flexShrink: 0 }}>{p.av}</div>
@@ -1785,6 +1824,11 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
               </a>
             )}
             {p.peaks.length > 0 && <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginTop: "10px" }}>{p.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "6px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}</div>}
+            {p.type === "walk" && p.route && p.route.length > 2 && (
+              <div style={{ marginTop: "10px" }} onClick={e => e.stopPropagation()}>
+                <RoutePreview points={p.route} height={120} />
+              </div>
+            )}
             <div style={{ display: "flex", gap: "16px", marginTop: "12px" }}>
               <button onClick={() => handleLike(p.id)} style={{ background: "none", border: "none", color: likedPosts.has(p.id) ? "#E85D3A" : "#BDD6F4", opacity: likedPosts.has(p.id) ? 1 : 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Heart size={14} fill={likedPosts.has(p.id) ? "#E85D3A" : "none"} /> {p.likes}</button>
               <button onClick={() => setCommentOpen(commentOpen === p.id ? null : p.id)} style={{ background: "none", border: "none", color: commentOpen === p.id ? "#5A98E3" : "#BDD6F4", opacity: commentOpen === p.id ? 1 : 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><MessageCircle size={14} /> {(postComments[p.id] || []).length || p.comments || 0}</button>
@@ -2110,20 +2154,41 @@ const OfflineBanner = () => {
 
 const ROUTE_EXTRA = {
   1: { terrain: ["Mountain Track","Scree","Exposed Ridge","Rocky Path"], description: "The most popular route up Britain's highest peak follows the well-maintained Mountain Track (formerly the Tourist Route) from Glen Nevis. The path is clear throughout but becomes rocky and bouldery in the upper section. Navigation in poor visibility on the plateau is crucial — the summit plateau is large and featureless and has claimed lives in all seasons.", history: "Ben Nevis means 'Mountain with its Head in the Clouds' in Gaelic. The first recorded ascent was by botanist James Robertson in 1771. The former summit hotel and observatory (1883–1904) recorded weather data that still informs Scottish meteorology today. In April, the north face is a world-class ice climbing destination.", flora: "Red deer are common on the lower slopes. Look for ptarmigan near the summit plateau — they turn white in winter. Mountain hares, golden eagles and peregrine falcons inhabit these slopes year-round." },
-  2: { terrain: ["Scramble","Exposed Arête","Rocky Ridge","Summit Plateau","Navigation Required"], description: "One of Scotland's great mountain days, the CMD Arête combines a steep approach to Carn Mòr Dearg with a thrilling narrow arête walk linking to Ben Nevis from the northeast. The arête itself involves simple scrambling with significant exposure — this is not a route for those uncomfortable with heights or unstable in high winds.", history: "The CMD Arête was popularised in the Victorian era as the sporting alternative to the Tourist Route. The north face of Ben Nevis visible from the arête contains routes like Tower Ridge (TD) and Zero Gully, legendary among Scottish winter climbers.", flora: "Snow bunting are often spotted on the upper plateau in winter. The northeast corrie holds snow well into early summer. Rare alpine flowers including purple saxifrage bloom on ledges below the arête in May and June." },
+  2: { terrain: ["Scramble","Exposed Arête","Rocky Ridge","Summit Plateau","Navigation Required"], description: "One of Scotland's great mountain days, the CMD Arête ascends to Carn Mòr Dearg before the thrilling narrow arête walk northeast to Ben Nevis summit. The arête requires simple scrambling with significant exposure — not for those uncomfortable with heights. The standard descent is via the Mountain Track (Tourist Route) back to Glen Nevis — do NOT reverse the arête.", history: "The CMD Arête was popularised in the Victorian era as the sporting alternative to the Tourist Route. The north face of Ben Nevis visible from the arête contains routes like Tower Ridge (TD) and Zero Gully, legendary among Scottish winter climbers.", flora: "Snow bunting are often spotted on the upper plateau in winter. The northeast corrie holds snow well into early summer. Rare alpine flowers including purple saxifrage bloom on ledges below the arête in May and June." },
   3: { terrain: ["Steep Approach","Scramble","Rocky Ridge","Summit Plateau"], description: "Buachaille Etive Mòr via Coire na Tulaich is a steep, direct ascent through a dramatic corrie followed by a ridge walk to the summit of Stob Dearg. The approach up the corrie involves a sustained hands-on scramble in the upper section. Descent should not be attempted straight down the south face — return via the ascent route.", history: "The Buachaille ('The Great Herdsman') has stood sentinel at the entrance to Glen Coe since the last ice age carved its dramatic profile. It is one of the most photographed mountains in Scotland, instantly recognisable from the A82. The northeast buttress was first climbed in 1895.", flora: "Glen Coe is a designated SSSI. The lower slopes support ancient Caledonian birch woodland. Red squirrel, otter, and golden eagle are all recorded here. The corrie headwall holds late snow and supports specialist alpine plant communities." },
   4: { terrain: ["Lochside Path","Graded Trail","Gentle Ascent","Woodland"], description: "Ben Lomond via the Ptarmigan Ridge is the southernmost Munro and the most accessible from Glasgow. The tourist path from Rowardennan is well-graded and clear throughout. The alternative Ptarmigan Ridge route (from the same start) gives a more varied approach via the northwest ridge with wider views over Loch Lomond.", history: "Ben Lomond was one of the first mountains climbed for sport rather than necessity, with records of ascents from the 1750s. The Trossachs and Loch Lomond area became romantically famous after Walter Scott's poem 'The Lady of the Lake' (1810) and Rob Roy (1817).", flora: "Ben Lomond National Memorial Park is managed by the National Trust for Scotland. Atlantic oakwood clings to the lower slopes — one of the finest examples in Britain. Ospreys nest at Loch Lomond from spring. Red deer and feral goats roam the upper slopes." },
   5: { terrain: ["Exposed Ridge","Scramble","Four Summits","High Level Route","Navigation Required"], description: "The Ring of Steall is one of Scotland's finest ridge walks, linking four Munros in the Mamores range above Glen Nevis. The route involves sustained scrambling on the connecting ridges, particularly on An Gearanach and the Sgùrr a' Mhàim descent. A wire bridge over the Water of Nevis adds character to the approach.", history: "The Mamores were a major centre of Highland clan life — the area saw significant clearances in the 18th and 19th centuries. The ring takes its name from the An Steall waterfall in the gorge below, the second highest waterfall in Scotland at 120m.", flora: "The high ridges support a full suite of arctic-alpine species. Look for mountain ringlet butterflies (Britain's only truly alpine butterfly) on the south-facing slopes in July. Red deer herds are abundant throughout." },
 };
 const ROUTE_EXTRA_DEFAULT = { terrain: ["Mountain Path","Open Hillside"], description: "A classic Scottish mountain route. Always check conditions before heading out and carry full navigation equipment. Weather can change rapidly in the Scottish Highlands year-round.", history: "Scotland's mountains have a rich history of exploration, farming, and Highland culture. Many summits were first climbed in the Victorian era during the golden age of Scottish mountaineering.", flora: "Scottish uplands support rare habitats including blanket bog, montane heath, and arctic-alpine plant communities. Red deer, mountain hare, ptarmigan, and golden eagle are frequent companions." };
 
-const RoutesPage = ({ openRoute }) => {
+const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
   const [cf, setCf] = useState(null);
   const [df, setDf] = useState(null);
   const [showCommunity, setShowCommunity] = useState(true);
   const [subTab, setSubTab] = useState("list");
   const [selRegion, setSelRegion] = useState(null);
   const [showRouteDetail, setShowRouteDetail] = useState(null); // route object
+  const [routeDetailCoords, setRouteDetailCoords] = useState(null);
+  const [routeDetailCoordsLoading, setRouteDetailCoordsLoading] = useState(false);
+
+  // Fetch GPX preview coords when route detail opens
+  useEffect(() => {
+    if (!showRouteDetail?.gpx_file) { setRouteDetailCoords(null); return; }
+    setRouteDetailCoords(null);
+    setRouteDetailCoordsLoading(true);
+    fetchGpxText(showRouteDetail.gpx_file)
+      .then(xml => { setRouteDetailCoords(parseGpxCoords(xml)); })
+      .catch(() => setRouteDetailCoords(null))
+      .finally(() => setRouteDetailCoordsLoading(false));
+  }, [showRouteDetail?.gpx_file]);
+
+  // Open route detail from external navigation (header search)
+  useEffect(() => {
+    if (pendingRouteDetail) {
+      setShowRouteDetail(pendingRouteDetail);
+      if (onClearPendingRoute) onClearPendingRoute();
+    }
+  }, [pendingRouteDetail]);
   // GPX drawing now happens on main map via openRoute prop
 
   const filtered = ROUTES.filter(r => {
@@ -2163,6 +2228,21 @@ const RoutesPage = ({ openRoute }) => {
               <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6 }}>{showRouteDetail.reg} · Start: {showRouteDetail.start}</div>
             </div>
           </div>
+        </div>
+
+        {/* Route GPX preview */}
+        <div style={{ background: "#041e3d", flexShrink: 0, position: "relative" }}>
+          {routeDetailCoordsLoading && (
+            <div style={{ height: "80px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: "2px solid rgba(90,152,227,0.2)", borderTop: "2px solid #5A98E3", animation: "spin 0.7s linear infinite" }} />
+            </div>
+          )}
+          {!routeDetailCoordsLoading && routeDetailCoords && routeDetailCoords.length > 1 && (
+            <RoutePreview points={routeDetailCoords} height={120} />
+          )}
+          {/* Fade overlays */}
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "24px", background: "linear-gradient(to bottom, rgba(13,45,84,0.85), transparent)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "24px", background: "linear-gradient(to top, #041e3d, transparent)", pointerEvents: "none" }} />
         </div>
 
         {/* Body */}
@@ -2260,7 +2340,72 @@ const RoutesPage = ({ openRoute }) => {
       </div>
     )}
 
-    <div style={{ padding: subTab === "map" ? "0 16px 0" : "0 16px 16px", overflowY: subTab === "map" ? "hidden" : "auto", flex: 1, display: "flex", flexDirection: "column" }}>
+    {/* ═══ FULL-SCREEN ROUTES MAP OVERLAY ═══ */}
+    {subTab === "map" && (
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "62px", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
+        {/* Back chevron */}
+        <button
+          onClick={() => { setSubTab("list"); setSelRegion(null); }}
+          style={{
+            position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 12px)", left: 12, zIndex: 60,
+            background: "rgba(4,30,61,0.92)", backdropFilter: "blur(12px)",
+            border: "1px solid rgba(90,152,227,0.25)", borderRadius: "10px",
+            padding: "8px 14px", color: "#F8F8F8", cursor: "pointer",
+            display: "flex", alignItems: "center", gap: "6px",
+            fontSize: "13px", fontWeight: 700, fontFamily: "'DM Sans'",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.3)"
+          }}
+        >
+          <ChevronLeft size={16} /> Routes
+        </button>
+        {/* Cluster map fills full screen */}
+        <RoutesClusterMap filtered={filtered} selRegion={selRegion} setSelRegion={setSelRegion} />
+        {/* Selected region route list */}
+        {selRegion && (
+          <div style={{
+            position: "absolute", bottom: 10, left: 10, right: 10, zIndex: 20,
+            background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)",
+            borderRadius: "14px", border: "1px solid rgba(90,152,227,0.15)",
+            animation: "su .25s ease", maxHeight: "200px", overflow: "auto"
+          }}>
+            <div style={{ height: "3px", background: "linear-gradient(90deg,#E85D3A,transparent)" }} />
+            <div style={{ padding: "10px 12px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <div style={{ fontSize: "13px", fontWeight: 800, color: "#F8F8F8" }}>{selRegion.name} · {selRegion.routes.length} routes</div>
+                <button onClick={() => setSelRegion(null)} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "24px", height: "24px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={11} /></button>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                {selRegion.routes.map((r, j) => (
+                  <div key={r.id}
+                    onClick={() => openRoute(r, "routes-map")}
+                    style={{
+                      display: "flex", alignItems: "center", gap: "10px",
+                      padding: "8px 10px", borderRadius: "10px",
+                      background: "#0a2240", border: "1px solid rgba(90,152,227,0.08)",
+                      animation: `fi .2s ease ${j * .04}s both`, cursor: r.gpx_file ? "pointer" : "default"
+                    }}>
+                    <Route size={14} color={CLS[r.cls]?.color} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
+                      <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{r.dist}km · {r.elev}m · {r.time}</div>
+                    </div>
+                    <div style={{ display: "flex", gap: "4px", flexShrink: 0, alignItems: "center" }}>
+                      <span style={{ fontSize: "9px", padding: "1px 5px", borderRadius: "4px", background: `${CLS[r.cls]?.color}15`, color: CLS[r.cls]?.color, fontWeight: 600 }}>{CLS[r.cls]?.name}</span>
+                      <span style={{ fontSize: "9px", padding: "1px 5px", borderRadius: "4px", background: `${dc(r.diff)}15`, color: dc(r.diff), fontWeight: 600 }}>{r.diff}</span>
+                      {(r.gpx_file || ROUTES.find(x => x.name === r.name && x.gpx_file)) && (
+                        <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", background: "rgba(232,93,58,0.12)", color: "#E85D3A", fontWeight: 700 }}>View →</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    )}
+
+    <div style={{ padding: "0 16px 16px", overflowY: "auto", flex: 1, display: "flex", flexDirection: "column" }}>
       {/* Header with sub-tabs */}
       <div style={{ padding: "24px 0 12px", display: "flex", alignItems: "baseline", gap: "16px" }}>
         <div onClick={() => setSubTab("list")} style={{ fontSize: "24px", fontWeight: 800, color: subTab === "list" ? "#F8F8F8" : "#BDD6F4", fontFamily: "'Playfair Display',serif", cursor: "pointer", opacity: subTab === "list" ? 1 : 0.4, transition: "all .2s" }}>Routes</div>
@@ -2342,59 +2487,7 @@ const RoutesPage = ({ openRoute }) => {
         </div>
       )}
 
-      {/* ═══ MAP VIEW ═══ */}
-      {subTab === "map" && (
-        <div style={{ flex: 1, position: "relative", display: "flex", flexDirection: "column" }}>
-        <RoutesClusterMap filtered={filtered} selRegion={selRegion} setSelRegion={setSelRegion} />
-
-          {/* Selected region route list */}
-          {selRegion && (
-            <div style={{
-              position: "absolute", bottom: 10, left: 10, right: 10, zIndex: 20,
-              background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)",
-              borderRadius: "14px", border: "1px solid rgba(90,152,227,0.15)",
-              animation: "su .25s ease", maxHeight: "200px", overflow: "auto"
-            }}>
-              <div style={{ height: "3px", background: "linear-gradient(90deg,#E85D3A,transparent)" }} />
-              <div style={{ padding: "10px 12px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                  <div style={{ fontSize: "13px", fontWeight: 800, color: "#F8F8F8" }}>{selRegion.name} · {selRegion.routes.length} routes</div>
-                  <button onClick={() => setSelRegion(null)} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "24px", height: "24px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={11} /></button>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  {selRegion.routes.map((r, j) => (
-                    <div key={r.id}
-                      onClick={() => openRoute(r, "routes-map")}
-                      style={{
-                        display: "flex", alignItems: "center", gap: "10px",
-                        padding: "8px 10px", borderRadius: "10px",
-                        background: "#0a2240",
-                        border: "1px solid rgba(90,152,227,0.08)",
-                        animation: `fi .2s ease ${j * .04}s both`, cursor: r.gpx_file ? "pointer" : "default"
-                      }}>
-                      <Route size={14} color={CLS[r.cls]?.color} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
-                        <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{r.dist}km · {r.elev}m · {r.time}</div>
-                      </div>
-                      <div style={{ display: "flex", gap: "4px", flexShrink: 0, alignItems: "center" }}>
-                        <span style={{ fontSize: "9px", padding: "1px 5px", borderRadius: "4px", background: `${CLS[r.cls]?.color}15`, color: CLS[r.cls]?.color, fontWeight: 600 }}>{CLS[r.cls]?.name}</span>
-                        <span style={{ fontSize: "9px", padding: "1px 5px", borderRadius: "4px", background: `${dc(r.diff)}15`, color: dc(r.diff), fontWeight: 600 }}>{r.diff}</span>
-                        {(r.gpx_file || ROUTES.find(x => x.name === r.name && x.gpx_file)) && (
-                          <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px",
-                            background: "rgba(232,93,58,0.12)", color: "#E85D3A", fontWeight: 700 }}>
-                            View →
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+      {/* Map view is handled by the full-screen overlay above */}
 
       {/* Downloaded tab */}
       {subTab === "downloaded" && (
@@ -2628,9 +2721,12 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   const [currentAlt, setCurrentAlt] = useState(null); // m above sea level
   const [gpsError, setGpsError] = useState(null);
   const [detectedPeaks, setDetectedPeaks] = useState([]);
+  const [summitToast, setSummitToast] = useState(null); // { name, cls, ht } — shown briefly when summit hit
   const watchIdRef = useRef(null);
   const trackPointsRef = useRef([]);    // [{lng, lat, alt, t}]
   const lastAltRef = useRef(null);
+  const userMovedMapRef = useRef(false); // true when user has manually panned away from location
+  const [userMovedMap, setUserMovedMap] = useState(false); // mirror for re-centre button visibility
   const movingTimeRef = useRef(0);      // seconds actually moving
   const movingTimerRef = useRef(null);
 
@@ -2650,46 +2746,62 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     PEAKS.forEach(pk => {
       const d = haversineDist([lng, lat], [pk.lng, pk.lat]) * 1000; // metres
       if (d < 150) {
-        setDetectedPeaks(prev => prev.find(p => p.id === pk.id) ? prev : [...prev, pk]);
+        setDetectedPeaks(prev => {
+          if (prev.find(p => p.id === pk.id)) return prev;
+          // New summit detected — show toast
+          setSummitToast(pk);
+          return [...prev, pk];
+        });
       }
     });
   };
+
+  // Auto-dismiss summit toast after 5 seconds
+  useEffect(() => {
+    if (!summitToast) return;
+    const t = setTimeout(() => setSummitToast(null), 5000);
+    return () => clearTimeout(t);
+  }, [summitToast]);
 
   const locationMarkerRef = useRef(null);
 
   // Create the pulsing blue location dot element
   const createLocationDot = () => {
     const el = document.createElement("div");
-    el.style.cssText = `
-      position: relative;
-      width: 20px;
-      height: 20px;
-    `;
+    el.style.cssText = `position: relative; width: 20px; height: 20px;`;
     // Outer pulse ring
     const pulse = document.createElement("div");
     pulse.style.cssText = `
-      position: absolute;
-      top: 50%; left: 50%;
+      position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      width: 40px; height: 40px;
-      border-radius: 50%;
+      width: 40px; height: 40px; border-radius: 50%;
       background: rgba(90,152,227,0.2);
       animation: locationPulse 2s ease-out infinite;
     `;
     // Inner dot
     const dot = document.createElement("div");
     dot.style.cssText = `
-      position: absolute;
-      top: 50%; left: 50%;
+      position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      width: 16px; height: 16px;
-      border-radius: 50%;
-      background: #5A98E3;
-      border: 3px solid #ffffff;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #5A98E3; border: 3px solid #ffffff;
       box-shadow: 0 2px 8px rgba(90,152,227,0.6);
+    `;
+    // Elevation label (updated by updateLiveTrack)
+    const label = document.createElement("div");
+    label.className = "elev-label";
+    label.style.cssText = `
+      position: absolute; top: 24px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(4,30,61,0.88); color: #5A98E3;
+      font-size: 10px; font-weight: 700; font-family: 'DM Sans', sans-serif;
+      padding: 2px 6px; border-radius: 4px; white-space: nowrap;
+      border: 1px solid rgba(90,152,227,0.35); pointer-events: none;
+      display: none;
     `;
     el.appendChild(pulse);
     el.appendChild(dot);
+    el.appendChild(label);
     return el;
   };
 
@@ -2705,6 +2817,8 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
         const mapboxgl = mod.default;
         if (locationMarkerRef.current) {
           locationMarkerRef.current.setLngLat([latest.lng, latest.lat]);
+          const lbl = locationMarkerRef.current.getElement().querySelector(".elev-label");
+          if (lbl && latest.alt != null) { lbl.textContent = `${Math.round(latest.alt)}m`; lbl.style.display = "block"; }
         } else {
           const el = createLocationDot();
           locationMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: "center" })
@@ -2774,12 +2888,16 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
         }
 
         const point = { lng, lat, alt: alt ?? null, t: now };
-        trackPointsRef.current = [...trackPointsRef.current, point];
-        updateLiveTrack(trackPointsRef.current);
+        // Only add point if no GPS jump > 50m (filters out satellite lock errors)
+        const isGpsJump = prev && haversineDist([prev.lng, prev.lat], [lng, lat]) > 0.05;
+        if (!isGpsJump) {
+          trackPointsRef.current = [...trackPointsRef.current, point];
+          updateLiveTrack(trackPointsRef.current);
+        }
         checkNearPeak(lat, lng);
 
-        // Pan map to follow user while recording
-        if (mapRef.current) {
+        // Pan map to follow user while recording (only if user hasn't manually panned away)
+        if (mapRef.current && !userMovedMapRef.current) {
           mapRef.current.easeTo({ center: [lng, lat], duration: 800 });
         }
       },
@@ -2826,6 +2944,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     setRealSpeed(0);
     setCurrentAlt(null);
     setDetectedPeaks([]);
+    setSummitToast(null);
     setGpsError(null);
     setElapsed(0);
     setRecording(false);
@@ -2887,9 +3006,14 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       if (!gpxRouteRef.current) {
         setTimeout(() => { try { geolocate.trigger(); } catch(e) {} }, 1000);
       }
-
-
     });
+
+    // Detect user-initiated map panning (touchstart/dragstart have originalEvent set)
+    const onUserMove = (e) => {
+      if (e.originalEvent) { userMovedMapRef.current = true; setUserMovedMap(true); }
+    };
+    map.on("dragstart", onUserMove);
+    map.on("touchstart", onUserMove);
 
     }); return () => {
       mapLoadedRef.current = false;
@@ -3408,12 +3532,38 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   }, [d3]);
 
   return (
-    <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "62px", zIndex: 0 }}>
       {/* Real Mapbox Map */}
       <div ref={mapContainer} style={{ position: "absolute", inset: 0 }} />
 
-      {/* Top controls */}
-      <div style={{ position: "absolute", top: 10, left: 10, right: 10, display: "flex", gap: "6px", zIndex: 20 }}>
+      {/* Re-centre button — shown after user pans away during tracking */}
+      {recording && userMovedMap && (
+        <button
+          onClick={() => {
+            const lastPt = trackPointsRef.current[trackPointsRef.current.length - 1];
+            if (lastPt && mapRef.current) {
+              mapRef.current.flyTo({ center: [lastPt.lng, lastPt.lat], duration: 600 });
+            }
+            userMovedMapRef.current = false;
+            setUserMovedMap(false);
+          }}
+          style={{
+            position: "absolute", bottom: "120px", right: "16px", zIndex: 10,
+            background: "rgba(4,30,61,0.95)", border: "1px solid rgba(90,152,227,0.3)",
+            borderRadius: "12px", padding: "8px 14px", color: "#5A98E3",
+            fontSize: "12px", fontWeight: 700, cursor: "pointer",
+            display: "flex", alignItems: "center", gap: "6px",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.3)", fontFamily: "'DM Sans'",
+            backdropFilter: "blur(8px)"
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+          Re-centre
+        </button>
+      )}
+
+      {/* Top controls — offset by status bar height when viewport-fit=cover is active */}
+      <div style={{ position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 10px)", left: 10, right: 10, display: "flex", gap: "6px", zIndex: 20 }}>
         <div style={{ flex: 1, position: "relative" }}>
           <div style={{ background: "rgba(4,30,61,.88)", backdropFilter: "blur(12px)", borderRadius: "12px", padding: "9px 14px", display: "flex", alignItems: "center", gap: "8px", border: `1px solid ${searchFocused ? "rgba(90,152,227,0.3)" : "rgba(90,152,227,0.15)"}` }}>
             <Search size={14} color="#BDD6F4" style={{ opacity: 0.4 }} />
@@ -3473,11 +3623,11 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       </div>
 
       {/* Unsure prompt */}
-      {wo && <div onClick={goHome} style={{ position: "absolute", top: 56, left: "50%", transform: "translateX(-50%)", background: "rgba(232,93,58,.92)", backdropFilter: "blur(8px)", borderRadius: "20px", padding: "7px 18px", zIndex: 20, display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", animation: "fi .4s ease", border: "1px solid rgba(248,248,248,.15)" }}><span style={{ fontSize: "12px", color: "#F8F8F8", fontWeight: 600 }}>Unsure where to go?</span><ArrowRight size={14} color="#F8F8F8" /></div>}
+      {wo && <div onClick={goHome} style={{ position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 56px)", left: "50%", transform: "translateX(-50%)", background: "rgba(232,93,58,.92)", backdropFilter: "blur(8px)", borderRadius: "20px", padding: "7px 18px", zIndex: 20, display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", animation: "fi .4s ease", border: "1px solid rgba(248,248,248,.15)" }}><span style={{ fontSize: "12px", color: "#F8F8F8", fontWeight: 600 }}>Unsure where to go?</span><ArrowRight size={14} color="#F8F8F8" /></div>}
 
       {/* GPX route banner — shown when a route is active or loading */}
       {(gpxRoute || mapGpxLoading) && (
-        <div style={{ position: "absolute", top: 56, left: 10, right: 10, zIndex: 22,
+        <div style={{ position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 56px)", left: 10, right: 10, zIndex: 22,
           background: "rgba(4,30,61,0.96)", backdropFilter: "blur(12px)", borderRadius: "14px",
           border: "1px solid rgba(232,93,58,0.25)", animation: "su .25s ease", overflow: "hidden" }}>
           <div style={{ height: "2px", background: "linear-gradient(90deg,#E85D3A,transparent)" }} />
@@ -3639,6 +3789,19 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                     </div>
                   ))}
                 </div>
+
+                {/* Summit toast — flashes when a peak is auto-detected */}
+                {summitToast && (
+                  <div style={{ padding: "10px 14px", borderRadius: "10px", background: "linear-gradient(135deg,rgba(107,203,119,0.18),rgba(90,152,227,0.1))", border: "1px solid rgba(107,203,119,0.35)", marginBottom: "10px", display: "flex", alignItems: "center", gap: "10px", animation: "su .3s ease" }}>
+                    <div style={{ fontSize: "22px", flexShrink: 0 }}>⛰️</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: "12px", fontWeight: 800, color: "#6BCB77" }}>Summit Reached!</div>
+                      <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", marginTop: "1px" }}>{summitToast.name}</div>
+                      <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6 }}>{summitToast.ht}m · {CLS[summitToast.cls]?.name || summitToast.cls}</div>
+                    </div>
+                    <button onClick={() => setSummitToast(null)} style={{ background: "none", border: "none", color: "#6BCB77", opacity: 0.5, cursor: "pointer", padding: "2px", flexShrink: 0 }}><X size={14} /></button>
+                  </div>
+                )}
 
                 {/* GPS error */}
                 {gpsError && (
@@ -3883,34 +4046,55 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
   const [discView, setDiscView] = useState("list");
   const [discCat, setDiscCat] = useState(null);
   const [selArticle, setSelArticle] = useState(null);
+  const [readingArticle, setReadingArticle] = useState(null);
 
   const filteredArticles = DISCOVER.filter(a => !discCat || a.cat === discCat);
   const categories = [...new Set(DISCOVER.map(a => a.cat))];
 
   return (
-    <div style={{ padding: (subTab === "discover" && discView === "map") ? "0 16px 0" : "0 16px 16px", overflowY: (subTab === "discover" && discView === "map") ? "hidden" : "auto", flex: 1, display: "flex", flexDirection: "column" }}>
+    <>
+    <div style={{ padding: "0 16px 16px", overflowY: "auto", flex: 1, display: "flex", flexDirection: "column" }}>
       {/* Header with sub-tabs */}
       <div style={{ padding: "24px 0 12px", display: "flex", alignItems: "baseline", gap: "16px" }}>
-        <div onClick={() => setSubTab("learn")} style={{ fontSize: "24px", fontWeight: 800, color: subTab === "learn" ? "#F8F8F8" : "#BDD6F4", fontFamily: "'Playfair Display',serif", cursor: "pointer", opacity: subTab === "learn" ? 1 : 0.4, transition: "all .2s" }}>Learn</div>
-        <div onClick={() => setSubTab("discover")} style={{ fontSize: "24px", fontWeight: 800, color: subTab === "discover" ? "#F8F8F8" : "#BDD6F4", fontFamily: "'Playfair Display',serif", cursor: "pointer", opacity: subTab === "discover" ? 1 : 0.4, transition: "all .2s", display: "flex", alignItems: "center", gap: "8px" }}>
+        <div onClick={() => setSubTab("learn")} style={{ fontSize: "24px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif", cursor: "pointer", opacity: subTab === "learn" ? 1 : 0.45, transition: "opacity .2s" }}>Learn</div>
+        <div onClick={() => setSubTab("discover")} style={{ fontSize: "24px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif", cursor: "pointer", opacity: subTab === "discover" ? 1 : 0.45, transition: "opacity .2s", display: "flex", alignItems: "center", gap: "8px" }}>
           Discover
-          <Sparkles size={16} color={subTab === "discover" ? "#E85D3A" : "#BDD6F4"} style={{ opacity: subTab === "discover" ? 1 : 0.4 }} />
+          <Sparkles size={16} color={subTab === "discover" ? "#E85D3A" : "#BDD6F4"} style={{ opacity: subTab === "discover" ? 1 : 0.45 }} />
         </div>
       </div>
 
       {/* ═══ LEARN SUB-TAB ═══ */}
       {subTab === "learn" && (
         <div>
-          <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, marginBottom: "14px" }}>Build your skills, stay safe on the hill</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+            <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6 }}>Build your skills, stay safe on the hill</div>
+            {Object.values(courseProgress).some(v => v > 0) && (
+              <button onClick={() => onCourseProgress && MODULES.forEach(m => onCourseProgress(m.id, 0))} style={{ background: "none", border: "1px solid rgba(232,93,58,0.25)", borderRadius: "8px", padding: "4px 10px", color: "#E85D3A", fontSize: "10px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: 0.7 }}>Reset</button>
+            )}
+          </div>
           <div style={{ padding: "14px", marginBottom: "16px", borderRadius: "14px", background: "linear-gradient(135deg,rgba(90,152,227,0.12),rgba(107,203,119,0.06))", border: "1px solid rgba(90,152,227,0.15)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div><div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>Your Progress</div><div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>3 of {MODULES.length} started · 1 completed</div></div>
-              <div style={{ fontSize: "24px", fontWeight: 800, color: "#5A98E3", fontFamily: "'JetBrains Mono'" }}>16%</div>
+              {(() => {
+                const started = MODULES.filter(m => (courseProgress[m.id] ?? 0) > 0).length;
+                const completed = MODULES.filter(m => (courseProgress[m.id] ?? 0) >= m.les).length;
+                const totalLessons = MODULES.reduce((a, m) => a + m.les, 0);
+                const doneLessons = MODULES.reduce((a, m) => a + Math.min(courseProgress[m.id] ?? 0, m.les), 0);
+                const pctAll = totalLessons > 0 ? Math.round((doneLessons / totalLessons) * 100) : 0;
+                return (<>
+                  <div><div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>Your Progress</div><div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>{started} of {MODULES.length} started · {completed} completed</div></div>
+                  <div style={{ fontSize: "24px", fontWeight: 800, color: "#5A98E3", fontFamily: "'JetBrains Mono'" }}>{pctAll}%</div>
+                </>);
+              })()}
             </div>
-            <div style={{ height: "5px", borderRadius: "5px", background: "#0a2240", marginTop: "10px" }}><div style={{ width: "16%", height: "100%", borderRadius: "5px", background: "linear-gradient(90deg,#5A98E3,#6BCB77)" }} /></div>
+            <div style={{ height: "5px", borderRadius: "5px", background: "#0a2240", marginTop: "10px" }}>{(() => {
+              const totalLessons = MODULES.reduce((a, m) => a + m.les, 0);
+              const doneLessons = MODULES.reduce((a, m) => a + Math.min(courseProgress[m.id] ?? 0, m.les), 0);
+              const pctAll = totalLessons > 0 ? Math.round((doneLessons / totalLessons) * 100) : 0;
+              return <div style={{ width: `${pctAll}%`, height: "100%", borderRadius: "5px", background: "linear-gradient(90deg,#5A98E3,#6BCB77)" }} />;
+            })()}</div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            {MODULES.map((m, i) => { const doneLessons = courseProgress[m.id] ?? m.done; const pct = Math.round((doneLessons / m.les) * 100); return (
+            {MODULES.map((m, i) => { const doneLessons = courseProgress[m.id] ?? 0; const pct = Math.round((doneLessons / m.les) * 100); return (
               <div key={m.id} onClick={() => setSel(sel === m.id ? null : m.id)} style={{ background: "#0a2240", borderRadius: "14px", overflow: "hidden", border: "1px solid rgba(90,152,227,0.1)", cursor: "pointer", animation: `fi .3s ease ${i * .04}s both` }}>
                 <div style={{ padding: "14px", display: "flex", alignItems: "center", gap: "12px" }}>
                   <div style={{ width: "46px", height: "46px", borderRadius: "12px", background: pct === 100 ? "rgba(107,203,119,0.1)" : "#264f80", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", border: pct === 100 ? "1px solid rgba(107,203,119,0.2)" : "none" }}>{m.ic}</div>
@@ -3978,7 +4162,7 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
                       <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.6, marginBottom: "10px", fontStyle: "italic" }}>"{a.excerpt}"</div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>By <span style={{ color: "#5A98E3", fontWeight: 600 }}>{a.author}</span></div>
-                        <button style={{ padding: "7px 16px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Read Story</button>
+                        <button onClick={(e) => { e.stopPropagation(); setReadingArticle(a); }} style={{ padding: "7px 16px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Read Story</button>
                       </div>
                     </div>
                   )}
@@ -3987,48 +4171,112 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
             </div>
           )}
 
-          {/* ═══ MAP VIEW ═══ */}
-          {discView === "map" && (
-            <div style={{ flex: 1, position: "relative", display: "flex", flexDirection: "column" }}>
-            <MiniMap height="100%" markers={filteredArticles.map(a => ({ lat: a.lat, lng: a.lng, color: "#264f80", html: `<span style="font-size:17px">${a.icon}</span>`, data: a, style: "width:38px;height:38px;border-radius:50%;background:#264f80;border:2px solid rgba(90,152,227,0.3);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.3);" }))} onMarkerClick={(m) => setSelArticle(selArticle?.id === m.data.id ? null : m.data)}>
+          {/* Map view handled by full-screen overlay below */}
+        </div>
+      )}
 
-              {/* Selected article popup */}
-              {selArticle && (
-                <div style={{
-                  position: "absolute", bottom: 10, left: 10, right: 10, zIndex: 20,
-                  background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)",
-                  borderRadius: "14px", border: "1px solid rgba(90,152,227,0.15)",
-                  animation: "su .25s ease", overflow: "hidden"
-                }}>
-                  <div style={{ height: "3px", background: "linear-gradient(90deg,#E85D3A,transparent)" }} />
-                  <div style={{ padding: "12px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={{ fontSize: "18px" }}>{selArticle.icon}</span>
-                          <span style={{ fontSize: "14px", fontWeight: 800, color: "#F8F8F8" }}>{selArticle.title}</span>
-                        </div>
-                        <div style={{ display: "flex", gap: "6px", marginTop: "4px", alignItems: "center" }}>
-                          <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>{selArticle.cat}</span>
-                          <span style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5 }}>{selArticle.region} · {selArticle.read}</span>
-                        </div>
-                      </div>
-                      <button onClick={(e) => { e.stopPropagation(); setSelArticle(null); }} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "26px", height: "26px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><X size={12} /></button>
-                    </div>
-                    <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.6, marginTop: "8px", fontStyle: "italic" }}>"{selArticle.excerpt}"</div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
-                      <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>By <span style={{ color: "#5A98E3", fontWeight: 600 }}>{selArticle.author}</span></div>
-                      <button style={{ padding: "8px 18px", borderRadius: "9px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Read Story</button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </MiniMap>
+      {/* ═══ ARTICLE READER MODAL ═══ */}
+      {readingArticle && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(2,12,27,0.97)", display: "flex", flexDirection: "column", overflowY: "auto" }}>
+          {/* Header */}
+          <div style={{ position: "sticky", top: 0, background: "rgba(4,30,61,0.98)", backdropFilter: "blur(14px)", borderBottom: "1px solid rgba(90,152,227,0.12)", padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px", zIndex: 10 }}>
+            <button onClick={() => setReadingArticle(null)} style={{ background: "rgba(90,152,227,0.12)", border: "none", borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <X size={16} />
+            </button>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: "10px", color: "#5A98E3", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>{readingArticle.cat}</div>
+              <div style={{ fontSize: "14px", fontWeight: 800, color: "#F8F8F8", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{readingArticle.title}</div>
             </div>
-          )}
+            <div style={{ fontSize: "28px", flexShrink: 0 }}>{readingArticle.icon}</div>
+          </div>
+
+          {/* Hero band */}
+          <div style={{ background: "linear-gradient(135deg,rgba(90,152,227,0.12),rgba(232,93,58,0.08))", borderBottom: "1px solid rgba(90,152,227,0.1)", padding: "18px 18px 16px" }}>
+            <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.55, marginBottom: "6px" }}>
+              {readingArticle.region}{readingArticle.peak ? ` · ${readingArticle.peak}` : ""} · {readingArticle.read}
+            </div>
+            <div style={{ fontSize: "13px", color: "#BDD6F4", lineHeight: 1.65, fontStyle: "italic", borderLeft: "3px solid #E85D3A", paddingLeft: "12px" }}>
+              "{readingArticle.excerpt}"
+            </div>
+            <div style={{ marginTop: "12px", fontSize: "10px", color: "#BDD6F4", opacity: 0.4 }}>
+              By <span style={{ color: "#5A98E3", fontWeight: 700, opacity: 1 }}>{readingArticle.author}</span>
+            </div>
+          </div>
+
+          {/* Article body */}
+          <div style={{ padding: "20px 18px 40px", display: "flex", flexDirection: "column", gap: "16px" }}>
+            {(readingArticle.body || []).map((para, i) => (
+              <p key={i} style={{ margin: 0, fontSize: "14px", color: "#D6E8FF", lineHeight: 1.75, fontWeight: 400 }}>
+                {para}
+              </p>
+            ))}
+          </div>
+
+          {/* Footer */}
+          <div style={{ padding: "16px 18px 32px", borderTop: "1px solid rgba(90,152,227,0.1)", display: "flex", justifyContent: "center" }}>
+            <button onClick={() => setReadingArticle(null)} style={{ padding: "11px 32px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg,#5A98E3,#4080cc)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+              Close Article
+            </button>
+          </div>
         </div>
       )}
     </div>
+
+    {/* ═══ FULL-SCREEN DISCOVER MAP OVERLAY ═══ */}
+    {subTab === "discover" && discView === "map" && (
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "62px", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
+        {/* Back button */}
+        <button
+          onClick={() => { setDiscView("list"); setSelArticle(null); }}
+          style={{
+            position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 12px)", left: 12, zIndex: 60,
+            background: "rgba(4,30,61,0.92)", backdropFilter: "blur(12px)",
+            border: "1px solid rgba(90,152,227,0.25)", borderRadius: "10px",
+            padding: "8px 14px", color: "#F8F8F8", cursor: "pointer",
+            display: "flex", alignItems: "center", gap: "6px",
+            fontSize: "13px", fontWeight: 700, fontFamily: "'DM Sans'",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.3)"
+          }}
+        >
+          <ChevronLeft size={16} /> Discover
+        </button>
+        {/* Full-screen map with story markers */}
+        <MiniMap height="100%" markers={filteredArticles.map(a => ({ lat: a.lat, lng: a.lng, color: "#264f80", html: `<span style="font-size:17px">${a.icon}</span>`, data: a, style: "width:38px;height:38px;border-radius:50%;background:#264f80;border:2px solid rgba(90,152,227,0.3);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.3);" }))} onMarkerClick={(m) => setSelArticle(selArticle?.id === m.data.id ? null : m.data)}>
+          {/* Selected article popup */}
+          {selArticle && (
+            <div style={{
+              position: "absolute", bottom: 10, left: 10, right: 10, zIndex: 20,
+              background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)",
+              borderRadius: "14px", border: "1px solid rgba(90,152,227,0.15)",
+              animation: "su .25s ease", overflow: "hidden"
+            }}>
+              <div style={{ height: "3px", background: "linear-gradient(90deg,#E85D3A,transparent)" }} />
+              <div style={{ padding: "12px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontSize: "18px" }}>{selArticle.icon}</span>
+                      <span style={{ fontSize: "14px", fontWeight: 800, color: "#F8F8F8" }}>{selArticle.title}</span>
+                    </div>
+                    <div style={{ display: "flex", gap: "6px", marginTop: "4px", alignItems: "center" }}>
+                      <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>{selArticle.cat}</span>
+                      <span style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5 }}>{selArticle.region} · {selArticle.read}</span>
+                    </div>
+                  </div>
+                  <button onClick={(e) => { e.stopPropagation(); setSelArticle(null); }} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "26px", height: "26px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><X size={12} /></button>
+                </div>
+                <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.6, marginTop: "8px", fontStyle: "italic" }}>"{selArticle.excerpt}"</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
+                  <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>By <span style={{ color: "#5A98E3", fontWeight: 600 }}>{selArticle.author}</span></div>
+                  <button onClick={(e) => { e.stopPropagation(); setReadingArticle(selArticle); }} style={{ padding: "8px 18px", borderRadius: "9px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Read Story</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </MiniMap>
+      </div>
+    )}
+    </>
   );
 };
 
@@ -4469,7 +4717,7 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 5: PROFILE
    ═══════════════════════════════════════════════════════════════════ */
-const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRoute, onSignOut, savedWalks, setSavedWalks, dbPeaks, userName, userLocation, setUserLocation, followerCount, followingCount, followingIds, setFollowingIds, setFollowerCount, setFollowingCount, userId, onViewProfile }) => {
+const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRoute, onSignOut, savedWalks, setSavedWalks, dbPeaks, userName, userLocation, setUserLocation, followerCount, followingCount, followingIds, setFollowingIds, setFollowerCount, setFollowingCount, userId, onViewProfile, onPublishPost }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [showFollowers, setShowFollowers] = useState(null); // null | "followers" | "following"
   const [followerFilter, setFollowerFilter] = useState("recent");
@@ -4488,6 +4736,15 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
   // Profile photo
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  // My social posts (loaded from posts table)
+  const [myDbPosts, setMyDbPosts] = useState([]);
+
+  useEffect(() => {
+    if (!userId) return;
+    supabase.from("posts").select("*").eq("user_id", userId)
+      .order("created_at", { ascending: false }).limit(30)
+      .then(({ data }) => { if (data) setMyDbPosts(data); });
+  }, [userId]);
 
   // Upload a photo for a walk to Supabase Storage
   const handleWalkPhotoUpload = async (walkId, file) => {
@@ -4682,6 +4939,9 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
   const [evDiff, setEvDiff] = useState("Moderate");
   const [evSpots, setEvSpots] = useState("8");
   const [evCreated, setEvCreated] = useState(false);
+  const [frOrg, setFrOrg] = useState("");
+  const [frDesc, setFrDesc] = useState("");
+  const [frLink, setFrLink] = useState("");
 
   // ── STATS section state ──
   const [statView, setStatView] = useState("weekly");
@@ -4833,14 +5093,14 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
   return (
     <>
       {showSettings && <SettingsPage onClose={() => setShowSettings(false)} onSignOut={onSignOut} userName={userName} userId={userId} />}
-    <div style={{ padding: "0 16px 16px", overflowY: "auto", flex: 1 }}>
+    <div style={{ padding: "0 16px 16px", overflowY: "auto", flex: 1, WebkitOverflowScrolling: "touch" }}>
 
       {/* ═══ FOLLOWERS / FOLLOWING — FULL PAGE ═══ */}
       {showFollowers && (
         <div style={{ position: "fixed", inset: 0, zIndex: 60, background: "#041e3d", display: "flex", flexDirection: "column", animation: "fi .2s ease" }}>
 
           {/* Header */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 16px", borderBottom: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,0.95)", backdropFilter: "blur(12px)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "calc(14px + env(safe-area-inset-top, 0px)) 16px 14px", borderBottom: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,0.95)", backdropFilter: "blur(12px)" }}>
             <button onClick={() => setShowFollowers(null)} style={{ background: "rgba(90,152,227,0.1)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", padding: "7px 12px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600, fontFamily: "'DM Sans'" }}>
               <ChevronLeft size={16} /> Back
             </button>
@@ -5492,7 +5752,29 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               {(() => {
                 const canCreate = evName && evDate && evTime && evRegion && (evRoute || evGpx);
                 return (
-                  <button onClick={() => { if (canCreate) setEvCreated(true); }} style={{ width: "100%", padding: "11px", borderRadius: "10px", border: "none", background: canCreate ? "linear-gradient(135deg,#E85D3A,#d04a2a)" : "#264f80", color: canCreate ? "#F8F8F8" : "#BDD6F4", fontSize: "13px", fontWeight: 700, cursor: canCreate ? "pointer" : "default", fontFamily: "'DM Sans'", opacity: canCreate ? 1 : 0.5, transition: "all .2s" }}>
+                  <button onClick={async () => {
+                    if (!canCreate) return;
+                    const region = ROUTE_REGIONS.find(r => r.name === evRegion);
+                    const { data: { user } } = await supabase.auth.getUser();
+                    const meta = user?.user_metadata || {};
+                    const newPost = {
+                      user_id: user?.id || null,
+                      username: meta.username || userName || null,
+                      full_name: meta.full_name || null,
+                      type: "event",
+                      text: `${evName} — ${evDate} at ${evTime} · ${evDiff} · Max ${evSpots} spots · ${evAge} · ${evGender}${evRoute ? " · " + evRoute : ""}`,
+                      peaks: [],
+                      lat: region?.lat || null,
+                      lng: region?.lng || null,
+                    };
+                    const { error } = await supabase.from("posts").insert(newPost);
+                    if (error) console.error("Event insert error:", error);
+                    const displayName = meta.username || userName || "You";
+                    const livePost = { ...newPost, id: Date.now(), user: displayName, av: "📅", likes: 0, comments: 0, time: "just now", isLive: true };
+                    if (onPublishPost) onPublishPost(livePost);
+                    setMyDbPosts(prev => [livePost, ...prev]);
+                    setEvCreated(true);
+                  }} style={{ width: "100%", padding: "11px", borderRadius: "10px", border: "none", background: canCreate ? "linear-gradient(135deg,#E85D3A,#d04a2a)" : "#264f80", color: canCreate ? "#F8F8F8" : "#BDD6F4", fontSize: "13px", fontWeight: 700, cursor: canCreate ? "pointer" : "default", fontFamily: "'DM Sans'", opacity: canCreate ? 1 : 0.5, transition: "all .2s" }}>
                     Create Walk Event
                   </button>
                 );
@@ -5530,16 +5812,22 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                 const { data: { user } } = await supabase.auth.getUser();
                 if (user) {
                   const meta = user.user_metadata || {};
-                  await supabase.from("posts").insert({
+                  const newPost = {
                     user_id: user.id,
                     username: meta.username || null,
                     full_name: meta.full_name || null,
                     type: "summit",
                     text: postText,
                     peaks: [],
-                  });
+                  };
+                  const { error } = await supabase.from("posts").insert(newPost);
+                  if (error) console.error("Post insert error:", error);
+                  const displayName = meta.username || userName || "You";
+                  const livePost = { ...newPost, id: Date.now(), user: displayName, av: displayName[0].toUpperCase(), likes: 0, comments: 0, time: "just now", isLive: true };
+                  if (onPublishPost) onPublishPost(livePost);
+                  setMyDbPosts(prev => [livePost, ...prev]);
                 }
-                setCreateType(null); setShowCreate(false); setPostText(""); if (goHome) goHome("all");
+                setCreateType(null); setShowCreate(false); setPostText("");
               }} style={{ flex: 1, padding: "9px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Post</button>
             </div>
           </div>
@@ -5552,10 +5840,53 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               <button onClick={() => { setCreateType(null); setShowCreate(false); }} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "26px", height: "26px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><X size={12} /></button>
               <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>Create Fundraiser</div>
             </div>
-            <input type="text" placeholder="Organisation name (e.g. Glencoe MRT)" style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "8px" }} />
-            <textarea placeholder="Tell people why this matters..." rows={2} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", resize: "none", marginBottom: "8px" }} />
-            <input type="url" placeholder="GoFundMe or donation link" style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "10px" }} />
-            <button onClick={() => { setCreateType(null); setShowCreate(false); if (goHome) goHome("fundraiser"); }} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg,#6BCB77,#55a866)", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Publish Fundraiser</button>
+            <input type="text" placeholder="Organisation name (e.g. Glencoe MRT)" value={frOrg} onChange={e => setFrOrg(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "8px" }} />
+            <textarea placeholder="Tell people why this matters..." rows={2} value={frDesc} onChange={e => setFrDesc(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", resize: "none", marginBottom: "8px" }} />
+            <input type="url" placeholder="GoFundMe or donation link" value={frLink} onChange={e => setFrLink(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "10px" }} />
+            <button onClick={async () => {
+              if (!frOrg) return;
+              const { data: { user } } = await supabase.auth.getUser();
+              const meta = user?.user_metadata || {};
+              const newPost = {
+                user_id: user?.id || null,
+                username: meta.username || userName || null,
+                full_name: meta.full_name || null,
+                type: "fundraiser",
+                text: frDesc || frOrg,
+                peaks: [],
+                link: frLink || null,
+              };
+              const { error } = await supabase.from("posts").insert(newPost);
+              if (error) console.error("Fundraiser insert error:", error);
+              const displayName = meta.username || userName || frOrg;
+              const livePost = { ...newPost, id: Date.now(), user: frOrg || displayName, av: "❤️", likes: 0, comments: 0, time: "just now", isLive: true };
+              if (onPublishPost) onPublishPost(livePost);
+              setMyDbPosts(prev => [livePost, ...prev]);
+              setCreateType(null); setShowCreate(false); setFrOrg(""); setFrDesc(""); setFrLink(""); if (goHome) goHome("fundraiser");
+            }} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "none", background: frOrg ? "linear-gradient(135deg,#6BCB77,#55a866)" : "#264f80", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: frOrg ? "pointer" : "default", fontFamily: "'DM Sans'", opacity: frOrg ? 1 : 0.5 }}>Publish Fundraiser</button>
+          </div>
+        )}
+
+        {/* Social posts (posts table) */}
+        {!createType && !showCreate && myDbPosts.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "14px" }}>
+            {myDbPosts.map((p, i) => (
+              <div key={p.id || i} style={{ background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.12)", padding: "14px", animation: `fi .3s ease ${i * .05}s both` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                  <div style={{ width: 30, height: 30, borderRadius: "50%", background: avatarUrl ? "transparent" : "linear-gradient(135deg,#264f80,#5A98E3)", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>
+                    {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (userName||"U")[0].toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8" }}>{userName}</div>
+                    <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4 }}>
+                      {p.time || (p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "just now")}
+                      {p.type === "event" ? " · 📅 Event" : p.type === "fundraiser" ? " · ❤️ Fundraiser" : ""}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ fontSize: "13px", color: "#BDD6F4", lineHeight: 1.55 }}>{p.text}</div>
+              </div>
+            ))}
           </div>
         )}
 
@@ -5565,7 +5896,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             {savedWalks && savedWalks.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {savedWalks.map((w, i) => (
-                  <div key={i} style={{ background: "#0a2240", borderRadius: "16px", border: "1px solid rgba(90,152,227,0.12)", overflow: "hidden", animation: `fi .3s ease ${i * .05}s both` }}>
+                  <div key={i} onClick={() => setSelWalk(w)} style={{ background: "#0a2240", borderRadius: "16px", border: "1px solid rgba(90,152,227,0.12)", overflow: "hidden", animation: `fi .3s ease ${i * .05}s both`, cursor: "pointer" }}>
                     <div style={{ height: "3px", background: "linear-gradient(90deg,#6BCB77,#5A98E3)" }} />
                     <div style={{ padding: "14px" }}>
 
@@ -5671,7 +6002,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
         <div style={{ position: "fixed", inset: 0, zIndex: 70, background: "#041e3d", display: "flex", flexDirection: "column", animation: "fi .2s ease" }}>
 
           {/* Header */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 16px", borderBottom: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,0.95)", backdropFilter: "blur(12px)", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "calc(14px + env(safe-area-inset-top, 0px)) 16px 14px", borderBottom: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,0.95)", backdropFilter: "blur(12px)", flexShrink: 0 }}>
             <button onClick={() => { setSelWalk(null); setConfirmDeleteWalk(false); }} style={{ background: "rgba(90,152,227,0.1)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", padding: "7px 12px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600, fontFamily: "'DM Sans'" }}>
               <ChevronLeft size={16} /> Back
             </button>
@@ -5934,13 +6265,13 @@ const UserProfileModal = ({ user, userId, followingIds, onFollow, onClose }) => 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 80, background: "#041e3d", display: "flex", flexDirection: "column", animation: "fi .2s ease" }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 16px", borderBottom: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,0.95)", backdropFilter: "blur(12px)", flexShrink: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "calc(14px + env(safe-area-inset-top, 0px)) 16px 14px", borderBottom: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,0.95)", backdropFilter: "blur(12px)", flexShrink: 0 }}>
         <button onClick={onClose} style={{ background: "rgba(90,152,227,0.1)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", padding: "7px 12px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600, fontFamily: "'DM Sans'" }}>
           <ChevronLeft size={16} /> Back
         </button>
         <div style={{ flex: 1 }} />
         {!isOwnProfile && (
-          <button onClick={() => onFollow(user.id)} style={{ padding: "8px 18px", borderRadius: "10px", border: isFollowing ? "1px solid rgba(90,152,227,0.3)" : "none", background: isFollowing ? "transparent" : "linear-gradient(135deg,#E85D3A,#d04a2a)", color: isFollowing ? "#5A98E3" : "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+          <button onClick={() => { onFollow(user.id); setFollowerCount(c => isFollowing ? Math.max(0, c - 1) : c + 1); }} style={{ padding: "8px 18px", borderRadius: "10px", border: isFollowing ? "1px solid rgba(90,152,227,0.3)" : "none", background: isFollowing ? "transparent" : "linear-gradient(135deg,#E85D3A,#d04a2a)", color: isFollowing ? "#5A98E3" : "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
             {isFollowing ? "Following" : "Follow"}
           </button>
         )}
@@ -6015,30 +6346,61 @@ const UserProfileModal = ({ user, userId, followingIds, onFollow, onClose }) => 
 /* ═══════════════════════════════════════════════════════════════════
    PWA INSTALL BANNER
    ═══════════════════════════════════════════════════════════════════ */
-const PWAInstallBanner = ({ onDismiss }) => (
-  <div style={{ position: "fixed", bottom: 80, left: 12, right: 12, zIndex: 90, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px", border: "1px solid rgba(90,152,227,0.25)", padding: "14px 16px", boxShadow: "0 8px 32px rgba(0,0,0,0.4)", animation: "su .3s ease" }}>
-    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-      <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        <Mountain size={22} color="#F8F8F8" />
+const PWAInstallBanner = ({ onDismiss }) => {
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [installing, setInstalling] = useState(false);
+  const isIos = typeof navigator !== "undefined" && /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+  useEffect(() => {
+    const handler = (e) => { e.preventDefault(); setInstallPrompt(e); };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    setInstalling(true);
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === "accepted") onDismiss();
+    setInstalling(false);
+    setInstallPrompt(null);
+  };
+
+  return (
+    <div style={{ position: "fixed", bottom: 80, left: 12, right: 12, zIndex: 90, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px", border: "1px solid rgba(90,152,227,0.25)", padding: "14px 16px", boxShadow: "0 8px 32px rgba(0,0,0,0.4)", animation: "su .3s ease" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <Mountain size={22} color="#F8F8F8" />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: "13px", fontWeight: 800, color: "#F8F8F8", marginBottom: "2px" }}>Add TrailSync to your home screen</div>
+          <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.4 }}>Works better as an app — faster, offline-ready, full screen</div>
+        </div>
+        <button onClick={onDismiss} style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.4, cursor: "pointer", padding: "4px", flexShrink: 0 }}><X size={16} /></button>
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: "13px", fontWeight: 800, color: "#F8F8F8", marginBottom: "2px" }}>Add TrailSync to your home screen</div>
-        <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.4 }}>Works better as an app — faster, offline-ready, full screen</div>
-      </div>
-      <button onClick={onDismiss} style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.4, cursor: "pointer", padding: "4px", flexShrink: 0 }}><X size={16} /></button>
+      {installPrompt && !isIos ? (
+        <button onClick={handleInstall} disabled={installing} style={{ marginTop: "12px", width: "100%", padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+          {installing ? "Installing…" : "📲 Install TrailSync"}
+        </button>
+      ) : (
+        <div style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
+          {isIos ? (
+            <div style={{ flex: 1, background: "rgba(90,152,227,0.08)", borderRadius: "10px", padding: "10px 12px" }}>
+              <div style={{ fontSize: "10px", fontWeight: 700, color: "#5A98E3", marginBottom: "4px" }}>📱 iPhone / iPad</div>
+              <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.5 }}>Tap <strong style={{ color: "#F8F8F8" }}>Share ↑</strong> then <strong style={{ color: "#F8F8F8" }}>Add to Home Screen</strong></div>
+            </div>
+          ) : (
+            <div style={{ flex: 1, background: "rgba(90,152,227,0.08)", borderRadius: "10px", padding: "10px 12px" }}>
+              <div style={{ fontSize: "10px", fontWeight: 700, color: "#5A98E3", marginBottom: "4px" }}>🤖 Android / Chrome</div>
+              <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.5 }}>Tap <strong style={{ color: "#F8F8F8" }}>⋮ Menu</strong> then <strong style={{ color: "#F8F8F8" }}>Add to Home Screen</strong></div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
-    <div style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
-      <div style={{ flex: 1, background: "rgba(90,152,227,0.08)", borderRadius: "10px", padding: "10px 12px" }}>
-        <div style={{ fontSize: "10px", fontWeight: 700, color: "#5A98E3", marginBottom: "4px" }}>📱 iPhone / iPad</div>
-        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.5 }}>Tap <strong style={{ color: "#F8F8F8" }}>Share</strong> then <strong style={{ color: "#F8F8F8" }}>Add to Home Screen</strong></div>
-      </div>
-      <div style={{ flex: 1, background: "rgba(90,152,227,0.08)", borderRadius: "10px", padding: "10px 12px" }}>
-        <div style={{ fontSize: "10px", fontWeight: 700, color: "#5A98E3", marginBottom: "4px" }}>🤖 Android</div>
-        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.5 }}>Tap <strong style={{ color: "#F8F8F8" }}>⋮ Menu</strong> then <strong style={{ color: "#F8F8F8" }}>Add to Home Screen</strong></div>
-      </div>
-    </div>
-  </div>
-);
+  );
+};
 
 /* ═══════════════════════════════════════════════════════════════════
    MAIN APP
@@ -6047,6 +6409,7 @@ export default function TrailSync() {
   // Start as loading, then resolve from Supabase session
   const [authState, setAuthState] = useState("loading");
   const [userName, setUserName] = useState("Alex");
+
   const [tab, setTab] = useState(() => {
     try { return (typeof window !== "undefined" ? sessionStorage.getItem("ts_tab") : null) || "home"; } catch { return "home"; }
   });
@@ -6064,6 +6427,7 @@ export default function TrailSync() {
       });
     }
   }, []);
+
 
   // Check Supabase session on mount
   useEffect(() => {
@@ -6113,9 +6477,12 @@ export default function TrailSync() {
   const [gpxRoute, setGpxRoute] = useState(null); //
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [headerSearch, setHeaderSearch] = useState("");
+  const [headerSearchFocused, setHeaderSearchFocused] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [searchResults, setSearchResults] = useState({ posts: [], users: [], routes: [], peaks: [] });
   const [searching, setSearching] = useState(false);
   const [viewingProfile, setViewingProfile] = useState(null); // { id, name, username, location }
+  const [pendingRouteDetail, setPendingRouteDetail] = useState(null);
   const [showPWABanner, setShowPWABanner] = useState(false);
 
   // Show PWA install banner if not already installed and not dismissed
@@ -6128,6 +6495,9 @@ export default function TrailSync() {
       }
     } catch(e) {}
   }, []);
+
+  // Close header menus when the user switches tabs
+  useEffect(() => { setShowUserMenu(false); setShowNotifications(false); }, [tab]);
 
   const [userCourseProgress, setUserCourseProgress] = useState({});
   const [userLocation, setUserLocation] = useState(null);
@@ -6151,7 +6521,6 @@ export default function TrailSync() {
         { follower_id: userId, following_id: targetId }
       );
       if (error) {
-        // Ignore duplicate key errors (already following)
         if (error.code === "23505") {
           console.log("Already following — row exists");
         } else {
@@ -6159,6 +6528,10 @@ export default function TrailSync() {
           setFollowingIds(prev => { const next = new Set(prev); next.delete(targetId); return next; });
           setFollowingCount(c => Math.max(0, c - 1));
         }
+      } else {
+        // Increment the target's follower_count in profiles table
+        const { data: pf } = await supabase.from("profiles").select("follower_count").eq("id", targetId).maybeSingle();
+        if (pf != null) await supabase.from("profiles").update({ follower_count: (pf.follower_count || 0) + 1 }).eq("id", targetId);
       }
     } else {
       setFollowingCount(c => Math.max(0, c - 1));
@@ -6167,6 +6540,10 @@ export default function TrailSync() {
         console.error("UNFOLLOW DELETE ERROR:", JSON.stringify(error));
         setFollowingIds(prev => { const next = new Set(prev); next.add(targetId); return next; });
         setFollowingCount(c => c + 1);
+      } else {
+        // Decrement the target's follower_count in profiles table
+        const { data: pf } = await supabase.from("profiles").select("follower_count").eq("id", targetId).maybeSingle();
+        if (pf != null) await supabase.from("profiles").update({ follower_count: Math.max(0, (pf.follower_count || 1) - 1) }).eq("id", targetId);
       }
     }
   };
@@ -6425,10 +6802,11 @@ export default function TrailSync() {
     setTab(TUTORIAL_STEPS[nextStep].tab);
   };
 
+
   // Auth screens
   if (authState === "username-prompt") {
     return (
-      <div style={{ width: "100%", height: "100vh", background: "#041e3d", fontFamily: "'DM Sans',system-ui,sans-serif", overflow: "hidden" }}>
+      <div style={{ position: "fixed", inset: 0, background: "#041e3d", fontFamily: "'DM Sans',system-ui,sans-serif", overflow: "hidden" }}>
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap');
           * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -6451,7 +6829,7 @@ export default function TrailSync() {
 
   if (authState === "loading") {
     return (
-      <div style={{ width: "100%", height: "100dvh", background: "#041e3d", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ position: "fixed", inset: 0, background: "#041e3d", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ textAlign: "center" }}>
           <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "linear-gradient(135deg,#E85D3A,#F49D37)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", animation: "glow 3s ease infinite" }}>
             <Mountain size={24} color="#F8F8F8" />
@@ -6464,7 +6842,7 @@ export default function TrailSync() {
 
   if (authState === "login") {
     return (
-      <div style={{ width: "100%", height: "100dvh", background: "#041e3d", fontFamily: "'DM Sans',system-ui,sans-serif", overflow: "hidden" }}>
+      <div style={{ position: "fixed", inset: 0, background: "#041e3d", fontFamily: "'DM Sans',system-ui,sans-serif", overflow: "hidden" }}>
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&family=Playfair+Display:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
           * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -6479,7 +6857,7 @@ export default function TrailSync() {
 
   if (authState === "signup") {
     return (
-      <div style={{ width: "100%", height: "100dvh", background: "#041e3d", fontFamily: "'DM Sans',system-ui,sans-serif", overflow: "hidden" }}>
+      <div style={{ position: "fixed", inset: 0, background: "#041e3d", fontFamily: "'DM Sans',system-ui,sans-serif", overflow: "hidden" }}>
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&family=Playfair+Display:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
           * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -6498,6 +6876,8 @@ export default function TrailSync() {
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&family=Playfair+Display:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         input, select, textarea { font-size: 16px !important; }
+        button, a, [role="button"] { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+        #header-search-input::placeholder { color: rgba(4,30,61,0.4); }
         ::-webkit-scrollbar { width: 3px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(90,152,227,.15); border-radius: 4px; }
         select option { background: #0a2240; color: #F8F8F8; }
         @keyframes fi { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -6512,164 +6892,200 @@ export default function TrailSync() {
 
       {/* Header */}
       {tab !== "map" && (
-        <div style={{ borderBottom: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,.92)", backdropFilter: "blur(12px)", zIndex: 30 }}>
-          {/* Top row: logo + bell + avatar */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{ width: "32px", height: "32px", borderRadius: "9px", background: "linear-gradient(135deg,#E85D3A,#F49D37)", display: "flex", alignItems: "center", justifyContent: "center", animation: "glow 3s ease infinite" }}>
-              <Mountain size={17} color="#F8F8F8" />
+        <div style={{ borderBottom: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,.92)", backdropFilter: "blur(12px)", position: "relative", zIndex: 50, width: "100%", paddingTop: "env(safe-area-inset-top, 0px)" }}>
+          {/* Top row — always: icon · [TrailSync|search] · bell · avatar */}
+          <div style={{ display: "flex", alignItems: "center", padding: "0 10px", gap: "8px", height: "52px" }}>
+
+            {/* Mountain icon — always visible */}
+            <div style={{ width: "30px", height: "30px", borderRadius: "9px", background: "linear-gradient(135deg,#E85D3A,#F49D37)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, animation: "glow 3s ease infinite" }}>
+              <Mountain size={15} color="#F8F8F8" />
             </div>
-            <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", letterSpacing: "-.3px" }}>TrailSync</div>
-          </div>
-          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-            <OfflineIndicator />
-            <button style={{ position: "relative", background: "#0a2240", border: "1px solid rgba(90,152,227,0.12)", borderRadius: "8px", padding: "6px", color: "#BDD6F4", cursor: "pointer" }}>
-              <Bell size={16} />
-              <div style={{ position: "absolute", top: 1, right: 1, width: "7px", height: "7px", borderRadius: "50%", background: "#E85D3A", border: "1px solid #041e3d" }} />
-            </button>
-            <div style={{ position: "relative" }}>
-              <div onClick={() => setShowUserMenu(m => !m)} style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: "#F8F8F8", border: "2px solid rgba(90,152,227,0.25)", cursor: "pointer" }}>
-                {userName ? userName[0].toUpperCase() : "A"}
+
+            {/* On home: compact search pill. On other tabs: TrailSync text */}
+            {tab === "home" ? (
+              <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: "6px" }}>
+                <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: "5px", background: "rgba(255,255,255,0.92)", borderRadius: "18px", padding: "5px 10px", border: "1px solid rgba(255,255,255,0.6)", cursor: "text" }}
+                  onClick={() => { const el = document.getElementById("header-search-input"); if (el) el.focus(); }}>
+                  <Search size={12} color="#5A98E3" style={{ flexShrink: 0 }} />
+                  <input
+                    id="header-search-input"
+                    type="text"
+                    placeholder="Search people, mountains, routes…"
+                    value={headerSearch}
+                    onChange={e => setHeaderSearch(e.target.value)}
+                    onFocus={() => setHeaderSearchFocused(true)}
+                    onBlur={() => { setTimeout(() => setHeaderSearchFocused(false), 150); }}
+                    style={{ background: "none", border: "none", outline: "none", color: "#041e3d", fontSize: "12px", fontFamily: "'DM Sans'", flex: 1, minWidth: 0 }}
+                  />
+                  {headerSearch && <button onClick={e => { e.stopPropagation(); setHeaderSearch(""); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#5A98E3", padding: 0, display: "flex", flexShrink: 0 }}><X size={12} /></button>}
+                </div>
+                {(headerSearchFocused || headerSearch) && (
+                  <button onMouseDown={() => { setHeaderSearch(""); setHeaderSearchFocused(false); document.getElementById("header-search-input")?.blur(); }} style={{ background: "none", border: "none", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", padding: "4px 2px", flexShrink: 0, fontFamily: "'DM Sans'", whiteSpace: "nowrap" }}>Cancel</button>
+                )}
               </div>
-              {showUserMenu && (
-                <>
-                  {/* Backdrop to close menu */}
-                  <div onClick={() => setShowUserMenu(false)} style={{ position: "fixed", inset: 0, zIndex: 40 }} />
-                  <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 41, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.2)", minWidth: "160px", overflow: "hidden", animation: "fi .15s ease" }}>
-                    <div style={{ padding: "10px 14px", borderBottom: "1px solid rgba(90,152,227,0.1)" }}>
-                      <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8" }}>{userName}</div>
-                      <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>Signed in</div>
+            ) : (
+              <div style={{ flex: 1, fontSize: "15px", fontWeight: 800, color: "#F8F8F8", letterSpacing: "-.3px" }}>TrailSync</div>
+            )}
+
+          {/* Right buttons — always visible */}
+          <div style={{ display: "flex", gap: "6px", alignItems: "center", flexShrink: 0 }}>
+              <OfflineIndicator />
+              {/* Bell — notification dropdown */}
+              <div style={{ position: "relative" }}>
+                <button onClick={() => { setShowNotifications(n => !n); setShowUserMenu(false); }} style={{ position: "relative", background: "#0a2240", border: "1px solid rgba(90,152,227,0.12)", borderRadius: "8px", padding: "6px", color: "#BDD6F4", cursor: "pointer" }}>
+                  <Bell size={16} />
+                  <div style={{ position: "absolute", top: 1, right: 1, width: "7px", height: "7px", borderRadius: "50%", background: "#E85D3A", border: "1px solid #041e3d" }} />
+                </button>
+                {showNotifications && (
+                  <>
+                    {/* Full-screen backdrop — tap anywhere to close */}
+                    <div onClick={() => setShowNotifications(false)} style={{ position: "fixed", inset: 0, zIndex: 195 }} />
+                    {/* Dropdown panel */}
+                    <div style={{ position: "absolute", top: "calc(100% + 10px)", right: 0, zIndex: 200, background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.2)", minWidth: "270px", overflow: "visible", animation: "su .15s ease", boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}>
+                      {/* Arrow caret — outer (border colour) */}
+                      <div style={{ position: "absolute", top: "-9px", right: "11px", width: 0, height: 0, borderLeft: "9px solid transparent", borderRight: "9px solid transparent", borderBottom: "9px solid rgba(90,152,227,0.2)" }} />
+                      {/* Arrow caret — inner (panel fill) */}
+                      <div style={{ position: "absolute", top: "-7px", right: "12px", width: 0, height: 0, borderLeft: "8px solid transparent", borderRight: "8px solid transparent", borderBottom: "8px solid #0a2240" }} />
+                      <div style={{ padding: "12px 16px", borderBottom: "1px solid rgba(90,152,227,0.1)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>Notifications</div>
+                        <button onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#BDD6F4", opacity: 0.5, padding: "2px", display: "flex", lineHeight: 1 }}><X size={14} /></button>
+                      </div>
+                      <div style={{ padding: "28px 16px", textAlign: "center" }}>
+                        <Bell size={28} color="#5A98E3" style={{ opacity: 0.25, marginBottom: "10px" }} />
+                        <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4 }}>No notifications yet</div>
+                        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.25, marginTop: "4px" }}>Follow others to see their activity here</div>
+                      </div>
                     </div>
-                    <button onClick={() => { setShowUserMenu(false); setTab("profile"); }} style={{ width: "100%", padding: "10px 14px", border: "none", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", textAlign: "left", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "8px" }}>
-                      <UserCircle size={14} /> Profile
-                    </button>
-                    <button onClick={async () => {
-                      setShowUserMenu(false);
-                      await supabase.auth.signOut();
-                      try { localStorage.clear(); } catch {}
-                      setUserName("Alex");
-                      setSavedWalks([]);
-                      setDbPeaks(null);
-                      setAuthState("login");
-                    }} style={{ width: "100%", padding: "10px 14px", border: "none", borderTop: "1px solid rgba(90,152,227,0.08)", background: "transparent", color: "#E85D3A", fontSize: "12px", fontWeight: 600, cursor: "pointer", textAlign: "left", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "8px" }}>
-                      <ArrowRight size={14} style={{ transform: "rotate(180deg)" }} /> Sign out
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-          </div>
-          {/* Search row — only on home tab */}
-          {tab === "home" && (
-            <div style={{ padding: "0 16px 10px", position: "relative" }}>
-              <div style={{ background: "rgba(255,255,255,0.97)", borderRadius: "10px", padding: "8px 12px", display: "flex", alignItems: "center", gap: "8px", border: "1px solid rgba(90,152,227,0.15)", boxShadow: "0 1px 4px rgba(0,0,0,0.12)" }}>
-                <Search size={13} color="#264f80" style={{ opacity: 0.6, flexShrink: 0 }} />
-                <input
-                  type="text"
-                  placeholder="Search people, walks, mountains…"
-                  value={headerSearch}
-                  onChange={e => setHeaderSearch(e.target.value)}
-                  style={{ flex: 1, background: "none", border: "none", outline: "none", color: "#041e3d", fontSize: "13px", fontFamily: "'DM Sans'" }}
-                />
-                {headerSearch && <button onClick={() => setHeaderSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "#BDD6F4", padding: 0, display: "flex" }}><X size={13} /></button>}
+                  </>
+                )}
               </div>
 
-              {/* ── Search dropdown — anchored to header search bar ── */}
-              {headerSearch && headerSearch.length >= 2 && (
-                <div style={{ position: "absolute", top: "calc(100% - 2px)", left: "16px", right: "16px", background: "rgba(4,30,61,0.99)", backdropFilter: "blur(20px)", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.25)", zIndex: 100, overflow: "hidden", maxHeight: "70vh", overflowY: "auto", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
-                  {searching && <div style={{ padding: "14px", textAlign: "center", fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>Searching…</div>}
-                  {!searching && searchResults.posts.length === 0 && searchResults.users.length === 0 && searchResults.routes.length === 0 && searchResults.peaks.length === 0 && (
-                    <div style={{ padding: "24px 14px", textAlign: "center" }}>
-                      <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.4, marginBottom: "4px" }}>No results for "{headerSearch}"</div>
-                      <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.25 }}>Try a mountain name, person, or post topic</div>
+              {/* Avatar — user menu dropdown */}
+              <div style={{ position: "relative" }}>
+                <div onClick={() => { setShowUserMenu(m => !m); setShowNotifications(false); }} style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: "#F8F8F8", border: "2px solid rgba(90,152,227,0.25)", cursor: "pointer" }}>
+                  {userName ? userName[0].toUpperCase() : "A"}
+                </div>
+                {showUserMenu && (
+                  <>
+                    {/* Full-screen backdrop — tap anywhere to close */}
+                    <div onClick={() => setShowUserMenu(false)} style={{ position: "fixed", inset: 0, zIndex: 195 }} />
+                    {/* Dropdown panel */}
+                    <div style={{ position: "absolute", top: "calc(100% + 10px)", right: 0, zIndex: 200, background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.2)", minWidth: "170px", overflow: "visible", animation: "su .15s ease", boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}>
+                      {/* Arrow caret — outer */}
+                      <div style={{ position: "absolute", top: "-9px", right: "11px", width: 0, height: 0, borderLeft: "9px solid transparent", borderRight: "9px solid transparent", borderBottom: "9px solid rgba(90,152,227,0.2)" }} />
+                      {/* Arrow caret — inner */}
+                      <div style={{ position: "absolute", top: "-7px", right: "12px", width: 0, height: 0, borderLeft: "8px solid transparent", borderRight: "8px solid transparent", borderBottom: "8px solid #0a2240" }} />
+                      <div style={{ padding: "10px 14px", borderBottom: "1px solid rgba(90,152,227,0.1)" }}>
+                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8" }}>{userName}</div>
+                        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>Signed in</div>
+                      </div>
+                      <button onClick={() => { setShowUserMenu(false); setTab("profile"); }} style={{ width: "100%", padding: "10px 14px", border: "none", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", textAlign: "left", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "8px" }}>
+                        <UserCircle size={14} /> Profile
+                      </button>
+                      <button onClick={async () => {
+                        setShowUserMenu(false);
+                        await supabase.auth.signOut();
+                        try { localStorage.clear(); } catch {}
+                        setUserName("Alex");
+                        setSavedWalks([]);
+                        setDbPeaks(null);
+                        setAuthState("login");
+                      }} style={{ width: "100%", padding: "10px 14px", border: "none", borderTop: "1px solid rgba(90,152,227,0.08)", background: "transparent", color: "#E85D3A", fontSize: "12px", fontWeight: 600, cursor: "pointer", textAlign: "left", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "8px" }}>
+                        <ArrowRight size={14} style={{ transform: "rotate(180deg)" }} /> Sign out
+                      </button>
                     </div>
-                  )}
-                  {searchResults.users.length > 0 && (
-                    <div>
-                      <div style={{ padding: "10px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>People</div>
-                      {searchResults.users.map(u => (
-                        <div key={u.id} style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid rgba(90,152,227,0.06)", cursor: "pointer" }} onClick={() => { setViewingProfile(u); setHeaderSearch(""); }}>
-                          <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>
-                            {(u.username || u.name || "?")[0].toUpperCase()}
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{u.name || u.username}</div>
-                            {u.username && <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>@{u.username}{u.location ? ` · ${u.location}` : ""}</div>}
-                          </div>
-                          {u.id !== userId && (
-                            <button onClick={e => { e.stopPropagation(); handleFollowFromSearch(u.id); }} style={{ padding: "5px 12px", borderRadius: "8px", cursor: "pointer", flexShrink: 0, background: followingIds?.has(u.id) ? "rgba(90,152,227,0.12)" : "linear-gradient(135deg,#E85D3A,#d04a2a)", color: followingIds?.has(u.id) ? "#5A98E3" : "#F8F8F8", fontSize: "11px", fontWeight: 700, fontFamily: "'DM Sans'", border: followingIds?.has(u.id) ? "1px solid rgba(90,152,227,0.2)" : "none" }}>
-                              {followingIds?.has(u.id) ? "Following" : "Follow"}
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {searchResults.routes.length > 0 && (
-                    <div>
-                      <div style={{ padding: "10px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Routes</div>
-                      {searchResults.routes.map(r => (
-                        <div key={r.id} onClick={() => { setHeaderSearch(""); if (r.gpx_file && openRoute) openRoute(r, "search"); }} style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid rgba(90,152,227,0.06)", cursor: r.gpx_file ? "pointer" : "default" }}>
-                          <div style={{ width: "34px", height: "34px", borderRadius: "10px", background: "rgba(232,93,58,0.1)", border: "1px solid rgba(232,93,58,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                            <Route size={16} color="#E85D3A" />
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
-                            <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>{r.reg} · {r.dist}km · {r.diff}</div>
-                          </div>
-                          {r.gpx_file && <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "5px", background: "rgba(232,93,58,0.12)", color: "#E85D3A", fontWeight: 700, flexShrink: 0 }}>View on map →</span>}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {searchResults.peaks.length > 0 && (
-                    <div>
-                      <div style={{ padding: "10px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Mountains</div>
-                      {searchResults.peaks.map(p => (
-                        <div key={p.id} style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid rgba(90,152,227,0.06)" }}>
-                          <div style={{ width: "34px", height: "34px", borderRadius: "10px", background: `${CLS[p.cls]?.color}15`, border: `1px solid ${CLS[p.cls]?.color}30`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                            <Mountain size={16} color={CLS[p.cls]?.color || "#5A98E3"} />
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{p.name}</div>
-                            <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>{p.ht}m · {p.reg}</div>
-                          </div>
-                          <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "5px", background: `${CLS[p.cls]?.color}15`, color: CLS[p.cls]?.color, fontWeight: 700, flexShrink: 0 }}>{CLS[p.cls]?.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {searchResults.posts.length > 0 && (
-                    <div>
-                      <div style={{ padding: "10px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Posts & Events</div>
-                      {searchResults.posts.map(p => (
-                        <div key={p.id} style={{ padding: "10px 14px", borderBottom: "1px solid rgba(90,152,227,0.06)", cursor: "pointer" }} onClick={() => setHeaderSearch("")}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "5px" }}>
-                            <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: p.type === "fundraiser" ? "rgba(107,203,119,0.15)" : p.type === "event" ? "rgba(90,152,227,0.15)" : "#264f80", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>
-                              {p.av}
-                            </div>
-                            <span style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8" }}>{p.user}</span>
-                            <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", background: p.type === "fundraiser" ? "rgba(107,203,119,0.12)" : p.type === "event" ? "rgba(90,152,227,0.12)" : "rgba(232,93,58,0.1)", color: p.type === "fundraiser" ? "#6BCB77" : p.type === "event" ? "#5A98E3" : "#E85D3A", fontWeight: 600 }}>{p.type}</span>
-                            <span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.35, marginLeft: "auto" }}>{p.time}</span>
-                          </div>
-                          <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.45, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{p.text}</div>
-                          {p.peaks?.length > 0 && <div style={{ display: "flex", gap: "4px", marginTop: "5px", flexWrap: "wrap" }}>{p.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}</div>}
-                        </div>
-                      ))}
-                    </div>
+                  </>
+                )}
+              </div>
+
+          </div>
+          </div>
+        </div>
+      )}
+
+      {/* Search dropdown — fixed overlay that floats below header regardless of parent overflow */}
+      {tab === "home" && headerSearch && headerSearch.length >= 2 && (
+        <div style={{ position: "fixed", top: "60px", left: "16px", right: "16px", zIndex: 200, background: "rgba(4,30,61,0.99)", backdropFilter: "blur(20px)", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.25)", overflow: "hidden", maxHeight: "70vh", overflowY: "auto", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
+          {searching && <div style={{ padding: "14px", textAlign: "center", fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>Searching…</div>}
+          {!searching && searchResults.posts.length === 0 && searchResults.users.length === 0 && searchResults.routes.length === 0 && searchResults.peaks.length === 0 && (
+            <div style={{ padding: "24px 14px", textAlign: "center" }}>
+              <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.4, marginBottom: "4px" }}>No results for "{headerSearch}"</div>
+              <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.25 }}>Try a mountain name, person, or post topic</div>
+            </div>
+          )}
+          {searchResults.users.length > 0 && (
+            <div>
+              <div style={{ padding: "10px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>People</div>
+              {searchResults.users.map(u => (
+                <div key={u.id} style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid rgba(90,152,227,0.06)", cursor: "pointer" }} onClick={() => { setViewingProfile(u); setHeaderSearch(""); }}>
+                  <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>{(u.username || u.name || "?")[0].toUpperCase()}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{u.name || u.username}</div>
+                    {u.username && <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>@{u.username}{u.location ? ` · ${u.location}` : ""}</div>}
+                  </div>
+                  {u.id !== userId && (
+                    <button onClick={e => { e.stopPropagation(); handleFollowFromSearch(u.id); }} style={{ padding: "5px 12px", borderRadius: "8px", cursor: "pointer", flexShrink: 0, background: followingIds?.has(u.id) ? "rgba(90,152,227,0.12)" : "linear-gradient(135deg,#E85D3A,#d04a2a)", color: followingIds?.has(u.id) ? "#5A98E3" : "#F8F8F8", fontSize: "11px", fontWeight: 700, fontFamily: "'DM Sans'", border: followingIds?.has(u.id) ? "1px solid rgba(90,152,227,0.2)" : "none" }}>
+                      {followingIds?.has(u.id) ? "Following" : "Follow"}
+                    </button>
                   )}
                 </div>
-              )}
+              ))}
+            </div>
+          )}
+          {searchResults.routes.length > 0 && (
+            <div>
+              <div style={{ padding: "10px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Routes</div>
+              {searchResults.routes.map(r => (
+                <div key={r.id} onClick={() => { setHeaderSearch(""); setTab("routes"); setPendingRouteDetail(r); }} style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid rgba(90,152,227,0.06)", cursor: "pointer" }}>
+                  <div style={{ width: "34px", height: "34px", borderRadius: "10px", background: "rgba(232,93,58,0.1)", border: "1px solid rgba(232,93,58,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Route size={16} color="#E85D3A" /></div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
+                    <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>{r.reg} · {r.dist}km · {r.diff}</div>
+                  </div>
+                  <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "5px", background: "rgba(90,152,227,0.12)", color: "#5A98E3", fontWeight: 700, flexShrink: 0 }}>View route →</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {searchResults.peaks.length > 0 && (
+            <div>
+              <div style={{ padding: "10px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Mountains</div>
+              {searchResults.peaks.map(p => (
+                <div key={p.id} style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid rgba(90,152,227,0.06)" }}>
+                  <div style={{ width: "34px", height: "34px", borderRadius: "10px", background: `${CLS[p.cls]?.color}15`, border: `1px solid ${CLS[p.cls]?.color}30`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Mountain size={16} color={CLS[p.cls]?.color || "#5A98E3"} /></div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{p.name}</div>
+                    <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>{p.ht}m · {p.reg}</div>
+                  </div>
+                  <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "5px", background: `${CLS[p.cls]?.color}15`, color: CLS[p.cls]?.color, fontWeight: 700, flexShrink: 0 }}>{CLS[p.cls]?.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {searchResults.posts.length > 0 && (
+            <div>
+              <div style={{ padding: "10px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Posts & Events</div>
+              {searchResults.posts.map(p => (
+                <div key={p.id} style={{ padding: "10px 14px", borderBottom: "1px solid rgba(90,152,227,0.06)", cursor: "pointer" }} onClick={() => setHeaderSearch("")}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "5px" }}>
+                    <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: p.type === "fundraiser" ? "rgba(107,203,119,0.15)" : p.type === "event" ? "rgba(90,152,227,0.15)" : "#264f80", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>{p.av}</div>
+                    <span style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8" }}>{p.user}</span>
+                    <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", background: p.type === "fundraiser" ? "rgba(107,203,119,0.12)" : p.type === "event" ? "rgba(90,152,227,0.12)" : "rgba(232,93,58,0.1)", color: p.type === "fundraiser" ? "#6BCB77" : p.type === "event" ? "#5A98E3" : "#E85D3A", fontWeight: 600 }}>{p.type}</span>
+                    <span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.35, marginLeft: "auto" }}>{p.time}</span>
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.45, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{p.text}</div>
+                  {p.peaks?.length > 0 && <div style={{ display: "flex", gap: "4px", marginTop: "5px", flexWrap: "wrap" }}>{p.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}</div>}
+                </div>
+              ))}
             </div>
           )}
         </div>
       )}
 
-      {/* Content */}
+      {/* Content — flex:1 fills between header and tab bar */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {tab === "home" && <HomePage userName={userName} initialFilter={feedFilter} userId={userId} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowingCount={setFollowingCount} headerSearch={headerSearch} setHeaderSearch={setHeaderSearch} openRoute={openRouteOnMap} searchResults={searchResults} setSearchResults={setSearchResults} searching={searching} setSearching={setSearching} onViewProfile={setViewingProfile} />}
-        {tab === "routes" && <RoutesPage openRoute={openRouteOnMap} />}
+        {tab === "routes" && <RoutesPage openRoute={openRouteOnMap} pendingRouteDetail={pendingRouteDetail} onClearPendingRoute={() => setPendingRouteDetail(null)} />}
         {tab === "map" && <MapPage dbPeaks={dbPeaks} goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={async (walk) => {
               // Optimistic update with DB-compatible shape
               const today = new Date();
@@ -6710,12 +7126,13 @@ export default function TrailSync() {
                   type: "walk",
                   text: parts.join(" · "),
                   peaks: walk.peaks || [],
+                  route_points: walk.route && walk.route.length > 1 ? walk.route : null,
                 });
                 if (postErr) console.error("posts insert error:", JSON.stringify(postErr));
               } catch (e) { console.error("Failed to save walk:", e); }
             }} openRoute={openRouteOnMap} gpxRoute={gpxRoute} onCloseGpx={closeGpxRoute} />}
-        {tab === "learn" && <LearnPage courseProgress={userCourseProgress} onCourseProgress={async (courseId, lessonsCompleted) => { setUserCourseProgress(prev => ({ ...prev, [courseId]: lessonsCompleted })); const { data: { user } } = await supabase.auth.getUser(); if (!user) return; await supabase.from("user_courses").upsert({ user_id: user.id, course_id: courseId, lessons_completed: lessonsCompleted, updated_at: new Date().toISOString() }, { onConflict: "user_id,course_id" }); }} />}
-        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} setSavedWalks={setSavedWalks} dbPeaks={dbPeaks} userName={userName} userLocation={userLocation} setUserLocation={setUserLocation} followerCount={followerCount} followingCount={followingCount} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowerCount={setFollowerCount} setFollowingCount={setFollowingCount} userId={userId} onViewProfile={setViewingProfile} onSignOut={async () => {
+        {tab === "learn" && <LearnPage courseProgress={userCourseProgress} onCourseProgress={async (courseId, lessonsCompleted) => { setUserCourseProgress(prev => { const next = { ...prev }; if (lessonsCompleted === 0) { delete next[courseId]; } else { next[courseId] = lessonsCompleted; } return next; }); const { data: { user } } = await supabase.auth.getUser(); if (!user) return; if (lessonsCompleted === 0) { await supabase.from("user_courses").delete().eq("user_id", user.id).eq("course_id", courseId); } else { await supabase.from("user_courses").upsert({ user_id: user.id, course_id: courseId, lessons_completed: lessonsCompleted, updated_at: new Date().toISOString() }, { onConflict: "user_id,course_id" }); } }} />}
+        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} setSavedWalks={setSavedWalks} dbPeaks={dbPeaks} userName={userName} userLocation={userLocation} setUserLocation={setUserLocation} followerCount={followerCount} followingCount={followingCount} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowerCount={setFollowerCount} setFollowingCount={setFollowingCount} userId={userId} onViewProfile={setViewingProfile} onPublishPost={post => setLivePosts(prev => [post, ...prev])} onSignOut={async () => {
   await supabase.auth.signOut();
   try { localStorage.clear(); } catch {}
   setUserName("Alex");
@@ -6756,7 +7173,7 @@ export default function TrailSync() {
       )}
 
       {/* Bottom nav */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-around", padding: "4px 6px 10px", borderTop: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,.96)", backdropFilter: "blur(12px)", zIndex: 30 }}>
+      <div style={{ position: "relative", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "space-around", padding: "4px 6px 10px", borderTop: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,.96)", backdropFilter: "blur(12px)" }}>
         {tabs.map((t, i) => {
           const I = t.icon; const a = tab === t.id; const ctr = i === 2;
           return (

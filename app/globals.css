@@ -24,3 +24,11 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Prevent body background showing during iOS overscroll bounce,
+   and ensure the navy app colour fills edge-to-edge on all devices */
+html, body {
+  background: #041e3d;
+  overscroll-behavior: none;
+  height: 100%;
+}

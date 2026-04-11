@@ -1,55 +1,92 @@
-// TrailSync Service Worker
-// Caches app shell and static assets for offline use
+// TrailSync Service Worker v5
+// Network-first for app shell, cache-first for map tiles
 
-const CACHE_VERSION = "trailsync-v1";
-const TILE_CACHE = "trailsync-tiles-v1";
+const CACHE_NAME = "trailsync-v5";
+const TILE_CACHE = "trailsync-tiles-v5";
 
-// App shell — these files are always cached on install
-const APP_SHELL = [
-  "/",
-  "/manifest.json",
+// Minimal app shell — only static public files
+const APP_SHELL = ["/", "/manifest.json", "/icon-192.png", "/icon-512.png"];
+
+// Never cache these — auth, API calls, analytics
+const NEVER_CACHE = [
+  "supabase.co",
+  "supabase.in",
+  "googleapis.com",
+  "vercel-analytics",
+  "vercel-insights",
+  "vercel.live",
+  "mapbox.com/events",
+  "api.mapbox.com/events",
 ];
 
-// ── Install: cache app shell ──
-self.addEventListener("install", event => {
+const shouldNeverCache = (url) =>
+  NEVER_CACHE.some((domain) => url.href.includes(domain));
+
+// ── Install ──────────────────────────────────────────────
+self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_VERSION).then(cache => cache.addAll(APP_SHELL))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
   );
   self.skipWaiting();
 });
 
-// ── Activate: clear old caches ──
-self.addEventListener("activate", event => {
+// ── Activate: purge old caches ────────────────────────────
+self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then(keys =>
+    caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter(k => k !== CACHE_VERSION && k !== TILE_CACHE)
-          .map(k => caches.delete(k))
+          .filter((k) => k !== CACHE_NAME && k !== TILE_CACHE)
+          .map((k) => caches.delete(k))
       )
     )
   );
   self.clients.claim();
 });
 
-// ── Fetch: serve from cache, fall back to network ──
-self.addEventListener("fetch", event => {
-  const url = new URL(event.request.url);
+// ── Fetch ─────────────────────────────────────────────────
+self.addEventListener("fetch", (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
 
-  // Map tiles — cache as user browses, serve cached if offline
+  // Skip non-GET requests entirely — never intercept POST/PATCH/DELETE
+  if (request.method !== "GET") return;
+
+  // Never cache auth, API, analytics
+  if (shouldNeverCache(url)) return;
+
+  // Map tiles — cache as user browses (cache-first)
   const isTile =
-    url.hostname.includes("mapbox.com") ||
-    url.hostname.includes("api.mapbox.com") ||
-    url.pathname.includes("/tiles/");
+    (url.hostname.includes("mapbox.com") ||
+      url.hostname.includes("api.mapbox.com")) &&
+    !url.pathname.includes("/events");
 
   if (isTile) {
     event.respondWith(
-      caches.open(TILE_CACHE).then(async cache => {
-        const cached = await cache.match(event.request);
+      caches.open(TILE_CACHE).then(async (cache) => {
+        const cached = await cache.match(request);
         if (cached) return cached;
         try {
-          const response = await fetch(event.request);
-          if (response.ok) cache.put(event.request, response.clone());
+          const response = await fetch(request);
+          if (response.ok) cache.put(request, response.clone());
+          return response;
+        } catch {
+          return new Response("", { status: 503 });
+        }
+      })
+    );
+    return;
+  }
+
+  // GPX files — cache when fetched
+  if (url.pathname.endsWith(".gpx")) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(async (cache) => {
+        const cached = await cache.match(request);
+        if (cached) return cached;
+        try {
+          const response = await fetch(request);
+          if (response.ok) cache.put(request, response.clone());
           return response;
         } catch {
           return cached || new Response("", { status: 503 });
@@ -59,38 +96,19 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // GPX files — cache when fetched
-  const isGpx = url.pathname.endsWith(".gpx") || url.hostname.includes("supabase.co");
-  if (isGpx) {
-    event.respondWith(
-      caches.open(CACHE_VERSION).then(async cache => {
-        const cached = await cache.match(event.request);
-        if (cached) return cached;
-        try {
-          const response = await fetch(event.request);
-          if (response.ok) cache.put(event.request, response.clone());
-          return response;
-        } catch {
-          return cached || new Response(JSON.stringify({ error: "offline" }), {
-            status: 503,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      })
-    );
-    return;
-  }
-
-  // App shell — network first, fall back to cache
+  // App navigation (same origin, HTML) — network first, cache fallback
   if (url.origin === self.location.origin) {
     event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          const clone = response.clone();
-          caches.open(CACHE_VERSION).then(cache => cache.put(event.request, clone));
+      fetch(request)
+        .then((response) => {
+          // Cache successful responses
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
           return response;
         })
-        .catch(() => caches.match(event.request))
+        .catch(() => caches.match(request))
     );
     return;
   }
