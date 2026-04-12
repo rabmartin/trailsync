@@ -2842,11 +2842,6 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
           updateLiveTrack(trackPointsRef.current);
         }
         checkNearPeak(lat, lng);
-
-        // Pan map to follow user while recording (only if user hasn't manually panned away)
-        if (mapRef.current && !userMovedMapRef.current) {
-          mapRef.current.easeTo({ center: [lng, lat], duration: 800 });
-        }
       },
       (err) => {
         if (err.code === 1) setGpsError("Location permission denied. Please enable in your browser settings.");
@@ -3483,8 +3478,8 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       {/* Real Mapbox Map */}
       <div ref={mapContainer} style={{ position: "absolute", inset: 0 }} />
 
-      {/* Re-centre button — shown after user pans away during tracking */}
-      {recording && userMovedMap && (
+      {/* Re-centre button — always visible during tracking so user can opt-in to snap to location */}
+      {recording && (
         <button
           onClick={() => {
             const lastPt = trackPointsRef.current[trackPointsRef.current.length - 1];
@@ -4236,31 +4231,46 @@ const RoutePreview = ({ points, height = 150 }) => {
   const lats = points.map(p => p[1]);
   const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
   const minLat = Math.min(...lats), maxLat = Math.max(...lats);
-  const W = 320, H = height, pad = 14;
-  const rX = maxLng - minLng || 0.001;
-  const rY = maxLat - minLat || 0.001;
-  const toX = lng => pad + ((lng - minLng) / rX) * (W - 2 * pad);
-  const toY = lat => H - pad - ((lat - minLat) / rY) * (H - 2 * pad);
+  // Add padding around bbox so route isn't clipped to edge
+  const lngPad = (maxLng - minLng) * 0.18 || 0.012;
+  const latPad = (maxLat - minLat) * 0.18 || 0.012;
+  const bMinLng = minLng - lngPad, bMaxLng = maxLng + lngPad;
+  const bMinLat = minLat - latPad, bMaxLat = maxLat + latPad;
+  const W = 320, H = height;
+  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+  const mapUrl = token
+    ? `https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/static/[${bMinLng.toFixed(5)},${bMinLat.toFixed(5)},${bMaxLng.toFixed(5)},${bMaxLat.toFixed(5)}]/${W}x${H}?access_token=${token}&attribution=false&logo=false`
+    : null;
+  // Mercator projection to match static map tiles
+  const mercY = lat => Math.log(Math.tan((lat * Math.PI / 180) / 2 + Math.PI / 4));
+  const mMinY = mercY(bMinLat), mMaxY = mercY(bMaxLat);
+  const toX = lng => ((lng - bMinLng) / (bMaxLng - bMinLng)) * W;
+  const toY = lat => H - ((mercY(lat) - mMinY) / (mMaxY - mMinY)) * H;
   const d = points.map((p, i) => `${i === 0 ? "M" : "L"}${toX(p[0]).toFixed(1)} ${toY(p[1]).toFixed(1)}`).join(" ");
   const sx = toX(points[0][0]), sy = toY(points[0][1]);
   const ex = toX(points[points.length - 1][0]), ey = toY(points[points.length - 1][1]);
   return (
-    <div style={{ background: "#041e3d", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(90,152,227,0.15)" }}>
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: `${H}px`, display: "block" }} preserveAspectRatio="xMidYMid meet">
+    <div style={{ borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(90,152,227,0.15)", position: "relative" }}>
+      {mapUrl
+        ? <img src={mapUrl} alt="" style={{ width: "100%", height: `${H}px`, display: "block", objectFit: "cover" }} />
+        : <div style={{ width: "100%", height: `${H}px`, background: "#0a2240" }} />}
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }} preserveAspectRatio="none">
         <defs>
           <linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#5A98E3" /><stop offset="100%" stopColor="#6BCB77" />
           </linearGradient>
+          <filter id="rShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="1" stdDeviation="2" floodColor="rgba(0,0,0,0.6)" />
+          </filter>
         </defs>
-        {[0.25, 0.5, 0.75].map(pct => <line key={pct} x1={pad} y1={H * pct} x2={W - pad} y2={H * pct} stroke="rgba(90,152,227,0.08)" strokeWidth="1" />)}
-        <path d={d} fill="none" stroke="rgba(90,152,227,0.18)" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={d} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" filter="url(#rShadow)" />
         <path d={d} fill="none" stroke="url(#rg)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx={sx} cy={sy} r="5" fill="#6BCB77" stroke="#041e3d" strokeWidth="2" />
-        <circle cx={ex} cy={ey} r="5" fill="#E85D3A" stroke="#041e3d" strokeWidth="2" />
+        <circle cx={sx} cy={sy} r="5" fill="#6BCB77" stroke="#fff" strokeWidth="2" />
+        <circle cx={ex} cy={ey} r="5" fill="#E85D3A" stroke="#fff" strokeWidth="2" />
       </svg>
-      <div style={{ display: "flex", gap: "14px", padding: "5px 12px 8px", justifyContent: "flex-end" }}>
+      <div style={{ position: "absolute", bottom: "6px", right: "8px", display: "flex", gap: "10px", background: "rgba(4,30,61,0.72)", backdropFilter: "blur(6px)", borderRadius: "6px", padding: "3px 8px" }}>
         {[["#6BCB77","Start"],["#E85D3A","Finish"]].map(([c, l]) => (
-          <span key={l} style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, display: "flex", alignItems: "center", gap: "4px" }}>
+          <span key={l} style={{ fontSize: "9px", color: "#F8F8F8", display: "flex", alignItems: "center", gap: "4px" }}>
             <span style={{ width: 7, height: 7, borderRadius: "50%", background: c, display: "inline-block" }} />{l}
           </span>
         ))}
@@ -4518,19 +4528,16 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
           <div style={{ fontSize: "24px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'DM Sans'" }}>Free</div>
           <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.45, marginTop: "4px" }}>Basic access to TrailSync</div>
         </div>
-        {[
-          { name: "Pro", price: "£3.99", period: "/month", color: "#5A98E3", border: "rgba(90,152,227,0.25)", features: ["Unlimited walk tracking", "Advanced stats & insights", "GPX import & export", "Priority support"] },
-          { name: "Premium", price: "£7.99", period: "/month", color: "#6BCB77", border: "rgba(107,203,119,0.25)", features: ["Everything in Pro", "Offline maps", "AI route recommendations", "Fundraiser creation", "Live hiker visibility"] },
-        ].map(plan => (
-          <div key={plan.name} style={{ background: "#0a2240", borderRadius: "14px", border: `1px solid ${plan.border}`, padding: "16px", marginBottom: "10px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-              <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8" }}>{plan.name}</div>
-              <div><span style={{ fontSize: "16px", fontWeight: 800, color: plan.color }}>{plan.price}</span><span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>{plan.period}</span></div>
-            </div>
-            {plan.features.map(f => <div key={f} style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.7, marginBottom: "6px", display: "flex", alignItems: "center", gap: "7px" }}><span style={{ color: plan.color, fontSize: "12px" }}>✓</span>{f}</div>)}
-            <button style={{ width: "100%", marginTop: "14px", padding: "11px", borderRadius: "10px", border: "none", background: `rgba(${plan.name === "Pro" ? "90,152,227" : "107,203,119"},0.12)`, color: plan.color, fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Upgrade to {plan.name}</button>
+        <div style={{ background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(107,203,119,0.25)", padding: "16px", marginBottom: "10px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+            <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8" }}>Premium</div>
+            <div><span style={{ fontSize: "16px", fontWeight: 800, color: "#6BCB77" }}>£7.99</span><span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>/month</span></div>
           </div>
-        ))}
+          {["Unlimited walk tracking", "Advanced stats & insights", "GPX import & export", "Offline maps", "AI route recommendations", "Fundraiser creation", "Live hiker visibility", "Priority support"].map(f => (
+            <div key={f} style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.7, marginBottom: "6px", display: "flex", alignItems: "center", gap: "7px" }}><span style={{ color: "#6BCB77", fontSize: "12px" }}>✓</span>{f}</div>
+          ))}
+          <button style={{ width: "100%", marginTop: "14px", padding: "11px", borderRadius: "10px", border: "none", background: "rgba(107,203,119,0.12)", color: "#6BCB77", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Upgrade to Premium</button>
+        </div>
       </>
     );
 
@@ -4540,7 +4547,7 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
         <div style={{ background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.1)", padding: "20px", marginBottom: "14px", textAlign: "center" }}>
           <div style={{ fontSize: "36px", marginBottom: "12px" }}>💳</div>
           <div style={{ fontSize: "13px", fontWeight: 600, color: "#F8F8F8", marginBottom: "6px" }}>No payment method on file</div>
-          <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.45, lineHeight: 1.5 }}>Payment details are added when you subscribe to a Pro or Premium plan.</div>
+          <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.45, lineHeight: 1.5 }}>Payment details are added when you subscribe to Premium.</div>
         </div>
         <div style={{ background: "rgba(90,152,227,0.06)", borderRadius: "12px", padding: "16px", border: "1px solid rgba(90,152,227,0.1)" }}>
           <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", marginBottom: "8px" }}>🍎 Subscribed via Apple Pay?</div>
@@ -7202,7 +7209,9 @@ export default function TrailSync() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {tab === "home" && <HomePage userName={userName} initialFilter={feedFilter} userId={userId} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowingCount={setFollowingCount} headerSearch={headerSearch} setHeaderSearch={setHeaderSearch} openRoute={openRouteOnMap} searchResults={searchResults} setSearchResults={setSearchResults} searching={searching} setSearching={setSearching} onViewProfile={setViewingProfile} />}
         {tab === "routes" && <RoutesPage openRoute={openRouteOnMap} pendingRouteDetail={pendingRouteDetail} onClearPendingRoute={() => setPendingRouteDetail(null)} />}
-        {tab === "map" && <MapPage dbPeaks={dbPeaks} goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={async (walk) => {
+        {/* MapPage always mounted so GPX/Mapbox state survives tab switches — hidden with CSS when not active */}
+        <div style={{ display: tab === "map" ? "flex" : "none", flex: 1, flexDirection: "column", overflow: "hidden" }}>
+          <MapPage dbPeaks={dbPeaks} goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={async (walk) => {
               // Optimistic update with DB-compatible shape
               const today = new Date();
               const dateWalked = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
@@ -7246,7 +7255,8 @@ export default function TrailSync() {
                 });
                 if (postErr) console.error("posts insert error:", JSON.stringify(postErr));
               } catch (e) { console.error("Failed to save walk:", e); }
-            }} openRoute={openRouteOnMap} gpxRoute={gpxRoute} onCloseGpx={closeGpxRoute} />}
+            }} openRoute={openRouteOnMap} gpxRoute={gpxRoute} onCloseGpx={closeGpxRoute} />
+        </div>
         {tab === "learn" && <LearnPage courseProgress={userCourseProgress} onCourseProgress={async (courseId, lessonsCompleted) => { setUserCourseProgress(prev => { const next = { ...prev }; if (lessonsCompleted === 0) { delete next[courseId]; } else { next[courseId] = lessonsCompleted; } return next; }); const { data: { user } } = await supabase.auth.getUser(); if (!user) return; if (lessonsCompleted === 0) { await supabase.from("user_courses").delete().eq("user_id", user.id).eq("course_id", courseId); } else { await supabase.from("user_courses").upsert({ user_id: user.id, course_id: courseId, lessons_completed: lessonsCompleted, updated_at: new Date().toISOString() }, { onConflict: "user_id,course_id" }); } }} />}
         {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} setSavedWalks={setSavedWalks} dbPeaks={dbPeaks} userName={userName} userLocation={userLocation} setUserLocation={setUserLocation} followerCount={followerCount} followingCount={followingCount} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowerCount={setFollowerCount} setFollowingCount={setFollowingCount} userId={userId} onViewProfile={setViewingProfile} onPublishPost={post => setLivePosts(prev => [post, ...prev])} onSignOut={async () => {
   await supabase.auth.signOut();
