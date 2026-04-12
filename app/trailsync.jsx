@@ -2510,7 +2510,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
    TAB 3: MAP
    ═══════════════════════════════════════════════════════════════════ */
 const RouteWeatherPanel = ({ routeWeather, elevProfile, onElevHover, onElevLeave }) => {
-  const [wxOpen, setWxOpen] = useState(false);
+  const [wxOpen, setWxOpen] = useState(true);
   return (
     <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 24, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px 16px 0 0", border: "1px solid rgba(90,152,227,0.15)", borderBottom: "none" }}>
       <div onClick={() => setWxOpen(o => !o)} style={{ padding: "12px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px" }}>
