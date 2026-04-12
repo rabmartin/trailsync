@@ -6279,36 +6279,28 @@ const TutorialOverlay = ({ step, totalSteps, currentStep, onNext, onSkip }) => {
 const UserProfileModal = ({ user, userId, followingIds, onFollow, onClose }) => {
   const [posts, setPosts] = useState([]);
   const [walks, setWalks] = useState([]);
-  const [peakCount, setPeakCount] = useState(0);
+  const [peaks, setPeaks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [followerCount, setFollowerCount] = useState(user.follower_count || 0);
   const [followingCount, setFollowingCount] = useState(user.following_count || 0);
+  const [sec, setSec] = useState("mountains");
 
   useEffect(() => {
     async function loadProfile() {
       setLoading(true);
       try {
-        // Load their posts
-        const { data: postData } = await supabase.from("posts").select("*")
-          .eq("user_id", user.id).order("created_at", { ascending: false }).limit(10);
-        if (postData) setPosts(postData);
-
-        // Load their walk count
-        const { data: walkData } = await supabase.from("user_walks").select("id")
-          .eq("user_id", user.id);
-        if (walkData) setWalks(walkData);
-
-        // Load their peak count
-        const { data: peakData } = await supabase.from("user_peaks").select("id")
-          .eq("user_id", user.id).eq("done", true);
-        if (peakData) setPeakCount(peakData.length);
-
-        // Load follower/following counts from profile
-        const { data: profileData } = await supabase.from("profiles")
-          .select("follower_count, following_count").eq("id", user.id).maybeSingle();
-        if (profileData) {
-          setFollowerCount(profileData.follower_count || 0);
-          setFollowingCount(profileData.following_count || 0);
+        const [postRes, walkRes, peakRes, profileRes] = await Promise.all([
+          supabase.from("posts").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
+          supabase.from("user_walks").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+          supabase.from("user_peaks").select("*").eq("user_id", user.id).eq("done", true),
+          supabase.from("profiles").select("follower_count, following_count").eq("id", user.id).maybeSingle(),
+        ]);
+        if (postRes.data) setPosts(postRes.data);
+        if (walkRes.data) setWalks(walkRes.data);
+        if (peakRes.data) setPeaks(peakRes.data);
+        if (profileRes.data) {
+          setFollowerCount(profileRes.data.follower_count || 0);
+          setFollowingCount(profileRes.data.following_count || 0);
         }
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
@@ -6318,6 +6310,17 @@ const UserProfileModal = ({ user, userId, followingIds, onFollow, onClose }) => 
 
   const isFollowing = followingIds?.has(user.id);
   const isOwnProfile = userId === user.id;
+  const displayName = user.name || user.username || "Hiker";
+  const totalDist = walks.reduce((a, w) => a + (parseFloat(w.distance_km) || 0), 0);
+  const totalElev = walks.reduce((a, w) => a + (parseInt(w.elevation_m) || 0), 0);
+
+  // Group peaks by class
+  const peaksByCls = peaks.reduce((acc, p) => {
+    const cls = p.peak_id?.split("-")[0] || "munros";
+    if (!acc[cls]) acc[cls] = [];
+    acc[cls].push(p);
+    return acc;
+  }, {});
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 80, background: "#041e3d", display: "flex", flexDirection: "column", animation: "fi .2s ease" }}>
@@ -6334,67 +6337,123 @@ const UserProfileModal = ({ user, userId, followingIds, onFollow, onClose }) => 
         )}
       </div>
 
-      {/* Body */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px" }}>
+      <div style={{ flex: 1, overflowY: "auto" }}>
         {/* Avatar + name */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "20px" }}>
-          <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "26px", fontWeight: 800, color: "#F8F8F8", border: "3px solid rgba(90,152,227,0.3)", flexShrink: 0 }}>
-            {(user.username || user.name || "?")[0].toUpperCase()}
-          </div>
-          <div>
-            <div style={{ fontSize: "20px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>{user.name || user.username}</div>
-            {user.username && <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>@{user.username}</div>}
-            {user.location && <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>📍 {user.location}</div>}
-          </div>
-        </div>
-
-        {/* Stats row */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "20px" }}>
-          {[
-            [walks.length, "Walks"],
-            [peakCount, "Peaks"],
-            [followerCount, "Followers"],
-          ].map(([val, label]) => (
-            <div key={label} style={{ textAlign: "center", padding: "12px 4px", background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.1)" }}>
-              <div style={{ fontSize: "20px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
-              <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
+        <div style={{ padding: "20px 16px 0" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "16px" }}>
+            <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "26px", fontWeight: 800, color: "#F8F8F8", border: "3px solid rgba(90,152,227,0.3)", flexShrink: 0 }}>
+              {displayName[0].toUpperCase()}
             </div>
-          ))}
+            <div>
+              <div style={{ fontSize: "20px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>{displayName}</div>
+              {user.username && <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>@{user.username}</div>}
+              {user.location && <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>📍 {user.location}</div>}
+            </div>
+          </div>
+
+          {/* Stats row */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px", marginBottom: "16px" }}>
+            {[[walks.length, "Walks"], [peaks.length, "Peaks"], [followerCount, "Followers"], [followingCount, "Following"]].map(([val, label]) => (
+              <div key={label} style={{ textAlign: "center", padding: "10px 4px", background: "#0a2240", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.1)" }}>
+                <div style={{ fontSize: "18px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
+                <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4, marginTop: "3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Distance / Elevation summary */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", marginBottom: "16px" }}>
+            <div style={{ background: "#0a2240", borderRadius: "10px", padding: "10px 12px", border: "1px solid rgba(90,152,227,0.1)" }}>
+              <div style={{ fontSize: "16px", fontWeight: 800, color: "#5A98E3", fontFamily: "'JetBrains Mono'" }}>{totalDist.toFixed(1)}km</div>
+              <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>Total distance</div>
+            </div>
+            <div style={{ background: "#0a2240", borderRadius: "10px", padding: "10px 12px", border: "1px solid rgba(90,152,227,0.1)" }}>
+              <div style={{ fontSize: "16px", fontWeight: 800, color: "#6BCB77", fontFamily: "'JetBrains Mono'" }}>{totalElev >= 1000 ? `${(totalElev/1000).toFixed(1)}km` : `${totalElev}m`}</div>
+              <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>Total elevation</div>
+            </div>
+          </div>
+
+          {/* Section tabs */}
+          <div style={{ display: "flex", background: "#0a2240", borderRadius: "10px", padding: "3px", marginBottom: "16px" }}>
+            {[["mountains", "Mountains"], ["posts", "Posts"], ["walks", "Walks"]].map(([k, l]) => (
+              <button key={k} onClick={() => setSec(k)} style={{ flex: 1, padding: "7px", borderRadius: "8px", border: "none", background: sec === k ? "rgba(90,152,227,0.2)" : "transparent", color: sec === k ? "#5A98E3" : "#BDD6F4", fontSize: "10px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: sec === k ? 1 : 0.5 }}>{l}</button>
+            ))}
+          </div>
         </div>
 
-        {/* Their posts */}
-        {loading ? (
-          <div style={{ textAlign: "center", padding: "40px" }}>
-            <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#5A98E3", margin: "0 auto", animation: "pulse 1s ease infinite" }} />
-            <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4, marginTop: "12px" }}>Loading…</div>
-          </div>
-        ) : posts.length > 0 ? (
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "#BDD6F4", opacity: 0.4, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "10px" }}>Posts</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              {posts.map(p => (
-                <div key={p.id} style={{ background: "#0a2240", borderRadius: "14px", padding: "14px", border: "1px solid rgba(90,152,227,0.1)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                    <span style={{ fontSize: "9px", padding: "1px 7px", borderRadius: "5px", background: p.type === "fundraiser" ? "rgba(107,203,119,0.12)" : p.type === "event" ? "rgba(90,152,227,0.12)" : "rgba(232,93,58,0.1)", color: p.type === "fundraiser" ? "#6BCB77" : p.type === "event" ? "#5A98E3" : "#E85D3A", fontWeight: 600 }}>{p.type || "post"}</span>
-                    <span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4 }}>{timeAgo(p.created_at)}</span>
-                  </div>
-                  <div style={{ fontSize: "13px", color: "#BDD6F4", lineHeight: 1.5 }}>{p.text}</div>
-                  {p.peaks?.length > 0 && (
-                    <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginTop: "8px" }}>
-                      {p.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "5px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}
+        {/* Section content */}
+        <div style={{ padding: "0 16px 24px" }}>
+          {loading ? (
+            <div style={{ textAlign: "center", padding: "40px" }}>
+              <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4 }}>Loading…</div>
+            </div>
+          ) : sec === "mountains" ? (
+            peaks.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                <Mountain size={36} color="#BDD6F4" style={{ opacity: 0.2, marginBottom: "12px" }} />
+                <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.4 }}>{displayName} hasn't logged any peaks yet.</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                {peaks.map(p => (
+                  <div key={p.peak_id} style={{ background: "#0a2240", borderRadius: "10px", padding: "10px 12px", border: "1px solid rgba(90,152,227,0.08)", display: "flex", alignItems: "center", gap: "10px" }}>
+                    <Mountain size={16} color="#6BCB77" style={{ flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{p.peak_name}</div>
+                      {p.date_completed && <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>{p.date_completed}</div>}
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div style={{ textAlign: "center", padding: "40px 20px" }}>
-            <Users size={36} color="#BDD6F4" style={{ opacity: 0.2, marginBottom: "12px" }} />
-            <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8", marginBottom: "6px" }}>No posts yet</div>
-            <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4 }}>{user.name || user.username} hasn't posted anything yet.</div>
-          </div>
-        )}
+                    <CheckCircle size={14} color="#6BCB77" style={{ flexShrink: 0 }} />
+                  </div>
+                ))}
+              </div>
+            )
+          ) : sec === "posts" ? (
+            posts.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                <Users size={36} color="#BDD6F4" style={{ opacity: 0.2, marginBottom: "12px" }} />
+                <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.4 }}>{displayName} hasn't posted anything yet.</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {posts.map(p => (
+                  <div key={p.id} style={{ background: "#0a2240", borderRadius: "14px", padding: "14px", border: "1px solid rgba(90,152,227,0.1)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                      <span style={{ fontSize: "9px", padding: "1px 7px", borderRadius: "5px", background: p.type === "fundraiser" ? "rgba(107,203,119,0.12)" : p.type === "event" ? "rgba(90,152,227,0.12)" : "rgba(232,93,58,0.1)", color: p.type === "fundraiser" ? "#6BCB77" : p.type === "event" ? "#5A98E3" : "#E85D3A", fontWeight: 600 }}>{p.type || "post"}</span>
+                      <span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4 }}>{timeAgo(p.created_at)}</span>
+                    </div>
+                    <div style={{ fontSize: "13px", color: "#BDD6F4", lineHeight: 1.5 }}>{p.text}</div>
+                    {p.peaks?.length > 0 && (
+                      <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginTop: "8px" }}>
+                        {p.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "5px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )
+          ) : (
+            walks.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                <Route size={36} color="#BDD6F4" style={{ opacity: 0.2, marginBottom: "12px" }} />
+                <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.4 }}>{displayName} hasn't logged any walks yet.</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {walks.map(w => (
+                  <div key={w.id} style={{ background: "#0a2240", borderRadius: "12px", padding: "12px 14px", border: "1px solid rgba(90,152,227,0.08)" }}>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", marginBottom: "6px" }}>{w.name || "Walk"}</div>
+                    <div style={{ display: "flex", gap: "12px" }}>
+                      {w.distance_km && <span style={{ fontSize: "11px", color: "#5A98E3", fontWeight: 600 }}>{parseFloat(w.distance_km).toFixed(1)}km</span>}
+                      {w.elevation_m && <span style={{ fontSize: "11px", color: "#6BCB77", fontWeight: 600 }}>↑{w.elevation_m}m</span>}
+                      {w.duration && <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5 }}>{w.duration}</span>}
+                    </div>
+                    {w.date_walked && <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.3, marginTop: "4px" }}>{w.date_walked}</div>}
+                  </div>
+                ))}
+              </div>
+            )
+          )}
+        </div>
       </div>
     </div>
   );
@@ -7234,7 +7293,7 @@ export default function TrailSync() {
         {tabs.map((t, i) => {
           const I = t.icon; const a = tab === t.id; const ctr = i === 2;
           return (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{ background: "none", border: "none", padding: ctr ? "0" : "4px 10px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", color: a ? (ctr ? "#F8F8F8" : "#E85D3A") : "#BDD6F4", transition: "color .2s", opacity: a ? 1 : 0.45 }}>
+            <button key={t.id} onClick={() => setTab(t.id)} style={{ background: "none", border: "none", padding: ctr ? "0" : "4px 10px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", color: a ? (ctr ? "#F8F8F8" : "#E85D3A") : "#BDD6F4", transition: "color .2s", opacity: ctr ? 1 : (a ? 1 : 0.45) }}>
               {ctr ? (
                 <div style={{ width: "46px", height: "46px", borderRadius: "50%", background: a ? "linear-gradient(135deg,#E85D3A,#d04a2a)" : "#1a3a6e", display: "flex", alignItems: "center", justifyContent: "center", marginTop: "-12px", border: `2px solid ${a ? "#E85D3A" : "#2a5298"}`, boxShadow: a ? "0 4px 16px rgba(232,93,58,.35)" : "none", transition: "all .2s" }}>
                   <I size={20} color="#F8F8F8" />
