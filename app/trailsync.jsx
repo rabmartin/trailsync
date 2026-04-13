@@ -2397,8 +2397,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
                   cursor: "pointer", animation: `fi .3s ease ${i * .04}s both` }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "8px" }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8", lineHeight: 1.3 }}>{r.name}</div>
-                    <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.5, marginTop: "3px" }}>{r.reg} · Start: {r.start}</div>
+                    <div style={{ fontSize: "18px", fontWeight: 800, color: "#F8F8F8", lineHeight: 1.2, fontFamily: "'DM Sans',sans-serif" }}>{r.name}</div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
                     {(r.gpx_file || ROUTES.find(x => x.name === r.name && x.gpx_file)) && (
