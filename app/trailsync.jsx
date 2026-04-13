@@ -2635,6 +2635,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
 
   const [trackMode, setTrackMode] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [statsCollapsed, setStatsCollapsed] = useState(false);
   // Guided route walk state
   const [gpxRouteActive, setGpxRouteActive] = useState(false);
   const [gpxRouteCoords, setGpxRouteCoords] = useState(null); // parsed coords from GPX
@@ -3485,7 +3486,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       {/* Real Mapbox Map */}
       <div ref={mapContainer} style={{ position: "absolute", inset: 0 }} />
 
-      {/* Re-centre button — always visible during tracking so user can opt-in to snap to location */}
+      {/* Re-centre button — top-right, always visible during tracking */}
       {recording && (
         <button
           onClick={() => {
@@ -3497,7 +3498,10 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
             setUserMovedMap(false);
           }}
           style={{
-            position: "absolute", bottom: "120px", right: "16px", zIndex: 10,
+            position: "absolute",
+            top: "calc(env(safe-area-inset-top, 0px) + 60px)",
+            right: "10px",
+            zIndex: 26,
             background: "rgba(4,30,61,0.95)", border: "1px solid rgba(90,152,227,0.3)",
             borderRadius: "12px", padding: "8px 14px", color: "#5A98E3",
             fontSize: "12px", fontWeight: 700, cursor: "pointer",
@@ -3711,7 +3715,27 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
           {(recording || paused) && !finished && <div style={{ height: "3px", background: recording ? "linear-gradient(90deg,#6BCB77,#5A98E3)" : "linear-gradient(90deg,#F49D37,#E85D3A)", animation: recording ? "pulse 2s ease infinite" : "none" }} />}
           {finished && <div style={{ height: "3px", background: "linear-gradient(90deg,#6BCB77,transparent)" }} />}
 
-          <div style={{ padding: "14px 16px", maxHeight: "70vh", overflowY: "auto" }}>
+          {/* Collapse / expand handle — always visible */}
+          <div
+            onClick={() => setStatsCollapsed(c => !c)}
+            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px 0", cursor: "pointer" }}
+          >
+            <div style={{ width: "36px", height: "3px", borderRadius: "2px", background: "rgba(90,152,227,0.3)", margin: "0 auto" }} />
+            {/* Collapsed summary pill — only visible when collapsed */}
+            {statsCollapsed && (recording || paused) && (
+              <div style={{ position: "absolute", left: "16px", right: "52px", display: "flex", gap: "12px", alignItems: "center" }}>
+                <span style={{ fontSize: "14px", fontWeight: 800, color: paused ? "#F49D37" : "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{fmtTime(elapsed)}</span>
+                <span style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.7 }}>{realDistDisplay}km</span>
+                <span style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.7 }}>+{realElevDisplay}m</span>
+                {paused && <span style={{ fontSize: "9px", color: "#F49D37", fontWeight: 700, letterSpacing: "0.5px" }}>PAUSED</span>}
+              </div>
+            )}
+            <div style={{ marginLeft: "auto", color: "#BDD6F4", opacity: 0.4, flexShrink: 0 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d={statsCollapsed ? "M18 15l-6-6-6 6" : "M6 9l6 6 6-6"}/></svg>
+            </div>
+          </div>
+
+          <div style={{ padding: statsCollapsed ? "6px 16px 10px" : "10px 16px 14px", maxHeight: statsCollapsed ? 0 : "70vh", overflow: statsCollapsed ? "hidden" : "auto", transition: "max-height 0.25s ease, padding 0.2s ease" }}>
 
             {/* ═══ ACTIVE RECORDING / PAUSED VIEW ═══ */}
             {!finished && !saved && (
