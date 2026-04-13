@@ -647,20 +647,20 @@ const PrivacyPopup = ({ onClose }) => (
         </div>
         <button onClick={onClose} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={14} /></button>
       </div>
-      <div style={{ padding: "18px", fontSize: "12px", color: "#BDD6F4", lineHeight: 1.7 }}>
-        <div style={{ fontWeight: 700, color: "#F8F8F8", fontSize: "13px", marginBottom: "8px" }}>What we collect</div>
+      <div style={{ padding: "18px", fontSize: "14px", color: "#BDD6F4", lineHeight: 1.7 }}>
+        <div style={{ fontWeight: 700, color: "#F8F8F8", fontSize: "15px", marginBottom: "8px" }}>What we collect</div>
         <div style={{ marginBottom: "14px" }}>
           We collect your name, email address, date of birth, and optionally your location. Your date of birth is used to enable age-range filtering on community walks and to ensure age-appropriate features. Your location, if provided, helps us personalise weather recommendations for areas near you.
         </div>
-        <div style={{ fontWeight: 700, color: "#F8F8F8", fontSize: "13px", marginBottom: "8px" }}>How we store it</div>
+        <div style={{ fontWeight: 700, color: "#F8F8F8", fontSize: "15px", marginBottom: "8px" }}>How we store it</div>
         <div style={{ marginBottom: "14px" }}>
           Your data is stored securely on encrypted servers hosted by Supabase (EU region). We never sell your data to third parties. Your password is hashed and cannot be read by anyone, including us. Walk data and summit logs are linked to your account and are only visible to you unless you choose to share them.
         </div>
-        <div style={{ fontWeight: 700, color: "#F8F8F8", fontSize: "13px", marginBottom: "8px" }}>How we use it</div>
+        <div style={{ fontWeight: 700, color: "#F8F8F8", fontSize: "15px", marginBottom: "8px" }}>How we use it</div>
         <div style={{ marginBottom: "14px" }}>
           Your data is used solely to provide and improve the TrailSync experience — personalised weather, peak tracking, community features, and your profile. We may use anonymised, aggregated data to understand how people use the app.
         </div>
-        <div style={{ fontWeight: 700, color: "#F8F8F8", fontSize: "13px", marginBottom: "8px" }}>Requesting deletion</div>
+        <div style={{ fontWeight: 700, color: "#F8F8F8", fontSize: "15px", marginBottom: "8px" }}>Requesting deletion</div>
         <div style={{ marginBottom: "6px" }}>
           You can request full deletion of your account and all associated data at any time by emailing <span style={{ color: "#5A98E3", fontWeight: 600 }}>privacy@trailsync.app</span> or through the Settings page in your profile. We will delete all your data within 30 days of your request, in compliance with UK GDPR.
         </div>
@@ -725,27 +725,27 @@ const UsernamePrompt = ({ onDone, fullName }) => {
             <Mountain size={26} color="#F8F8F8" />
           </div>
           <div style={{ fontSize: "22px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>Choose a username</div>
-          <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, marginTop: "6px" }}>
+          <div style={{ fontSize: "15px", color: "#BDD6F4", opacity: 0.6, marginTop: "6px" }}>
             How the community will find you.<br />You can skip this for now.
           </div>
         </div>
 
         <div style={{ marginBottom: "6px" }}>
           <div style={{ position: "relative" }}>
-            <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", fontSize: "13px", color: "#BDD6F4", opacity: 0.5 }}>@</span>
+            <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", fontSize: "15px", color: "#BDD6F4", opacity: 0.5 }}>@</span>
             <input
               type="text"
               placeholder="yourname"
               value={username}
               onChange={e => handleChange(e.target.value)}
               maxLength={30}
-              style={{ width: "100%", padding: "12px 14px 12px 28px", borderRadius: "10px", border: `1px solid ${available === true ? "rgba(107,203,119,0.4)" : available === false ? "rgba(232,93,58,0.4)" : "rgba(90,152,227,0.2)"}`, background: "#0a2240", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'", transition: "border .2s" }}
+              style={{ width: "100%", padding: "12px 14px 12px 28px", borderRadius: "10px", border: `1px solid ${available === true ? "rgba(107,203,119,0.4)" : available === false ? "rgba(232,93,58,0.4)" : "rgba(90,152,227,0.2)"}`, background: "#0a2240", color: "#F8F8F8", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'", transition: "border .2s" }}
             />
           </div>
-          {statusText && <div style={{ fontSize: "11px", color: statusColor, marginTop: "5px", paddingLeft: "4px" }}>{statusText}</div>}
+          {statusText && <div style={{ fontSize: "13px", color: statusColor, marginTop: "5px", paddingLeft: "4px" }}>{statusText}</div>}
         </div>
 
-        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4, marginBottom: "20px", paddingLeft: "4px" }}>
+        <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4, marginBottom: "20px", paddingLeft: "4px" }}>
           Letters, numbers and underscores only
         </div>
 
@@ -753,7 +753,7 @@ const UsernamePrompt = ({ onDone, fullName }) => {
           {saving ? "Saving…" : "Set Username"}
         </button>
 
-        <button onClick={handleSkip} style={{ width: "100%", padding: "11px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+        <button onClick={handleSkip} style={{ width: "100%", padding: "11px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "15px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>
           Skip for now — use {fullName || "my name"}
         </button>
       </div>
@@ -811,18 +811,18 @@ const LoginScreen = ({ onLogin, onGoSignup }) => {
           <Mountain size={28} color="#F8F8F8" />
         </div>
         <div style={{ fontSize: "28px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>TrailSync</div>
-        <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, marginTop: "4px" }}>Summit · Track · Connect</div>
+        <div style={{ fontSize: "15px", color: "#BDD6F4", opacity: 0.6, marginTop: "4px" }}>Summit · Track · Connect</div>
       </div>
 
       <div style={{ width: "100%", maxWidth: "360px", animation: "su .4s ease .1s both" }}>
         {/* Social sign-in buttons */}
-        <button onClick={onLogin} style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#F8F8F8", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", fontFamily: "'DM Sans'", marginBottom: "10px" }}>
+        <button onClick={onLogin} style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", fontFamily: "'DM Sans'", marginBottom: "10px" }}>
           <Mail size={16} /> Sign in with email
         </button>
-        <button disabled style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.1)", background: "#0a2240", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "default", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", fontFamily: "'DM Sans'", marginBottom: "10px", opacity: 0.4 }}>
-          <Apple size={16} /> Sign in with Apple <span style={{ fontSize: "10px", opacity: 0.6 }}>(coming soon)</span>
+        <button disabled style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.1)", background: "#0a2240", color: "#BDD6F4", fontSize: "15px", fontWeight: 600, cursor: "default", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", fontFamily: "'DM Sans'", marginBottom: "10px", opacity: 0.4 }}>
+          <Apple size={16} /> Sign in with Apple <span style={{ fontSize: "12px", opacity: 0.6 }}>(coming soon)</span>
         </button>
-        <button onClick={handleGoogleLogin} disabled={!!oauthLoading} style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#F8F8F8", fontSize: "13px", fontWeight: 600, cursor: oauthLoading ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", fontFamily: "'DM Sans'", marginBottom: "10px", opacity: oauthLoading ? 0.7 : 1 }}>
+        <button onClick={handleGoogleLogin} disabled={!!oauthLoading} style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", fontWeight: 600, cursor: oauthLoading ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", fontFamily: "'DM Sans'", marginBottom: "10px", opacity: oauthLoading ? 0.7 : 1 }}>
           {oauthLoading === "google" ? <div style={{ width: "16px", height: "16px", border: "2px solid rgba(248,248,248,0.3)", borderTop: "2px solid #F8F8F8", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> : <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>}
           {oauthLoading === "google" ? "Redirecting…" : "Sign in with Google"}
         </button>
@@ -830,16 +830,16 @@ const LoginScreen = ({ onLogin, onGoSignup }) => {
         {/* Divider */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "20px 0" }}>
           <div style={{ flex: 1, height: "1px", background: "rgba(90,152,227,0.12)" }} />
-          <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4 }}>or sign in with email</span>
+          <span style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.4 }}>or sign in with email</span>
           <div style={{ flex: 1, height: "1px", background: "rgba(90,152,227,0.12)" }} />
         </div>
 
         {/* Email/password fields */}
-        <input type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "10px" }} />
-        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "16px" }} />
+        <input type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "10px" }} />
+        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "16px" }} />
 
         {error && (
-          <div style={{ padding: "10px 12px", borderRadius: "8px", background: "rgba(232,93,58,0.1)", border: "1px solid rgba(232,93,58,0.2)", marginBottom: "12px", fontSize: "12px", color: "#E85D3A" }}>
+          <div style={{ padding: "10px 12px", borderRadius: "8px", background: "rgba(232,93,58,0.1)", border: "1px solid rgba(232,93,58,0.2)", marginBottom: "12px", fontSize: "14px", color: "#E85D3A" }}>
             {error}
           </div>
         )}
@@ -858,12 +858,12 @@ const LoginScreen = ({ onLogin, onGoSignup }) => {
             setLoading(false);
             if (resetError) setError(resetError.message || "Could not send reset email.");
             else setError("✓ Password reset email sent — check your inbox.");
-          }} style={{ fontSize: "12px", color: "#5A98E3", cursor: "pointer", fontWeight: 600 }}>
+          }} style={{ fontSize: "14px", color: "#5A98E3", cursor: "pointer", fontWeight: 600 }}>
             Forgot your password?
           </span>
         </div>
 
-        <div style={{ textAlign: "center", marginTop: "14px", fontSize: "13px", color: "#BDD6F4", opacity: 0.6 }}>
+        <div style={{ textAlign: "center", marginTop: "14px", fontSize: "15px", color: "#BDD6F4", opacity: 0.6 }}>
           Don't have an account? <span onClick={onGoSignup} style={{ color: "#5A98E3", fontWeight: 700, cursor: "pointer", opacity: 1 }}>Sign up here</span>
         </div>
       </div>
@@ -945,42 +945,42 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
           <Mountain size={24} color="#F8F8F8" />
         </div>
         <div style={{ fontSize: "22px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>Create your account</div>
-        <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, marginTop: "4px" }}>Join the TrailSync community</div>
+        <div style={{ fontSize: "14px", color: "#BDD6F4", opacity: 0.6, marginTop: "4px" }}>Join the TrailSync community</div>
       </div>
 
       <div style={{ width: "100%", maxWidth: "360px", animation: "su .4s ease .1s both" }}>
         {/* Name */}
         <div style={{ marginBottom: "10px" }}>
-          <label style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Full name</label>
-          <input type="text" placeholder="Your name" value={name} onChange={e => setName(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'" }} />
+          <label style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Full name</label>
+          <input type="text" placeholder="Your name" value={name} onChange={e => setName(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'" }} />
         </div>
 
         {/* Date of birth */}
         <div style={{ marginBottom: "10px" }}>
-          <label style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Date of birth</label>
-          <input type="date" value={dob} onChange={e => setDob(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'" }} />
+          <label style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Date of birth</label>
+          <input type="date" value={dob} onChange={e => setDob(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'" }} />
         </div>
 
         {/* Email */}
         <div style={{ marginBottom: "10px" }}>
-          <label style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Email address</label>
-          <input type="email" placeholder="you@email.com" value={email} onChange={e => setEmail(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'" }} />
+          <label style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Email address</label>
+          <input type="email" placeholder="you@email.com" value={email} onChange={e => setEmail(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'" }} />
         </div>
 
         {/* Password */}
         <div style={{ marginBottom: "10px" }}>
-          <label style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Password</label>
-          <input type="password" placeholder="Create a password" value={password} onChange={e => setPassword(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'" }} />
+          <label style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Password</label>
+          <input type="password" placeholder="Create a password" value={password} onChange={e => setPassword(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'" }} />
         </div>
 
         {/* Location */}
         <div style={{ marginBottom: "16px" }}>
-          <label style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Location</label>
-          <input type="text" placeholder="(Optional)" value={location} onChange={e => setLocation(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: location ? "#F8F8F8" : "#BDD6F4", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'" }} />
+          <label style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Location</label>
+          <input type="text" placeholder="(Optional)" value={location} onChange={e => setLocation(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: location ? "#F8F8F8" : "#BDD6F4", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'" }} />
         </div>
 
         {error && (
-          <div style={{ padding: "10px 12px", borderRadius: "8px", background: error.includes("check your email") ? "rgba(107,203,119,0.1)" : "rgba(232,93,58,0.1)", border: `1px solid ${error.includes("check your email") ? "rgba(107,203,119,0.2)" : "rgba(232,93,58,0.2)"}`, marginBottom: "12px", fontSize: "12px", color: error.includes("check your email") ? "#6BCB77" : "#E85D3A", lineHeight: 1.5 }}>
+          <div style={{ padding: "10px 12px", borderRadius: "8px", background: error.includes("check your email") ? "rgba(107,203,119,0.1)" : "rgba(232,93,58,0.1)", border: `1px solid ${error.includes("check your email") ? "rgba(107,203,119,0.2)" : "rgba(232,93,58,0.2)"}`, marginBottom: "12px", fontSize: "14px", color: error.includes("check your email") ? "#6BCB77" : "#E85D3A", lineHeight: 1.5 }}>
             {error}
           </div>
         )}
@@ -991,13 +991,13 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
 
         {/* Privacy link */}
         <div style={{ textAlign: "center", marginTop: "16px" }}>
-          <span onClick={() => setShowPrivacy(true)} style={{ fontSize: "11px", color: "#5A98E3", cursor: "pointer", fontWeight: 600 }}>
+          <span onClick={() => setShowPrivacy(true)} style={{ fontSize: "13px", color: "#5A98E3", cursor: "pointer", fontWeight: 600 }}>
             <Shield size={10} style={{ verticalAlign: "middle", marginRight: "4px" }} />
             How we collect, store, and protect your data
           </span>
         </div>
 
-        <div style={{ textAlign: "center", marginTop: "14px", fontSize: "13px", color: "#BDD6F4", opacity: 0.6 }}>
+        <div style={{ textAlign: "center", marginTop: "14px", fontSize: "15px", color: "#BDD6F4", opacity: 0.6 }}>
           Already have an account? <span onClick={onGoLogin} style={{ color: "#5A98E3", fontWeight: 700, cursor: "pointer", opacity: 1 }}>Sign in</span>
         </div>
       </div>
@@ -1347,12 +1347,12 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
         <div style={{ marginBottom: "14px", animation: "fi .15s ease" }}>
           <div style={{ background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.2)", padding: "12px", animation: "fi .15s ease" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-              <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>{(userName||"U")[0].toUpperCase()}</div>
-              <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{userName}</div>
+              <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>{(userName||"U")[0].toUpperCase()}</div>
+              <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>{userName}</div>
             </div>
-            <textarea autoFocus placeholder="Share a summit, trail conditions, local wildlife…" value={feedPostText} onChange={e => setFeedPostText(e.target.value)} rows={3} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.15)", background: "#041e3d", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'", resize: "none", boxSizing: "border-box" }} />
+            <textarea autoFocus placeholder="Share a summit, trail conditions, local wildlife…" value={feedPostText} onChange={e => setFeedPostText(e.target.value)} rows={3} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.15)", background: "#041e3d", color: "#F8F8F8", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'", resize: "none", boxSizing: "border-box" }} />
             <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
-              <button onClick={() => { setFeedPostOpen(false); setFeedPostText(""); }} style={{ flex: 1, padding: "9px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
+              <button onClick={() => { setFeedPostOpen(false); setFeedPostText(""); }} style={{ flex: 1, padding: "9px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
               <button disabled={!feedPostText.trim() || feedPosting} onClick={async () => {
                 if (!feedPostText.trim() || feedPosting) return;
                 setFeedPosting(true);
@@ -1364,7 +1364,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                   setLivePosts(prev => [{ id: Date.now(), user: meta.username || meta.full_name?.split(" ")[0] || userName, av: (userName||"U")[0].toUpperCase(), time: "just now", type: "summit", text: feedPostText.trim(), likes: 0, comments: 0, peaks: [], user_id: user.id }, ...prev]);
                 }
                 setFeedPostText(""); setFeedPostOpen(false); setFeedPosting(false);
-              }} style={{ flex: 2, padding: "9px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: !feedPostText.trim() || feedPosting ? 0.6 : 1 }}>
+              }} style={{ flex: 2, padding: "9px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: !feedPostText.trim() || feedPosting ? 0.6 : 1 }}>
                 {feedPosting ? "Posting…" : "Post to Feed"}
               </button>
             </div>
@@ -1381,11 +1381,11 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
             </div>
             Best Weather Areas
             {wxLoading ? (
-              <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "8px", background: "rgba(90,152,227,0.15)", color: "#BDD6F4", fontWeight: 600 }}>Loading…</span>
+              <span style={{ fontSize: "12px", padding: "2px 8px", borderRadius: "8px", background: "rgba(90,152,227,0.15)", color: "#BDD6F4", fontWeight: 600 }}>Loading…</span>
             ) : wxError ? (
-              <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "8px", background: "rgba(232,93,58,0.12)", color: "#E85D3A", fontWeight: 600 }}>Offline</span>
+              <span style={{ fontSize: "12px", padding: "2px 8px", borderRadius: "8px", background: "rgba(232,93,58,0.12)", color: "#E85D3A", fontWeight: 600 }}>Offline</span>
             ) : (
-              <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "8px", background: "rgba(107,203,119,0.15)", color: "#6BCB77", fontWeight: 600 }}>Live</span>
+              <span style={{ fontSize: "12px", padding: "2px 8px", borderRadius: "8px", background: "rgba(107,203,119,0.15)", color: "#6BCB77", fontWeight: 600 }}>Live</span>
             )}
           </span>
           <ChevronDown size={18} style={{ transform: wxOpen ? "rotate(180deg)" : "none", transition: ".3s", color: "#BDD6F4" }} />
@@ -1400,20 +1400,20 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                     padding: "4px 10px", borderRadius: "8px", border: "none", cursor: "pointer",
                     background: wxDay === d ? "rgba(90,152,227,0.2)" : "transparent",
                     color: wxDay === d ? "#5A98E3" : "#BDD6F4",
-                    fontSize: "10px", fontWeight: wxDay === d ? 700 : 500, fontFamily: "'DM Sans'"
+                    fontSize: "12px", fontWeight: wxDay === d ? 700 : 500, fontFamily: "'DM Sans'"
                   }}>{label}</button>
                 ))}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <button onClick={() => setWindUnit(u => u === "mph" ? "kph" : "mph")} style={{ padding: "3px 8px", borderRadius: "6px", border: "1px solid rgba(90,152,227,0.2)", background: "rgba(90,152,227,0.08)", color: "#5A98E3", fontSize: "10px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>{windUnit}</button>
+                <button onClick={() => setWindUnit(u => u === "mph" ? "kph" : "mph")} style={{ padding: "3px 8px", borderRadius: "6px", border: "1px solid rgba(90,152,227,0.2)", background: "rgba(90,152,227,0.08)", color: "#5A98E3", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>{windUnit}</button>
                 {wxUpdated && !wxLoading && (
-                  <span style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4 }}>
+                  <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4 }}>
                     {wxUpdated.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 )}
               </div>
             </div>
-            <div style={{ padding: "0 14px 4px", fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>
+            <div style={{ padding: "0 14px 4px", fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>
               Ranked: wind 30% · feels-like 25% · precip 25% · vis 20% · summit altitude adjusted
             </div>
             {sorted.map((a, i) => {
@@ -1440,22 +1440,22 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                       background: a.loading ? "rgba(90,152,227,0.08)" :
                         a.score >= 85 ? "rgba(107,203,119,0.12)" : a.score >= 70 ? "rgba(235,203,139,0.12)" : "rgba(232,93,58,0.12)",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: "12px", fontWeight: 800,
+                      fontSize: "14px", fontWeight: 800,
                       color: a.loading ? "#BDD6F4" : a.score >= 85 ? "#6BCB77" : a.score >= 70 ? "#EBCB8B" : "#E85D3A"
                     }}>{a.loading ? "—" : a.score}</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        <span style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{a.region}</span>
-                        <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", background: `${CLS[a.cls]?.color}18`, color: CLS[a.cls]?.color, fontWeight: 600 }}>
+                        <span style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>{a.region}</span>
+                        <span style={{ fontSize: "11px", padding: "1px 6px", borderRadius: "4px", background: `${CLS[a.cls]?.color}18`, color: CLS[a.cls]?.color, fontWeight: 600 }}>
                           {CLS[a.cls]?.name}
                         </span>
                         {a.isBestDay && a.bestDayName && !a.loading && (
-                          <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", background: "rgba(107,203,119,0.12)", color: "#6BCB77", fontWeight: 600 }}>
+                          <span style={{ fontSize: "11px", padding: "1px 6px", borderRadius: "4px", background: "rgba(107,203,119,0.12)", color: "#6BCB77", fontWeight: 600 }}>
                             {a.bestDayName}
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, marginTop: "1px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, marginTop: "1px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {a.peaks.join(" · ")}
                       </div>
                     </div>
@@ -1466,12 +1466,12 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                         <>
                           <WI type={a.ic} size={18} />
                           <div style={{ textAlign: "right", minWidth: "42px" }}>
-                            <div style={{ fontSize: "12px", fontWeight: 700, color: a.feels < -5 ? "#BDD6F4" : "#F8F8F8" }}>{a.feels}°</div>
-                            <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.5 }}>feels</div>
+                            <div style={{ fontSize: "14px", fontWeight: 700, color: a.feels < -5 ? "#BDD6F4" : "#F8F8F8" }}>{a.feels}°</div>
+                            <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>feels</div>
                           </div>
                           <div style={{ textAlign: "right", minWidth: "36px" }}>
-                            <div style={{ fontSize: "12px", fontWeight: 700, color: a.wind > 35 ? "#E85D3A" : a.wind >= 20 ? "#F49D37" : "#F8F8F8" }}>{fmtWind(a.wind)}</div>
-                            <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.5 }}>{windUnit}</div>
+                            <div style={{ fontSize: "14px", fontWeight: 700, color: a.wind > 35 ? "#E85D3A" : a.wind >= 20 ? "#F49D37" : "#F8F8F8" }}>{fmtWind(a.wind)}</div>
+                            <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>{windUnit}</div>
                           </div>
                         </>
                       )}
@@ -1483,8 +1483,8 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                   {isExpanded && (
                     <div style={{ padding: "0 14px 14px", background: "rgba(90,152,227,0.04)", borderTop: "1px solid rgba(90,152,227,0.06)", animation: "fi .2s ease" }}>
                       <div style={{ padding: "10px 0 6px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div style={{ fontSize: "11px", fontWeight: 700, color: "#BDD6F4", opacity: 0.7 }}>Best mountains in {a.region}</div>
-                        <div style={{ display: "flex", gap: "8px", fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>
+                        <div style={{ fontSize: "13px", fontWeight: 700, color: "#BDD6F4", opacity: 0.7 }}>Best mountains in {a.region}</div>
+                        <div style={{ display: "flex", gap: "8px", fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>
                           <span>Temp: {a.temp}°</span>
                           <span>Precip: {a.precip}mm</span>
                           <span>Vis: {a.vis}</span>
@@ -1523,19 +1523,19 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                             }}>
                             <Mountain size={14} color={CLS[pk.cls]?.color} />
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8" }}>{pk.name}</div>
-                              <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5 }}>{pk.ht}m · {pk.reg}</div>
+                              <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{pk.name}</div>
+                              <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5 }}>{pk.ht}m · {pk.reg}</div>
                             </div>
                             {loading && <div style={{ width: "70px", height: "28px", borderRadius: "6px", background: "rgba(90,152,227,0.08)" }} />}
                             {!loading && lw && lw.wi !== undefined && (
                               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                                 <WI type={lw.ic || "cloudsun"} size={14} />
                                 <div style={{ textAlign: "center" }}>
-                                  <div style={{ fontSize: "11px", fontWeight: 700, color: lw.f < -5 ? "#BDD6F4" : "#F8F8F8" }}>{lw.f}°</div>
+                                  <div style={{ fontSize: "13px", fontWeight: 700, color: lw.f < -5 ? "#BDD6F4" : "#F8F8F8" }}>{lw.f}°</div>
                                   <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.4 }}>feels</div>
                                 </div>
                                 <div style={{ textAlign: "center" }}>
-                                  <div style={{ fontSize: "11px", fontWeight: 700, color: lw.wi > 35 ? "#E85D3A" : lw.wi >= 20 ? "#F49D37" : "#F8F8F8" }}>{fmtWind(lw.wi)}<span style={{ fontSize: "8px" }}>{windUnit}</span></div>
+                                  <div style={{ fontSize: "13px", fontWeight: 700, color: lw.wi > 35 ? "#E85D3A" : lw.wi >= 20 ? "#F49D37" : "#F8F8F8" }}>{fmtWind(lw.wi)}<span style={{ fontSize: "10px" }}>{windUnit}</span></div>
                                   <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.4 }}>wind</div>
                                 </div>
                                 {lw.sn && <Snowflake size={12} color="#BDD6F4" />}
@@ -1546,7 +1546,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                         );})}
                       </div>
                       {a.peaks.length > displayPeaks.length && (
-                        <div style={{ fontSize: "10px", color: "#5A98E3", textAlign: "center", marginTop: "8px", fontWeight: 600, cursor: "pointer" }}>
+                        <div style={{ fontSize: "12px", color: "#5A98E3", textAlign: "center", marginTop: "8px", fontWeight: 600, cursor: "pointer" }}>
                           + {a.peaks.length - displayPeaks.length} more peaks in this area
                         </div>
                       )}
@@ -1583,7 +1583,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
                 <div>
                   <div style={{ fontSize: "18px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>{selPeakWx.peak.name}</div>
-                  <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>{selPeakWx.peak.ht}m · {selPeakWx.peak.reg} · {CLS[selPeakWx.peak.cls]?.name}</div>
+                  <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>{selPeakWx.peak.ht}m · {selPeakWx.peak.reg} · {CLS[selPeakWx.peak.cls]?.name}</div>
                 </div>
                 <button onClick={() => setSelPeakWx(null)} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><X size={13} /></button>
               </div>
@@ -1594,7 +1594,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                   <WI type={selPeakWx.wx.ic} size={48} />
                   <div>
                     <div style={{ fontSize: "42px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'", lineHeight: 1 }}>{selPeakWx.wx.t}°</div>
-                    <div style={{ fontSize: "13px", color: "#BDD6F4", marginTop: "2px" }}>Feels like <span style={{ color: selPeakWx.wx.f < -10 ? "#5A98E3" : selPeakWx.wx.f < 0 ? "#BDD6F4" : "#F8F8F8", fontWeight: 700 }}>{selPeakWx.wx.f}°</span></div>
+                    <div style={{ fontSize: "15px", color: "#BDD6F4", marginTop: "2px" }}>Feels like <span style={{ color: selPeakWx.wx.f < -10 ? "#5A98E3" : selPeakWx.wx.f < 0 ? "#BDD6F4" : "#F8F8F8", fontWeight: 700 }}>{selPeakWx.wx.f}°</span></div>
                   </div>
                 </div>
               ) : (
@@ -1613,7 +1613,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                 /* Loading state */
                 <div style={{ padding: "30px", textAlign: "center" }}>
                   <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#5A98E3", margin: "0 auto", animation: "pulse 1s ease infinite" }} />
-                  <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, marginTop: "10px" }}>Fetching summit forecast…</div>
+                  <div style={{ fontSize: "14px", color: "#BDD6F4", opacity: 0.5, marginTop: "10px" }}>Fetching summit forecast…</div>
                 </div>
               ) : (
                 <>
@@ -1632,7 +1632,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                     ].map(([label, val, color]) => (
                       <div key={label} style={{ background: "#041e3d", borderRadius: "10px", padding: "10px", textAlign: "center" }}>
                         <div style={{ fontSize: "14px", fontWeight: 700, color, fontFamily: "'JetBrains Mono'" }}>{val}</div>
-                        <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginTop: "3px" }}>{label}</div>
+                        <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "3px" }}>{label}</div>
                       </div>
                     ))}
                   </div>
@@ -1640,7 +1640,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                   {/* Hourly forecast */}
                   {selPeakWx.wx.hours && (
                     <div style={{ padding: "0 18px 24px" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 700, color: "#BDD6F4", opacity: 0.6, marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Hour by hour</div>
+                      <div style={{ fontSize: "13px", fontWeight: 700, color: "#BDD6F4", opacity: 0.6, marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Hour by hour</div>
                       <div style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "6px" }}>
                         {selPeakWx.wx.hours.filter(h => h.hour >= 5 && h.hour <= 21).map(h => (
                           <div key={h.hour} style={{
@@ -1648,17 +1648,17 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                             background: "#041e3d", borderRadius: "10px", padding: "8px 4px",
                             border: "1px solid rgba(90,152,227,0.06)"
                           }}>
-                            <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginBottom: "5px" }}>
+                            <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginBottom: "5px" }}>
                               {h.hour < 12 ? `${h.hour}am` : h.hour === 12 ? "12pm" : `${h.hour - 12}pm`}
                             </div>
                             <WI type={wxIcon(h.code)} size={16} />
-                            <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8", marginTop: "5px" }}>{h.temp}°</div>
-                            <div style={{ fontSize: "9px", fontWeight: 600, color: h.wind > 35 ? "#E85D3A" : h.wind >= 20 ? "#F49D37" : "#BDD6F4", marginTop: "3px" }}>{fmtWind(h.wind)}{windUnit}</div>
-                            <div style={{ fontSize: "8px", color: "#5A98E3", marginTop: "2px" }}>{h.precip}%</div>
+                            <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8", marginTop: "5px" }}>{h.temp}°</div>
+                            <div style={{ fontSize: "11px", fontWeight: 600, color: h.wind > 35 ? "#E85D3A" : h.wind >= 20 ? "#F49D37" : "#BDD6F4", marginTop: "3px" }}>{fmtWind(h.wind)}{windUnit}</div>
+                            <div style={{ fontSize: "10px", color: "#5A98E3", marginTop: "2px" }}>{h.precip}%</div>
                           </div>
                         ))}
                       </div>
-                      <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.35, marginTop: "6px" }}>
+                      <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.35, marginTop: "6px" }}>
                         temp · wind · rain chance · altitude adjusted
                       </div>
                     </div>
@@ -1678,9 +1678,9 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
               <Trash2 size={20} color="#E85D3A" />
             </div>
             <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", marginBottom: "8px" }}>Delete Post?</div>
-            <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, marginBottom: "20px" }}>This can't be undone.</div>
+            <div style={{ fontSize: "15px", color: "#BDD6F4", opacity: 0.6, marginBottom: "20px" }}>This can't be undone.</div>
             <div style={{ display: "flex", gap: "10px" }}>
-              <button onClick={() => setConfirmDeletePost(null)} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+              <button onClick={() => setConfirmDeletePost(null)} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "15px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>
                 Cancel
               </button>
               <button onClick={async () => {
@@ -1688,7 +1688,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                 setConfirmDeletePost(null);
                 await supabase.from("posts").delete().eq("id", postId).eq("user_id", userId);
                 setLivePosts(prev => prev.filter(p => p.id !== postId));
-              }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+              }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
                 Delete
               </button>
             </div>
@@ -1705,19 +1705,19 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
           <div style={{ marginBottom: "16px", animation: "su .4s ease .2s both" }}>
             <div onClick={() => setShowSAIS(!showSAIS)} style={{ padding: "10px 14px", borderRadius: showSAIS ? "12px 12px 0 0" : "12px", background: "rgba(232,93,58,0.08)", border: "1px solid rgba(232,93,58,0.2)", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", transition: "border-radius .2s" }}>
               <AlertTriangle size={16} color="#E85D3A" />
-              <div style={{ flex: 1, fontSize: "11px", color: "#BDD6F4" }}><span style={{ fontWeight: 700, color: "#E85D3A" }}>SAIS Alert:</span> Considerable (3) hazard – Northern Cairngorms & Lochaber</div>
+              <div style={{ flex: 1, fontSize: "13px", color: "#BDD6F4" }}><span style={{ fontWeight: 700, color: "#E85D3A" }}>SAIS Alert:</span> Considerable (3) hazard – Northern Cairngorms & Lochaber</div>
               <ChevronDown size={14} color="#BDD6F4" style={{ opacity: 0.5, transform: showSAIS ? "rotate(180deg)" : "none", transition: ".2s" }} />
             </div>
             {showSAIS && (
               <div style={{ padding: "12px 14px", background: "rgba(232,93,58,0.04)", borderRadius: "0 0 12px 12px", border: "1px solid rgba(232,93,58,0.15)", borderTop: "none", animation: "fi .2s ease" }}>
-                <div style={{ fontSize: "11px", color: "#BDD6F4", lineHeight: 1.5, marginBottom: "12px" }}>
+                <div style={{ fontSize: "13px", color: "#BDD6F4", lineHeight: 1.5, marginBottom: "12px" }}>
                   Unstable windslab on N-NE aspects above 900m across Northern Cairngorms and Lochaber. Cornices building on lee slopes. Avoid steep terrain in affected areas.
                 </div>
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <a href="https://www.sais.gov.uk" target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "9px", borderRadius: "9px", background: "rgba(232,93,58,0.12)", border: "1px solid rgba(232,93,58,0.25)", color: "#E85D3A", fontSize: "11px", fontWeight: 700, cursor: "pointer", textAlign: "center", textDecoration: "none", fontFamily: "'DM Sans'" }}>
+                  <a href="https://www.sais.gov.uk" target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "9px", borderRadius: "9px", background: "rgba(232,93,58,0.12)", border: "1px solid rgba(232,93,58,0.25)", color: "#E85D3A", fontSize: "13px", fontWeight: 700, cursor: "pointer", textAlign: "center", textDecoration: "none", fontFamily: "'DM Sans'" }}>
                     View on SAIS ↗
                   </a>
-                  <a href="https://apps.apple.com/gb/app/be-avalanche-aware/id1477589689" target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "9px", borderRadius: "9px", background: "#0a2240", border: "1px solid rgba(90,152,227,0.15)", color: "#BDD6F4", fontSize: "11px", fontWeight: 600, cursor: "pointer", textAlign: "center", textDecoration: "none", fontFamily: "'DM Sans'" }}>
+                  <a href="https://apps.apple.com/gb/app/be-avalanche-aware/id1477589689" target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "9px", borderRadius: "9px", background: "#0a2240", border: "1px solid rgba(90,152,227,0.15)", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", textAlign: "center", textDecoration: "none", fontFamily: "'DM Sans'" }}>
                     Get SAIS App
                   </a>
                 </div>
@@ -1731,7 +1731,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px", animation: "su .4s ease .3s both" }}>
         <select value={ff} onChange={e => setFf(e.target.value)} style={{
           background: "#0a2240", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "20px",
-          color: ff === "all" ? "#BDD6F4" : "#5A98E3", fontSize: "12px", fontFamily: "'DM Sans'",
+          color: ff === "all" ? "#BDD6F4" : "#5A98E3", fontSize: "14px", fontFamily: "'DM Sans'",
           fontWeight: ff === "all" ? 500 : 700, padding: "6px 30px 6px 14px", cursor: "pointer",
           outline: "none", WebkitAppearance: "none", appearance: "none",
           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%235A98E3' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
@@ -1756,35 +1756,35 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
               <div onClick={() => p.user_id && onViewProfile && onViewProfile({ id: p.user_id, name: p.user, username: p.user })} style={{ width: "36px", height: "36px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "17px", fontWeight: 700, color: "#F8F8F8", cursor: p.user_id ? "pointer" : "default", flexShrink: 0 }}>{p.av}</div>
               <div style={{ flex: 1 }}>
-                <div onClick={() => p.user_id && onViewProfile && onViewProfile({ id: p.user_id, name: p.user, username: p.user })} style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", cursor: p.user_id ? "pointer" : "default", display: "inline-block" }}>{p.user}</div>
-                <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>{p.time}</div>
+                <div onClick={() => p.user_id && onViewProfile && onViewProfile({ id: p.user_id, name: p.user, username: p.user })} style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8", cursor: p.user_id ? "pointer" : "default", display: "inline-block" }}>{p.user}</div>
+                <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>{p.time}</div>
               </div>
-              {p.type === "walk" && <span style={{ fontSize: "9px", padding: "2px 8px", borderRadius: "6px", background: "rgba(90,152,227,0.15)", color: "#5A98E3", fontWeight: 700 }}>🥾 WALK</span>}
-              {p.type === "event" && <span style={{ fontSize: "9px", padding: "2px 8px", borderRadius: "6px", background: "rgba(90,152,227,0.15)", color: "#5A98E3", fontWeight: 700 }}>EVENT</span>}
-              {p.type === "news" && <span style={{ fontSize: "9px", padding: "2px 8px", borderRadius: "6px", background: "rgba(232,93,58,0.12)", color: "#E85D3A", fontWeight: 700 }}>ALERT</span>}
-              {p.type === "fundraiser" && <span style={{ fontSize: "9px", padding: "2px 8px", borderRadius: "6px", background: "rgba(107,203,119,0.12)", color: "#6BCB77", fontWeight: 700 }}>FUNDRAISER</span>}
+              {p.type === "walk" && <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "6px", background: "rgba(90,152,227,0.15)", color: "#5A98E3", fontWeight: 700 }}>🥾 WALK</span>}
+              {p.type === "event" && <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "6px", background: "rgba(90,152,227,0.15)", color: "#5A98E3", fontWeight: 700 }}>EVENT</span>}
+              {p.type === "news" && <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "6px", background: "rgba(232,93,58,0.12)", color: "#E85D3A", fontWeight: 700 }}>ALERT</span>}
+              {p.type === "fundraiser" && <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "6px", background: "rgba(107,203,119,0.12)", color: "#6BCB77", fontWeight: 700 }}>FUNDRAISER</span>}
             </div>
-            <div style={{ fontSize: "13px", color: "#BDD6F4", lineHeight: 1.55 }}>{p.text}</div>
+            <div style={{ fontSize: "15px", color: "#BDD6F4", lineHeight: 1.55 }}>{p.text}</div>
             {p.type === "fundraiser" && p.link && (
-              <a href={p.link} target="_blank" rel="noopener noreferrer" style={{ display: "block", marginTop: "10px", padding: "10px", borderRadius: "10px", background: "linear-gradient(135deg,#6BCB77,#55a866)", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'DM Sans'" }}>
+              <a href={p.link} target="_blank" rel="noopener noreferrer" style={{ display: "block", marginTop: "10px", padding: "10px", borderRadius: "10px", background: "linear-gradient(135deg,#6BCB77,#55a866)", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'DM Sans'" }}>
                 Donate to {p.user} ❤️
               </a>
             )}
-            {p.peaks.length > 0 && <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginTop: "10px" }}>{p.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "6px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}</div>}
+            {p.peaks.length > 0 && <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginTop: "10px" }}>{p.peaks.map(pk => <span key={pk} style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "6px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}</div>}
             {p.type === "walk" && p.route && p.route.length > 2 && (
               <div style={{ marginTop: "10px" }} onClick={e => e.stopPropagation()}>
                 <RoutePreview points={p.route} height={120} />
               </div>
             )}
             <div style={{ display: "flex", gap: "16px", marginTop: "12px" }}>
-              <button onClick={() => handleLike(p.id)} style={{ background: "none", border: "none", color: likedPosts.has(p.id) ? "#E85D3A" : "#BDD6F4", opacity: likedPosts.has(p.id) ? 1 : 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Heart size={14} fill={likedPosts.has(p.id) ? "#E85D3A" : "none"} /> {p.likes}</button>
-              <button onClick={() => setCommentOpen(commentOpen === p.id ? null : p.id)} style={{ background: "none", border: "none", color: commentOpen === p.id ? "#5A98E3" : "#BDD6F4", opacity: commentOpen === p.id ? 1 : 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><MessageCircle size={14} /> {(postComments[p.id] || []).length || p.comments || 0}</button>
-              <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Share2 size={14} /></button>
+              <button onClick={() => handleLike(p.id)} style={{ background: "none", border: "none", color: likedPosts.has(p.id) ? "#E85D3A" : "#BDD6F4", opacity: likedPosts.has(p.id) ? 1 : 0.5, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Heart size={14} fill={likedPosts.has(p.id) ? "#E85D3A" : "none"} /> {p.likes}</button>
+              <button onClick={() => setCommentOpen(commentOpen === p.id ? null : p.id)} style={{ background: "none", border: "none", color: commentOpen === p.id ? "#5A98E3" : "#BDD6F4", opacity: commentOpen === p.id ? 1 : 0.5, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><MessageCircle size={14} /> {(postComments[p.id] || []).length || p.comments || 0}</button>
+              <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.5, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Share2 size={14} /></button>
               {p.user_id === userId && (
                 <button onClick={(e) => {
                   e.stopPropagation();
                   setConfirmDeletePost(p.id);
-                }} style={{ background: "none", border: "none", color: "#E85D3A", opacity: 0.5, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'", marginLeft: "auto" }}><Trash2 size={13} /></button>
+                }} style={{ background: "none", border: "none", color: "#E85D3A", opacity: 0.5, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'", marginLeft: "auto" }}><Trash2 size={13} /></button>
               )}
             </div>
 
@@ -1793,10 +1793,10 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
               <div style={{ marginTop: "10px", borderTop: "1px solid rgba(90,152,227,0.08)", paddingTop: "10px" }}>
                 {(postComments[p.id] || []).map((c, ci) => (
                   <div key={ci} style={{ display: "flex", gap: "8px", marginBottom: "8px", alignItems: "flex-start" }}>
-                    <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>{c.av}</div>
+                    <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>{c.av}</div>
                     <div style={{ flex: 1, background: "rgba(90,152,227,0.06)", borderRadius: "10px", padding: "7px 10px" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 700, color: "#5A98E3", marginBottom: "2px" }}>{c.user}</div>
-                      <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.4 }}>{c.text}</div>
+                      <div style={{ fontSize: "13px", fontWeight: 700, color: "#5A98E3", marginBottom: "2px" }}>{c.user}</div>
+                      <div style={{ fontSize: "14px", color: "#BDD6F4", lineHeight: 1.4 }}>{c.text}</div>
                     </div>
                   </div>
                 ))}
@@ -1813,7 +1813,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                       }
                     }}
                     placeholder="Add a comment…"
-                    style={{ flex: 1, padding: "8px 12px", borderRadius: "20px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#F8F8F8", fontSize: "12px", fontFamily: "'DM Sans'", outline: "none" }}
+                    style={{ flex: 1, padding: "8px 12px", borderRadius: "20px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#F8F8F8", fontSize: "14px", fontFamily: "'DM Sans'", outline: "none" }}
                   />
                   <button onClick={async () => {
                     if (!commentText.trim()) return;
@@ -1821,7 +1821,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                     setPostComments(prev => ({ ...prev, [p.id]: [...(prev[p.id] || []), { user: userName, av: (userName||"U")[0].toUpperCase(), text: txt }] }));
                     setCommentText("");
                     await supabase.from("post_comments").insert({ post_id: p.id, user_id: userId, username: userName, text: txt }).catch(() => {});
-                  }} style={{ padding: "8px 14px", borderRadius: "20px", border: "none", background: "linear-gradient(135deg,#5A98E3,#264f80)", color: "#F8F8F8", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", flexShrink: 0 }}>Post</button>
+                  }} style={{ padding: "8px 14px", borderRadius: "20px", border: "none", background: "linear-gradient(135deg,#5A98E3,#264f80)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", flexShrink: 0 }}>Post</button>
                 </div>
               </div>
             )}
@@ -2034,14 +2034,14 @@ const RoutesClusterMap = ({ filtered, selRegion, setSelRegion, onMapReady }) => 
           background: "rgba(4,30,61,0.92)", backdropFilter: "blur(10px)", borderRadius: "20px",
           padding: "6px 16px", border: "1px solid rgba(90,152,227,0.2)", display: "flex", alignItems: "center", gap: "8px" }}>
           <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#E85D3A", animation: "pulse 1s ease infinite" }} />
-          <span style={{ fontSize: "11px", fontWeight: 600, color: "#BDD6F4", fontFamily: "'DM Sans'" }}>Loading route…</span>
+          <span style={{ fontSize: "13px", fontWeight: 600, color: "#BDD6F4", fontFamily: "'DM Sans'" }}>Loading route…</span>
         </div>
       )}
       {activeGpxId && (
         <div style={{ position: "absolute", top: 12, right: 12, zIndex: 25 }}>
           <button onClick={() => { removeGpxFromMap(mapRef.current, activeGpxId); setActiveGpxId(null); }}
             style={{ background: "rgba(4,30,61,0.92)", backdropFilter: "blur(10px)", border: "1px solid rgba(232,93,58,0.3)",
-              borderRadius: "20px", padding: "5px 12px", color: "#E85D3A", fontSize: "11px", fontWeight: 600,
+              borderRadius: "20px", padding: "5px 12px", color: "#E85D3A", fontSize: "13px", fontWeight: 600,
               cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "5px" }}>
             <X size={11} /> Clear route
           </button>
@@ -2070,7 +2070,7 @@ const OfflineIndicator = () => {
   return (
     <div title="No internet connection" style={{ padding: "5px 8px", borderRadius: "7px", background: "rgba(244,157,55,0.12)", border: "1px solid rgba(244,157,55,0.25)", display: "flex", alignItems: "center", gap: "4px" }}>
       <WifiOff size={13} color="#F49D37" />
-      <span style={{ fontSize: "10px", color: "#F49D37", fontWeight: 700, fontFamily: "'DM Sans'" }}>Offline</span>
+      <span style={{ fontSize: "12px", color: "#F49D37", fontWeight: 700, fontFamily: "'DM Sans'" }}>Offline</span>
     </div>
   );
 };
@@ -2092,8 +2092,8 @@ const OfflineBanner = () => {
     <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(244,157,55,0.1)", border: "1px solid rgba(244,157,55,0.25)", display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px", animation: "fi .3s ease" }}>
       <WifiOff size={14} color="#F49D37" />
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: "12px", fontWeight: 700, color: "#F49D37" }}>You're offline</div>
-        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, marginTop: "1px" }}>Cached routes and data are still available</div>
+        <div style={{ fontSize: "14px", fontWeight: 700, color: "#F49D37" }}>You're offline</div>
+        <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, marginTop: "1px" }}>Cached routes and data are still available</div>
       </div>
     </div>
   );
@@ -2166,13 +2166,13 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
           </svg>
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 50%, rgba(4,30,61,0.9) 100%)" }} />
           <div style={{ position: "relative", padding: "14px 16px 20px" }}>
-            <button onClick={() => setShowRouteDetail(null)} style={{ background: "rgba(4,30,61,0.6)", border: "none", borderRadius: "10px", padding: "8px 14px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600, fontFamily: "'DM Sans'", marginBottom: "50px", backdropFilter: "blur(8px)" }}>
+            <button onClick={() => setShowRouteDetail(null)} style={{ background: "rgba(4,30,61,0.6)", border: "none", borderRadius: "10px", padding: "8px 14px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "15px", fontWeight: 600, fontFamily: "'DM Sans'", marginBottom: "50px", backdropFilter: "blur(8px)" }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg> Back
             </button>
             <div>
-              <span style={{ fontSize: "10px", padding: "3px 10px", borderRadius: "8px", background: `rgba(${dc(showRouteDetail.diff) === "#6BCB77" ? "107,203,119" : dc(showRouteDetail.diff) === "#5A98E3" ? "90,152,227" : dc(showRouteDetail.diff) === "#F49D37" ? "244,157,55" : "232,93,58"},0.2)`, color: dc(showRouteDetail.diff), fontWeight: 700, marginBottom: "8px", display: "inline-block" }}>{showRouteDetail.diff}</span>
+              <span style={{ fontSize: "12px", padding: "3px 10px", borderRadius: "8px", background: `rgba(${dc(showRouteDetail.diff) === "#6BCB77" ? "107,203,119" : dc(showRouteDetail.diff) === "#5A98E3" ? "90,152,227" : dc(showRouteDetail.diff) === "#F49D37" ? "244,157,55" : "232,93,58"},0.2)`, color: dc(showRouteDetail.diff), fontWeight: 700, marginBottom: "8px", display: "inline-block" }}>{showRouteDetail.diff}</span>
               <div style={{ fontSize: "22px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'DM Sans'", lineHeight: 1.2, marginBottom: "4px" }}>{showRouteDetail.name}</div>
-              <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6 }}>{showRouteDetail.reg} · Start: {showRouteDetail.start}</div>
+              <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6 }}>{showRouteDetail.reg} · Start: {showRouteDetail.start}</div>
             </div>
           </div>
         </div>
@@ -2204,7 +2204,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
               <div key={label} style={{ background: "#0a2240", borderRadius: "12px", padding: "12px 8px", textAlign: "center", border: "1px solid rgba(90,152,227,0.1)" }}>
                 <div style={{ fontSize: "16px", marginBottom: "4px" }}>{icon}</div>
                 <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
-                <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.45, marginTop: "3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
+                <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.45, marginTop: "3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
               </div>
             ))}
           </div>
@@ -2213,17 +2213,17 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
             <Star size={14} color="#EBCB8B" fill="#EBCB8B" />
             <span style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{showRouteDetail.rat}</span>
-            <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.45 }}>({showRouteDetail.rev} reviews)</span>
-            {showRouteDetail.src === "ts" && <span style={{ fontSize: "9px", padding: "2px 8px", borderRadius: "6px", background: "rgba(90,152,227,0.1)", color: "#5A98E3", fontWeight: 700 }}>✓ Verified</span>}
+            <span style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.45 }}>({showRouteDetail.rev} reviews)</span>
+            {showRouteDetail.src === "ts" && <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "6px", background: "rgba(90,152,227,0.1)", color: "#5A98E3", fontWeight: 700 }}>✓ Verified</span>}
           </div>
 
           {/* Terrain tags */}
           {extra?.terrain && (
             <div style={{ marginBottom: "16px" }}>
-              <div style={{ fontSize: "10px", fontWeight: 700, color: "#BDD6F4", opacity: 0.5, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Terrain</div>
+              <div style={{ fontSize: "12px", fontWeight: 700, color: "#BDD6F4", opacity: 0.5, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Terrain</div>
               <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                 {extra.terrain.map(t => (
-                  <span key={t} style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "8px", background: "rgba(90,152,227,0.08)", border: "1px solid rgba(90,152,227,0.15)", color: "#BDD6F4", fontWeight: 600 }}>{t}</span>
+                  <span key={t} style={{ fontSize: "13px", padding: "4px 10px", borderRadius: "8px", background: "rgba(90,152,227,0.08)", border: "1px solid rgba(90,152,227,0.15)", color: "#BDD6F4", fontWeight: 600 }}>{t}</span>
                 ))}
               </div>
             </div>
@@ -2232,17 +2232,17 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
           {/* Route description */}
           {extra?.description && (
             <div style={{ background: "#0a2240", borderRadius: "12px", padding: "14px", marginBottom: "12px", border: "1px solid rgba(90,152,227,0.08)" }}>
-              <div style={{ fontSize: "10px", fontWeight: 700, color: "#5A98E3", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>About This Route</div>
-              <div style={{ fontSize: "13px", color: "#BDD6F4", lineHeight: 1.65, opacity: 0.85 }}>{extra.description}</div>
+              <div style={{ fontSize: "12px", fontWeight: 700, color: "#5A98E3", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>About This Route</div>
+              <div style={{ fontSize: "15px", color: "#BDD6F4", lineHeight: 1.65, opacity: 0.85 }}>{extra.description}</div>
             </div>
           )}
 
           {/* Peaks */}
           {showRouteDetail.peaks && showRouteDetail.peaks.length > 0 && (
             <div style={{ background: "rgba(107,203,119,0.05)", borderRadius: "12px", padding: "14px", marginBottom: "12px", border: "1px solid rgba(107,203,119,0.12)" }}>
-              <div style={{ fontSize: "10px", fontWeight: 700, color: "#6BCB77", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>⛰️ Summits on Route</div>
+              <div style={{ fontSize: "12px", fontWeight: 700, color: "#6BCB77", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>⛰️ Summits on Route</div>
               <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                {showRouteDetail.peaks.map(pk => <span key={pk} style={{ fontSize: "12px", padding: "4px 10px", borderRadius: "8px", background: "rgba(107,203,119,0.1)", color: "#6BCB77", fontWeight: 600 }}>{pk}</span>)}
+                {showRouteDetail.peaks.map(pk => <span key={pk} style={{ fontSize: "14px", padding: "4px 10px", borderRadius: "8px", background: "rgba(107,203,119,0.1)", color: "#6BCB77", fontWeight: 600 }}>{pk}</span>)}
               </div>
             </div>
           )}
@@ -2252,14 +2252,14 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
             <div style={{ background: "#0a2240", borderRadius: "12px", padding: "14px", marginBottom: "12px", border: "1px solid rgba(90,152,227,0.08)" }}>
               {extra.history && (
                 <>
-                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#5A98E3", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>🏔️ History</div>
-                  <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.65, opacity: 0.8, marginBottom: extra.flora ? "12px" : 0 }}>{extra.history}</div>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#5A98E3", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>🏔️ History</div>
+                  <div style={{ fontSize: "14px", color: "#BDD6F4", lineHeight: 1.65, opacity: 0.8, marginBottom: extra.flora ? "12px" : 0 }}>{extra.history}</div>
                 </>
               )}
               {extra.flora && (
                 <>
-                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#6BCB77", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>🌿 Wildlife & Flora</div>
-                  <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.65, opacity: 0.8 }}>{extra.flora}</div>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#6BCB77", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>🌿 Wildlife & Flora</div>
+                  <div style={{ fontSize: "14px", color: "#BDD6F4", lineHeight: 1.65, opacity: 0.8 }}>{extra.flora}</div>
                 </>
               )}
             </div>
@@ -2271,8 +2271,8 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A98E3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>Directions to Start</div>
-              <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5, marginTop: "2px" }}>{showRouteDetail.start} · Opens Google Maps</div>
+              <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>Directions to Start</div>
+              <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, marginTop: "2px" }}>{showRouteDetail.start} · Opens Google Maps</div>
             </div>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5A98E3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           </a>
@@ -2299,7 +2299,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
             border: "1px solid rgba(90,152,227,0.25)", borderRadius: "10px",
             padding: "8px 14px", color: "#F8F8F8", cursor: "pointer",
             display: "flex", alignItems: "center", gap: "6px",
-            fontSize: "13px", fontWeight: 700, fontFamily: "'DM Sans'",
+            fontSize: "15px", fontWeight: 700, fontFamily: "'DM Sans'",
             boxShadow: "0 2px 12px rgba(0,0,0,0.3)"
           }}
         >
@@ -2318,7 +2318,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
             <div style={{ height: "3px", background: "linear-gradient(90deg,#E85D3A,transparent)" }} />
             <div style={{ padding: "10px 12px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                <div style={{ fontSize: "13px", fontWeight: 800, color: "#F8F8F8" }}>{selRegion.name} · {selRegion.routes.length} routes</div>
+                <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8" }}>{selRegion.name} · {selRegion.routes.length} routes</div>
                 <button onClick={() => setSelRegion(null)} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "24px", height: "24px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={11} /></button>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -2333,14 +2333,14 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
                     }}>
                     <Route size={14} color={CLS[r.cls]?.color} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
-                      <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{r.dist}km · {r.elev}m · {r.time}</div>
+                      <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
+                      <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{r.dist}km · {r.elev}m · {r.time}</div>
                     </div>
                     <div style={{ display: "flex", gap: "4px", flexShrink: 0, alignItems: "center" }}>
-                      <span style={{ fontSize: "9px", padding: "1px 5px", borderRadius: "4px", background: `${CLS[r.cls]?.color}15`, color: CLS[r.cls]?.color, fontWeight: 600 }}>{CLS[r.cls]?.name}</span>
-                      <span style={{ fontSize: "9px", padding: "1px 5px", borderRadius: "4px", background: `${dc(r.diff)}15`, color: dc(r.diff), fontWeight: 600 }}>{r.diff}</span>
+                      <span style={{ fontSize: "11px", padding: "1px 5px", borderRadius: "4px", background: `${CLS[r.cls]?.color}15`, color: CLS[r.cls]?.color, fontWeight: 600 }}>{CLS[r.cls]?.name}</span>
+                      <span style={{ fontSize: "11px", padding: "1px 5px", borderRadius: "4px", background: `${dc(r.diff)}15`, color: dc(r.diff), fontWeight: 600 }}>{r.diff}</span>
                       {(r.gpx_file || ROUTES.find(x => x.name === r.name && x.gpx_file)) && (
-                        <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", background: "rgba(232,93,58,0.12)", color: "#E85D3A", fontWeight: 700 }}>View →</span>
+                        <span style={{ fontSize: "11px", padding: "1px 6px", borderRadius: "4px", background: "rgba(232,93,58,0.12)", color: "#E85D3A", fontWeight: 700 }}>View →</span>
                       )}
                     </div>
                   </div>
@@ -2369,21 +2369,21 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
       {/* Shared filters */}
       <div style={{ display: "flex", gap: "6px", marginBottom: "10px", flexWrap: "wrap", alignItems: "center" }}>
         {subTab !== "downloaded" && (
-          <select value={cf || ""} onChange={e => setCf(e.target.value || null)} style={{ padding: "7px 12px", borderRadius: "10px", fontSize: "11px", fontWeight: 600, background: cf ? "rgba(232,93,58,0.1)" : "#0a2240", border: `1px solid ${cf ? "rgba(232,93,58,0.3)" : "rgba(90,152,227,0.12)"}`, color: cf ? "#E85D3A" : "#BDD6F4", outline: "none", cursor: "pointer", fontFamily: "'DM Sans'" }}>
+          <select value={cf || ""} onChange={e => setCf(e.target.value || null)} style={{ padding: "7px 12px", borderRadius: "10px", fontSize: "13px", fontWeight: 600, background: cf ? "rgba(232,93,58,0.1)" : "#0a2240", border: `1px solid ${cf ? "rgba(232,93,58,0.3)" : "rgba(90,152,227,0.12)"}`, color: cf ? "#E85D3A" : "#BDD6F4", outline: "none", cursor: "pointer", fontFamily: "'DM Sans'" }}>
             <option value="">All Classifications</option>
             {Object.entries(CLS).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
           </select>
         )}
-        <select value={df || ""} onChange={e => setDf(e.target.value || null)} style={{ padding: "7px 12px", borderRadius: "10px", fontSize: "11px", fontWeight: 600, background: df ? "rgba(90,152,227,0.1)" : "#0a2240", border: `1px solid ${df ? "rgba(90,152,227,0.3)" : "rgba(90,152,227,0.12)"}`, color: df ? "#5A98E3" : "#BDD6F4", outline: "none", cursor: "pointer", fontFamily: "'DM Sans'" }}>
+        <select value={df || ""} onChange={e => setDf(e.target.value || null)} style={{ padding: "7px 12px", borderRadius: "10px", fontSize: "13px", fontWeight: 600, background: df ? "rgba(90,152,227,0.1)" : "#0a2240", border: `1px solid ${df ? "rgba(90,152,227,0.3)" : "rgba(90,152,227,0.12)"}`, color: df ? "#5A98E3" : "#BDD6F4", outline: "none", cursor: "pointer", fontFamily: "'DM Sans'" }}>
           <option value="">All Difficulty</option>
           {["Easy", "Moderate", "Hard", "Expert"].map(d => <option key={d} value={d}>{d}</option>)}
         </select>
-        {subTab !== "map" && <button onClick={() => setShowCommunity(!showCommunity)} style={{ padding: "7px 12px", borderRadius: "10px", fontSize: "11px", fontWeight: 600, background: showCommunity ? "rgba(90,152,227,0.12)" : "#0a2240", border: `1px solid ${showCommunity ? "rgba(90,152,227,0.25)" : "rgba(90,152,227,0.12)"}`, color: showCommunity ? "#5A98E3" : "#BDD6F4", cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "4px", opacity: showCommunity ? 1 : 0.5 }}>
+        {subTab !== "map" && <button onClick={() => setShowCommunity(!showCommunity)} style={{ padding: "7px 12px", borderRadius: "10px", fontSize: "13px", fontWeight: 600, background: showCommunity ? "rgba(90,152,227,0.12)" : "#0a2240", border: `1px solid ${showCommunity ? "rgba(90,152,227,0.25)" : "rgba(90,152,227,0.12)"}`, color: showCommunity ? "#5A98E3" : "#BDD6F4", cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "4px", opacity: showCommunity ? 1 : 0.5 }}>
           <Users size={12} /> Community
         </button>}
       </div>
 
-      <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4, marginBottom: "12px" }}>{filtered.length} routes found</div>
+      <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.4, marginBottom: "12px" }}>{filtered.length} routes found</div>
 
       {/* ═══ LIST VIEW ═══ */}
       {subTab === "list" && (
@@ -2398,39 +2398,39 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "8px" }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8", lineHeight: 1.3 }}>{r.name}</div>
-                    <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "3px" }}>{r.reg} · Start: {r.start}</div>
+                    <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.5, marginTop: "3px" }}>{r.reg} · Start: {r.start}</div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
                     {(r.gpx_file || ROUTES.find(x => x.name === r.name && x.gpx_file)) && (
-                      <span style={{ fontSize: "9px", padding: "2px 8px", borderRadius: "8px",
+                      <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "8px",
                         background: "rgba(232,93,58,0.12)", color: "#E85D3A", fontWeight: 700 }}>
                         View on map →
                       </span>
                     )}
                     <Star size={12} color="#EBCB8B" fill="#EBCB8B" />
-                    <span style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8" }}>{r.rat}</span>
-                    <span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>({r.rev})</span>
+                    <span style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{r.rat}</span>
+                    <span style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>({r.rev})</span>
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
-                  <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "8px", background: `${CLS[r.cls]?.color}15`, color: CLS[r.cls]?.color, fontWeight: 600 }}>{CLS[r.cls]?.name}</span>
-                  <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "8px", background: `${dc(r.diff)}18`, color: dc(r.diff), fontWeight: 600 }}>{r.diff}</span>
+                  <span style={{ fontSize: "12px", padding: "2px 8px", borderRadius: "8px", background: `${CLS[r.cls]?.color}15`, color: CLS[r.cls]?.color, fontWeight: 600 }}>{CLS[r.cls]?.name}</span>
+                  <span style={{ fontSize: "12px", padding: "2px 8px", borderRadius: "8px", background: `${dc(r.diff)}18`, color: dc(r.diff), fontWeight: 600 }}>{r.diff}</span>
                   {r.src === "ts" ? (
-                    <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "8px", background: "rgba(90,152,227,0.1)", color: "#5A98E3", fontWeight: 600 }}>✓ Verified</span>
+                    <span style={{ fontSize: "12px", padding: "2px 8px", borderRadius: "8px", background: "rgba(90,152,227,0.1)", color: "#5A98E3", fontWeight: 600 }}>✓ Verified</span>
                   ) : (
-                    <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "8px", background: "rgba(244,157,55,0.1)", color: "#F49D37", fontWeight: 600 }}>Community</span>
+                    <span style={{ fontSize: "12px", padding: "2px 8px", borderRadius: "8px", background: "rgba(244,157,55,0.1)", color: "#F49D37", fontWeight: 600 }}>Community</span>
                   )}
                 </div>
                 <div style={{ display: "flex", gap: "16px" }}>
-                  <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "4px" }}><Navigation size={12} /> {r.dist}km</span>
-                  <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "4px" }}><TrendingUp size={12} /> {r.elev}m</span>
-                  <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "4px" }}><Clock size={12} /> {r.time}</span>
+                  <span style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "4px" }}><Navigation size={12} /> {r.dist}km</span>
+                  <span style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "4px" }}><TrendingUp size={12} /> {r.elev}m</span>
+                  <span style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "4px" }}><Clock size={12} /> {r.time}</span>
                 </div>
-                {r.peaks && r.peaks.length > 0 && <div style={{ display: "flex", gap: "4px", marginTop: "8px" }}>{r.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "5px", background: "rgba(232,93,58,0.08)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}</div>}
+                {r.peaks && r.peaks.length > 0 && <div style={{ display: "flex", gap: "4px", marginTop: "8px" }}>{r.peaks.map(pk => <span key={pk} style={{ fontSize: "11px", padding: "2px 6px", borderRadius: "5px", background: "rgba(232,93,58,0.08)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}</div>}
               </div>
             ))}
           </div>
-          <div style={{ padding: "14px 0", fontSize: "10px", color: "#BDD6F4", opacity: 0.4, textAlign: "center", fontStyle: "italic" }}>Community routes are not regulated. Please use at your own risk and always carry appropriate navigation equipment.</div>
+          <div style={{ padding: "14px 0", fontSize: "12px", color: "#BDD6F4", opacity: 0.4, textAlign: "center", fontStyle: "italic" }}>Community routes are not regulated. Please use at your own risk and always carry appropriate navigation equipment.</div>
         </div>
       )}
 
@@ -2451,22 +2451,22 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
               </div>
               <div>
                 <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>Offline Routes</div>
-                <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6 }}>Download routes to use without signal</div>
+                <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6 }}>Download routes to use without signal</div>
               </div>
             </div>
-            <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.7, lineHeight: 1.6, marginBottom: "12px" }}>
+            <div style={{ fontSize: "14px", color: "#BDD6F4", opacity: 0.7, lineHeight: 1.6, marginBottom: "12px" }}>
               Full offline route downloads — including OS map tiles, GPX tracks and elevation data — are coming with the TrailSync native app. Routes you download will be available even in areas with no signal.
             </div>
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
               {["OS Map tiles", "GPX tracks", "Elevation data", "Peak info", "Weather cache"].map(f => (
-                <span key={f} style={{ fontSize: "10px", padding: "3px 8px", borderRadius: "6px", background: "rgba(90,152,227,0.1)", color: "#5A98E3", fontWeight: 600 }}>{f}</span>
+                <span key={f} style={{ fontSize: "12px", padding: "3px 8px", borderRadius: "6px", background: "rgba(90,152,227,0.1)", color: "#5A98E3", fontWeight: 600 }}>{f}</span>
               ))}
             </div>
           </div>
 
           {/* Recently viewed — cached automatically */}
           <div style={{ marginBottom: "14px" }}>
-            <div style={{ fontSize: "12px", fontWeight: 700, color: "#BDD6F4", opacity: 0.5, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "10px" }}>
+            <div style={{ fontSize: "14px", fontWeight: 700, color: "#BDD6F4", opacity: 0.5, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "10px" }}>
               Cached from recent browsing
             </div>
             <div style={{ background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.1)", overflow: "hidden" }}>
@@ -2476,14 +2476,14 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
                     <Map size={16} color="#6BCB77" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
-                    <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{r.dist}km · {r.elev}m · Partial cache</div>
+                    <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
+                    <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{r.dist}km · {r.elev}m · Partial cache</div>
                   </div>
-                  <div style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "5px", background: "rgba(107,203,119,0.1)", color: "#6BCB77", fontWeight: 600, flexShrink: 0 }}>Cached</div>
+                  <div style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "5px", background: "rgba(107,203,119,0.1)", color: "#6BCB77", fontWeight: 600, flexShrink: 0 }}>Cached</div>
                 </div>
               ))}
             </div>
-            <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.35, marginTop: "6px", paddingLeft: "2px" }}>
+            <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.35, marginTop: "6px", paddingLeft: "2px" }}>
               Routes you've viewed are partially cached. Full offline download available in the native app.
             </div>
           </div>
@@ -2491,11 +2491,11 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
           {/* Storage info */}
           <div style={{ padding: "12px 14px", borderRadius: "12px", background: "#0a2240", border: "1px solid rgba(90,152,227,0.1)", display: "flex", alignItems: "center", gap: "12px" }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "12px", fontWeight: 600, color: "#BDD6F4", marginBottom: "4px" }}>Cache storage</div>
+              <div style={{ fontSize: "14px", fontWeight: 600, color: "#BDD6F4", marginBottom: "4px" }}>Cache storage</div>
               <div style={{ height: "4px", borderRadius: "2px", background: "rgba(90,152,227,0.1)", overflow: "hidden" }}>
                 <div style={{ height: "100%", width: "18%", borderRadius: "2px", background: "linear-gradient(90deg,#5A98E3,#6BCB77)" }} />
               </div>
-              <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4, marginTop: "4px" }}>~12 MB used of browser cache</div>
+              <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4, marginTop: "4px" }}>~12 MB used of browser cache</div>
             </div>
           </div>
 
@@ -2516,12 +2516,12 @@ const RouteWeatherPanel = ({ routeWeather, elevProfile, onElevHover, onElevLeave
       <div onClick={() => setWxOpen(o => !o)} style={{ padding: "12px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px" }}>
         <div style={{ width: "32px", height: "3px", borderRadius: "2px", background: "rgba(90,152,227,0.3)", position: "absolute", top: "6px", left: "50%", transform: "translateX(-50%)" }} />
         <div style={{ display: "flex", gap: "12px", flex: 1, marginTop: "4px" }}>
-          <span style={{ fontSize: "12px", color: "#BDD6F4" }}>📏 {routeWeather.totalKm}km</span>
-          <span style={{ fontSize: "12px", color: "#BDD6F4" }}>⏱️ {routeWeather.totalHours}h</span>
-          <span style={{ fontSize: "12px", color: "#BDD6F4" }}>⛰️ {routeWeather.totalAscent}m</span>
-          {routeWeather.timeline[0] && <span style={{ fontSize: "12px", color: "#BDD6F4", marginLeft: "auto" }}>{routeWeather.timeline[0].icon} {routeWeather.timeline[0].temp !== undefined ? `${Math.round(routeWeather.timeline[0].temp)}°` : ""}</span>}
+          <span style={{ fontSize: "14px", color: "#BDD6F4" }}>📏 {routeWeather.totalKm}km</span>
+          <span style={{ fontSize: "14px", color: "#BDD6F4" }}>⏱️ {routeWeather.totalHours}h</span>
+          <span style={{ fontSize: "14px", color: "#BDD6F4" }}>⛰️ {routeWeather.totalAscent}m</span>
+          {routeWeather.timeline[0] && <span style={{ fontSize: "14px", color: "#BDD6F4", marginLeft: "auto" }}>{routeWeather.timeline[0].icon} {routeWeather.timeline[0].temp !== undefined ? `${Math.round(routeWeather.timeline[0].temp)}°` : ""}</span>}
         </div>
-        <div style={{ color: "#BDD6F4", opacity: 0.4, fontSize: "10px", flexShrink: 0 }}>{wxOpen ? "▼" : "▲"}</div>
+        <div style={{ color: "#BDD6F4", opacity: 0.4, fontSize: "12px", flexShrink: 0 }}>{wxOpen ? "▼" : "▲"}</div>
       </div>
       {wxOpen && (
         <div style={{ padding: "0 16px 16px", maxHeight: "40vh", overflowY: "auto" }}>
@@ -2558,25 +2558,25 @@ const RouteWeatherPanel = ({ routeWeather, elevProfile, onElevHover, onElevLeave
                 })()}
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2px" }}>
-                <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>{Math.min(...elevProfile)}m</div>
-                <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>Elevation</div>
-                <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>{Math.max(...elevProfile)}m</div>
+                <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4 }}>{Math.min(...elevProfile)}m</div>
+                <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4 }}>Elevation</div>
+                <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4 }}>{Math.max(...elevProfile)}m</div>
               </div>
             </div>
           )}
           <div style={{ display: "flex", gap: "5px", overflowX: "auto", paddingBottom: "4px" }}>
             {routeWeather.timeline.map((pt, i) => (
               <div key={i} style={{ flexShrink: 0, width: "56px", textAlign: "center", background: "#0a2240", borderRadius: "10px", padding: "7px 3px", border: "1px solid rgba(90,152,227,0.08)" }}>
-                <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginBottom: "3px" }}>{i === 0 ? "Now" : `+${i}h`}</div>
+                <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginBottom: "3px" }}>{i === 0 ? "Now" : `+${i}h`}</div>
                 <div style={{ fontSize: "16px", marginBottom: "2px" }}>{pt.icon || "🌤️"}</div>
-                <div style={{ fontSize: "11px", fontWeight: 700, color: "#F8F8F8" }}>{pt.temp !== undefined ? `${Math.round(pt.temp)}°` : "—"}</div>
-                <div style={{ fontSize: "8px", color: "#5A98E3", marginTop: "1px" }}>{pt.wind !== undefined ? `${Math.round(pt.wind)}mph` : ""}</div>
-                <div style={{ fontSize: "8px", color: pt.precip > 50 ? "#E85D3A" : "#BDD6F4", opacity: 0.6 }}>{pt.precip !== undefined ? `${pt.precip}%` : ""}</div>
+                <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{pt.temp !== undefined ? `${Math.round(pt.temp)}°` : "—"}</div>
+                <div style={{ fontSize: "10px", color: "#5A98E3", marginTop: "1px" }}>{pt.wind !== undefined ? `${Math.round(pt.wind)}mph` : ""}</div>
+                <div style={{ fontSize: "10px", color: pt.precip > 50 ? "#E85D3A" : "#BDD6F4", opacity: 0.6 }}>{pt.precip !== undefined ? `${pt.precip}%` : ""}</div>
                 <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.3 }}>{pt.ele}m</div>
               </div>
             ))}
           </div>
-          <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.25, textAlign: "center", marginTop: "8px" }}>Naismith timing · Open-Meteo</div>
+          <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.25, textAlign: "center", marginTop: "8px" }}>Naismith timing · Open-Meteo</div>
         </div>
       )}
     </div>
@@ -3504,7 +3504,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
             zIndex: 26,
             background: "rgba(4,30,61,0.95)", border: "1px solid rgba(90,152,227,0.3)",
             borderRadius: "12px", padding: "8px 14px", color: "#5A98E3",
-            fontSize: "12px", fontWeight: 700, cursor: "pointer",
+            fontSize: "14px", fontWeight: 700, cursor: "pointer",
             display: "flex", alignItems: "center", gap: "6px",
             boxShadow: "0 4px 16px rgba(0,0,0,0.3)", fontFamily: "'DM Sans'",
             backdropFilter: "blur(8px)"
@@ -3545,38 +3545,38 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                 }}>
                   <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: item.color || "#5A98E3", flexShrink: 0 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: "12px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</div>
-                    <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{item.sub}</div>
+                    <div style={{ fontSize: "14px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</div>
+                    <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{item.sub}</div>
                   </div>
-                  <span style={{ fontSize: "8px", padding: "2px 6px", borderRadius: "4px", background: "rgba(90,152,227,0.1)", color: "#BDD6F4", fontWeight: 600, textTransform: "uppercase", flexShrink: 0 }}>{item.type}</span>
+                  <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "4px", background: "rgba(90,152,227,0.1)", color: "#BDD6F4", fontWeight: 600, textTransform: "uppercase", flexShrink: 0 }}>{item.type}</span>
                 </button>
               ))}
             </div>
           )}
         </div>
         <div style={{ position: "relative" }}>
-          <button onClick={() => setLm(!lm)} style={{ background: "rgba(4,30,61,.88)", backdropFilter: "blur(12px)", border: "1px solid rgba(90,152,227,0.15)", borderRadius: "12px", padding: "9px 12px", color: "#BDD6F4", fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", fontWeight: 600, fontFamily: "'DM Sans'" }}>
+          <button onClick={() => setLm(!lm)} style={{ background: "rgba(4,30,61,.88)", backdropFilter: "blur(12px)", border: "1px solid rgba(90,152,227,0.15)", borderRadius: "12px", padding: "9px 12px", color: "#BDD6F4", fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", fontWeight: 600, fontFamily: "'DM Sans'" }}>
             <Layers size={14} /> Layers
           </button>
           {lm && (
             <div style={{ position: "absolute", top: "110%", right: 0, minWidth: "200px", background: "rgba(4,30,61,.97)", backdropFilter: "blur(16px)", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.2)", padding: "6px", zIndex: 30 }}>
-              <div style={{ padding: "6px 12px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Map Style</div>
-              {[["standard", "🗺️ Standard"], ["topo", "📐 Topographical (OS/Harvey)"], ["satellite", "🛰️ Satellite"]].map(([k, l]) => <button key={k} onClick={() => setLayer(k)} style={{ display: "block", width: "100%", padding: "8px 12px", borderRadius: "8px", border: "none", background: layer === k ? "rgba(90,152,227,0.15)" : "transparent", color: layer === k ? "#5A98E3" : "#BDD6F4", fontSize: "12px", cursor: "pointer", textAlign: "left", fontFamily: "'DM Sans'", fontWeight: layer === k ? 600 : 400 }}>{l}</button>)}
+              <div style={{ padding: "6px 12px 4px", fontSize: "11px", color: "#BDD6F4", opacity: 0.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Map Style</div>
+              {[["standard", "🗺️ Standard"], ["topo", "📐 Topographical (OS/Harvey)"], ["satellite", "🛰️ Satellite"]].map(([k, l]) => <button key={k} onClick={() => setLayer(k)} style={{ display: "block", width: "100%", padding: "8px 12px", borderRadius: "8px", border: "none", background: layer === k ? "rgba(90,152,227,0.15)" : "transparent", color: layer === k ? "#5A98E3" : "#BDD6F4", fontSize: "14px", cursor: "pointer", textAlign: "left", fontFamily: "'DM Sans'", fontWeight: layer === k ? 600 : 400 }}>{l}</button>)}
               <div style={{ height: "1px", background: "rgba(90,152,227,0.1)", margin: "4px 0" }} />
-              <div style={{ padding: "6px 12px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Overlays</div>
-              <button onClick={() => setD3(!d3)} style={{ display: "flex", width: "100%", padding: "8px 12px", borderRadius: "8px", border: "none", alignItems: "center", gap: "8px", background: d3 ? "rgba(90,152,227,0.15)" : "transparent", color: d3 ? "#5A98E3" : "#BDD6F4", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans'" }}><Globe size={12} /> 3D Terrain</button>
-              {[["wind", "💨 Wind"], ["precip", "🌧️ Precipitation"], ["cloud", "☁️ Cloud Cover"]].map(([k, l]) => <button key={k} onClick={() => setWo(wo === k ? null : k)} style={{ display: "block", width: "100%", padding: "8px 12px", borderRadius: "8px", border: "none", background: wo === k ? "rgba(90,152,227,0.15)" : "transparent", color: wo === k ? "#5A98E3" : "#BDD6F4", fontSize: "12px", cursor: "pointer", textAlign: "left", fontFamily: "'DM Sans'" }}>{l}</button>)}
+              <div style={{ padding: "6px 12px 4px", fontSize: "11px", color: "#BDD6F4", opacity: 0.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Overlays</div>
+              <button onClick={() => setD3(!d3)} style={{ display: "flex", width: "100%", padding: "8px 12px", borderRadius: "8px", border: "none", alignItems: "center", gap: "8px", background: d3 ? "rgba(90,152,227,0.15)" : "transparent", color: d3 ? "#5A98E3" : "#BDD6F4", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans'" }}><Globe size={12} /> 3D Terrain</button>
+              {[["wind", "💨 Wind"], ["precip", "🌧️ Precipitation"], ["cloud", "☁️ Cloud Cover"]].map(([k, l]) => <button key={k} onClick={() => setWo(wo === k ? null : k)} style={{ display: "block", width: "100%", padding: "8px 12px", borderRadius: "8px", border: "none", background: wo === k ? "rgba(90,152,227,0.15)" : "transparent", color: wo === k ? "#5A98E3" : "#BDD6F4", fontSize: "14px", cursor: "pointer", textAlign: "left", fontFamily: "'DM Sans'" }}>{l}</button>)}
               <div style={{ height: "1px", background: "rgba(90,152,227,0.1)", margin: "4px 0" }} />
-              <div style={{ padding: "6px 12px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Community</div>
-              <button onClick={() => setSh(!sh)} style={{ display: "flex", width: "100%", padding: "8px 12px", borderRadius: "8px", border: "none", alignItems: "center", gap: "8px", background: sh ? "rgba(90,152,227,0.15)" : "transparent", color: sh ? "#5A98E3" : "#BDD6F4", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans'" }}><Eye size={12} /> Live Hikers ({HIKERS.length})</button>
-              <button onClick={() => setSc(!sc)} style={{ display: "flex", width: "100%", padding: "8px 12px", borderRadius: "8px", border: "none", alignItems: "center", gap: "8px", background: sc ? "rgba(90,152,227,0.15)" : "transparent", color: sc ? "#5A98E3" : "#BDD6F4", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans'" }}><Users size={12} /> Community Walks ({C_WALKS.length})</button>
+              <div style={{ padding: "6px 12px 4px", fontSize: "11px", color: "#BDD6F4", opacity: 0.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Community</div>
+              <button onClick={() => setSh(!sh)} style={{ display: "flex", width: "100%", padding: "8px 12px", borderRadius: "8px", border: "none", alignItems: "center", gap: "8px", background: sh ? "rgba(90,152,227,0.15)" : "transparent", color: sh ? "#5A98E3" : "#BDD6F4", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans'" }}><Eye size={12} /> Live Hikers ({HIKERS.length})</button>
+              <button onClick={() => setSc(!sc)} style={{ display: "flex", width: "100%", padding: "8px 12px", borderRadius: "8px", border: "none", alignItems: "center", gap: "8px", background: sc ? "rgba(90,152,227,0.15)" : "transparent", color: sc ? "#5A98E3" : "#BDD6F4", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans'" }}><Users size={12} /> Community Walks ({C_WALKS.length})</button>
             </div>
           )}
         </div>
       </div>
 
       {/* Unsure prompt */}
-      {wo && <div onClick={goHome} style={{ position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 56px)", left: "50%", transform: "translateX(-50%)", background: "rgba(232,93,58,.92)", backdropFilter: "blur(8px)", borderRadius: "20px", padding: "7px 18px", zIndex: 20, display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", animation: "fi .4s ease", border: "1px solid rgba(248,248,248,.15)" }}><span style={{ fontSize: "12px", color: "#F8F8F8", fontWeight: 600 }}>Unsure where to go?</span><ArrowRight size={14} color="#F8F8F8" /></div>}
+      {wo && <div onClick={goHome} style={{ position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 56px)", left: "50%", transform: "translateX(-50%)", background: "rgba(232,93,58,.92)", backdropFilter: "blur(8px)", borderRadius: "20px", padding: "7px 18px", zIndex: 20, display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", animation: "fi .4s ease", border: "1px solid rgba(248,248,248,.15)" }}><span style={{ fontSize: "14px", color: "#F8F8F8", fontWeight: 600 }}>Unsure where to go?</span><ArrowRight size={14} color="#F8F8F8" /></div>}
 
       {/* GPX route banner — shown when a route is active or loading */}
       {(gpxRoute || mapGpxLoading) && (
@@ -3586,30 +3586,30 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
           <div style={{ height: "2px", background: "linear-gradient(90deg,#E85D3A,transparent)" }} />
           <div style={{ padding: "10px 12px", display: "flex", alignItems: "center", gap: "10px" }}>
             <button onClick={onCloseGpx} style={{ background: "rgba(90,152,227,0.1)", border: "1px solid rgba(90,152,227,0.2)",
-              borderRadius: "8px", padding: "5px 10px", color: "#BDD6F4", fontSize: "11px", fontWeight: 600,
+              borderRadius: "8px", padding: "5px 10px", color: "#BDD6F4", fontSize: "13px", fontWeight: 600,
               cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "5px", flexShrink: 0 }}>
               ← Back
             </button>
             {mapGpxLoading ? (
               <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
                 <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#E85D3A", animation: "pulse 1s ease infinite" }} />
-                <span style={{ fontSize: "12px", color: "#BDD6F4", fontFamily: "'DM Sans'" }}>Loading route…</span>
+                <span style={{ fontSize: "14px", color: "#BDD6F4", fontFamily: "'DM Sans'" }}>Loading route…</span>
               </div>
             ) : gpxRoute && (
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{gpxRoute.route.name}</div>
-                <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, marginTop: "1px" }}>
+                <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{gpxRoute.route.name}</div>
+                <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, marginTop: "1px" }}>
                   {gpxRoute.route.dist}km · {gpxRoute.route.elev}m · {gpxRoute.route.diff}
                 </div>
               </div>
             )}
             {gpxRoute && !gpxRouteActive && (
-              <button onClick={() => setGpxRouteActive(true)} style={{ padding: "7px 14px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", flexShrink: 0, display: "flex", alignItems: "center", gap: "6px" }}>
+              <button onClick={() => setGpxRouteActive(true)} style={{ padding: "7px 14px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", flexShrink: 0, display: "flex", alignItems: "center", gap: "6px" }}>
                 <Play size={12} /> Start
               </button>
             )}
             {gpxRoute && gpxRouteActive && (
-              <button onClick={() => setGpxRouteActive(false)} style={{ padding: "7px 14px", borderRadius: "10px", border: "1px solid rgba(232,93,58,0.3)", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", flexShrink: 0 }}>
+              <button onClick={() => setGpxRouteActive(false)} style={{ padding: "7px 14px", borderRadius: "10px", border: "1px solid rgba(232,93,58,0.3)", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", flexShrink: 0 }}>
                 Stop
               </button>
             )}
@@ -3621,7 +3621,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       {gpxRoute && !gpxRouteActive && routeWeatherLoading && (
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 24, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px 16px 0 0", border: "1px solid rgba(90,152,227,0.15)", borderBottom: "none", padding: "14px 16px", textAlign: "center" }}>
           <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#5A98E3", margin: "0 auto 8px", animation: "pulse 1s ease infinite" }} />
-          <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5 }}>Calculating route forecast…</div>
+          <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.5 }}>Calculating route forecast…</div>
         </div>
       )}
       {gpxRoute && !gpxRouteActive && routeWeather && (
@@ -3680,12 +3680,12 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
               ["Est. Left", gpxRouteEta],
             ].map(([label, val]) => (
               <div key={label} style={{ textAlign: "center", padding: "10px 4px", background: "#0a2240", borderRadius: "10px" }}>
-                <div style={{ fontSize: "13px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
-                <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4, marginTop: "3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
+                <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
+                <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4, marginTop: "3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
               </div>
             ))}
           </div>
-          <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4, textAlign: "center" }}>
+          <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4, textAlign: "center" }}>
             Your position updates as you move · GPS must be enabled
           </div>
         </div>
@@ -3697,7 +3697,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
           zIndex: 21, padding: "8px 20px", borderRadius: "20px",
           background: "rgba(4,30,61,0.9)", backdropFilter: "blur(8px)",
           border: "1px solid rgba(90,152,227,0.2)",
-          color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer",
+          color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer",
           display: "flex", alignItems: "center", gap: "6px", fontFamily: "'DM Sans'"
         }}>
           <Navigation size={14} /> Track Walk
@@ -3725,9 +3725,9 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
             {statsCollapsed && (recording || paused) && (
               <div style={{ position: "absolute", left: "16px", right: "52px", display: "flex", gap: "12px", alignItems: "center" }}>
                 <span style={{ fontSize: "14px", fontWeight: 800, color: paused ? "#F49D37" : "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{fmtTime(elapsed)}</span>
-                <span style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.7 }}>{realDistDisplay}km</span>
-                <span style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.7 }}>+{realElevDisplay}m</span>
-                {paused && <span style={{ fontSize: "9px", color: "#F49D37", fontWeight: 700, letterSpacing: "0.5px" }}>PAUSED</span>}
+                <span style={{ fontSize: "14px", color: "#BDD6F4", opacity: 0.7 }}>{realDistDisplay}km</span>
+                <span style={{ fontSize: "14px", color: "#BDD6F4", opacity: 0.7 }}>+{realElevDisplay}m</span>
+                {paused && <span style={{ fontSize: "11px", color: "#F49D37", fontWeight: 700, letterSpacing: "0.5px" }}>PAUSED</span>}
               </div>
             )}
             <div style={{ marginLeft: "auto", color: "#BDD6F4", opacity: 0.4, flexShrink: 0 }}>
@@ -3744,7 +3744,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                 {(recording || paused) && (
                   <div style={{ textAlign: "center", marginBottom: "12px" }}>
                     <div style={{ fontSize: "32px", fontWeight: 800, color: paused ? "#F49D37" : "#F8F8F8", fontFamily: "'JetBrains Mono'", letterSpacing: "2px" }}>{fmtTime(elapsed)}</div>
-                    {paused && <div style={{ fontSize: "10px", color: "#F49D37", fontWeight: 600, marginTop: "2px" }}>PAUSED</div>}
+                    {paused && <div style={{ fontSize: "12px", color: "#F49D37", fontWeight: 600, marginTop: "2px" }}>PAUSED</div>}
                   </div>
                 )}
 
@@ -3757,8 +3757,8 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                     ["Speed", `${realSpeedDisplay}kph`, Zap],
                   ].map(([label, val]) => (
                     <div key={label} style={{ textAlign: "center", padding: "8px 4px", background: "#0a2240", borderRadius: "10px" }}>
-                      <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
-                      <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>{label}</div>
+                      <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
+                      <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4 }}>{label}</div>
                     </div>
                   ))}
                 </div>
@@ -3768,9 +3768,9 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                   <div style={{ padding: "10px 14px", borderRadius: "10px", background: "linear-gradient(135deg,rgba(107,203,119,0.18),rgba(90,152,227,0.1))", border: "1px solid rgba(107,203,119,0.35)", marginBottom: "10px", display: "flex", alignItems: "center", gap: "10px", animation: "su .3s ease" }}>
                     <div style={{ fontSize: "22px", flexShrink: 0 }}>⛰️</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "12px", fontWeight: 800, color: "#6BCB77" }}>Summit Reached!</div>
-                      <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", marginTop: "1px" }}>{summitToast.name}</div>
-                      <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6 }}>{summitToast.ht}m · {CLS[summitToast.cls]?.name || summitToast.cls}</div>
+                      <div style={{ fontSize: "14px", fontWeight: 800, color: "#6BCB77" }}>Summit Reached!</div>
+                      <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8", marginTop: "1px" }}>{summitToast.name}</div>
+                      <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6 }}>{summitToast.ht}m · {CLS[summitToast.cls]?.name || summitToast.cls}</div>
                     </div>
                     <button onClick={() => setSummitToast(null)} style={{ background: "none", border: "none", color: "#6BCB77", opacity: 0.5, cursor: "pointer", padding: "2px", flexShrink: 0 }}><X size={14} /></button>
                   </div>
@@ -3780,7 +3780,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                 {gpsError && (
                   <div style={{ padding: "8px 12px", borderRadius: "8px", background: "rgba(232,93,58,0.1)",
                     border: "1px solid rgba(232,93,58,0.2)", marginBottom: "10px",
-                    fontSize: "11px", color: "#E85D3A", display: "flex", alignItems: "center", gap: "6px" }}>
+                    fontSize: "13px", color: "#E85D3A", display: "flex", alignItems: "center", gap: "6px" }}>
                     <AlertTriangle size={12} /> {gpsError}
                   </div>
                 )}
@@ -3789,19 +3789,19 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                 <div style={{ display: "flex", gap: "8px" }}>
                   {!recording && !paused && (
                     <>
-                      <button onClick={() => { resetTracking(); setTrackMode(false); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
-                      <button onClick={() => { setRecording(true); }} style={{ flex: 2, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#6BCB77,#55a866)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                      <button onClick={() => { resetTracking(); setTrackMode(false); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
+                      <button onClick={() => { setRecording(true); }} style={{ flex: 2, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#6BCB77,#55a866)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                         <Play size={16} /> Start Recording
                       </button>
                     </>
                   )}
                   {recording && (
                     <>
-                      <button onClick={() => { setRecording(false); setPaused(true); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                      <button onClick={() => { setRecording(false); setPaused(true); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                         <Pause size={14} /> Stop
                       </button>
                       <div style={{ flex: 1, padding: "8px", borderRadius: "10px", background: "#0a2240", textAlign: "center" }}>
-                        <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.5 }}>
+                        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>
                           {gpxRoute ? "Est. finish" : "Pace"}
                         </div>
                         <div style={{ fontSize: "14px", fontWeight: 700, color: "#5A98E3", fontFamily: "'JetBrains Mono'" }}>
@@ -3831,10 +3831,10 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                   )}
                   {paused && (
                     <>
-                      <button onClick={() => { setPaused(false); setRecording(true); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#6BCB77,#55a866)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                      <button onClick={() => { setPaused(false); setRecording(true); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#6BCB77,#55a866)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                         <Play size={14} /> Resume
                       </button>
-                      <button onClick={() => { setPaused(false); setFinished(true); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#5A98E3,#4080cc)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                      <button onClick={() => { setPaused(false); setFinished(true); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#5A98E3,#4080cc)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                         <CheckCircle size={14} /> Finish
                       </button>
                     </>
@@ -3848,7 +3848,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
               <>
                 <div style={{ textAlign: "center", marginBottom: "14px" }}>
                   <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>Walk Complete!</div>
-                  <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>Great effort out there</div>
+                  <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>Great effort out there</div>
                 </div>
 
                 {/* Summary stats */}
@@ -3860,7 +3860,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                   ].map(([label, val]) => (
                     <div key={label} style={{ textAlign: "center", padding: "10px 4px", background: "#0a2240", borderRadius: "10px" }}>
                       <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
-                      <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4 }}>{label}</div>
+                      <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4 }}>{label}</div>
                     </div>
                   ))}
                 </div>
@@ -3871,55 +3871,55 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                   ].map(([label, val]) => (
                     <div key={label} style={{ textAlign: "center", padding: "10px 4px", background: "#0a2240", borderRadius: "10px" }}>
                       <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
-                      <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4 }}>{label}</div>
+                      <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4 }}>{label}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* Peaks detected */}
                 <div style={{ padding: "10px", background: "rgba(107,203,119,0.06)", borderRadius: "10px", border: "1px solid rgba(107,203,119,0.12)", marginBottom: "14px" }}>
-                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#6BCB77", marginBottom: "6px" }}>Peaks Detected</div>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#6BCB77", marginBottom: "6px" }}>Peaks Detected</div>
                   <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
                     {detectedPeaks.length > 0 ? detectedPeaks.map(pk => (
-                      <span key={pk.id} style={{ fontSize: "10px", padding: "3px 8px", borderRadius: "6px", background: "rgba(107,203,119,0.1)", color: "#6BCB77", fontWeight: 600, display: "flex", alignItems: "center", gap: "3px" }}>
+                      <span key={pk.id} style={{ fontSize: "12px", padding: "3px 8px", borderRadius: "6px", background: "rgba(107,203,119,0.1)", color: "#6BCB77", fontWeight: 600, display: "flex", alignItems: "center", gap: "3px" }}>
                         <CheckCircle size={10} /> {pk.name}
                       </span>
                     )) : (
-                      <span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>No peaks detected on this route</span>
+                      <span style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>No peaks detected on this route</span>
                     )}
                   </div>
-                  <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "6px", fontStyle: "italic" }}>Peaks are auto-detected based on your route. You can adjust this in your summit log.</div>
+                  <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4, marginTop: "6px", fontStyle: "italic" }}>Peaks are auto-detected based on your route. You can adjust this in your summit log.</div>
                 </div>
 
                 {/* Activity name */}
                 <div style={{ marginBottom: "10px" }}>
-                  <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Activity Name</label>
-                  <input type="text" placeholder="e.g. Ben Lomond via Ptarmigan Ridge" value={actName} onChange={e => setActName(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'" }} />
+                  <label style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Activity Name</label>
+                  <input type="text" placeholder="e.g. Ben Lomond via Ptarmigan Ridge" value={actName} onChange={e => setActName(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "14px", outline: "none", fontFamily: "'DM Sans'" }} />
                 </div>
 
                 {/* Description */}
                 <div style={{ marginBottom: "10px" }}>
-                  <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Description (optional)</label>
-                  <textarea placeholder="How was the walk? Conditions, highlights, memorable moments..." value={actDesc} onChange={e => setActDesc(e.target.value)} rows={3} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", resize: "none" }} />
+                  <label style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Description (optional)</label>
+                  <textarea placeholder="How was the walk? Conditions, highlights, memorable moments..." value={actDesc} onChange={e => setActDesc(e.target.value)} rows={3} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "14px", outline: "none", fontFamily: "'DM Sans'", resize: "none" }} />
                 </div>
 
                 {/* Route preview map */}
                 {trackPointsRef.current.length > 2 && (
                   <div style={{ marginBottom: "10px" }}>
-                    <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "6px" }}>Your Route</label>
+                    <label style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "6px" }}>Your Route</label>
                     <RoutePreview points={trackPointsRef.current.map(p => [p.lng, p.lat])} />
                   </div>
                 )}
 
                 {/* Add photos */}
-                <button onClick={() => setActPhotos(p => p + 1)} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px dashed rgba(90,152,227,0.25)", background: "transparent", color: "#BDD6F4", fontSize: "11px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontFamily: "'DM Sans'", marginBottom: "14px" }}>
+                <button onClick={() => setActPhotos(p => p + 1)} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px dashed rgba(90,152,227,0.25)", background: "transparent", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontFamily: "'DM Sans'", marginBottom: "14px" }}>
                   <Camera size={14} /> {actPhotos > 0 ? `${actPhotos} photo${actPhotos > 1 ? "s" : ""} added — tap to add more` : "Add Photos"}
                 </button>
 
                 {/* Save buttons */}
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <button onClick={() => { resetTracking(); setTrackMode(false); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Discard</button>
-                  <button onClick={() => { if (onSaveWalk) onSaveWalk({ name: actName || "Untitled Walk", desc: actDesc, dist: realDistDisplay, elev: realElevDisplay, time: fmtTime(elapsed), movingTime: fmtTime(movingTimeRef.current), avgSpeed: (realDist > 0 && elapsed > 0 ? (realDist / (elapsed / 3600)).toFixed(1) : "0.0"), peaks: detectedPeaks.map(p => p.name), photos: actPhotos, date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }), route: trackPointsRef.current.map(p => [p.lng, p.lat]) }); setSaved(true); }} style={{ flex: 2, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Save & Publish</button>
+                  <button onClick={() => { resetTracking(); setTrackMode(false); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Discard</button>
+                  <button onClick={() => { if (onSaveWalk) onSaveWalk({ name: actName || "Untitled Walk", desc: actDesc, dist: realDistDisplay, elev: realElevDisplay, time: fmtTime(elapsed), movingTime: fmtTime(movingTimeRef.current), avgSpeed: (realDist > 0 && elapsed > 0 ? (realDist / (elapsed / 3600)).toFixed(1) : "0.0"), peaks: detectedPeaks.map(p => p.name), photos: actPhotos, date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }), route: trackPointsRef.current.map(p => [p.lng, p.lat]) }); setSaved(true); }} style={{ flex: 2, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Save & Publish</button>
                 </div>
               </>
             )}
@@ -3929,10 +3929,10 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
               <div style={{ textAlign: "center", padding: "20px 0" }}>
                 <div style={{ fontSize: "36px", marginBottom: "10px" }}>🎉</div>
                 <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>Walk Saved!</div>
-                <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, marginTop: "4px", marginBottom: "16px" }}>Published to your profile and the community feed</div>
+                <div style={{ fontSize: "14px", color: "#BDD6F4", opacity: 0.6, marginTop: "4px", marginBottom: "16px" }}>Published to your profile and the community feed</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <button onClick={() => { setTrackMode(false); setFinished(false); setSaved(false); setRecording(false); setPaused(false); setElapsed(0); setActName(""); setActDesc(""); setActPhotos(0); goProfile("posts"); }} style={{ width: "100%", padding: "11px 24px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>View Activity</button>
-                  <button onClick={() => { setTrackMode(false); setFinished(false); setSaved(false); setRecording(false); setPaused(false); setElapsed(0); setActName(""); setActDesc(""); setActPhotos(0); }} style={{ width: "100%", padding: "11px 24px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Back to Map</button>
+                  <button onClick={() => { setTrackMode(false); setFinished(false); setSaved(false); setRecording(false); setPaused(false); setElapsed(0); setActName(""); setActDesc(""); setActPhotos(0); goProfile("posts"); }} style={{ width: "100%", padding: "11px 24px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>View Activity</button>
+                  <button onClick={() => { setTrackMode(false); setFinished(false); setSaved(false); setRecording(false); setPaused(false); setElapsed(0); setActName(""); setActDesc(""); setActPhotos(0); }} style={{ width: "100%", padding: "11px 24px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Back to Map</button>
                 </div>
               </div>
             )}
@@ -3947,21 +3947,21 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
           <div style={{ height: "4px", background: `linear-gradient(90deg,${CLS[sp.cls]?.color},transparent)` }} />
           <div style={{ padding: "14px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
-              <div><div style={{ fontSize: "17px", fontWeight: 800, color: "#F8F8F8" }}>{sp.name}</div><div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>{sp.ht}m · {sp.reg}</div></div>
+              <div><div style={{ fontSize: "17px", fontWeight: 800, color: "#F8F8F8" }}>{sp.name}</div><div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>{sp.ht}m · {sp.reg}</div></div>
               <button onClick={() => { setSp(null); }} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={13} /></button>
             </div>
-            <div style={{ display: "flex", gap: "6px", marginTop: "8px" }}><span style={{ fontSize: "9px", padding: "2px 8px", borderRadius: "6px", background: `${CLS[sp.cls]?.color}15`, color: CLS[sp.cls]?.color, fontWeight: 700 }}>{CLS[sp.cls]?.name}</span></div>
+            <div style={{ display: "flex", gap: "6px", marginTop: "8px" }}><span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "6px", background: `${CLS[sp.cls]?.color}15`, color: CLS[sp.cls]?.color, fontWeight: 700 }}>{CLS[sp.cls]?.name}</span></div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px", marginTop: "12px" }}>
-              {[["Feels", `${sp.w.f}°`, Thermometer, sp.w.f < -5 ? "#BDD6F4" : "#F8F8F8"], ["Wind", `${sp.w.wi}mph`, Wind, sp.w.wi > 35 ? "#E85D3A" : sp.w.wi >= 20 ? "#F49D37" : "#F8F8F8"], ["Rain", `${sp.w.p}mm`, Droplets, sp.w.p > 2 ? "#5A98E3" : "#F8F8F8"], ["Vis", sp.w.v, Eye, "#F8F8F8"]].map(([l, v, I, c]) => <div key={l} style={{ textAlign: "center", padding: "10px 4px", background: "#0a2240", borderRadius: "10px" }}><I size={14} color="#BDD6F4" style={{ opacity: 0.5 }} /><div style={{ fontSize: "14px", fontWeight: 700, color: c, marginTop: "3px" }}>{v}</div><div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4, marginTop: "1px" }}>{l}</div></div>)}
+              {[["Feels", `${sp.w.f}°`, Thermometer, sp.w.f < -5 ? "#BDD6F4" : "#F8F8F8"], ["Wind", `${sp.w.wi}mph`, Wind, sp.w.wi > 35 ? "#E85D3A" : sp.w.wi >= 20 ? "#F49D37" : "#F8F8F8"], ["Rain", `${sp.w.p}mm`, Droplets, sp.w.p > 2 ? "#5A98E3" : "#F8F8F8"], ["Vis", sp.w.v, Eye, "#F8F8F8"]].map(([l, v, I, c]) => <div key={l} style={{ textAlign: "center", padding: "10px 4px", background: "#0a2240", borderRadius: "10px" }}><I size={14} color="#BDD6F4" style={{ opacity: 0.5 }} /><div style={{ fontSize: "14px", fontWeight: 700, color: c, marginTop: "3px" }}>{v}</div><div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4, marginTop: "1px" }}>{l}</div></div>)}
             </div>
-            <button style={{ marginTop: "14px", width: "100%", padding: "11px", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", border: "none", borderRadius: "11px", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Log This Summit ⛰️</button>
+            <button style={{ marginTop: "14px", width: "100%", padding: "11px", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", border: "none", borderRadius: "11px", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Log This Summit ⛰️</button>
             {/* Routes for this peak */}
             {(() => {
               const peakRoutes = ROUTES.filter(r => r.peaks && r.peaks.includes(sp.name));
               if (!peakRoutes.length) return null;
               return (
                 <div style={{ marginTop: "10px", borderTop: "1px solid rgba(90,152,227,0.08)", paddingTop: "10px" }}>
-                  <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, fontWeight: 700, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Routes</div>
+                  <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, fontWeight: 700, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Routes</div>
                   {peakRoutes.map(r => (
                     <div key={r.id} onClick={() => openRoute && openRoute(r, "search")} style={{
                       display: "flex", alignItems: "center", gap: "6px", marginTop: "4px",
@@ -3971,10 +3971,10 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                       transition: "all .15s"
                     }}>
                       <Route size={10} color="#5A98E3" />
-                      <span style={{ flex: 1, fontSize: "10px", fontWeight: 600, color: "#5A98E3", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</span>
-                      <span style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5 }}>{r.dist}km · {r.diff}</span>
+                      <span style={{ flex: 1, fontSize: "12px", fontWeight: 600, color: "#5A98E3", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</span>
+                      <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5 }}>{r.dist}km · {r.diff}</span>
                       {r.gpx_file && (
-                        <span style={{ fontSize: "8px", padding: "1px 5px", borderRadius: "3px",
+                        <span style={{ fontSize: "10px", padding: "1px 5px", borderRadius: "3px",
                           background: "rgba(232,93,58,0.15)", color: "#E85D3A", fontWeight: 700 }}>
                           View route →
                         </span>
@@ -3993,16 +3993,16 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
           <div style={{ height: "4px", background: "linear-gradient(90deg,#5A98E3,transparent)" }} />
           <div style={{ padding: "14px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
-              <div><div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8" }}>{sw.title}</div><div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>by <span style={{ color: "#5A98E3" }}>@{sw.host}</span></div></div>
+              <div><div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8" }}>{sw.title}</div><div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>by <span style={{ color: "#5A98E3" }}>@{sw.host}</span></div></div>
               <button onClick={() => setSw(null)} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={13} /></button>
             </div>
             <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "10px" }}>
-              {[`📅 ${sw.date}`, `🕐 ${sw.time}`, sw.type === "Female only" ? "♀️ Female only" : "👥 Mixed", sw.diff, `🎂 ${sw.age}`].map((l, i) => <span key={i} style={{ fontSize: "10px", padding: "3px 8px", borderRadius: "8px", background: l === sw.diff ? `${dc(sw.diff)}15` : "#0a2240", color: l === sw.diff ? dc(sw.diff) : "#BDD6F4", fontWeight: 500 }}>{l}</span>)}
-              {sw.mutuals > 0 && <span style={{ fontSize: "10px", padding: "3px 8px", borderRadius: "8px", background: "rgba(90,152,227,0.1)", color: "#5A98E3", fontWeight: 600 }}>{sw.mutuals} mutual{sw.mutuals > 1 ? "s" : ""}</span>}
+              {[`📅 ${sw.date}`, `🕐 ${sw.time}`, sw.type === "Female only" ? "♀️ Female only" : "👥 Mixed", sw.diff, `🎂 ${sw.age}`].map((l, i) => <span key={i} style={{ fontSize: "12px", padding: "3px 8px", borderRadius: "8px", background: l === sw.diff ? `${dc(sw.diff)}15` : "#0a2240", color: l === sw.diff ? dc(sw.diff) : "#BDD6F4", fontWeight: 500 }}>{l}</span>)}
+              {sw.mutuals > 0 && <span style={{ fontSize: "12px", padding: "3px 8px", borderRadius: "8px", background: "rgba(90,152,227,0.1)", color: "#5A98E3", fontWeight: 600 }}>{sw.mutuals} mutual{sw.mutuals > 1 ? "s" : ""}</span>}
             </div>
-            <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "8px" }}>📍 Start: {sw.start}</div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "10px" }}><div style={{ flex: 1, height: "5px", borderRadius: "5px", background: "#0a2240" }}><div style={{ width: `${(sw.filled / sw.spots) * 100}%`, height: "100%", borderRadius: "5px", background: sw.filled >= sw.spots ? "#E85D3A" : "#5A98E3" }} /></div><span style={{ fontSize: "11px", color: "#BDD6F4", fontWeight: 600 }}>{sw.filled}/{sw.spots}</span></div>
-            {sw.filled < sw.spots && <button style={{ marginTop: "12px", width: "100%", padding: "11px", background: "linear-gradient(135deg,#5A98E3,#4080cc)", border: "none", borderRadius: "11px", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Join Walk</button>}
+            <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.5, marginTop: "8px" }}>📍 Start: {sw.start}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "10px" }}><div style={{ flex: 1, height: "5px", borderRadius: "5px", background: "#0a2240" }}><div style={{ width: `${(sw.filled / sw.spots) * 100}%`, height: "100%", borderRadius: "5px", background: sw.filled >= sw.spots ? "#E85D3A" : "#5A98E3" }} /></div><span style={{ fontSize: "13px", color: "#BDD6F4", fontWeight: 600 }}>{sw.filled}/{sw.spots}</span></div>
+            {sw.filled < sw.spots && <button style={{ marginTop: "12px", width: "100%", padding: "11px", background: "linear-gradient(135deg,#5A98E3,#4080cc)", border: "none", borderRadius: "11px", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Join Walk</button>}
           </div>
         </div>
       )}
@@ -4040,9 +4040,9 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
       {subTab === "learn" && (
         <div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
-            <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6 }}>Build your skills, stay safe on the hill</div>
+            <div style={{ fontSize: "15px", color: "#BDD6F4", opacity: 0.6 }}>Build your skills, stay safe on the hill</div>
             {Object.values(courseProgress).some(v => v > 0) && (
-              <button onClick={() => onCourseProgress && MODULES.forEach(m => onCourseProgress(m.id, 0))} style={{ background: "none", border: "1px solid rgba(232,93,58,0.25)", borderRadius: "8px", padding: "4px 10px", color: "#E85D3A", fontSize: "10px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: 0.7 }}>Reset</button>
+              <button onClick={() => onCourseProgress && MODULES.forEach(m => onCourseProgress(m.id, 0))} style={{ background: "none", border: "1px solid rgba(232,93,58,0.25)", borderRadius: "8px", padding: "4px 10px", color: "#E85D3A", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: 0.7 }}>Reset</button>
             )}
           </div>
           <div style={{ padding: "14px", marginBottom: "16px", borderRadius: "14px", background: "linear-gradient(135deg,rgba(90,152,227,0.12),rgba(107,203,119,0.06))", border: "1px solid rgba(90,152,227,0.15)" }}>
@@ -4054,7 +4054,7 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
                 const doneLessons = MODULES.reduce((a, m) => a + Math.min(courseProgress[m.id] ?? 0, m.les), 0);
                 const pctAll = totalLessons > 0 ? Math.round((doneLessons / totalLessons) * 100) : 0;
                 return (<>
-                  <div><div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>Your Progress</div><div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>{started} of {MODULES.length} started · {completed} completed</div></div>
+                  <div><div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>Your Progress</div><div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>{started} of {MODULES.length} started · {completed} completed</div></div>
                   <div style={{ fontSize: "24px", fontWeight: 800, color: "#5A98E3", fontFamily: "'JetBrains Mono'" }}>{pctAll}%</div>
                 </>);
               })()}
@@ -4072,15 +4072,15 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
                 <div style={{ padding: "14px", display: "flex", alignItems: "center", gap: "12px" }}>
                   <div style={{ width: "46px", height: "46px", borderRadius: "12px", background: pct === 100 ? "rgba(107,203,119,0.1)" : "#264f80", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", border: pct === 100 ? "1px solid rgba(107,203,119,0.2)" : "none" }}>{m.ic}</div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{m.title}</span>{pct === 100 && <CheckCircle size={13} color="#6BCB77" />}</div>
-                    <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5, marginTop: "2px" }}>{m.lvl} · {m.les} lessons · {m.time}</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px" }}><div style={{ flex: 1, height: "3px", borderRadius: "3px", background: "#264f80" }}><div style={{ width: `${pct}%`, height: "100%", borderRadius: "3px", background: pct === 100 ? "#6BCB77" : "#5A98E3" }} /></div><span style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, fontWeight: 600 }}>{doneLessons}/{m.les}</span></div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>{m.title}</span>{pct === 100 && <CheckCircle size={13} color="#6BCB77" />}</div>
+                    <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, marginTop: "2px" }}>{m.lvl} · {m.les} lessons · {m.time}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px" }}><div style={{ flex: 1, height: "3px", borderRadius: "3px", background: "#264f80" }}><div style={{ width: `${pct}%`, height: "100%", borderRadius: "3px", background: pct === 100 ? "#6BCB77" : "#5A98E3" }} /></div><span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, fontWeight: 600 }}>{doneLessons}/{m.les}</span></div>
                   </div>
                   <ChevronRight size={16} color="#BDD6F4" style={{ opacity: 0.4, transform: sel === m.id ? "rotate(90deg)" : "none", transition: ".2s" }} />
                 </div>
                 {sel === m.id && <div style={{ padding: "0 14px 14px", borderTop: "1px solid rgba(90,152,227,0.1)", paddingTop: "12px" }}>
-                  <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.5, marginBottom: "12px" }}>{m.desc}</div>
-                  <button onClick={() => { if (pct < 100 && onCourseProgress) { const next = Math.min(doneLessons + 1, m.les); onCourseProgress(m.id, next); } }} style={{ padding: "9px 22px", borderRadius: "10px", border: "none", background: pct === 100 ? "#264f80" : "linear-gradient(135deg,#5A98E3,#4080cc)", color: pct === 100 ? "#BDD6F4" : "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>{pct === 100 ? "Review" : pct > 0 ? "Continue" : "Start"}</button>
+                  <div style={{ fontSize: "14px", color: "#BDD6F4", lineHeight: 1.5, marginBottom: "12px" }}>{m.desc}</div>
+                  <button onClick={() => { if (pct < 100 && onCourseProgress) { const next = Math.min(doneLessons + 1, m.les); onCourseProgress(m.id, next); } }} style={{ padding: "9px 22px", borderRadius: "10px", border: "none", background: pct === 100 ? "#264f80" : "linear-gradient(135deg,#5A98E3,#4080cc)", color: pct === 100 ? "#BDD6F4" : "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>{pct === 100 ? "Review" : pct > 0 ? "Continue" : "Start"}</button>
                 </div>}
               </div>
             ); })}
@@ -4091,22 +4091,22 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
       {/* ═══ DISCOVER SUB-TAB ═══ */}
       {subTab === "discover" && (
         <div style={discView === "map" ? { flex: 1, display: "flex", flexDirection: "column" } : {}}>
-          <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, marginBottom: "12px" }}>Stories, history, and hidden gems from the hills</div>
+          <div style={{ fontSize: "15px", color: "#BDD6F4", opacity: 0.6, marginBottom: "12px" }}>Stories, history, and hidden gems from the hills</div>
 
           {/* View toggle */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
             <div style={{ display: "flex", gap: "4px" }}>
-              <button onClick={() => setDiscView("list")} style={{ padding: "5px 12px", borderRadius: "8px", border: "none", background: discView === "list" ? "rgba(90,152,227,0.2)" : "#0a2240", color: discView === "list" ? "#5A98E3" : "#BDD6F4", fontSize: "11px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'", opacity: discView === "list" ? 1 : 0.5 }}><List size={12} /> Articles</button>
-              <button onClick={() => setDiscView("map")} style={{ padding: "5px 12px", borderRadius: "8px", border: "none", background: discView === "map" ? "rgba(90,152,227,0.2)" : "#0a2240", color: discView === "map" ? "#5A98E3" : "#BDD6F4", fontSize: "11px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'", opacity: discView === "map" ? 1 : 0.5 }}><Map size={12} /> Map</button>
+              <button onClick={() => setDiscView("list")} style={{ padding: "5px 12px", borderRadius: "8px", border: "none", background: discView === "list" ? "rgba(90,152,227,0.2)" : "#0a2240", color: discView === "list" ? "#5A98E3" : "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'", opacity: discView === "list" ? 1 : 0.5 }}><List size={12} /> Articles</button>
+              <button onClick={() => setDiscView("map")} style={{ padding: "5px 12px", borderRadius: "8px", border: "none", background: discView === "map" ? "rgba(90,152,227,0.2)" : "#0a2240", color: discView === "map" ? "#5A98E3" : "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'", opacity: discView === "map" ? 1 : 0.5 }}><Map size={12} /> Map</button>
             </div>
-            <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>{filteredArticles.length} stories</div>
+            <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>{filteredArticles.length} stories</div>
           </div>
 
           {/* Category chips */}
           <div style={{ display: "flex", gap: "4px", marginBottom: "12px", flexWrap: "wrap" }}>
-            <button onClick={() => setDiscCat(null)} style={{ padding: "4px 10px", borderRadius: "12px", border: `1px solid ${!discCat ? "rgba(248,248,248,0.2)" : "rgba(90,152,227,0.1)"}`, background: !discCat ? "rgba(248,248,248,0.08)" : "transparent", color: !discCat ? "#F8F8F8" : "#BDD6F4", fontSize: "10px", cursor: "pointer", fontWeight: !discCat ? 700 : 400, fontFamily: "'DM Sans'", opacity: discCat ? 0.5 : 1 }}>All</button>
+            <button onClick={() => setDiscCat(null)} style={{ padding: "4px 10px", borderRadius: "12px", border: `1px solid ${!discCat ? "rgba(248,248,248,0.2)" : "rgba(90,152,227,0.1)"}`, background: !discCat ? "rgba(248,248,248,0.08)" : "transparent", color: !discCat ? "#F8F8F8" : "#BDD6F4", fontSize: "12px", cursor: "pointer", fontWeight: !discCat ? 700 : 400, fontFamily: "'DM Sans'", opacity: discCat ? 0.5 : 1 }}>All</button>
             {categories.map(c => (
-              <button key={c} onClick={() => setDiscCat(discCat === c ? null : c)} style={{ padding: "4px 10px", borderRadius: "12px", border: `1px solid ${discCat === c ? "#E85D3A" : "rgba(90,152,227,0.1)"}`, background: discCat === c ? "rgba(232,93,58,0.12)" : "transparent", color: discCat === c ? "#E85D3A" : "#BDD6F4", fontSize: "10px", cursor: "pointer", fontWeight: discCat === c ? 700 : 400, fontFamily: "'DM Sans'", opacity: discCat === c ? 1 : 0.5 }}>{c}</button>
+              <button key={c} onClick={() => setDiscCat(discCat === c ? null : c)} style={{ padding: "4px 10px", borderRadius: "12px", border: `1px solid ${discCat === c ? "#E85D3A" : "rgba(90,152,227,0.1)"}`, background: discCat === c ? "rgba(232,93,58,0.12)" : "transparent", color: discCat === c ? "#E85D3A" : "#BDD6F4", fontSize: "12px", cursor: "pointer", fontWeight: discCat === c ? 700 : 400, fontFamily: "'DM Sans'", opacity: discCat === c ? 1 : 0.5 }}>{c}</button>
             ))}
           </div>
 
@@ -4122,20 +4122,20 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
                   <div style={{ padding: "14px", display: "flex", gap: "12px" }}>
                     <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "#264f80", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", flexShrink: 0 }}>{a.icon}</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", lineHeight: 1.3 }}>{a.title}</div>
+                      <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8", lineHeight: 1.3 }}>{a.title}</div>
                       <div style={{ display: "flex", gap: "6px", marginTop: "4px", alignItems: "center", flexWrap: "wrap" }}>
-                        <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>{a.cat}</span>
-                        <span style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5 }}>{a.region}</span>
-                        <span style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4 }}>· {a.read}</span>
+                        <span style={{ fontSize: "11px", padding: "1px 6px", borderRadius: "4px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>{a.cat}</span>
+                        <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5 }}>{a.region}</span>
+                        <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4 }}>· {a.read}</span>
                       </div>
                     </div>
                   </div>
                   {selArticle?.id === a.id && (
                     <div style={{ padding: "0 14px 14px", borderTop: "1px solid rgba(90,152,227,0.08)", paddingTop: "12px" }}>
-                      <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.6, marginBottom: "10px", fontStyle: "italic" }}>"{a.excerpt}"</div>
+                      <div style={{ fontSize: "14px", color: "#BDD6F4", lineHeight: 1.6, marginBottom: "10px", fontStyle: "italic" }}>"{a.excerpt}"</div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>By <span style={{ color: "#5A98E3", fontWeight: 600 }}>{a.author}</span></div>
-                        <button onClick={(e) => { e.stopPropagation(); setReadingArticle(a); }} style={{ padding: "7px 16px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Read Story</button>
+                        <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>By <span style={{ color: "#5A98E3", fontWeight: 600 }}>{a.author}</span></div>
+                        <button onClick={(e) => { e.stopPropagation(); setReadingArticle(a); }} style={{ padding: "7px 16px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Read Story</button>
                       </div>
                     </div>
                   )}
@@ -4157,7 +4157,7 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
               <X size={16} />
             </button>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: "10px", color: "#5A98E3", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>{readingArticle.cat}</div>
+              <div style={{ fontSize: "12px", color: "#5A98E3", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>{readingArticle.cat}</div>
               <div style={{ fontSize: "14px", fontWeight: 800, color: "#F8F8F8", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{readingArticle.title}</div>
             </div>
             <div style={{ fontSize: "28px", flexShrink: 0 }}>{readingArticle.icon}</div>
@@ -4165,13 +4165,13 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
 
           {/* Hero band */}
           <div style={{ background: "linear-gradient(135deg,rgba(90,152,227,0.12),rgba(232,93,58,0.08))", borderBottom: "1px solid rgba(90,152,227,0.1)", padding: "18px 18px 16px" }}>
-            <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.55, marginBottom: "6px" }}>
+            <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.55, marginBottom: "6px" }}>
               {readingArticle.region}{readingArticle.peak ? ` · ${readingArticle.peak}` : ""} · {readingArticle.read}
             </div>
-            <div style={{ fontSize: "13px", color: "#BDD6F4", lineHeight: 1.65, fontStyle: "italic", borderLeft: "3px solid #E85D3A", paddingLeft: "12px" }}>
+            <div style={{ fontSize: "15px", color: "#BDD6F4", lineHeight: 1.65, fontStyle: "italic", borderLeft: "3px solid #E85D3A", paddingLeft: "12px" }}>
               "{readingArticle.excerpt}"
             </div>
-            <div style={{ marginTop: "12px", fontSize: "10px", color: "#BDD6F4", opacity: 0.4 }}>
+            <div style={{ marginTop: "12px", fontSize: "12px", color: "#BDD6F4", opacity: 0.4 }}>
               By <span style={{ color: "#5A98E3", fontWeight: 700, opacity: 1 }}>{readingArticle.author}</span>
             </div>
           </div>
@@ -4187,7 +4187,7 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
 
           {/* Footer */}
           <div style={{ padding: "16px 18px 32px", borderTop: "1px solid rgba(90,152,227,0.1)", display: "flex", justifyContent: "center" }}>
-            <button onClick={() => setReadingArticle(null)} style={{ padding: "11px 32px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg,#5A98E3,#4080cc)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+            <button onClick={() => setReadingArticle(null)} style={{ padding: "11px 32px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg,#5A98E3,#4080cc)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
               Close Article
             </button>
           </div>
@@ -4207,7 +4207,7 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
             border: "1px solid rgba(90,152,227,0.25)", borderRadius: "10px",
             padding: "8px 14px", color: "#F8F8F8", cursor: "pointer",
             display: "flex", alignItems: "center", gap: "6px",
-            fontSize: "13px", fontWeight: 700, fontFamily: "'DM Sans'",
+            fontSize: "15px", fontWeight: 700, fontFamily: "'DM Sans'",
             boxShadow: "0 2px 12px rgba(0,0,0,0.3)"
           }}
         >
@@ -4232,16 +4232,16 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
                       <span style={{ fontSize: "14px", fontWeight: 800, color: "#F8F8F8" }}>{selArticle.title}</span>
                     </div>
                     <div style={{ display: "flex", gap: "6px", marginTop: "4px", alignItems: "center" }}>
-                      <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>{selArticle.cat}</span>
-                      <span style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5 }}>{selArticle.region} · {selArticle.read}</span>
+                      <span style={{ fontSize: "11px", padding: "1px 6px", borderRadius: "4px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>{selArticle.cat}</span>
+                      <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5 }}>{selArticle.region} · {selArticle.read}</span>
                     </div>
                   </div>
                   <button onClick={(e) => { e.stopPropagation(); setSelArticle(null); }} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "26px", height: "26px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><X size={12} /></button>
                 </div>
-                <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.6, marginTop: "8px", fontStyle: "italic" }}>"{selArticle.excerpt}"</div>
+                <div style={{ fontSize: "14px", color: "#BDD6F4", lineHeight: 1.6, marginTop: "8px", fontStyle: "italic" }}>"{selArticle.excerpt}"</div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
-                  <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>By <span style={{ color: "#5A98E3", fontWeight: 600 }}>{selArticle.author}</span></div>
-                  <button onClick={(e) => { e.stopPropagation(); setReadingArticle(selArticle); }} style={{ padding: "8px 18px", borderRadius: "9px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Read Story</button>
+                  <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>By <span style={{ color: "#5A98E3", fontWeight: 600 }}>{selArticle.author}</span></div>
+                  <button onClick={(e) => { e.stopPropagation(); setReadingArticle(selArticle); }} style={{ padding: "8px 18px", borderRadius: "9px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Read Story</button>
                 </div>
               </div>
             </div>
@@ -4301,7 +4301,7 @@ const RoutePreview = ({ points, height = 150 }) => {
       </svg>
       <div style={{ position: "absolute", bottom: "6px", right: "8px", display: "flex", gap: "10px", background: "rgba(4,30,61,0.72)", backdropFilter: "blur(6px)", borderRadius: "6px", padding: "3px 8px" }}>
         {[["#6BCB77","Start"],["#E85D3A","Finish"]].map(([c, l]) => (
-          <span key={l} style={{ fontSize: "9px", color: "#F8F8F8", display: "flex", alignItems: "center", gap: "4px" }}>
+          <span key={l} style={{ fontSize: "11px", color: "#F8F8F8", display: "flex", alignItems: "center", gap: "4px" }}>
             <span style={{ width: 7, height: 7, borderRadius: "50%", background: c, display: "inline-block" }} />{l}
           </span>
         ))}
@@ -4342,19 +4342,19 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
   );
   const UnitTog = ({ leftLabel, rightLabel, value, leftVal, rightVal, onChange }) => (
     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-      <span style={{ fontSize: "11px", fontWeight: value === leftVal ? 700 : 400, color: value === leftVal ? "#F8F8F8" : "#BDD6F4", opacity: value === leftVal ? 1 : 0.45 }}>{leftLabel}</span>
+      <span style={{ fontSize: "13px", fontWeight: value === leftVal ? 700 : 400, color: value === leftVal ? "#F8F8F8" : "#BDD6F4", opacity: value === leftVal ? 1 : 0.45 }}>{leftLabel}</span>
       <div onClick={() => onChange(value === leftVal ? rightVal : leftVal)} style={{ width: "46px", height: "26px", borderRadius: "13px", background: value === rightVal ? "#5A98E3" : "rgba(90,152,227,0.15)", cursor: "pointer", position: "relative", transition: "background .2s", border: "1px solid rgba(90,152,227,0.2)" }}>
         <div style={{ position: "absolute", top: "2px", left: value === rightVal ? "22px" : "2px", width: "20px", height: "20px", borderRadius: "50%", background: "#F8F8F8", transition: "left .2s", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
       </div>
-      <span style={{ fontSize: "11px", fontWeight: value === rightVal ? 700 : 400, color: value === rightVal ? "#F8F8F8" : "#BDD6F4", opacity: value === rightVal ? 1 : 0.45 }}>{rightLabel}</span>
+      <span style={{ fontSize: "13px", fontWeight: value === rightVal ? 700 : 400, color: value === rightVal ? "#F8F8F8" : "#BDD6F4", opacity: value === rightVal ? 1 : 0.45 }}>{rightLabel}</span>
     </div>
   );
   const Row = ({ label, sub, icon, onClick, right, danger, noBorder }) => (
     <div onClick={right ? undefined : onClick} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 0", cursor: (onClick && !right) ? "pointer" : "default", borderBottom: noBorder ? "none" : "1px solid rgba(90,152,227,0.07)" }}>
       {icon && <div style={{ width: "32px", height: "32px", borderRadius: "9px", background: danger ? "rgba(232,93,58,0.1)" : "rgba(90,152,227,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "15px" }}>{icon}</div>}
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: "13px", fontWeight: 600, color: danger ? "#E85D3A" : "#F8F8F8", fontFamily: "'DM Sans'" }}>{label}</div>
-        {sub && <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5, marginTop: "2px", lineHeight: 1.4 }}>{sub}</div>}
+        <div style={{ fontSize: "15px", fontWeight: 600, color: danger ? "#E85D3A" : "#F8F8F8", fontFamily: "'DM Sans'" }}>{label}</div>
+        {sub && <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, marginTop: "2px", lineHeight: 1.4 }}>{sub}</div>}
       </div>
       {right || (onClick && !right ? <svg width="7" height="12" viewBox="0 0 7 12" fill="none"><path d="M1 1l5 5-5 5" stroke="#BDD6F4" strokeWidth="1.5" strokeOpacity="0.35" strokeLinecap="round" strokeLinejoin="round"/></svg> : null)}
     </div>
@@ -4367,7 +4367,7 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
       <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'DM Sans'" }}>{title}</div>
     </div>
   );
-  const Sec = ({ title }) => <div style={{ fontSize: "9px", fontWeight: 700, color: "#5A98E3", letterSpacing: "0.08em", textTransform: "uppercase", marginTop: "20px", marginBottom: "4px", opacity: 0.75 }}>{title}</div>;
+  const Sec = ({ title }) => <div style={{ fontSize: "11px", fontWeight: 700, color: "#5A98E3", letterSpacing: "0.08em", textTransform: "uppercase", marginTop: "20px", marginBottom: "4px", opacity: 0.75 }}>{title}</div>;
 
   useEffect(() => {
     if (page === "activity" && !actLoaded && userId) {
@@ -4382,7 +4382,7 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: "20px", paddingTop: "6px" }}>
           <div>
             <div style={{ fontSize: "20px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'DM Sans'" }}>Settings</div>
-            <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.45, marginTop: "2px" }}>{userName}</div>
+            <div style={{ fontSize: "14px", color: "#BDD6F4", opacity: 0.45, marginTop: "2px" }}>{userName}</div>
           </div>
           <button onClick={onClose} style={{ background: "rgba(90,152,227,0.1)", border: "none", borderRadius: "50%", width: "32px", height: "32px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -4407,7 +4407,7 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
         <Row icon="⭐" label="Subscription" sub="Plans and billing" onClick={() => setPage("subscription")} />
         <Row icon="💳" label="Payment" sub="Payment methods" onClick={() => setPage("payment")} />
         <div style={{ marginTop: "24px", paddingBottom: "8px" }}>
-          <button onClick={onSignOut} style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "1px solid rgba(232,93,58,0.2)", background: "rgba(232,93,58,0.05)", color: "#E85D3A", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Sign Out</button>
+          <button onClick={onSignOut} style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "1px solid rgba(232,93,58,0.2)", background: "rgba(232,93,58,0.05)", color: "#E85D3A", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Sign Out</button>
         </div>
       </>
     );
@@ -4422,22 +4422,22 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
             { label: "Location", val: epLocation, set: setEpLocation, placeholder: "e.g. Scottish Highlands", type: "text" },
           ].map(({ label, val, set, placeholder, type }) => (
             <div key={label}>
-              <div style={{ fontSize: "11px", fontWeight: 600, color: "#BDD6F4", opacity: 0.55, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
+              <div style={{ fontSize: "13px", fontWeight: 600, color: "#BDD6F4", opacity: 0.55, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
               <input
                 type={type} value={val} onChange={e => set(e.target.value)} placeholder={placeholder}
-                style={{ width: "100%", padding: "11px 13px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#F8F8F8", fontSize: "13px", fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }}
+                style={{ width: "100%", padding: "11px 13px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }}
               />
             </div>
           ))}
           <div>
-            <div style={{ fontSize: "11px", fontWeight: 600, color: "#BDD6F4", opacity: 0.55, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Bio</div>
+            <div style={{ fontSize: "13px", fontWeight: 600, color: "#BDD6F4", opacity: 0.55, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Bio</div>
             <textarea
               value={epBio} onChange={e => setEpBio(e.target.value)} placeholder="A short bio..." rows={3}
-              style={{ width: "100%", padding: "11px 13px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#F8F8F8", fontSize: "13px", fontFamily: "'DM Sans'", outline: "none", resize: "none", boxSizing: "border-box", lineHeight: 1.5 }}
+              style={{ width: "100%", padding: "11px 13px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", fontFamily: "'DM Sans'", outline: "none", resize: "none", boxSizing: "border-box", lineHeight: 1.5 }}
             />
           </div>
           {epMsg && (
-            <div style={{ padding: "10px 12px", borderRadius: "8px", background: epMsg.ok ? "rgba(107,203,119,0.1)" : "rgba(232,93,58,0.1)", border: `1px solid ${epMsg.ok ? "rgba(107,203,119,0.25)" : "rgba(232,93,58,0.25)"}`, color: epMsg.ok ? "#6BCB77" : "#E85D3A", fontSize: "12px", fontWeight: 600 }}>
+            <div style={{ padding: "10px 12px", borderRadius: "8px", background: epMsg.ok ? "rgba(107,203,119,0.1)" : "rgba(232,93,58,0.1)", border: `1px solid ${epMsg.ok ? "rgba(107,203,119,0.25)" : "rgba(232,93,58,0.25)"}`, color: epMsg.ok ? "#6BCB77" : "#E85D3A", fontSize: "14px", fontWeight: 600 }}>
               {epMsg.text}
             </div>
           )}
@@ -4469,10 +4469,10 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
         <Hdr title="Account & Security" />
         <Sec title="Change Password" />
         <div style={{ background: "#0a2240", borderRadius: "12px", padding: "14px", marginBottom: "4px" }}>
-          <input type="password" placeholder="Current password" value={pwCur} onChange={e => setPwCur(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.15)", background: "#041e3d", color: "#F8F8F8", fontSize: "13px", fontFamily: "'DM Sans'", outline: "none", marginBottom: "8px", boxSizing: "border-box" }} />
-          <input type="password" placeholder="New password" value={pwNew} onChange={e => setPwNew(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.15)", background: "#041e3d", color: "#F8F8F8", fontSize: "13px", fontFamily: "'DM Sans'", outline: "none", marginBottom: "8px", boxSizing: "border-box" }} />
-          <input type="password" placeholder="Confirm new password" value={pwConf} onChange={e => setPwConf(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.15)", background: "#041e3d", color: "#F8F8F8", fontSize: "13px", fontFamily: "'DM Sans'", outline: "none", marginBottom: "10px", boxSizing: "border-box" }} />
-          {pwMsg && <div style={{ fontSize: "11px", color: pwMsg.ok ? "#6BCB77" : "#E85D3A", marginBottom: "8px" }}>{pwMsg.text}</div>}
+          <input type="password" placeholder="Current password" value={pwCur} onChange={e => setPwCur(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.15)", background: "#041e3d", color: "#F8F8F8", fontSize: "15px", fontFamily: "'DM Sans'", outline: "none", marginBottom: "8px", boxSizing: "border-box" }} />
+          <input type="password" placeholder="New password" value={pwNew} onChange={e => setPwNew(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.15)", background: "#041e3d", color: "#F8F8F8", fontSize: "15px", fontFamily: "'DM Sans'", outline: "none", marginBottom: "8px", boxSizing: "border-box" }} />
+          <input type="password" placeholder="Confirm new password" value={pwConf} onChange={e => setPwConf(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.15)", background: "#041e3d", color: "#F8F8F8", fontSize: "15px", fontFamily: "'DM Sans'", outline: "none", marginBottom: "10px", boxSizing: "border-box" }} />
+          {pwMsg && <div style={{ fontSize: "13px", color: pwMsg.ok ? "#6BCB77" : "#E85D3A", marginBottom: "8px" }}>{pwMsg.text}</div>}
           <button onClick={async () => {
             if (!pwNew || pwNew !== pwConf) { setPwMsg({ ok: false, text: "Passwords don't match" }); return; }
             if (pwNew.length < 8) { setPwMsg({ ok: false, text: "Must be at least 8 characters" }); return; }
@@ -4481,7 +4481,7 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
             setPwLoading(false);
             if (error) setPwMsg({ ok: false, text: error.message });
             else { setPwMsg({ ok: true, text: "Password updated successfully!" }); setPwCur(""); setPwNew(""); setPwConf(""); }
-          }} disabled={pwLoading} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg,#5A98E3,#264f80)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: pwLoading ? 0.6 : 1 }}>
+          }} disabled={pwLoading} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg,#5A98E3,#264f80)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: pwLoading ? 0.6 : 1 }}>
             {pwLoading ? "Updating…" : "Update Password"}
           </button>
         </div>
@@ -4490,30 +4490,30 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
           <Row icon="⏸️" label="Deactivate Account" sub="Temporarily hide your profile — reactivate by signing in" onClick={() => setDeacStep(1)} />
         ) : (
           <div style={{ background: "rgba(90,152,227,0.05)", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.15)", padding: "14px", marginBottom: "4px" }}>
-            <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", marginBottom: "6px" }}>Deactivate your account?</div>
-            <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, marginBottom: "12px", lineHeight: 1.55 }}>Your profile will be hidden from the community. Your data is fully preserved. Sign back in at any time to reactivate.</div>
+            <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8", marginBottom: "6px" }}>Deactivate your account?</div>
+            <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, marginBottom: "12px", lineHeight: 1.55 }}>Your profile will be hidden from the community. Your data is fully preserved. Sign back in at any time to reactivate.</div>
             <div style={{ display: "flex", gap: "8px" }}>
-              <button onClick={() => setDeacStep(0)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
-              <button onClick={async () => { await supabase.auth.updateUser({ data: { deactivated: true } }); onSignOut(); }} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "none", background: "rgba(90,152,227,0.2)", color: "#5A98E3", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Deactivate</button>
+              <button onClick={() => setDeacStep(0)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
+              <button onClick={async () => { await supabase.auth.updateUser({ data: { deactivated: true } }); onSignOut(); }} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "none", background: "rgba(90,152,227,0.2)", color: "#5A98E3", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Deactivate</button>
             </div>
           </div>
         )}
         {delStep === 0 && <Row icon="🗑️" label="Delete Account" sub="Permanently delete all your data" onClick={() => setDelStep(1)} danger />}
         {delStep === 1 && (
           <div style={{ background: "rgba(232,93,58,0.05)", borderRadius: "12px", border: "1px solid rgba(232,93,58,0.2)", padding: "14px" }}>
-            <div style={{ fontSize: "13px", fontWeight: 700, color: "#E85D3A", marginBottom: "6px" }}>Are you sure?</div>
-            <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, marginBottom: "12px", lineHeight: 1.55 }}>This permanently deletes your profile, walks, stats and all associated data. This cannot be undone. We process deletion requests within 30 days (UK GDPR).</div>
+            <div style={{ fontSize: "15px", fontWeight: 700, color: "#E85D3A", marginBottom: "6px" }}>Are you sure?</div>
+            <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, marginBottom: "12px", lineHeight: 1.55 }}>This permanently deletes your profile, walks, stats and all associated data. This cannot be undone. We process deletion requests within 30 days (UK GDPR).</div>
             <div style={{ display: "flex", gap: "8px" }}>
-              <button onClick={() => setDelStep(0)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
-              <button onClick={() => setDelStep(2)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "none", background: "#E85D3A", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Yes, Delete</button>
+              <button onClick={() => setDelStep(0)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
+              <button onClick={() => setDelStep(2)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "none", background: "#E85D3A", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Yes, Delete</button>
             </div>
           </div>
         )}
         {delStep === 2 && (
           <div style={{ background: "rgba(232,93,58,0.05)", borderRadius: "12px", border: "1px solid rgba(232,93,58,0.2)", padding: "14px" }}>
-            <div style={{ fontSize: "13px", fontWeight: 700, color: "#6BCB77", marginBottom: "6px" }}>Request submitted</div>
-            <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.55, marginBottom: "12px" }}>We'll delete all your data within 30 days and send a confirmation to your email. You'll be signed out now.</div>
-            <button onClick={async () => { await supabase.auth.updateUser({ data: { deletion_requested: true, deletion_requested_at: new Date().toISOString() } }); onSignOut(); }} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "none", background: "#E85D3A", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Sign Out & Submit</button>
+            <div style={{ fontSize: "15px", fontWeight: 700, color: "#6BCB77", marginBottom: "6px" }}>Request submitted</div>
+            <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.55, marginBottom: "12px" }}>We'll delete all your data within 30 days and send a confirmation to your email. You'll be signed out now.</div>
+            <button onClick={async () => { await supabase.auth.updateUser({ data: { deletion_requested: true, deletion_requested_at: new Date().toISOString() } }); onSignOut(); }} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "none", background: "#E85D3A", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Sign Out & Submit</button>
           </div>
         )}
       </>
@@ -4523,21 +4523,21 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
       <>
         <Hdr title="Your Activity" />
         {!actLoaded ? (
-          <div style={{ textAlign: "center", padding: "50px 0", color: "#BDD6F4", opacity: 0.4, fontSize: "12px" }}>Loading…</div>
+          <div style={{ textAlign: "center", padding: "50px 0", color: "#BDD6F4", opacity: 0.4, fontSize: "14px" }}>Loading…</div>
         ) : comments.length === 0 ? (
           <div style={{ textAlign: "center", padding: "50px 0" }}>
             <div style={{ fontSize: "36px", marginBottom: "12px" }}>💬</div>
-            <div style={{ fontSize: "13px", fontWeight: 600, color: "#F8F8F8", marginBottom: "4px" }}>No comments yet</div>
-            <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.45 }}>Your comments on community posts will appear here</div>
+            <div style={{ fontSize: "15px", fontWeight: 600, color: "#F8F8F8", marginBottom: "4px" }}>No comments yet</div>
+            <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.45 }}>Your comments on community posts will appear here</div>
           </div>
         ) : (
           <>
             <Sec title={`Your Comments (${comments.length})`} />
             {comments.map((c, i) => (
               <div key={i} style={{ padding: "11px 0", borderBottom: "1px solid rgba(90,152,227,0.07)" }}>
-                <div style={{ fontSize: "12px", color: "#F8F8F8", marginBottom: "4px", lineHeight: 1.4 }}>"{c.text}"</div>
-                {c.posts?.text && <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.45, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>On: {c.posts.text}</div>}
-                <div style={{ fontSize: "9px", color: "#5A98E3", marginTop: "4px", opacity: 0.6 }}>{new Date(c.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</div>
+                <div style={{ fontSize: "14px", color: "#F8F8F8", marginBottom: "4px", lineHeight: 1.4 }}>"{c.text}"</div>
+                {c.posts?.text && <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.45, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>On: {c.posts.text}</div>}
+                <div style={{ fontSize: "11px", color: "#5A98E3", marginTop: "4px", opacity: 0.6 }}>{new Date(c.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</div>
               </div>
             ))}
           </>
@@ -4550,12 +4550,12 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
         <Hdr title="Privacy" />
         <Sec title="Profile Visibility" />
         <Row label="Public Profile" sub="Anyone can view your profile and walks" right={<Tog on={privPublic} onToggle={() => { const v = !privPublic; setPrivPublic(v); sp("ts_pub", v); }} />} />
-        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.45, marginTop: "8px", lineHeight: 1.55, marginBottom: "4px" }}>When private, only people you approve can view your walks and stats. Your name still appears on shared summits.</div>
+        <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.45, marginTop: "8px", lineHeight: 1.55, marginBottom: "4px" }}>When private, only people you approve can view your walks and stats. Your name still appears on shared summits.</div>
         <Sec title="Live Hikers Map" />
         <Row label="Appear on Live Map" sub="Show your location to other TrailSync users during walks" right={<Tog on={liveHikers} onToggle={() => { const v = !liveHikers; setLiveHikers(v); sp("ts_live", v); }} />} />
         <div style={{ background: "rgba(90,152,227,0.05)", borderRadius: "10px", padding: "12px", marginTop: "10px", border: "1px solid rgba(90,152,227,0.1)" }}>
-          <div style={{ fontSize: "11px", fontWeight: 700, color: "#5A98E3", marginBottom: "5px" }}>How Live Hikers works</div>
-          <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.6 }}>When enabled, your approximate position appears as a dot on the live map during an active walk. Your exact GPS coordinates are never stored — only a rounded position (~100m accuracy). This updates every 30 seconds and stops automatically when you end your walk. Only logged-in TrailSync users can see live hikers.</div>
+          <div style={{ fontSize: "13px", fontWeight: 700, color: "#5A98E3", marginBottom: "5px" }}>How Live Hikers works</div>
+          <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.6 }}>When enabled, your approximate position appears as a dot on the live map during an active walk. Your exact GPS coordinates are never stored — only a rounded position (~100m accuracy). This updates every 30 seconds and stops automatically when you end your walk. Only logged-in TrailSync users can see live hikers.</div>
         </div>
       </>
     );
@@ -4573,8 +4573,8 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
             <div key={u.label}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0" }}>
                 <div>
-                  <div style={{ fontSize: "13px", fontWeight: 600, color: "#F8F8F8" }}>{u.label}</div>
-                  <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.45, marginTop: "1px" }}>{u.sub}</div>
+                  <div style={{ fontSize: "15px", fontWeight: 600, color: "#F8F8F8" }}>{u.label}</div>
+                  <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.45, marginTop: "1px" }}>{u.sub}</div>
                 </div>
                 <UnitTog {...u} />
               </div>
@@ -4582,7 +4582,7 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
             </div>
           ))}
         </div>
-        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4, marginTop: "10px", lineHeight: 1.5 }}>Changes apply immediately across the app. Stored walk data is not modified.</div>
+        <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4, marginTop: "10px", lineHeight: 1.5 }}>Changes apply immediately across the app. Stored walk data is not modified.</div>
       </>
     );
 
@@ -4592,7 +4592,7 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
         <div style={{ background: "#0a2240", borderRadius: "12px", padding: "18px", marginBottom: "14px", textAlign: "center" }}>
           <div style={{ fontSize: "32px", marginBottom: "10px" }}>📍</div>
           <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8", marginBottom: "6px" }}>GPS Required for Walk Tracking</div>
-          <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.55, lineHeight: 1.6 }}>TrailSync uses GPS to track walks, detect summits, and show your position on the map. Location is only active during a recording.</div>
+          <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.55, lineHeight: 1.6 }}>TrailSync uses GPS to track walks, detect summits, and show your position on the map. Location is only active during a recording.</div>
         </div>
         <button onClick={() => {
           if (navigator.permissions) {
@@ -4603,16 +4603,16 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
           } else {
             navigator.geolocation.getCurrentPosition(() => alert("Location is working correctly!"), () => alert("Location unavailable. Check your settings."));
           }
-        }} style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg,#5A98E3,#264f80)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", marginBottom: "12px" }}>
+        }} style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg,#5A98E3,#264f80)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", marginBottom: "12px" }}>
           Check Location Permission
         </button>
         <div style={{ background: "rgba(90,152,227,0.06)", borderRadius: "10px", padding: "13px", marginBottom: "8px", border: "1px solid rgba(90,152,227,0.1)" }}>
-          <div style={{ fontSize: "11px", fontWeight: 700, color: "#5A98E3", marginBottom: "6px" }}>📱 Enable on iPhone</div>
-          <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.65, lineHeight: 1.65 }}>Settings → Privacy & Security → Location Services → Safari → While Using App<br/>Or: Settings → Safari → Location → Allow</div>
+          <div style={{ fontSize: "13px", fontWeight: 700, color: "#5A98E3", marginBottom: "6px" }}>📱 Enable on iPhone</div>
+          <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.65, lineHeight: 1.65 }}>Settings → Privacy & Security → Location Services → Safari → While Using App<br/>Or: Settings → Safari → Location → Allow</div>
         </div>
         <div style={{ background: "rgba(90,152,227,0.06)", borderRadius: "10px", padding: "13px", border: "1px solid rgba(90,152,227,0.1)" }}>
-          <div style={{ fontSize: "11px", fontWeight: 700, color: "#5A98E3", marginBottom: "6px" }}>🤖 Enable on Android</div>
-          <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.65, lineHeight: 1.65 }}>Settings → Apps → Chrome → Permissions → Location → Allow<br/>Or: tap the lock icon in your browser address bar → Location → Allow</div>
+          <div style={{ fontSize: "13px", fontWeight: 700, color: "#5A98E3", marginBottom: "6px" }}>🤖 Enable on Android</div>
+          <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.65, lineHeight: 1.65 }}>Settings → Apps → Chrome → Permissions → Location → Allow<br/>Or: tap the lock icon in your browser address bar → Location → Allow</div>
         </div>
       </>
     );
@@ -4621,19 +4621,19 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
       <>
         <Hdr title="Subscription" />
         <div style={{ background: "linear-gradient(135deg,rgba(90,152,227,0.08),rgba(107,203,119,0.04))", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.15)", padding: "18px", marginBottom: "16px", textAlign: "center" }}>
-          <div style={{ fontSize: "10px", fontWeight: 700, color: "#5A98E3", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px" }}>Current Plan</div>
+          <div style={{ fontSize: "12px", fontWeight: 700, color: "#5A98E3", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px" }}>Current Plan</div>
           <div style={{ fontSize: "24px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'DM Sans'" }}>Free</div>
-          <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.45, marginTop: "4px" }}>Basic access to TrailSync</div>
+          <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.45, marginTop: "4px" }}>Basic access to TrailSync</div>
         </div>
         <div style={{ background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(107,203,119,0.25)", padding: "16px", marginBottom: "10px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
             <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8" }}>Premium</div>
-            <div><span style={{ fontSize: "16px", fontWeight: 800, color: "#6BCB77" }}>£7.99</span><span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>/month</span></div>
+            <div><span style={{ fontSize: "16px", fontWeight: 800, color: "#6BCB77" }}>£7.99</span><span style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>/month</span></div>
           </div>
           {["Unlimited walk tracking", "Advanced stats & insights", "GPX import & export", "Offline maps", "AI route recommendations", "Fundraiser creation", "Live hiker visibility", "Priority support"].map(f => (
-            <div key={f} style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.7, marginBottom: "6px", display: "flex", alignItems: "center", gap: "7px" }}><span style={{ color: "#6BCB77", fontSize: "12px" }}>✓</span>{f}</div>
+            <div key={f} style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.7, marginBottom: "6px", display: "flex", alignItems: "center", gap: "7px" }}><span style={{ color: "#6BCB77", fontSize: "14px" }}>✓</span>{f}</div>
           ))}
-          <button style={{ width: "100%", marginTop: "14px", padding: "11px", borderRadius: "10px", border: "none", background: "rgba(107,203,119,0.12)", color: "#6BCB77", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Upgrade to Premium</button>
+          <button style={{ width: "100%", marginTop: "14px", padding: "11px", borderRadius: "10px", border: "none", background: "rgba(107,203,119,0.12)", color: "#6BCB77", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Upgrade to Premium</button>
         </div>
       </>
     );
@@ -4643,13 +4643,13 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
         <Hdr title="Payment" />
         <div style={{ background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.1)", padding: "20px", marginBottom: "14px", textAlign: "center" }}>
           <div style={{ fontSize: "36px", marginBottom: "12px" }}>💳</div>
-          <div style={{ fontSize: "13px", fontWeight: 600, color: "#F8F8F8", marginBottom: "6px" }}>No payment method on file</div>
-          <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.45, lineHeight: 1.5 }}>Payment details are added when you subscribe to Premium.</div>
+          <div style={{ fontSize: "15px", fontWeight: 600, color: "#F8F8F8", marginBottom: "6px" }}>No payment method on file</div>
+          <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.45, lineHeight: 1.5 }}>Payment details are added when you subscribe to Premium.</div>
         </div>
         <div style={{ background: "rgba(90,152,227,0.06)", borderRadius: "12px", padding: "16px", border: "1px solid rgba(90,152,227,0.1)" }}>
-          <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", marginBottom: "8px" }}>🍎 Subscribed via Apple Pay?</div>
-          <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.6, marginBottom: "12px" }}>Apple Pay subscriptions are billed and managed directly by Apple. We can't modify or cancel them from within the app — you'll need to manage this in your iPhone Settings.</div>
-          <button onClick={() => { try { window.location.href = "itms-apps://settings"; } catch { alert("Go to: iPhone Settings → [Your Name] → Subscriptions → TrailSync"); }}} style={{ width: "100%", padding: "11px", borderRadius: "9px", border: "none", background: "rgba(90,152,227,0.12)", color: "#5A98E3", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+          <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8", marginBottom: "8px" }}>🍎 Subscribed via Apple Pay?</div>
+          <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.6, marginBottom: "12px" }}>Apple Pay subscriptions are billed and managed directly by Apple. We can't modify or cancel them from within the app — you'll need to manage this in your iPhone Settings.</div>
+          <button onClick={() => { try { window.location.href = "itms-apps://settings"; } catch { alert("Go to: iPhone Settings → [Your Name] → Subscriptions → TrailSync"); }}} style={{ width: "100%", padding: "11px", borderRadius: "9px", border: "none", background: "rgba(90,152,227,0.12)", color: "#5A98E3", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
             Open iPhone Settings
           </button>
         </div>
@@ -4681,8 +4681,8 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
           { q: "Can I use TrailSync offline?", a: "Basic features work offline, but mapping and community features require an internet connection. Offline maps are available on the Premium plan." },
         ].map((item, i) => (
           <div key={i} style={{ marginBottom: "14px", background: "#0a2240", borderRadius: "12px", padding: "14px", border: "1px solid rgba(90,152,227,0.08)" }}>
-            <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", marginBottom: "7px" }}>{item.q}</div>
-            <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.65, lineHeight: 1.6 }}>{item.a}</div>
+            <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8", marginBottom: "7px" }}>{item.q}</div>
+            <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.65, lineHeight: 1.6 }}>{item.a}</div>
           </div>
         ))}
       </>
@@ -4691,7 +4691,7 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
     if (page === "legal-privacy") return (
       <>
         <Hdr title="Privacy Policy" />
-        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4, marginBottom: "16px" }}>Last updated: April 2026</div>
+        <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4, marginBottom: "16px" }}>Last updated: April 2026</div>
         {[
           { title: "What we collect", body: "We collect the information you provide when creating an account (name, email), your walk activity (routes, distance, elevation, peaks), and posts you make to the community feed. We also collect anonymised usage data to improve the app." },
           { title: "How we use it", body: "Your data is used to provide the TrailSync service — tracking your walks, displaying your stats, and powering community features. We do not sell your data to third parties or use it for advertising." },
@@ -4702,8 +4702,8 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
           { title: "Contact", body: "For privacy-related queries contact privacy@trailsync.app. We aim to respond within 5 working days." },
         ].map((s, i) => (
           <div key={i} style={{ marginBottom: "14px" }}>
-            <div style={{ fontSize: "12px", fontWeight: 700, color: "#5A98E3", marginBottom: "5px" }}>{s.title}</div>
-            <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.65, lineHeight: 1.65 }}>{s.body}</div>
+            <div style={{ fontSize: "14px", fontWeight: 700, color: "#5A98E3", marginBottom: "5px" }}>{s.title}</div>
+            <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.65, lineHeight: 1.65 }}>{s.body}</div>
           </div>
         ))}
       </>
@@ -4712,7 +4712,7 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
     if (page === "legal-gdpr") return (
       <>
         <Hdr title="GDPR & Your Rights" />
-        <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.55, lineHeight: 1.6, marginBottom: "16px" }}>Under UK GDPR you have the following rights regarding your personal data:</div>
+        <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.55, lineHeight: 1.6, marginBottom: "16px" }}>Under UK GDPR you have the following rights regarding your personal data:</div>
         {[
           { right: "Right of Access", desc: "Request a copy of all personal data we hold about you." },
           { right: "Right to Rectification", desc: "Ask us to correct inaccurate or incomplete data." },
@@ -4722,13 +4722,13 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
           { right: "Right to Object", desc: "Object to certain types of processing, including direct marketing." },
         ].map((r, i) => (
           <div key={i} style={{ padding: "12px 0", borderBottom: "1px solid rgba(90,152,227,0.07)" }}>
-            <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8", marginBottom: "4px" }}>{r.right}</div>
-            <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.5 }}>{r.desc}</div>
+            <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8", marginBottom: "4px" }}>{r.right}</div>
+            <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.5 }}>{r.desc}</div>
           </div>
         ))}
         <div style={{ background: "rgba(90,152,227,0.06)", borderRadius: "10px", padding: "13px", marginTop: "16px", border: "1px solid rgba(90,152,227,0.1)" }}>
-          <div style={{ fontSize: "11px", fontWeight: 700, color: "#5A98E3", marginBottom: "5px" }}>Exercise your rights</div>
-          <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.55 }}>Email privacy@trailsync.app or use Settings → Account & Security → Delete Account. We aim to respond within 30 days.</div>
+          <div style={{ fontSize: "13px", fontWeight: 700, color: "#5A98E3", marginBottom: "5px" }}>Exercise your rights</div>
+          <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.55 }}>Email privacy@trailsync.app or use Settings → Account & Security → Delete Account. We aim to respond within 30 days.</div>
         </div>
       </>
     );
@@ -4736,7 +4736,7 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
     if (page === "legal-terms") return (
       <>
         <Hdr title="Terms of Service" />
-        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4, marginBottom: "16px" }}>Last updated: April 2026</div>
+        <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4, marginBottom: "16px" }}>Last updated: April 2026</div>
         {[
           { title: "Acceptance", body: "By using TrailSync you agree to these terms. If you don't agree, please don't use the app." },
           { title: "Your account", body: "You're responsible for keeping your login credentials secure. Don't share your account or use it for anything illegal or harmful." },
@@ -4746,8 +4746,8 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
           { title: "Changes", body: "We may update these terms and will notify you of significant changes. Continued use after changes means acceptance." },
         ].map((s, i) => (
           <div key={i} style={{ marginBottom: "14px" }}>
-            <div style={{ fontSize: "12px", fontWeight: 700, color: "#5A98E3", marginBottom: "5px" }}>{s.title}</div>
-            <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.65, lineHeight: 1.65 }}>{s.body}</div>
+            <div style={{ fontSize: "14px", fontWeight: 700, color: "#5A98E3", marginBottom: "5px" }}>{s.title}</div>
+            <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.65, lineHeight: 1.65 }}>{s.body}</div>
           </div>
         ))}
       </>
@@ -5217,13 +5217,13 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
 
           {/* Header */}
           <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "calc(14px + env(safe-area-inset-top, 0px)) 16px 14px", borderBottom: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,0.95)", backdropFilter: "blur(12px)" }}>
-            <button onClick={() => setShowFollowers(null)} style={{ background: "rgba(90,152,227,0.1)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", padding: "7px 12px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600, fontFamily: "'DM Sans'" }}>
+            <button onClick={() => setShowFollowers(null)} style={{ background: "rgba(90,152,227,0.1)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", padding: "7px 12px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "15px", fontWeight: 600, fontFamily: "'DM Sans'" }}>
               <ChevronLeft size={16} /> Back
             </button>
             <div style={{ flex: 1, display: "flex", gap: "6px" }}>
               {["followers", "following"].map(t => (
-                <button key={t} onClick={() => setShowFollowers(t)} style={{ flex: 1, padding: "8px", borderRadius: "10px", border: "none", background: showFollowers === t ? "rgba(90,152,227,0.15)" : "transparent", color: showFollowers === t ? "#5A98E3" : "#BDD6F4", fontSize: "13px", fontWeight: showFollowers === t ? 700 : 500, cursor: "pointer", fontFamily: "'DM Sans'", textTransform: "capitalize" }}>
-                  {t} <span style={{ fontSize: "11px", opacity: 0.6 }}>({t === "followers" ? (followerCount ?? 0) : (followingCount ?? 0)})</span>
+                <button key={t} onClick={() => setShowFollowers(t)} style={{ flex: 1, padding: "8px", borderRadius: "10px", border: "none", background: showFollowers === t ? "rgba(90,152,227,0.15)" : "transparent", color: showFollowers === t ? "#5A98E3" : "#BDD6F4", fontSize: "15px", fontWeight: showFollowers === t ? 700 : 500, cursor: "pointer", fontFamily: "'DM Sans'", textTransform: "capitalize" }}>
+                  {t} <span style={{ fontSize: "13px", opacity: 0.6 }}>({t === "followers" ? (followerCount ?? 0) : (followingCount ?? 0)})</span>
                 </button>
               ))}
             </div>
@@ -5232,7 +5232,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
           {/* Filters */}
           <div style={{ display: "flex", gap: "6px", padding: "10px 16px 8px", borderBottom: "1px solid rgba(90,152,227,0.07)" }}>
             {[["recent", "Recent"], ["area", "By Area"], ["interacted", "Most Interacted"]].map(([k, l]) => (
-              <button key={k} onClick={() => setFollowerFilter(k)} style={{ padding: "5px 12px", borderRadius: "8px", border: "none", background: followerFilter === k ? "rgba(90,152,227,0.15)" : "rgba(90,152,227,0.05)", color: followerFilter === k ? "#5A98E3" : "#BDD6F4", fontSize: "11px", fontWeight: followerFilter === k ? 700 : 500, cursor: "pointer", fontFamily: "'DM Sans'" }}>{l}</button>
+              <button key={k} onClick={() => setFollowerFilter(k)} style={{ padding: "5px 12px", borderRadius: "8px", border: "none", background: followerFilter === k ? "rgba(90,152,227,0.15)" : "rgba(90,152,227,0.05)", color: followerFilter === k ? "#5A98E3" : "#BDD6F4", fontSize: "13px", fontWeight: followerFilter === k ? 700 : 500, cursor: "pointer", fontFamily: "'DM Sans'" }}>{l}</button>
             ))}
           </div>
 
@@ -5241,13 +5241,13 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             {listLoading ? (
               <div style={{ padding: "60px", textAlign: "center" }}>
                 <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#5A98E3", margin: "0 auto", animation: "pulse 1s ease infinite" }} />
-                <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4, marginTop: "12px" }}>Loading…</div>
+                <div style={{ fontSize: "14px", color: "#BDD6F4", opacity: 0.4, marginTop: "12px" }}>Loading…</div>
               </div>
             ) : (showFollowers === "followers" ? followerList : followingList).length === 0 ? (
               <div style={{ padding: "60px 24px", textAlign: "center" }}>
                 <Users size={40} color="#5A98E3" style={{ opacity: 0.2, marginBottom: "16px" }} />
                 <div style={{ fontSize: "16px", fontWeight: 700, color: "#F8F8F8", marginBottom: "8px" }}>No {showFollowers} yet</div>
-                <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.4, lineHeight: 1.5 }}>
+                <div style={{ fontSize: "15px", color: "#BDD6F4", opacity: 0.4, lineHeight: 1.5 }}>
                   {showFollowers === "followers" ? "When people follow you they'll appear here." : "Search for hikers and follow them to see their walks and summits."}
                 </div>
               </div>
@@ -5258,7 +5258,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{u.name || u.username}</div>
-                  <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "2px" }}>
+                  <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.5, marginTop: "2px" }}>
                     {u.username ? `@${u.username}` : ""}{u.location ? ` · ${u.location}` : ""}
                   </div>
                 </div>
@@ -5267,7 +5267,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                     padding: "7px 16px", borderRadius: "10px", cursor: "pointer", flexShrink: 0,
                     background: followingIds?.has(u.id) ? "transparent" : "linear-gradient(135deg,#E85D3A,#d04a2a)",
                     color: followingIds?.has(u.id) ? "#5A98E3" : "#F8F8F8",
-                    fontSize: "12px", fontWeight: 700, fontFamily: "'DM Sans'",
+                    fontSize: "14px", fontWeight: 700, fontFamily: "'DM Sans'",
                     border: followingIds?.has(u.id) ? "1px solid rgba(90,152,227,0.3)" : "none",
                   }}>
                     {followingIds?.has(u.id) ? "Following" : "Follow"}
@@ -5295,7 +5295,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: "20px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>{userName || ME.name}</div>
-          <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={{ fontSize: "14px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "6px" }}>
               <span>@{userName?.toLowerCase().replace(/\s+/g, "_") || ME.user}</span>
               {userLocation ? (
                 <span>· {userLocation}</span>
@@ -5310,12 +5310,12 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               )}
             </div>
           <div style={{ display: "flex", gap: "12px", marginTop: "4px" }}>
-            <span onClick={() => setShowFollowers("followers")} style={{ fontSize: "11px", color: "#BDD6F4", cursor: "pointer" }}><strong style={{ color: "#F8F8F8" }}>{followerCount ?? 0}</strong> followers</span>
-            <span onClick={() => setShowFollowers("following")} style={{ fontSize: "11px", color: "#BDD6F4", cursor: "pointer" }}><strong style={{ color: "#F8F8F8" }}>{followingCount ?? 0}</strong> following</span>
+            <span onClick={() => setShowFollowers("followers")} style={{ fontSize: "13px", color: "#BDD6F4", cursor: "pointer" }}><strong style={{ color: "#F8F8F8" }}>{followerCount ?? 0}</strong> followers</span>
+            <span onClick={() => setShowFollowers("following")} style={{ fontSize: "13px", color: "#BDD6F4", cursor: "pointer" }}><strong style={{ color: "#F8F8F8" }}>{followingCount ?? 0}</strong> following</span>
           </div>
         </div>
         <div style={{ display: "flex", gap: "6px" }}>
-              <button onClick={onSignOut} style={{ padding: "6px 12px", borderRadius: "8px", background: "#0a2240", border: "1px solid rgba(90,152,227,0.12)", cursor: "pointer", color: "#BDD6F4", fontSize: "11px", fontWeight: 600, display: "flex", alignItems: "center", gap: "5px", fontFamily: "'DM Sans'" }}>
+              <button onClick={onSignOut} style={{ padding: "6px 12px", borderRadius: "8px", background: "#0a2240", border: "1px solid rgba(90,152,227,0.12)", cursor: "pointer", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, display: "flex", alignItems: "center", gap: "5px", fontFamily: "'DM Sans'" }}>
                 <ArrowRight size={13} style={{ transform: "rotate(180deg)" }} /> Sign out
               </button>
               <button onClick={() => setShowSettings(true)} style={{ padding: "7px", borderRadius: "8px", background: "#0a2240", border: "1px solid rgba(90,152,227,0.12)", cursor: "pointer", color: "#BDD6F4" }}><Settings size={16} /></button>
@@ -5323,11 +5323,11 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "16px" }}>
-        {[[ME.walks, "Walks", "#E85D3A"], [`${ME.dist}km`, "Distance", "#5A98E3"], [`${(ME.elev / 1000).toFixed(1)}km`, "Elevation", "#6BCB77"]].map(([v, l, c]) => <div key={l} style={{ background: "#0a2240", borderRadius: "10px", padding: "10px 6px", textAlign: "center", border: "1px solid rgba(90,152,227,0.1)" }}><div style={{ fontSize: "17px", fontWeight: 800, color: c, fontFamily: "'JetBrains Mono'" }}>{v}</div><div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginTop: "2px" }}>{l}</div></div>)}
+        {[[ME.walks, "Walks", "#E85D3A"], [`${ME.dist}km`, "Distance", "#5A98E3"], [`${(ME.elev / 1000).toFixed(1)}km`, "Elevation", "#6BCB77"]].map(([v, l, c]) => <div key={l} style={{ background: "#0a2240", borderRadius: "10px", padding: "10px 6px", textAlign: "center", border: "1px solid rgba(90,152,227,0.1)" }}><div style={{ fontSize: "17px", fontWeight: 800, color: c, fontFamily: "'JetBrains Mono'" }}>{v}</div><div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "2px" }}>{l}</div></div>)}
       </div>
 
       <div style={{ display: "flex", gap: "3px", marginBottom: "14px", background: "#0a2240", borderRadius: "12px", padding: "3px", overflowX: "auto" }}>
-        {[["mountains", "Mountains"], ["posts", "Posts"], ["stats", "Stats"], ["leaderboard", "Leaderboard"]].map(([k, l]) => <button key={k} onClick={() => handleSecChange(k)} style={{ flex: 1, padding: "8px", borderRadius: "10px", border: "none", background: sec === k ? "rgba(90,152,227,0.2)" : "transparent", color: sec === k ? "#5A98E3" : "#BDD6F4", fontSize: "10px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: sec === k ? 1 : 0.5, whiteSpace: "nowrap" }}>{l}</button>)}
+        {[["mountains", "Mountains"], ["posts", "Posts"], ["stats", "Stats"], ["leaderboard", "Leaderboard"]].map(([k, l]) => <button key={k} onClick={() => handleSecChange(k)} style={{ flex: 1, padding: "8px", borderRadius: "10px", border: "none", background: sec === k ? "rgba(90,152,227,0.2)" : "transparent", color: sec === k ? "#5A98E3" : "#BDD6F4", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: sec === k ? 1 : 0.5, whiteSpace: "nowrap" }}>{l}</button>)}
       </div>
 
       {/* ═══ MOUNTAINS SECTION ═══ */}
@@ -5336,10 +5336,10 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
           {/* View toggle + filters */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
             <div style={{ display: "flex", gap: "4px" }}>
-              <button onClick={() => setMtView("map")} style={{ padding: "5px 12px", borderRadius: "8px", border: "none", background: mtView === "map" ? "rgba(90,152,227,0.2)" : "#0a2240", color: mtView === "map" ? "#5A98E3" : "#BDD6F4", fontSize: "11px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'", opacity: mtView === "map" ? 1 : 0.5 }}><Map size={12} /> Map</button>
-              <button onClick={() => { setMtView("list"); if (!mtCls) setMtCls("munros"); }} style={{ padding: "5px 12px", borderRadius: "8px", border: "none", background: mtView === "list" ? "rgba(90,152,227,0.2)" : "#0a2240", color: mtView === "list" ? "#5A98E3" : "#BDD6F4", fontSize: "11px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'", opacity: mtView === "list" ? 1 : 0.5 }}><List size={12} /> List</button>
+              <button onClick={() => setMtView("map")} style={{ padding: "5px 12px", borderRadius: "8px", border: "none", background: mtView === "map" ? "rgba(90,152,227,0.2)" : "#0a2240", color: mtView === "map" ? "#5A98E3" : "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'", opacity: mtView === "map" ? 1 : 0.5 }}><Map size={12} /> Map</button>
+              <button onClick={() => { setMtView("list"); if (!mtCls) setMtCls("munros"); }} style={{ padding: "5px 12px", borderRadius: "8px", border: "none", background: mtView === "list" ? "rgba(90,152,227,0.2)" : "#0a2240", color: mtView === "list" ? "#5A98E3" : "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'", opacity: mtView === "list" ? 1 : 0.5 }}><List size={12} /> List</button>
             </div>
-            <div style={{ fontSize: "10px", color: "#6BCB77", fontWeight: 600 }}>
+            <div style={{ fontSize: "12px", color: "#6BCB77", fontWeight: 600 }}>
               {(() => {
                 if (!mtCls) return "";
                 const fp = peakData.filter(p => p.cls === mtCls);
@@ -5352,7 +5352,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
 
           {/* Classification dropdown */}
           <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
-            <select value={mtCls || ""} onChange={e => setMtCls(e.target.value || null)} style={{ padding: "7px 12px", borderRadius: "10px", fontSize: "11px", fontWeight: 600, background: mtCls ? `${CLS[mtCls]?.color}15` : "#0a2240", border: `1px solid ${mtCls ? CLS[mtCls]?.color : "rgba(90,152,227,0.12)"}`, color: mtCls ? CLS[mtCls]?.color : "#BDD6F4", outline: "none", cursor: "pointer", fontFamily: "'DM Sans'" }}>
+            <select value={mtCls || ""} onChange={e => setMtCls(e.target.value || null)} style={{ padding: "7px 12px", borderRadius: "10px", fontSize: "13px", fontWeight: 600, background: mtCls ? `${CLS[mtCls]?.color}15` : "#0a2240", border: `1px solid ${mtCls ? CLS[mtCls]?.color : "rgba(90,152,227,0.12)"}`, color: mtCls ? CLS[mtCls]?.color : "#BDD6F4", outline: "none", cursor: "pointer", fontFamily: "'DM Sans'" }}>
               {Object.entries(CLS).filter(([k]) => k !== "non-mountain").map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
             </select>
           </div>
@@ -5360,7 +5360,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
           {/* Completed filter */}
           <div style={{ display: "flex", gap: "4px", marginBottom: "12px" }}>
             {[[null, "All"], ["done", "Completed"], ["todo", "To Do"]].map(([k, l]) => (
-              <button key={l} onClick={() => setMtDone(k)} style={{ padding: "4px 10px", borderRadius: "10px", border: "none", background: mtDone === k ? "rgba(90,152,227,0.15)" : "#0a2240", color: mtDone === k ? "#5A98E3" : "#BDD6F4", fontSize: "10px", cursor: "pointer", fontWeight: 600, fontFamily: "'DM Sans'", opacity: mtDone === k ? 1 : 0.5 }}>
+              <button key={l} onClick={() => setMtDone(k)} style={{ padding: "4px 10px", borderRadius: "10px", border: "none", background: mtDone === k ? "rgba(90,152,227,0.15)" : "#0a2240", color: mtDone === k ? "#5A98E3" : "#BDD6F4", fontSize: "12px", cursor: "pointer", fontWeight: 600, fontFamily: "'DM Sans'", opacity: mtDone === k ? 1 : 0.5 }}>
                 {k === "done" && <span style={{ color: "#6BCB77", marginRight: "3px" }}>●</span>}
                 {k === "todo" && <span style={{ color: "#E85D3A", marginRight: "3px" }}>●</span>}
                 {l}
@@ -5374,11 +5374,11 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               {/* Expand/collapse controls */}
               {mtExpanded && (
                 <div style={{ padding: "10px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
-                  <select value={mtCls || ""} onChange={e => setMtCls(e.target.value || null)} style={{ padding: "7px 12px", borderRadius: "10px", fontSize: "11px", fontWeight: 600, background: mtCls ? `${CLS[mtCls]?.color}15` : "#0a2240", border: `1px solid ${mtCls ? CLS[mtCls]?.color : "rgba(90,152,227,0.12)"}`, color: mtCls ? CLS[mtCls]?.color : "#BDD6F4", outline: "none", cursor: "pointer", fontFamily: "'DM Sans'" }}>
+                  <select value={mtCls || ""} onChange={e => setMtCls(e.target.value || null)} style={{ padding: "7px 12px", borderRadius: "10px", fontSize: "13px", fontWeight: 600, background: mtCls ? `${CLS[mtCls]?.color}15` : "#0a2240", border: `1px solid ${mtCls ? CLS[mtCls]?.color : "rgba(90,152,227,0.12)"}`, color: mtCls ? CLS[mtCls]?.color : "#BDD6F4", outline: "none", cursor: "pointer", fontFamily: "'DM Sans'" }}>
                     <option value="">All Classifications</option>
                     {Object.entries(CLS).filter(([k]) => k !== "non-mountain").map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
                   </select>
-                  <div style={{ fontSize: "10px", color: "#6BCB77", fontWeight: 600 }}>{mtCls ? `${filteredPeaks.filter(p => p.done).length}/${CLS[mtCls]?.count || filteredPeaks.length} logged` : ""}</div>
+                  <div style={{ fontSize: "12px", color: "#6BCB77", fontWeight: 600 }}>{mtCls ? `${filteredPeaks.filter(p => p.done).length}/${CLS[mtCls]?.count || filteredPeaks.length} logged` : ""}</div>
                   <button onClick={() => setMtExpanded(false)} style={{ background: "rgba(4,30,61,0.88)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "8px", padding: "6px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><Minimize2 size={14} /></button>
                 </div>
               )}
@@ -5389,7 +5389,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                 <button onClick={() => { removeGpxFromMap(mtMapRef.current, mtActiveGpxId); setMtActiveGpxId(null); }}
                   style={{ position: "absolute", top: 10, left: 10, zIndex: 22, background: "rgba(4,30,61,0.88)", backdropFilter: "blur(8px)",
                     border: "1px solid rgba(232,93,58,0.3)", borderRadius: "20px", padding: "5px 12px",
-                    color: "#E85D3A", fontSize: "11px", fontWeight: 600, cursor: "pointer",
+                    color: "#E85D3A", fontSize: "13px", fontWeight: 600, cursor: "pointer",
                     fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "5px" }}>
                   <X size={11} /> Clear route
                 </button>
@@ -5399,7 +5399,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                   background: "rgba(4,30,61,0.92)", backdropFilter: "blur(10px)", borderRadius: "20px",
                   padding: "5px 14px", border: "1px solid rgba(90,152,227,0.2)", display: "flex", alignItems: "center", gap: "7px" }}>
                   <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#E85D3A", animation: "pulse 1s ease infinite" }} />
-                  <span style={{ fontSize: "10px", fontWeight: 600, color: "#BDD6F4", fontFamily: "'DM Sans'" }}>Loading route…</span>
+                  <span style={{ fontSize: "12px", fontWeight: 600, color: "#BDD6F4", fontFamily: "'DM Sans'" }}>Loading route…</span>
                 </div>
               )}
                 <MiniMap key={mtExpanded ? "expanded" : "compact"} height={mtExpanded ? "100%" : "340px"} showGPS={true} onMapReady={map => { mtMapRef.current = map; }} markers={filteredPeaks.filter(pk => pk.lat && pk.lng).slice(0, 400).map(pk => ({ lat: pk.lat, lng: pk.lng, color: pk.done ? "#1a7a2e" : "#E85D3A", data: pk, style: `width:14px;height:14px;border-radius:50%;background:${pk.done ? "#1a7a2e" : "#E85D3A"};border:2px solid rgba(255,255,255,0.5);cursor:pointer;box-shadow:0 0 6px ${pk.done ? "rgba(26,122,46,0.5)" : "rgba(232,93,58,0.4)"};` }))} onMarkerClick={(m) => { setSelPeak(m.data); setLogging(false); if (mtActiveGpxId) { removeGpxFromMap(mtMapRef.current, mtActiveGpxId); setMtActiveGpxId(null); } }}>
@@ -5413,14 +5413,14 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                             <span style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8" }}>{selPeak.name}</span>
                             <div onClick={(e) => { e.stopPropagation(); if (selPeak.done && !logging) { handleUnlogPeak(selPeak.id); setLogging(false); } else if (!selPeak.done) { const today = new Date().toISOString().split("T")[0]; setPeakData(prev => prev.map(p => p.id === selPeak.id ? { ...p, done: true, date: today, log: "" } : p)); setSelPeak(prev => ({ ...prev, done: true, date: today, log: "" })); setLogDate(today); setLogNote(""); setLogging(true); } }} style={{ width: "22px", height: "22px", borderRadius: "6px", background: selPeak.done ? "rgba(107,203,119,0.15)" : "rgba(232,93,58,0.1)", border: `2px solid ${selPeak.done ? "#6BCB77" : "rgba(232,93,58,0.3)"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all .2s" }}>{selPeak.done && <Check size={13} color="#6BCB77" strokeWidth={3} />}</div>
                           </div>
-                          <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>{selPeak.ht}m · {selPeak.reg}</div>
-                          <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "5px", background: `${CLS[selPeak.cls]?.color}15`, color: CLS[selPeak.cls]?.color, fontWeight: 600, marginTop: "4px", display: "inline-block" }}>{CLS[selPeak.cls]?.name}</span>
+                          <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>{selPeak.ht}m · {selPeak.reg}</div>
+                          <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "5px", background: `${CLS[selPeak.cls]?.color}15`, color: CLS[selPeak.cls]?.color, fontWeight: 600, marginTop: "4px", display: "inline-block" }}>{CLS[selPeak.cls]?.name}</span>
                           {(() => { const matchedRoutes = ROUTES.filter(r => r.peaks && r.peaks.includes(selPeak.name)); return matchedRoutes.length > 0 ? (
                             <div style={{ marginTop: "6px" }}>
-                              <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, fontWeight: 600, marginBottom: "3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Routes</div>
+                              <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, fontWeight: 600, marginBottom: "3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Routes</div>
                               {matchedRoutes.map(r => (
                                 <div key={r.id} onClick={() => openRoute && openRoute(r, "mountain-tracker")} style={{
-                                  fontSize: "10px", cursor: r.gpx_file ? "pointer" : "default",
+                                  fontSize: "12px", cursor: r.gpx_file ? "pointer" : "default",
                                   fontWeight: 600, display: "flex", alignItems: "center", gap: "4px", marginTop: "3px",
                                   padding: "5px 8px", borderRadius: "7px",
                                   background: "rgba(90,152,227,0.06)",
@@ -5431,7 +5431,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                                   <Route size={10} />
                                   <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</span>
                                   <span style={{ opacity: 0.6, fontWeight: 400 }}>{r.dist}km · {r.diff}</span>
-                                  {r.gpx_file && <span style={{ fontSize: "8px", padding: "1px 4px", borderRadius: "3px",
+                                  {r.gpx_file && <span style={{ fontSize: "10px", padding: "1px 4px", borderRadius: "3px",
                                     background: "rgba(232,93,58,0.15)", color: "#E85D3A", fontWeight: 700 }}>
                                     View route →
                                   </span>}
@@ -5442,9 +5442,9 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                         </div>
                         <button onClick={() => { setSelPeak(null); setLogging(false); }} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "26px", height: "26px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={12} /></button>
                       </div>
-                      {selPeak.done && !logging && (<div style={{ marginTop: "10px", padding: "10px", background: "rgba(107,203,119,0.06)", borderRadius: "10px", border: "1px solid rgba(107,203,119,0.12)" }}><div style={{ fontSize: "10px", color: "#6BCB77", fontWeight: 700, marginBottom: "4px" }}>Completed · {selPeak.date}</div>{selPeak.log && <div style={{ fontSize: "11px", color: "#BDD6F4", lineHeight: 1.4 }}>{selPeak.log}</div>}</div>)}
-                      {!selPeak.done && !logging && (<button onClick={() => { const today = new Date().toISOString().split("T")[0]; setPeakData(prev => prev.map(p => p.id === selPeak.id ? { ...p, done: true, date: today, log: "" } : p)); setSelPeak(prev => ({ ...prev, done: true, date: today, log: "" })); setLogDate(today); setLogNote(""); setLogging(true); }} style={{ marginTop: "10px", width: "100%", padding: "10px", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", border: "none", borderRadius: "10px", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Log This Summit</button>)}
-                      {logging && (<div style={{ marginTop: "10px" }}><div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, marginBottom: "4px" }}>Date completed</div><input type="date" value={logDate} onChange={e => setLogDate(e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "8px" }} /><div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, marginBottom: "4px" }}>Log (optional)</div><textarea value={logNote} onChange={e => setLogNote(e.target.value)} placeholder="How was it? Conditions, route, memories..." rows={2} style={{ width: "100%", padding: "8px 10px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", resize: "none", marginBottom: "10px" }} /><div style={{ display: "flex", gap: "6px" }}><button onClick={() => setLogging(false)} style={{ flex: 1, padding: "9px", borderRadius: "9px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button><button onClick={() => handleLog(selPeak.id)} style={{ flex: 1, padding: "9px", borderRadius: "9px", border: "none", background: logDate ? "linear-gradient(135deg,#6BCB77,#55a866)" : "#264f80", color: logDate ? "#F8F8F8" : "#BDD6F4", fontSize: "12px", fontWeight: 700, cursor: logDate ? "pointer" : "default", fontFamily: "'DM Sans'", opacity: logDate ? 1 : 0.5 }}>Done</button></div></div>)}
+                      {selPeak.done && !logging && (<div style={{ marginTop: "10px", padding: "10px", background: "rgba(107,203,119,0.06)", borderRadius: "10px", border: "1px solid rgba(107,203,119,0.12)" }}><div style={{ fontSize: "12px", color: "#6BCB77", fontWeight: 700, marginBottom: "4px" }}>Completed · {selPeak.date}</div>{selPeak.log && <div style={{ fontSize: "13px", color: "#BDD6F4", lineHeight: 1.4 }}>{selPeak.log}</div>}</div>)}
+                      {!selPeak.done && !logging && (<button onClick={() => { const today = new Date().toISOString().split("T")[0]; setPeakData(prev => prev.map(p => p.id === selPeak.id ? { ...p, done: true, date: today, log: "" } : p)); setSelPeak(prev => ({ ...prev, done: true, date: today, log: "" })); setLogDate(today); setLogNote(""); setLogging(true); }} style={{ marginTop: "10px", width: "100%", padding: "10px", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", border: "none", borderRadius: "10px", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Log This Summit</button>)}
+                      {logging && (<div style={{ marginTop: "10px" }}><div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, marginBottom: "4px" }}>Date completed</div><input type="date" value={logDate} onChange={e => setLogDate(e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "14px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "8px" }} /><div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, marginBottom: "4px" }}>Log (optional)</div><textarea value={logNote} onChange={e => setLogNote(e.target.value)} placeholder="How was it? Conditions, route, memories..." rows={2} style={{ width: "100%", padding: "8px 10px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "14px", outline: "none", fontFamily: "'DM Sans'", resize: "none", marginBottom: "10px" }} /><div style={{ display: "flex", gap: "6px" }}><button onClick={() => setLogging(false)} style={{ flex: 1, padding: "9px", borderRadius: "9px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button><button onClick={() => handleLog(selPeak.id)} style={{ flex: 1, padding: "9px", borderRadius: "9px", border: "none", background: logDate ? "linear-gradient(135deg,#6BCB77,#55a866)" : "#264f80", color: logDate ? "#F8F8F8" : "#BDD6F4", fontSize: "14px", fontWeight: 700, cursor: logDate ? "pointer" : "default", fontFamily: "'DM Sans'", opacity: logDate ? 1 : 0.5 }}>Done</button></div></div>)}
                     </div>
                   </div>
                 )}
@@ -5460,13 +5460,13 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                 <div style={{ padding: "32px 16px", textAlign: "center", background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.1)", marginBottom: "10px" }}>
                   <Mountain size={32} color="#5A98E3" style={{ opacity: 0.3, marginBottom: "12px" }} />
                   <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8", marginBottom: "6px" }}>Select a classification</div>
-                  <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, lineHeight: 1.5 }}>Choose a classification above to browse peaks in list view — loading all at once is too slow.</div>
+                  <div style={{ fontSize: "14px", color: "#BDD6F4", opacity: 0.5, lineHeight: 1.5 }}>Choose a classification above to browse peaks in list view — loading all at once is too slow.</div>
                 </div>
               ) : (
                 <div>
                   <div style={{ display: "flex", gap: "4px", marginBottom: "10px" }}>
                     {[["name", "A-Z"], ["height", "Height"], ["class", "Class"]].map(([k, l]) => (
-                      <button key={k} onClick={() => setMtSort(k)} style={{ padding: "4px 10px", borderRadius: "8px", border: "none", background: mtSort === k ? "rgba(90,152,227,0.15)" : "#0a2240", color: mtSort === k ? "#5A98E3" : "#BDD6F4", fontSize: "10px", cursor: "pointer", fontWeight: 600, fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "3px", opacity: mtSort === k ? 1 : 0.5 }}>
+                      <button key={k} onClick={() => setMtSort(k)} style={{ padding: "4px 10px", borderRadius: "8px", border: "none", background: mtSort === k ? "rgba(90,152,227,0.15)" : "#0a2240", color: mtSort === k ? "#5A98E3" : "#BDD6F4", fontSize: "12px", cursor: "pointer", fontWeight: 600, fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "3px", opacity: mtSort === k ? 1 : 0.5 }}>
                         <ArrowUpDown size={10} /> {l}
                       </button>
                     ))}
@@ -5476,11 +5476,11 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                       <div key={pk.id} onClick={() => { setSelPeak(pk); setMtView("map"); setLogging(false); }} style={{ background: "#0a2240", borderRadius: "10px", padding: "11px 12px", border: "1px solid rgba(90,152,227,0.08)", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px", animation: `fi .2s ease ${i * .02}s both` }}>
                         <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: pk.done ? "#6BCB77" : "#E85D3A", border: "2px solid rgba(248,248,248,0.3)", boxShadow: `0 0 6px ${pk.done ? "rgba(107,203,119,0.3)" : "rgba(232,93,58,0.3)"}`, flexShrink: 0 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{pk.name}</div>
-                          <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{pk.reg}</div>
+                          <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>{pk.name}</div>
+                          <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{pk.reg}</div>
                         </div>
-                        <span style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "5px", background: `${CLS[pk.cls]?.color}12`, color: CLS[pk.cls]?.color, fontWeight: 600, flexShrink: 0 }}>{CLS[pk.cls]?.name}</span>
-                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#BDD6F4", opacity: 0.6, minWidth: "42px", textAlign: "right", fontFamily: "'JetBrains Mono'" }}>{pk.ht}m</div>
+                        <span style={{ fontSize: "11px", padding: "2px 6px", borderRadius: "5px", background: `${CLS[pk.cls]?.color}12`, color: CLS[pk.cls]?.color, fontWeight: 600, flexShrink: 0 }}>{CLS[pk.cls]?.name}</span>
+                        <div style={{ fontSize: "14px", fontWeight: 700, color: "#BDD6F4", opacity: 0.6, minWidth: "42px", textAlign: "right", fontFamily: "'JetBrains Mono'" }}>{pk.ht}m</div>
                         <div style={{ width: "18px", height: "18px", borderRadius: "5px", background: pk.done ? "rgba(107,203,119,0.12)" : "rgba(232,93,58,0.08)", border: `1.5px solid ${pk.done ? "#6BCB77" : "rgba(232,93,58,0.25)"}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           {pk.done && <Check size={11} color="#6BCB77" strokeWidth={3} />}
                         </div>
@@ -5509,21 +5509,21 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             {/* View toggle */}
             <div style={{ display: "flex", gap: "4px", marginBottom: "12px" }}>
               {[["weekly","Weekly"],["monthly","Monthly"],["yearly","Yearly"]].map(([k,l]) => (
-                <button key={k} onClick={() => { setStatView(k); setStatOffset(0); setStatCompareOffset(null); setStatSelectedBar(null); }} style={{ flex: 1, padding: "7px", borderRadius: "10px", border: "none", background: statView === k ? "rgba(90,152,227,0.15)" : "#0a2240", color: statView === k ? "#5A98E3" : "#BDD6F4", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: statView === k ? 1 : 0.5 }}>{l}</button>
+                <button key={k} onClick={() => { setStatView(k); setStatOffset(0); setStatCompareOffset(null); setStatSelectedBar(null); }} style={{ flex: 1, padding: "7px", borderRadius: "10px", border: "none", background: statView === k ? "rgba(90,152,227,0.15)" : "#0a2240", color: statView === k ? "#5A98E3" : "#BDD6F4", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: statView === k ? 1 : 0.5 }}>{l}</button>
               ))}
             </div>
 
             {/* Compact metric dropdown */}
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-              <span style={{ fontSize: "13px", color: "#F8F8F8", fontWeight: 700, whiteSpace: "nowrap" }}>Showing</span>
+              <span style={{ fontSize: "15px", color: "#F8F8F8", fontWeight: 700, whiteSpace: "nowrap" }}>Showing</span>
               <div style={{ position: "relative" }}>
                 <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", paddingLeft: "10px", paddingRight: "26px", pointerEvents: "none", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.25)", background: "rgba(90,152,227,0.08)", gap: "6px" }}>
-                  <span style={{ fontSize: "13px", fontWeight: 700, fontFamily: "'DM Sans'", color: "#F8F8F8", whiteSpace: "nowrap" }}>
+                  <span style={{ fontSize: "15px", fontWeight: 700, fontFamily: "'DM Sans'", color: "#F8F8F8", whiteSpace: "nowrap" }}>
                     {{"elevation":"Elevation Gain","distance":"Distance","time":"Time Spent","walks":"Activities"}[statMetric]}
                   </span>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#F8F8F8" strokeWidth="2.5" style={{ flexShrink: 0, marginLeft: "auto" }}><path d="m6 9 6 6 6-6"/></svg>
                 </div>
-                <select value={statMetric} onChange={e => setStatMetric(e.target.value)} style={{ padding: "6px 26px 6px 10px", borderRadius: "8px", border: "1px solid transparent", background: "transparent", color: "transparent", fontSize: "13px", fontFamily: "'DM Sans'", outline: "none", cursor: "pointer", opacity: 0, position: "relative", zIndex: 1 }}>
+                <select value={statMetric} onChange={e => setStatMetric(e.target.value)} style={{ padding: "6px 26px 6px 10px", borderRadius: "8px", border: "1px solid transparent", background: "transparent", color: "transparent", fontSize: "15px", fontFamily: "'DM Sans'", outline: "none", cursor: "pointer", opacity: 0, position: "relative", zIndex: 1 }}>
                   <option value="elevation">Elevation Gain</option>
                   <option value="distance">Distance</option>
                   <option value="time">Time Spent</option>
@@ -5536,8 +5536,8 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
               <button onClick={() => { setStatOffset(o => o - 1); setStatSelectedBar(null); }} style={{ width: "32px", height: "32px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#BDD6F4", cursor: "pointer", fontSize: "20px", lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif" }}>‹</button>
               <div style={{ textAlign: "center", flex: 1, padding: "0 8px" }}>
-                <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{stPeriodTitle(statView, statOffset)}</div>
-                {statOffset !== 0 && <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>tap › for current</div>}
+                <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>{stPeriodTitle(statView, statOffset)}</div>
+                {statOffset !== 0 && <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>tap › for current</div>}
               </div>
               <button onClick={() => { setStatOffset(o => Math.min(0, o + 1)); setStatSelectedBar(null); }} disabled={statOffset >= 0} style={{ width: "32px", height: "32px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: statOffset >= 0 ? "#264f80" : "#BDD6F4", cursor: statOffset >= 0 ? "default" : "pointer", fontSize: "20px", lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif" }}>›</button>
             </div>
@@ -5588,7 +5588,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             {statSelectedBar && (
               <div style={{ background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.15)", padding: "12px 14px", marginBottom: "12px", display: "flex", alignItems: "center", justifyContent: "space-between", animation: "fi .15s ease" }}>
                 <div>
-                  <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, fontWeight: 600, marginBottom: "2px" }}>{(() => {
+                  <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.5, fontWeight: 600, marginBottom: "2px" }}>{(() => {
                     const d = statSelectedBar.date instanceof Date ? statSelectedBar.date : new Date(statSelectedBar.date);
                     if (statView === "monthly") {
                       return d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
@@ -5600,12 +5600,12 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                   })()}</div>
                   <div style={{ fontSize: "20px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{stFmtVal(statSelectedBar.value, statMetric)}</div>
                   {statSelectedBar.cmpValue !== null && (
-                    <div style={{ fontSize: "10px", color: statSelectedBar.value >= statSelectedBar.cmpValue ? "#6BCB77" : CMP_COL, fontWeight: 600, marginTop: "2px" }}>
+                    <div style={{ fontSize: "12px", color: statSelectedBar.value >= statSelectedBar.cmpValue ? "#6BCB77" : CMP_COL, fontWeight: 600, marginTop: "2px" }}>
                       {statSelectedBar.value >= statSelectedBar.cmpValue ? "▲" : "▼"} vs {stFmtVal(statSelectedBar.cmpValue, statMetric)}
                     </div>
                   )}
                 </div>
-                <button onClick={() => setStatSelectedBar(null)} style={{ background: "rgba(90,152,227,0.1)", border: "none", borderRadius: "50%", width: "24px", height: "24px", cursor: "pointer", color: "#BDD6F4", fontSize: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+                <button onClick={() => setStatSelectedBar(null)} style={{ background: "rgba(90,152,227,0.1)", border: "none", borderRadius: "50%", width: "24px", height: "24px", cursor: "pointer", color: "#BDD6F4", fontSize: "14px", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
               </div>
             )}
 
@@ -5632,7 +5632,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                   {statCompareOffset === null ? (
                     <div style={{ position: "relative", width: "100%" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "6px 24px 6px 14px", borderRadius: "20px", border: "1px solid rgba(90,152,227,0.2)", pointerEvents: "none", position: "absolute", inset: 0 }}>
-                        <span style={{ fontSize: "11px", fontWeight: 700, fontFamily: "'DM Sans'", color: "#F8F8F8", display: "flex", alignItems: "center", gap: "5px" }}>
+                        <span style={{ fontSize: "13px", fontWeight: 700, fontFamily: "'DM Sans'", color: "#F8F8F8", display: "flex", alignItems: "center", gap: "5px" }}>
                           {cmpLabel}
                           <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#F8F8F8" strokeWidth="2.5"><path d="m6 9 6 6 6-6"/></svg>
                         </span>
@@ -5640,7 +5640,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                       <select
                         value=""
                         onChange={e => { if (e.target.value !== "") setStatCompareOffset(parseInt(e.target.value)); }}
-                        style={{ width: "100%", padding: "6px 24px 6px 14px", borderRadius: "20px", border: "1px solid transparent", background: "transparent", color: "transparent", fontSize: "11px", outline: "none", cursor: "pointer", opacity: 0, position: "relative", zIndex: 1 }}
+                        style={{ width: "100%", padding: "6px 24px 6px 14px", borderRadius: "20px", border: "1px solid transparent", background: "transparent", color: "transparent", fontSize: "13px", outline: "none", cursor: "pointer", opacity: 0, position: "relative", zIndex: 1 }}
                       >
                         <option value="">{cmpLabel}</option>
                         {cmpPeriods.map(o => <option key={o.value} value={String(o.value)}>{o.label}</option>)}
@@ -5649,10 +5649,10 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "4px 8px 4px 10px", borderRadius: "20px", border: `1px solid ${CMP_COL}`, background: "rgba(232,93,58,0.08)" }}>
-                        <span style={{ fontSize: "11px", fontWeight: 400, color: CMP_COL, fontFamily: "'DM Sans'" }}>{stPeriodTitle(cmpView, statCompareOffset)}</span>
-                        <button onClick={() => setStatCompareOffset(null)} style={{ background: "none", border: "none", cursor: "pointer", color: CMP_COL, display: "flex", alignItems: "center", padding: "1px", fontSize: "11px", lineHeight: 1 }}>✕</button>
+                        <span style={{ fontSize: "13px", fontWeight: 400, color: CMP_COL, fontFamily: "'DM Sans'" }}>{stPeriodTitle(cmpView, statCompareOffset)}</span>
+                        <button onClick={() => setStatCompareOffset(null)} style={{ background: "none", border: "none", cursor: "pointer", color: CMP_COL, display: "flex", alignItems: "center", padding: "1px", fontSize: "13px", lineHeight: 1 }}>✕</button>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "9px", color: "#BDD6F4", opacity: 0.5 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px", color: "#BDD6F4", opacity: 0.5 }}>
                         <span style={{ display: "flex", alignItems: "center", gap: "3px" }}><span style={{ display: "inline-block", width: "7px", height: "7px", borderRadius: "2px", background: MAIN_COL }} />{stPeriodTitle(statView, statOffset)}</span>
                         <span style={{ display: "flex", alignItems: "center", gap: "3px" }}><span style={{ display: "inline-block", width: "7px", height: "7px", borderRadius: "2px", background: CMP_COL }} />{stPeriodTitle(cmpView, statCompareOffset)}</span>
                       </div>
@@ -5666,13 +5666,13 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             {statCompareOffset !== null ? (
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                 <div style={{ background: "rgba(90,152,227,0.08)", borderRadius: "12px", padding: "14px 10px", textAlign: "center", border: "1px solid rgba(90,152,227,0.15)" }}>
-                  <div style={{ fontSize: "8px", color: MAIN_COL, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>{stPeriodTitle(statView, statOffset)}</div>
+                  <div style={{ fontSize: "10px", color: MAIN_COL, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>{stPeriodTitle(statView, statOffset)}</div>
                   <div style={{ fontSize: "22px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{stFmtVal(statTotal, statMetric)}</div>
                 </div>
                 <div style={{ background: "rgba(232,93,58,0.08)", borderRadius: "12px", padding: "14px 10px", textAlign: "center", border: "1px solid rgba(232,93,58,0.15)" }}>
-                  <div style={{ fontSize: "8px", color: CMP_COL, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>{stPeriodTitle(statView, statCompareOffset)}</div>
+                  <div style={{ fontSize: "10px", color: CMP_COL, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>{stPeriodTitle(statView, statCompareOffset)}</div>
                   <div style={{ fontSize: "22px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{stFmtVal(statCompareTotal, statMetric)}</div>
-                  {statCompareTotal > 0 && <div style={{ fontSize: "10px", color: statTotal >= statCompareTotal ? "#6BCB77" : CMP_COL, marginTop: "4px", fontWeight: 700 }}>{statTotal >= statCompareTotal ? "▲" : "▼"} {Math.round(Math.abs((statTotal - statCompareTotal) / statCompareTotal * 100))}%</div>}
+                  {statCompareTotal > 0 && <div style={{ fontSize: "12px", color: statTotal >= statCompareTotal ? "#6BCB77" : CMP_COL, marginTop: "4px", fontWeight: 700 }}>{statTotal >= statCompareTotal ? "▲" : "▼"} {Math.round(Math.abs((statTotal - statCompareTotal) / statCompareTotal * 100))}%</div>}
                 </div>
               </div>
             ) : (
@@ -5685,7 +5685,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                 ].map(([lbl,val,col]) => (
                   <div key={lbl} style={{ background: "#0a2240", borderRadius: "12px", padding: "14px 10px", textAlign: "center", border: "1px solid rgba(90,152,227,0.08)" }}>
                     <div style={{ fontSize: "22px", fontWeight: 800, color: col, fontFamily: "'JetBrains Mono'" }}>{val}</div>
-                    <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.45, marginTop: "4px" }}>{lbl}</div>
+                    <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.45, marginTop: "4px" }}>{lbl}</div>
                   </div>
                 ))}
               </div>
@@ -5693,16 +5693,16 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             {/* Badges */}
             <div style={{ marginTop: "20px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
-                <div style={{ fontSize: "11px", fontWeight: 700, color: "#BDD6F4", opacity: 0.5, textTransform: "uppercase", letterSpacing: "0.8px" }}>Badges</div>
-                <button onClick={() => setShowAllBadges(true)} style={{ fontSize: "11px", fontWeight: 600, color: "#5A98E3", background: "none", border: "none", cursor: "pointer", fontFamily: "'DM Sans'", padding: 0 }}>View all →</button>
+                <div style={{ fontSize: "13px", fontWeight: 700, color: "#BDD6F4", opacity: 0.5, textTransform: "uppercase", letterSpacing: "0.8px" }}>Badges</div>
+                <button onClick={() => setShowAllBadges(true)} style={{ fontSize: "13px", fontWeight: 600, color: "#5A98E3", background: "none", border: "none", cursor: "pointer", fontFamily: "'DM Sans'", padding: 0 }}>View all →</button>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                 {BADGES.slice(0, 4).map((b, i) => (
                   <div key={i} style={{ background: b.e ? "rgba(107,203,119,0.05)" : "#0a2240", borderRadius: "12px", padding: "14px", textAlign: "center", border: `1px solid ${b.e ? "rgba(107,203,119,0.12)" : "rgba(90,152,227,0.1)"}`, opacity: b.e ? 1 : .75 }}>
                     <div style={{ fontSize: "30px", marginBottom: "4px" }}>{b.i}</div>
-                    <div style={{ fontSize: "11px", fontWeight: 700, color: "#F8F8F8" }}>{b.n}</div>
-                    {b.e ? <div style={{ fontSize: "9px", color: "#6BCB77", fontWeight: 600, marginTop: "6px" }}><CheckCircle size={10} style={{ verticalAlign: "middle" }} /> Earned</div>
-                    : <div style={{ marginTop: "8px" }}><div style={{ height: "3px", borderRadius: "3px", background: "#264f80" }}><div style={{ width: `${b.p}%`, height: "100%", borderRadius: "3px", background: "#5A98E3" }} /></div><div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginTop: "3px" }}>{b.p}%</div></div>}
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{b.n}</div>
+                    {b.e ? <div style={{ fontSize: "11px", color: "#6BCB77", fontWeight: 600, marginTop: "6px" }}><CheckCircle size={10} style={{ verticalAlign: "middle" }} /> Earned</div>
+                    : <div style={{ marginTop: "8px" }}><div style={{ height: "3px", borderRadius: "3px", background: "#264f80" }}><div style={{ width: `${b.p}%`, height: "100%", borderRadius: "3px", background: "#5A98E3" }} /></div><div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "3px" }}>{b.p}%</div></div>}
                   </div>
                 ))}
               </div>
@@ -5712,20 +5712,20 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             {showAllBadges && (
               <div style={{ position: "fixed", inset: 0, zIndex: 60, background: "#041e3d", display: "flex", flexDirection: "column", animation: "fi .2s ease" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 16px", borderBottom: "1px solid rgba(90,152,227,0.1)" }}>
-                  <button onClick={() => setShowAllBadges(false)} style={{ background: "rgba(90,152,227,0.1)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", padding: "7px 12px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600, fontFamily: "'DM Sans'" }}>
+                  <button onClick={() => setShowAllBadges(false)} style={{ background: "rgba(90,152,227,0.1)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", padding: "7px 12px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "15px", fontWeight: 600, fontFamily: "'DM Sans'" }}>
                     <ChevronLeft size={16} /> Back
                   </button>
                   <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8" }}>All Badges</div>
-                  <div style={{ marginLeft: "auto", fontSize: "11px", color: "#6BCB77", fontWeight: 600 }}>{BADGES.filter(b => b.e).length}/{BADGES.length} earned</div>
+                  <div style={{ marginLeft: "auto", fontSize: "13px", color: "#6BCB77", fontWeight: 600 }}>{BADGES.filter(b => b.e).length}/{BADGES.length} earned</div>
                 </div>
                 <div style={{ overflowY: "auto", flex: 1, padding: "16px" }}>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                     {BADGES.map((b, i) => (
                       <div key={i} style={{ background: b.e ? "rgba(107,203,119,0.05)" : "#0a2240", borderRadius: "14px", padding: "16px", textAlign: "center", border: `1px solid ${b.e ? "rgba(107,203,119,0.15)" : "rgba(90,152,227,0.1)"}`, opacity: b.e ? 1 : .75, animation: `fi .3s ease ${i * .04}s both` }}>
                         <div style={{ fontSize: "34px", marginBottom: "6px" }}>{b.i}</div>
-                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8" }}>{b.n}</div>
-                        {b.e ? <div style={{ fontSize: "9px", color: "#6BCB77", fontWeight: 600, marginTop: "8px" }}><CheckCircle size={10} style={{ verticalAlign: "middle" }} /> Earned</div>
-                        : <div style={{ marginTop: "10px" }}><div style={{ height: "4px", borderRadius: "4px", background: "#264f80" }}><div style={{ width: `${b.p}%`, height: "100%", borderRadius: "4px", background: "#5A98E3" }} /></div><div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.5, marginTop: "4px" }}>{b.p}% complete</div></div>}
+                        <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{b.n}</div>
+                        {b.e ? <div style={{ fontSize: "11px", color: "#6BCB77", fontWeight: 600, marginTop: "8px" }}><CheckCircle size={10} style={{ verticalAlign: "middle" }} /> Earned</div>
+                        : <div style={{ marginTop: "10px" }}><div style={{ height: "4px", borderRadius: "4px", background: "#264f80" }}><div style={{ width: `${b.p}%`, height: "100%", borderRadius: "4px", background: "#5A98E3" }} /></div><div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "4px" }}>{b.p}% complete</div></div>}
                       </div>
                     ))}
                   </div>
@@ -5745,16 +5745,16 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
 
         const renderRow = (u, rank, extra = {}) => (
           <div key={u.uid} style={{ background: u.isMe ? "rgba(90,152,227,0.08)" : "#0a2240", borderRadius: "10px", padding: "10px 12px", border: `1px solid ${u.isMe ? "rgba(90,152,227,0.3)" : "rgba(90,152,227,0.08)"}`, display: "flex", alignItems: "center", gap: "10px", animation: `fi .3s ease ${Math.min(rank, 20) * .04}s both`, ...extra }}>
-            <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: rank < 3 ? `${["#FFD700","#C0C0C0","#CD7F32"][rank]}15` : "#264f80", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 800, color: rank < 3 ? ["#FFD700","#C0C0C0","#CD7F32"][rank] : "#BDD6F4", flexShrink: 0 }}>{rank + 1}</div>
-            <div style={{ width: "30px", height: "30px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>{(u.n || "?")[0].toUpperCase()}</div>
+            <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: rank < 3 ? `${["#FFD700","#C0C0C0","#CD7F32"][rank]}15` : "#264f80", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 800, color: rank < 3 ? ["#FFD700","#C0C0C0","#CD7F32"][rank] : "#BDD6F4", flexShrink: 0 }}>{rank + 1}</div>
+            <div style={{ width: "30px", height: "30px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "15px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>{(u.n || "?")[0].toUpperCase()}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: "12px", fontWeight: 700, color: u.isMe ? "#5A98E3" : "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.n}{u.isMe ? " (you)" : ""}</div>
+              <div style={{ fontSize: "14px", fontWeight: 700, color: u.isMe ? "#5A98E3" : "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.n}{u.isMe ? " (you)" : ""}</div>
             </div>
             <div style={{ textAlign: "right", flexShrink: 0 }}>
               <div style={{ fontSize: "14px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>
                 {lbm === "d" ? `${u.d}km` : lbm === "e" ? `${u.e >= 1000 ? (u.e/1000).toFixed(1)+"km" : u.e+"m"}` : u.pts.toLocaleString()}
               </div>
-              <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4 }}>{lbm === "d" ? "distance" : lbm === "e" ? "elevation" : "points"}</div>
+              <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4 }}>{lbm === "d" ? "distance" : lbm === "e" ? "elevation" : "points"}</div>
             </div>
           </div>
         );
@@ -5764,27 +5764,27 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             {/* Global / Friends toggle */}
             <div style={{ display: "flex", gap: "3px", marginBottom: "10px", background: "#0a2240", borderRadius: "10px", padding: "3px" }}>
               {[["global", "Global"], ["friends", "Friends"]].map(([k, l]) => (
-                <button key={k} onClick={() => setLbScope(k)} style={{ flex: 1, padding: "6px", borderRadius: "8px", border: "none", background: lbScope === k ? "rgba(90,152,227,0.2)" : "transparent", color: lbScope === k ? "#5A98E3" : "#BDD6F4", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>{l}</button>
+                <button key={k} onClick={() => setLbScope(k)} style={{ flex: 1, padding: "6px", borderRadius: "8px", border: "none", background: lbScope === k ? "rgba(90,152,227,0.2)" : "transparent", color: lbScope === k ? "#5A98E3" : "#BDD6F4", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>{l}</button>
               ))}
             </div>
             {/* Time period filter */}
             <div style={{ display: "flex", gap: "3px", marginBottom: "10px", background: "#0a2240", borderRadius: "10px", padding: "3px", overflowX: "auto" }}>
               {[["daily", "Day"], ["weekly", "Week"], ["monthly", "Month"], ["6month", "6 Mo"], ["yearly", "Year"], ["all", "All Time"]].map(([k, l]) => (
-                <button key={k} onClick={() => setLbTime(k)} style={{ padding: "5px 10px", borderRadius: "8px", border: "none", background: lbTime === k ? "rgba(90,152,227,0.2)" : "transparent", color: lbTime === k ? "#5A98E3" : "#BDD6F4", fontSize: "10px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'", opacity: lbTime === k ? 1 : 0.4, whiteSpace: "nowrap" }}>{l}</button>
+                <button key={k} onClick={() => setLbTime(k)} style={{ padding: "5px 10px", borderRadius: "8px", border: "none", background: lbTime === k ? "rgba(90,152,227,0.2)" : "transparent", color: lbTime === k ? "#5A98E3" : "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'", opacity: lbTime === k ? 1 : 0.4, whiteSpace: "nowrap" }}>{l}</button>
               ))}
             </div>
             {/* Metric filter */}
             <div style={{ display: "flex", gap: "4px", marginBottom: "10px" }}>
               {[["d", "Distance"], ["e", "Elevation"], ["pts", "Points"]].map(([k, l]) => (
-                <button key={k} onClick={() => setLbm(k)} style={{ padding: "6px 14px", borderRadius: "10px", fontSize: "10px", cursor: "pointer", background: lbm === k ? "rgba(90,152,227,0.2)" : "#0a2240", border: `1px solid ${lbm === k ? "rgba(90,152,227,0.3)" : "rgba(90,152,227,0.1)"}`, color: lbm === k ? "#5A98E3" : "#BDD6F4", fontWeight: 700, fontFamily: "'DM Sans'" }}>{l}</button>
+                <button key={k} onClick={() => setLbm(k)} style={{ padding: "6px 14px", borderRadius: "10px", fontSize: "12px", cursor: "pointer", background: lbm === k ? "rgba(90,152,227,0.2)" : "#0a2240", border: `1px solid ${lbm === k ? "rgba(90,152,227,0.3)" : "rgba(90,152,227,0.1)"}`, color: lbm === k ? "#5A98E3" : "#BDD6F4", fontWeight: 700, fontFamily: "'DM Sans'" }}>{l}</button>
               ))}
             </div>
-            {lbLoading && <div style={{ padding: "28px", textAlign: "center", fontSize: "12px", color: "#BDD6F4", opacity: 0.4 }}>Loading…</div>}
+            {lbLoading && <div style={{ padding: "28px", textAlign: "center", fontSize: "14px", color: "#BDD6F4", opacity: 0.4 }}>Loading…</div>}
             {!lbLoading && sorted.length === 0 && (
               <div style={{ padding: "32px 16px", textAlign: "center" }}>
                 <div style={{ fontSize: "28px", marginBottom: "10px" }}>🏔️</div>
-                <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.5, marginBottom: "4px" }}>No activity yet</div>
-                <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.3 }}>{lbScope === "friends" ? "Follow people to see their stats here" : "Record a walk to appear on the leaderboard"}</div>
+                <div style={{ fontSize: "15px", color: "#BDD6F4", opacity: 0.5, marginBottom: "4px" }}>No activity yet</div>
+                <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.3 }}>{lbScope === "friends" ? "Follow people to see their stats here" : "Record a walk to appear on the leaderboard"}</div>
               </div>
             )}
             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -5793,7 +5793,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               {meOutside && meRow && <>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "4px 0" }}>
                   <div style={{ flex: 1, height: "1px", background: "rgba(90,152,227,0.12)" }} />
-                  <span style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.3, fontWeight: 600 }}>YOUR RANK</span>
+                  <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.3, fontWeight: 600 }}>YOUR RANK</span>
                   <div style={{ flex: 1, height: "1px", background: "rgba(90,152,227,0.12)" }} />
                 </div>
                 {renderRow(meRow, myRank)}
@@ -5806,15 +5806,15 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
       {sec === "posts" && <div>
         {/* Create button */}
         <div style={{ position: "relative", marginBottom: "14px" }}>
-          <button onClick={() => setShowCreate(!showCreate)} style={{ width: "100%", padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+          <button onClick={() => setShowCreate(!showCreate)} style={{ width: "100%", padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
             <Plus size={16} /> Create
           </button>
           {showCreate && !createType && (
             <div style={{ marginTop: "6px", background: "#0a2240", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.15)", overflow: "hidden", animation: "fi .2s ease" }}>
               {[["post", "📝 Post", "Share an update or photo"], ["event", "📅 Event", "Schedule a community walk"], ["fundraiser", "❤️ Fundraiser", "Support a local MRT or cause"]].map(([k, icon, desc]) => (
-                <button key={k} onClick={() => setCreateType(k)} style={{ width: "100%", padding: "12px 14px", border: "none", borderBottom: "1px solid rgba(90,152,227,0.08)", background: "transparent", color: "#F8F8F8", fontSize: "13px", fontWeight: 600, cursor: "pointer", textAlign: "left", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "10px" }}>
+                <button key={k} onClick={() => setCreateType(k)} style={{ width: "100%", padding: "12px 14px", border: "none", borderBottom: "1px solid rgba(90,152,227,0.08)", background: "transparent", color: "#F8F8F8", fontSize: "15px", fontWeight: 600, cursor: "pointer", textAlign: "left", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "10px" }}>
                   <span style={{ fontSize: "16px" }}>{icon.split(" ")[0]}</span>
-                  <div><div>{icon.split(" ").slice(1).join(" ")}</div><div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5, fontWeight: 400 }}>{desc}</div></div>
+                  <div><div>{icon.split(" ").slice(1).join(" ")}</div><div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, fontWeight: 400 }}>{desc}</div></div>
                 </button>
               ))}
             </div>
@@ -5832,37 +5832,37 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               </div>
 
               <div style={{ marginBottom: "10px" }}>
-                <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Walk Name</label>
-                <input type="text" placeholder="e.g. Beginner Munro - Ben Lomond" value={evName} onChange={e => setEvName(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'" }} />
+                <label style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Walk Name</label>
+                <input type="text" placeholder="e.g. Beginner Munro - Ben Lomond" value={evName} onChange={e => setEvName(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "14px", outline: "none", fontFamily: "'DM Sans'" }} />
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "10px" }}>
                 <div>
-                  <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Date</label>
-                  <input type="date" value={evDate} onChange={e => setEvDate(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'" }} />
+                  <label style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Date</label>
+                  <input type="date" value={evDate} onChange={e => setEvDate(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "14px", outline: "none", fontFamily: "'DM Sans'" }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Time</label>
-                  <input type="time" value={evTime} onChange={e => setEvTime(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'" }} />
+                  <label style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Time</label>
+                  <input type="time" value={evTime} onChange={e => setEvTime(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "14px", outline: "none", fontFamily: "'DM Sans'" }} />
                 </div>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "10px" }}>
                 <div>
-                  <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Age Range</label>
-                  <select value={evAge} onChange={e => setEvAge(e.target.value)} style={{ width: "100%", padding: "10px 8px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "11px", outline: "none", fontFamily: "'DM Sans'" }}>
+                  <label style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Age Range</label>
+                  <select value={evAge} onChange={e => setEvAge(e.target.value)} style={{ width: "100%", padding: "10px 8px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'" }}>
                     {["Any", "18+", "21+", "18-30", "25-45", "30-50", "40+", "50+"].map(a => <option key={a} value={a}>{a}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Gender</label>
-                  <select value={evGender} onChange={e => setEvGender(e.target.value)} style={{ width: "100%", padding: "10px 8px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "11px", outline: "none", fontFamily: "'DM Sans'" }}>
+                  <label style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Gender</label>
+                  <select value={evGender} onChange={e => setEvGender(e.target.value)} style={{ width: "100%", padding: "10px 8px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'" }}>
                     {["Mixed", "Female only", "Male only"].map(g => <option key={g} value={g}>{g}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Spots</label>
-                  <select value={evSpots} onChange={e => setEvSpots(e.target.value)} style={{ width: "100%", padding: "10px 8px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "11px", outline: "none", fontFamily: "'DM Sans'" }}>
+                  <label style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Spots</label>
+                  <select value={evSpots} onChange={e => setEvSpots(e.target.value)} style={{ width: "100%", padding: "10px 8px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'" }}>
                     {["4", "6", "8", "10", "12", "15", "20"].map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
@@ -5870,14 +5870,14 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "10px" }}>
                 <div>
-                  <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Difficulty {evRoute && <span style={{ color: "#6BCB77", fontSize: "8px" }}>(auto)</span>}</label>
-                  <select value={evDiff} onChange={e => { if (!evRoute) setEvDiff(e.target.value); }} disabled={!!evRoute} style={{ width: "100%", padding: "10px 8px", borderRadius: "8px", border: `1px solid ${evRoute ? "rgba(107,203,119,0.2)" : "rgba(90,152,227,0.2)"}`, background: evRoute ? "rgba(107,203,119,0.06)" : "#041e3d", color: "#F8F8F8", fontSize: "11px", outline: "none", fontFamily: "'DM Sans'", opacity: evRoute ? 0.7 : 1 }}>
+                  <label style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Difficulty {evRoute && <span style={{ color: "#6BCB77", fontSize: "10px" }}>(auto)</span>}</label>
+                  <select value={evDiff} onChange={e => { if (!evRoute) setEvDiff(e.target.value); }} disabled={!!evRoute} style={{ width: "100%", padding: "10px 8px", borderRadius: "8px", border: `1px solid ${evRoute ? "rgba(107,203,119,0.2)" : "rgba(90,152,227,0.2)"}`, background: evRoute ? "rgba(107,203,119,0.06)" : "#041e3d", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'", opacity: evRoute ? 0.7 : 1 }}>
                     {["Easy", "Moderate", "Hard", "Expert"].map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Region</label>
-                  <select value={evRegion} onChange={e => { setEvRegion(e.target.value); setEvRoute(""); setEvGpx(false); }} style={{ width: "100%", padding: "10px 8px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "11px", outline: "none", fontFamily: "'DM Sans'" }}>
+                  <label style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Region</label>
+                  <select value={evRegion} onChange={e => { setEvRegion(e.target.value); setEvRoute(""); setEvGpx(false); }} style={{ width: "100%", padding: "10px 8px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'" }}>
                     <option value="">Select region</option>
                     {[...new Set(ROUTES.map(r => r.reg))].sort().map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
@@ -5887,8 +5887,8 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               {/* Route selection - only shows when region is selected */}
               {evRegion && (
                 <div style={{ marginBottom: "10px" }}>
-                  <label style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Route</label>
-                  <select value={evRoute} onChange={e => { const val = e.target.value; setEvRoute(val); if (val) { setEvGpx(false); const route = ROUTES.find(r => r.name === val); if (route) setEvDiff(route.diff); } }} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'" }}>
+                  <label style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Route</label>
+                  <select value={evRoute} onChange={e => { const val = e.target.value; setEvRoute(val); if (val) { setEvGpx(false); const route = ROUTES.find(r => r.name === val); if (route) setEvDiff(route.diff); } }} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "14px", outline: "none", fontFamily: "'DM Sans'" }}>
                     <option value="">Select a verified route (or upload GPX below)</option>
                     {ROUTES.filter(r => r.reg === evRegion && r.src === "ts").map(r => <option key={r.id} value={r.name}>{r.name} ({r.dist}km · {r.diff})</option>)}
                   </select>
@@ -5898,11 +5898,11 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               {/* GPX upload - required if no verified route selected */}
               {evRegion && !evRoute && (
                 <div style={{ marginBottom: "10px" }}>
-                  <button onClick={() => setEvGpx(!evGpx)} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: `1px dashed ${evGpx ? "#6BCB77" : "rgba(90,152,227,0.25)"}`, background: evGpx ? "rgba(107,203,119,0.06)" : "transparent", color: evGpx ? "#6BCB77" : "#BDD6F4", fontSize: "11px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontFamily: "'DM Sans'" }}>
+                  <button onClick={() => setEvGpx(!evGpx)} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: `1px dashed ${evGpx ? "#6BCB77" : "rgba(90,152,227,0.25)"}`, background: evGpx ? "rgba(107,203,119,0.06)" : "transparent", color: evGpx ? "#6BCB77" : "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontFamily: "'DM Sans'" }}>
                     {evGpx ? <><CheckCircle size={14} /> GPX file uploaded</> : <><Navigation size={14} /> Upload GPX file (required)</>}
                   </button>
                   {!evGpx && (
-                    <div style={{ fontSize: "9px", color: "#E85D3A", opacity: 0.8, marginTop: "4px", fontStyle: "italic" }}>
+                    <div style={{ fontSize: "11px", color: "#E85D3A", opacity: 0.8, marginTop: "4px", fontStyle: "italic" }}>
                       A GPX file is required when not using a verified route, so participants know exactly what they're signing up for.
                     </div>
                   )}
@@ -5935,7 +5935,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                     if (onPublishPost) onPublishPost(livePost);
                     setMyDbPosts(prev => [livePost, ...prev]);
                     setEvCreated(true);
-                  }} style={{ width: "100%", padding: "11px", borderRadius: "10px", border: "none", background: canCreate ? "linear-gradient(135deg,#E85D3A,#d04a2a)" : "#264f80", color: canCreate ? "#F8F8F8" : "#BDD6F4", fontSize: "13px", fontWeight: 700, cursor: canCreate ? "pointer" : "default", fontFamily: "'DM Sans'", opacity: canCreate ? 1 : 0.5, transition: "all .2s" }}>
+                  }} style={{ width: "100%", padding: "11px", borderRadius: "10px", border: "none", background: canCreate ? "linear-gradient(135deg,#E85D3A,#d04a2a)" : "#264f80", color: canCreate ? "#F8F8F8" : "#BDD6F4", fontSize: "15px", fontWeight: 700, cursor: canCreate ? "pointer" : "default", fontFamily: "'DM Sans'", opacity: canCreate ? 1 : 0.5, transition: "all .2s" }}>
                     Create Walk Event
                   </button>
                 );
@@ -5949,12 +5949,12 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
           <div style={{ background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(107,203,119,0.15)", padding: "20px", textAlign: "center", animation: "su .3s ease" }}>
             <div style={{ fontSize: "36px", marginBottom: "10px" }}>🥾</div>
             <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>Walk Scheduled!</div>
-            <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, marginTop: "4px", marginBottom: "4px" }}>{evName}</div>
-            <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginBottom: "16px" }}>{evDate} · {evTime} · {evRegion} · {evGender} · {evAge}</div>
-            <div style={{ fontSize: "10px", color: "#6BCB77", marginBottom: "16px" }}>Published to the community map and feed</div>
+            <div style={{ fontSize: "14px", color: "#BDD6F4", opacity: 0.6, marginTop: "4px", marginBottom: "4px" }}>{evName}</div>
+            <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.5, marginBottom: "16px" }}>{evDate} · {evTime} · {evRegion} · {evGender} · {evAge}</div>
+            <div style={{ fontSize: "12px", color: "#6BCB77", marginBottom: "16px" }}>Published to the community map and feed</div>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              <button onClick={() => { setCreateType(null); setShowCreate(false); setEvCreated(false); setEvName(""); setEvDate(""); setEvTime(""); setEvAge("Any"); setEvGender("Mixed"); setEvRegion(""); setEvRoute(""); setEvGpx(false); setEvDiff("Moderate"); setEvSpots("8"); if (goHome) goHome("events"); }} style={{ width: "100%", padding: "10px 24px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>View Event</button>
-              <button onClick={() => { setCreateType(null); setShowCreate(false); setEvCreated(false); setEvName(""); setEvDate(""); setEvTime(""); setEvAge("Any"); setEvGender("Mixed"); setEvRegion(""); setEvRoute(""); setEvGpx(false); setEvDiff("Moderate"); setEvSpots("8"); }} style={{ width: "100%", padding: "10px 24px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Done</button>
+              <button onClick={() => { setCreateType(null); setShowCreate(false); setEvCreated(false); setEvName(""); setEvDate(""); setEvTime(""); setEvAge("Any"); setEvGender("Mixed"); setEvRegion(""); setEvRoute(""); setEvGpx(false); setEvDiff("Moderate"); setEvSpots("8"); if (goHome) goHome("events"); }} style={{ width: "100%", padding: "10px 24px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>View Event</button>
+              <button onClick={() => { setCreateType(null); setShowCreate(false); setEvCreated(false); setEvName(""); setEvDate(""); setEvTime(""); setEvAge("Any"); setEvGender("Mixed"); setEvRegion(""); setEvRoute(""); setEvGpx(false); setEvDiff("Moderate"); setEvSpots("8"); }} style={{ width: "100%", padding: "10px 24px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Done</button>
             </div>
           </div>
         )}
@@ -5966,9 +5966,9 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               <button onClick={() => { setCreateType(null); setShowCreate(false); }} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "26px", height: "26px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><X size={12} /></button>
               <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>Create Post</div>
             </div>
-            <textarea placeholder="What's on your mind? Share a summit story, trail tip, or photo..." rows={3} value={postText} onChange={e => setPostText(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", resize: "none", marginBottom: "10px" }} />
+            <textarea placeholder="What's on your mind? Share a summit story, trail tip, or photo..." rows={3} value={postText} onChange={e => setPostText(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "14px", outline: "none", fontFamily: "'DM Sans'", resize: "none", marginBottom: "10px" }} />
             <div style={{ display: "flex", gap: "8px" }}>
-              <button style={{ flex: 1, padding: "9px", borderRadius: "8px", border: "1px dashed rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Camera size={13} /> Photo</button>
+              <button style={{ flex: 1, padding: "9px", borderRadius: "8px", border: "1px dashed rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Camera size={13} /> Photo</button>
               <button onClick={async () => {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (user) {
@@ -5989,7 +5989,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                   setMyDbPosts(prev => [livePost, ...prev]);
                 }
                 setCreateType(null); setShowCreate(false); setPostText("");
-              }} style={{ flex: 1, padding: "9px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Post</button>
+              }} style={{ flex: 1, padding: "9px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Post</button>
             </div>
           </div>
         )}
@@ -6001,9 +6001,9 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               <button onClick={() => { setCreateType(null); setShowCreate(false); }} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "26px", height: "26px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><X size={12} /></button>
               <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>Create Fundraiser</div>
             </div>
-            <input type="text" placeholder="Organisation name (e.g. Glencoe MRT)" value={frOrg} onChange={e => setFrOrg(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "8px" }} />
-            <textarea placeholder="Tell people why this matters..." rows={2} value={frDesc} onChange={e => setFrDesc(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", resize: "none", marginBottom: "8px" }} />
-            <input type="url" placeholder="GoFundMe or donation link" value={frLink} onChange={e => setFrLink(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "10px" }} />
+            <input type="text" placeholder="Organisation name (e.g. Glencoe MRT)" value={frOrg} onChange={e => setFrOrg(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "14px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "8px" }} />
+            <textarea placeholder="Tell people why this matters..." rows={2} value={frDesc} onChange={e => setFrDesc(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "14px", outline: "none", fontFamily: "'DM Sans'", resize: "none", marginBottom: "8px" }} />
+            <input type="url" placeholder="GoFundMe or donation link" value={frLink} onChange={e => setFrLink(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "14px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "10px" }} />
             <button onClick={async () => {
               if (!frOrg) return;
               const { data: { user } } = await supabase.auth.getUser();
@@ -6024,7 +6024,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               if (onPublishPost) onPublishPost(livePost);
               setMyDbPosts(prev => [livePost, ...prev]);
               setCreateType(null); setShowCreate(false); setFrOrg(""); setFrDesc(""); setFrLink(""); if (goHome) goHome("fundraiser");
-            }} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "none", background: frOrg ? "linear-gradient(135deg,#6BCB77,#55a866)" : "#264f80", color: "#F8F8F8", fontSize: "12px", fontWeight: 700, cursor: frOrg ? "pointer" : "default", fontFamily: "'DM Sans'", opacity: frOrg ? 1 : 0.5 }}>Publish Fundraiser</button>
+            }} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "none", background: frOrg ? "linear-gradient(135deg,#6BCB77,#55a866)" : "#264f80", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: frOrg ? "pointer" : "default", fontFamily: "'DM Sans'", opacity: frOrg ? 1 : 0.5 }}>Publish Fundraiser</button>
           </div>
         )}
 
@@ -6034,18 +6034,18 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             {myDbPosts.map((p, i) => (
               <div key={p.id || i} style={{ background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.12)", padding: "14px", animation: `fi .3s ease ${i * .05}s both` }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                  <div style={{ width: 30, height: 30, borderRadius: "50%", background: avatarUrl ? "transparent" : "linear-gradient(135deg,#264f80,#5A98E3)", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>
+                  <div style={{ width: 30, height: 30, borderRadius: "50%", background: avatarUrl ? "transparent" : "linear-gradient(135deg,#264f80,#5A98E3)", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>
                     {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (userName||"U")[0].toUpperCase()}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8" }}>{userName}</div>
-                    <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4 }}>
+                    <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{userName}</div>
+                    <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4 }}>
                       {p.time || (p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "just now")}
                       {p.type === "event" ? " · 📅 Event" : p.type === "fundraiser" ? " · ❤️ Fundraiser" : ""}
                     </div>
                   </div>
                 </div>
-                <div style={{ fontSize: "13px", color: "#BDD6F4", lineHeight: 1.55 }}>{p.text}</div>
+                <div style={{ fontSize: "15px", color: "#BDD6F4", lineHeight: 1.55 }}>{p.text}</div>
               </div>
             ))}
           </div>
@@ -6067,10 +6067,10 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                           {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 800, color: "#F8F8F8" }}>{(userName||"A")[0].toUpperCase()}</div>}
                         </div>
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{userName}</div>
-                          <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>{w.date} · Tracked walk</div>
+                          <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>{userName}</div>
+                          <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>{w.date} · Tracked walk</div>
                         </div>
-                        <button onClick={() => setSelWalk(w)} style={{ background: "rgba(90,152,227,0.08)", border: "1px solid rgba(90,152,227,0.15)", borderRadius: "8px", padding: "5px 10px", color: "#5A98E3", fontSize: "10px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>View</button>
+                        <button onClick={() => setSelWalk(w)} style={{ background: "rgba(90,152,227,0.08)", border: "1px solid rgba(90,152,227,0.15)", borderRadius: "8px", padding: "5px 10px", color: "#5A98E3", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>View</button>
                       </div>
 
                       {/* Walk name */}
@@ -6080,8 +6080,8 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px", marginBottom: "12px" }}>
                         {[["Distance", `${w.dist ?? 0}km`], ["Elevation", `${w.elev ?? 0}m`], ["Moving", w.movingTime || "--"]].map(([label, val]) => (
                           <div key={label} style={{ textAlign: "center", padding: "8px 4px", background: "#041e3d", borderRadius: "8px" }}>
-                            <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
-                            <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>{label}</div>
+                            <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
+                            <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>{label}</div>
                           </div>
                         ))}
                       </div>
@@ -6089,7 +6089,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                       {/* Peaks */}
                       {w.peaks?.length > 0 && (
                         <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "12px" }}>
-                          {w.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "6px", background: "rgba(107,203,119,0.1)", color: "#6BCB77", fontWeight: 600 }}>⛰️ {pk}</span>)}
+                          {w.peaks.map(pk => <span key={pk} style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "6px", background: "rgba(107,203,119,0.1)", color: "#6BCB77", fontWeight: 600 }}>⛰️ {pk}</span>)}
                         </div>
                       )}
 
@@ -6113,7 +6113,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                                     <div style={{ width: "28px", height: "28px", borderRadius: "8px", background: "rgba(90,152,227,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                       <Plus size={16} color="#5A98E3" />
                                     </div>
-                                    <span style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4, fontWeight: 600 }}>Add photo</span>
+                                    <span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4, fontWeight: 600 }}>Add photo</span>
                                   </>
                                 )}
                                 <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { if (e.target.files?.[0] && w.id) handleWalkPhotoUpload(w.id, e.target.files[0]); }} />
@@ -6130,15 +6130,15 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                           rows={2}
                           value={walkComments[w.id] || w.desc || ""}
                           onChange={e => setWalkComments(prev => ({ ...prev, [w.id]: e.target.value }))}
-                          style={{ width: "100%", padding: "10px 12px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "#041e3d", color: "#F8F8F8", fontSize: "12px", outline: "none", fontFamily: "'DM Sans'", resize: "none", lineHeight: 1.5 }}
+                          style={{ width: "100%", padding: "10px 12px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "#041e3d", color: "#F8F8F8", fontSize: "14px", outline: "none", fontFamily: "'DM Sans'", resize: "none", lineHeight: 1.5 }}
                         />
                       </div>
 
                       {/* Social actions */}
                       <div style={{ display: "flex", gap: "16px", borderTop: "1px solid rgba(90,152,227,0.08)", paddingTop: "10px" }}>
-                        <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.45, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Heart size={14} /></button>
-                        <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.45, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><MessageCircle size={14} /></button>
-                        <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.45, fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Share2 size={14} /></button>
+                        <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.45, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Heart size={14} /></button>
+                        <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.45, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><MessageCircle size={14} /></button>
+                        <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.45, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Share2 size={14} /></button>
                       </div>
 
                     </div>
@@ -6149,7 +6149,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               <div style={{ textAlign: "center", padding: "40px 20px" }}>
                 <Camera size={36} color="#BDD6F4" style={{ opacity: 0.3, marginBottom: "14px" }} />
                 <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>Your Posts</div>
-                <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, marginTop: "6px" }}>Share summit photos, schedule walks, and support your local MRT</div>
+                <div style={{ fontSize: "14px", color: "#BDD6F4", opacity: 0.5, marginTop: "6px" }}>Share summit photos, schedule walks, and support your local MRT</div>
               </div>
             )}
           </div>
@@ -6164,12 +6164,12 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
 
           {/* Header */}
           <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "calc(14px + env(safe-area-inset-top, 0px)) 16px 14px", borderBottom: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,0.95)", backdropFilter: "blur(12px)", flexShrink: 0 }}>
-            <button onClick={() => { setSelWalk(null); setConfirmDeleteWalk(false); }} style={{ background: "rgba(90,152,227,0.1)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", padding: "7px 12px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600, fontFamily: "'DM Sans'" }}>
+            <button onClick={() => { setSelWalk(null); setConfirmDeleteWalk(false); }} style={{ background: "rgba(90,152,227,0.1)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", padding: "7px 12px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "15px", fontWeight: 600, fontFamily: "'DM Sans'" }}>
               <ChevronLeft size={16} /> Back
             </button>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selWalk.name}</div>
-              <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{selWalk.date}</div>
+              <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{selWalk.date}</div>
             </div>
           </div>
 
@@ -6186,7 +6186,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               ].map(([label, val]) => (
                 <div key={label} style={{ textAlign: "center", padding: "14px 6px", background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.1)" }}>
                   <div style={{ fontSize: "17px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
-                  <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
+                  <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4, marginTop: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
                 </div>
               ))}
             </div>
@@ -6199,7 +6199,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
               ].map(([label, val]) => (
                 <div key={label} style={{ textAlign: "center", padding: "14px 6px", background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.1)" }}>
                   <div style={{ fontSize: "17px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
-                  <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
+                  <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4, marginTop: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
                 </div>
               ))}
             </div>
@@ -6218,9 +6218,9 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                 const paceSec = Math.round(((totalMins / dist) - paceMin) * 60);
                 return (
                   <div style={{ padding: "14px 16px", background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.1)", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
-                    <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, textTransform: "uppercase", letterSpacing: "0.5px" }}>Pace</div>
+                    <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.5, textTransform: "uppercase", letterSpacing: "0.5px" }}>Pace</div>
                     <div style={{ fontSize: "18px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>
-                      {paceMin}:{String(paceSec).padStart(2, "0")} <span style={{ fontSize: "11px", fontWeight: 500, color: "#BDD6F4", opacity: 0.5 }}>min/km</span>
+                      {paceMin}:{String(paceSec).padStart(2, "0")} <span style={{ fontSize: "13px", fontWeight: 500, color: "#BDD6F4", opacity: 0.5 }}>min/km</span>
                     </div>
                   </div>
                 );
@@ -6230,7 +6230,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             {/* Route map */}
             {selWalk.route && selWalk.route.length > 2 && (
               <div style={{ marginBottom: "10px" }}>
-                <div style={{ fontSize: "10px", fontWeight: 700, color: "#BDD6F4", opacity: 0.5, marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Route</div>
+                <div style={{ fontSize: "12px", fontWeight: 700, color: "#BDD6F4", opacity: 0.5, marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Route</div>
                 <RoutePreview points={selWalk.route} height={160} />
               </div>
             )}
@@ -6238,18 +6238,18 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             {/* Notes */}
             {selWalk.desc ? (
               <div style={{ padding: "14px", background: "#0a2240", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.08)", marginBottom: "10px" }}>
-                <div style={{ fontSize: "10px", fontWeight: 700, color: "#BDD6F4", opacity: 0.5, marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Notes</div>
-                <div style={{ fontSize: "13px", color: "#BDD6F4", lineHeight: 1.6 }}>{selWalk.desc}</div>
+                <div style={{ fontSize: "12px", fontWeight: 700, color: "#BDD6F4", opacity: 0.5, marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Notes</div>
+                <div style={{ fontSize: "15px", color: "#BDD6F4", lineHeight: 1.6 }}>{selWalk.desc}</div>
               </div>
             ) : null}
 
             {/* Peaks bagged */}
             {selWalk.peaks && selWalk.peaks.length > 0 ? (
               <div style={{ padding: "14px", background: "rgba(107,203,119,0.05)", borderRadius: "14px", border: "1px solid rgba(107,203,119,0.12)", marginBottom: "10px" }}>
-                <div style={{ fontSize: "10px", fontWeight: 700, color: "#6BCB77", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px" }}>⛰️ Peaks Bagged</div>
+                <div style={{ fontSize: "12px", fontWeight: 700, color: "#6BCB77", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px" }}>⛰️ Peaks Bagged</div>
                 <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                   {selWalk.peaks.map(pk => (
-                    <span key={pk} style={{ fontSize: "12px", padding: "5px 12px", borderRadius: "10px", background: "rgba(107,203,119,0.12)", color: "#6BCB77", fontWeight: 600 }}>{pk}</span>
+                    <span key={pk} style={{ fontSize: "14px", padding: "5px 12px", borderRadius: "10px", background: "rgba(107,203,119,0.12)", color: "#6BCB77", fontWeight: 600 }}>{pk}</span>
                   ))}
                 </div>
               </div>
@@ -6257,15 +6257,15 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
 
             {/* Delete */}
             {!confirmDeleteWalk ? (
-              <button onClick={() => setConfirmDeleteWalk(true)} style={{ width: "100%", padding: "13px", borderRadius: "14px", border: "1px solid rgba(232,93,58,0.2)", background: "rgba(232,93,58,0.05)", color: "#E85D3A", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "8px" }}>
+              <button onClick={() => setConfirmDeleteWalk(true)} style={{ width: "100%", padding: "13px", borderRadius: "14px", border: "1px solid rgba(232,93,58,0.2)", background: "rgba(232,93,58,0.05)", color: "#E85D3A", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "8px" }}>
                 <Trash2 size={15} /> Delete Walk
               </button>
             ) : (
               <div style={{ marginTop: "8px", padding: "18px", background: "rgba(232,93,58,0.06)", borderRadius: "14px", border: "1px solid rgba(232,93,58,0.2)", textAlign: "center" }}>
                 <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8", marginBottom: "6px" }}>Delete this walk?</div>
-                <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, marginBottom: "16px" }}>This can't be undone.</div>
+                <div style={{ fontSize: "14px", color: "#BDD6F4", opacity: 0.5, marginBottom: "16px" }}>This can't be undone.</div>
                 <div style={{ display: "flex", gap: "10px" }}>
-                  <button onClick={() => setConfirmDeleteWalk(false)} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
+                  <button onClick={() => setConfirmDeleteWalk(false)} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "15px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
                   <button disabled={deletingWalk} onClick={async () => {
                     setDeletingWalk(true);
                     try {
@@ -6278,7 +6278,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                       setConfirmDeleteWalk(false);
                     } catch (e) { console.error(e); }
                     finally { setDeletingWalk(false); }
-                  }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: deletingWalk ? "default" : "pointer", fontFamily: "'DM Sans'", opacity: deletingWalk ? 0.6 : 1 }}>
+                  }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: deletingWalk ? "default" : "pointer", fontFamily: "'DM Sans'", opacity: deletingWalk ? 0.6 : 1 }}>
                     {deletingWalk ? "Deleting…" : "Delete"}
                   </button>
                 </div>
@@ -6362,13 +6362,13 @@ const TutorialOverlay = ({ step, totalSteps, currentStep, onNext, onSkip }) => {
         </div>
 
         <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", marginBottom: "6px", fontFamily: "'Playfair Display',serif" }}>{step.title}</div>
-        <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.6, marginBottom: "16px" }}>{step.text}</div>
+        <div style={{ fontSize: "14px", color: "#BDD6F4", lineHeight: 1.6, marginBottom: "16px" }}>{step.text}</div>
 
         <div style={{ display: "flex", gap: "8px" }}>
-          <button onClick={onSkip} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+          <button onClick={onSkip} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>
             Skip
           </button>
-          <button onClick={onNext} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: currentStep === totalSteps - 1 ? "linear-gradient(135deg,#6BCB77,#55a866)" : "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+          <button onClick={onNext} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: currentStep === totalSteps - 1 ? "linear-gradient(135deg,#6BCB77,#55a866)" : "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
             {currentStep === totalSteps - 1 ? "Get Started" : `Next (${currentStep + 1}/${totalSteps})`}
           </button>
         </div>
@@ -6430,12 +6430,12 @@ const UserProfileModal = ({ user, userId, followingIds, onFollow, onClose }) => 
     <div style={{ position: "fixed", inset: 0, zIndex: 80, background: "#041e3d", display: "flex", flexDirection: "column", animation: "fi .2s ease" }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "calc(14px + env(safe-area-inset-top, 0px)) 16px 14px", borderBottom: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,0.95)", backdropFilter: "blur(12px)", flexShrink: 0 }}>
-        <button onClick={onClose} style={{ background: "rgba(90,152,227,0.1)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", padding: "7px 12px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600, fontFamily: "'DM Sans'" }}>
+        <button onClick={onClose} style={{ background: "rgba(90,152,227,0.1)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", padding: "7px 12px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "15px", fontWeight: 600, fontFamily: "'DM Sans'" }}>
           <ChevronLeft size={16} /> Back
         </button>
         <div style={{ flex: 1 }} />
         {!isOwnProfile && (
-          <button onClick={() => { onFollow(user.id); setFollowerCount(c => isFollowing ? Math.max(0, c - 1) : c + 1); }} style={{ padding: "8px 18px", borderRadius: "10px", border: isFollowing ? "1px solid rgba(90,152,227,0.3)" : "none", background: isFollowing ? "transparent" : "linear-gradient(135deg,#E85D3A,#d04a2a)", color: isFollowing ? "#5A98E3" : "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+          <button onClick={() => { onFollow(user.id); setFollowerCount(c => isFollowing ? Math.max(0, c - 1) : c + 1); }} style={{ padding: "8px 18px", borderRadius: "10px", border: isFollowing ? "1px solid rgba(90,152,227,0.3)" : "none", background: isFollowing ? "transparent" : "linear-gradient(135deg,#E85D3A,#d04a2a)", color: isFollowing ? "#5A98E3" : "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
             {isFollowing ? "Following" : "Follow"}
           </button>
         )}
@@ -6450,8 +6450,8 @@ const UserProfileModal = ({ user, userId, followingIds, onFollow, onClose }) => 
             </div>
             <div>
               <div style={{ fontSize: "20px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>{displayName}</div>
-              {user.username && <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>@{user.username}</div>}
-              {user.location && <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>📍 {user.location}</div>}
+              {user.username && <div style={{ fontSize: "14px", color: "#BDD6F4", opacity: 0.6, marginTop: "2px" }}>@{user.username}</div>}
+              {user.location && <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>📍 {user.location}</div>}
             </div>
           </div>
 
@@ -6460,7 +6460,7 @@ const UserProfileModal = ({ user, userId, followingIds, onFollow, onClose }) => 
             {[[walks.length, "Walks"], [peaks.length, "Peaks"], [followerCount, "Followers"], [followingCount, "Following"]].map(([val, label]) => (
               <div key={label} style={{ textAlign: "center", padding: "10px 4px", background: "#0a2240", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.1)" }}>
                 <div style={{ fontSize: "18px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
-                <div style={{ fontSize: "8px", color: "#BDD6F4", opacity: 0.4, marginTop: "3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
+                <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4, marginTop: "3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
               </div>
             ))}
           </div>
@@ -6469,18 +6469,18 @@ const UserProfileModal = ({ user, userId, followingIds, onFollow, onClose }) => 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", marginBottom: "16px" }}>
             <div style={{ background: "#0a2240", borderRadius: "10px", padding: "10px 12px", border: "1px solid rgba(90,152,227,0.1)" }}>
               <div style={{ fontSize: "16px", fontWeight: 800, color: "#5A98E3", fontFamily: "'JetBrains Mono'" }}>{totalDist.toFixed(1)}km</div>
-              <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>Total distance</div>
+              <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>Total distance</div>
             </div>
             <div style={{ background: "#0a2240", borderRadius: "10px", padding: "10px 12px", border: "1px solid rgba(90,152,227,0.1)" }}>
               <div style={{ fontSize: "16px", fontWeight: 800, color: "#6BCB77", fontFamily: "'JetBrains Mono'" }}>{totalElev >= 1000 ? `${(totalElev/1000).toFixed(1)}km` : `${totalElev}m`}</div>
-              <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>Total elevation</div>
+              <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>Total elevation</div>
             </div>
           </div>
 
           {/* Section tabs */}
           <div style={{ display: "flex", background: "#0a2240", borderRadius: "10px", padding: "3px", marginBottom: "16px" }}>
             {[["mountains", "Mountains"], ["posts", "Posts"], ["walks", "Walks"]].map(([k, l]) => (
-              <button key={k} onClick={() => setSec(k)} style={{ flex: 1, padding: "7px", borderRadius: "8px", border: "none", background: sec === k ? "rgba(90,152,227,0.2)" : "transparent", color: sec === k ? "#5A98E3" : "#BDD6F4", fontSize: "10px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: sec === k ? 1 : 0.5 }}>{l}</button>
+              <button key={k} onClick={() => setSec(k)} style={{ flex: 1, padding: "7px", borderRadius: "8px", border: "none", background: sec === k ? "rgba(90,152,227,0.2)" : "transparent", color: sec === k ? "#5A98E3" : "#BDD6F4", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: sec === k ? 1 : 0.5 }}>{l}</button>
             ))}
           </div>
         </div>
@@ -6489,13 +6489,13 @@ const UserProfileModal = ({ user, userId, followingIds, onFollow, onClose }) => 
         <div style={{ padding: "0 16px 24px" }}>
           {loading ? (
             <div style={{ textAlign: "center", padding: "40px" }}>
-              <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4 }}>Loading…</div>
+              <div style={{ fontSize: "14px", color: "#BDD6F4", opacity: 0.4 }}>Loading…</div>
             </div>
           ) : sec === "mountains" ? (
             peaks.length === 0 ? (
               <div style={{ textAlign: "center", padding: "40px 20px" }}>
                 <Mountain size={36} color="#BDD6F4" style={{ opacity: 0.2, marginBottom: "12px" }} />
-                <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.4 }}>{displayName} hasn't logged any peaks yet.</div>
+                <div style={{ fontSize: "15px", color: "#BDD6F4", opacity: 0.4 }}>{displayName} hasn't logged any peaks yet.</div>
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -6503,8 +6503,8 @@ const UserProfileModal = ({ user, userId, followingIds, onFollow, onClose }) => 
                   <div key={p.peak_id} style={{ background: "#0a2240", borderRadius: "10px", padding: "10px 12px", border: "1px solid rgba(90,152,227,0.08)", display: "flex", alignItems: "center", gap: "10px" }}>
                     <Mountain size={16} color="#6BCB77" style={{ flexShrink: 0 }} />
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{p.peak_name}</div>
-                      {p.date_completed && <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>{p.date_completed}</div>}
+                      <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>{p.peak_name}</div>
+                      {p.date_completed && <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4, marginTop: "2px" }}>{p.date_completed}</div>}
                     </div>
                     <CheckCircle size={14} color="#6BCB77" style={{ flexShrink: 0 }} />
                   </div>
@@ -6515,20 +6515,20 @@ const UserProfileModal = ({ user, userId, followingIds, onFollow, onClose }) => 
             posts.length === 0 ? (
               <div style={{ textAlign: "center", padding: "40px 20px" }}>
                 <Users size={36} color="#BDD6F4" style={{ opacity: 0.2, marginBottom: "12px" }} />
-                <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.4 }}>{displayName} hasn't posted anything yet.</div>
+                <div style={{ fontSize: "15px", color: "#BDD6F4", opacity: 0.4 }}>{displayName} hasn't posted anything yet.</div>
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {posts.map(p => (
                   <div key={p.id} style={{ background: "#0a2240", borderRadius: "14px", padding: "14px", border: "1px solid rgba(90,152,227,0.1)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                      <span style={{ fontSize: "9px", padding: "1px 7px", borderRadius: "5px", background: p.type === "fundraiser" ? "rgba(107,203,119,0.12)" : p.type === "event" ? "rgba(90,152,227,0.12)" : "rgba(232,93,58,0.1)", color: p.type === "fundraiser" ? "#6BCB77" : p.type === "event" ? "#5A98E3" : "#E85D3A", fontWeight: 600 }}>{p.type || "post"}</span>
-                      <span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4 }}>{timeAgo(p.created_at)}</span>
+                      <span style={{ fontSize: "11px", padding: "1px 7px", borderRadius: "5px", background: p.type === "fundraiser" ? "rgba(107,203,119,0.12)" : p.type === "event" ? "rgba(90,152,227,0.12)" : "rgba(232,93,58,0.1)", color: p.type === "fundraiser" ? "#6BCB77" : p.type === "event" ? "#5A98E3" : "#E85D3A", fontWeight: 600 }}>{p.type || "post"}</span>
+                      <span style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4 }}>{timeAgo(p.created_at)}</span>
                     </div>
-                    <div style={{ fontSize: "13px", color: "#BDD6F4", lineHeight: 1.5 }}>{p.text}</div>
+                    <div style={{ fontSize: "15px", color: "#BDD6F4", lineHeight: 1.5 }}>{p.text}</div>
                     {p.peaks?.length > 0 && (
                       <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginTop: "8px" }}>
-                        {p.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "5px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}
+                        {p.peaks.map(pk => <span key={pk} style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "5px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}
                       </div>
                     )}
                   </div>
@@ -6539,19 +6539,19 @@ const UserProfileModal = ({ user, userId, followingIds, onFollow, onClose }) => 
             walks.length === 0 ? (
               <div style={{ textAlign: "center", padding: "40px 20px" }}>
                 <Route size={36} color="#BDD6F4" style={{ opacity: 0.2, marginBottom: "12px" }} />
-                <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.4 }}>{displayName} hasn't logged any walks yet.</div>
+                <div style={{ fontSize: "15px", color: "#BDD6F4", opacity: 0.4 }}>{displayName} hasn't logged any walks yet.</div>
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {walks.map(w => (
                   <div key={w.id} style={{ background: "#0a2240", borderRadius: "12px", padding: "12px 14px", border: "1px solid rgba(90,152,227,0.08)" }}>
-                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", marginBottom: "6px" }}>{w.name || "Walk"}</div>
+                    <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8", marginBottom: "6px" }}>{w.name || "Walk"}</div>
                     <div style={{ display: "flex", gap: "12px" }}>
-                      {w.distance_km && <span style={{ fontSize: "11px", color: "#5A98E3", fontWeight: 600 }}>{parseFloat(w.distance_km).toFixed(1)}km</span>}
-                      {w.elevation_m && <span style={{ fontSize: "11px", color: "#6BCB77", fontWeight: 600 }}>↑{w.elevation_m}m</span>}
-                      {w.duration && <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5 }}>{w.duration}</span>}
+                      {w.distance_km && <span style={{ fontSize: "13px", color: "#5A98E3", fontWeight: 600 }}>{parseFloat(w.distance_km).toFixed(1)}km</span>}
+                      {w.elevation_m && <span style={{ fontSize: "13px", color: "#6BCB77", fontWeight: 600 }}>↑{w.elevation_m}m</span>}
+                      {w.duration && <span style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.5 }}>{w.duration}</span>}
                     </div>
-                    {w.date_walked && <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.3, marginTop: "4px" }}>{w.date_walked}</div>}
+                    {w.date_walked && <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.3, marginTop: "4px" }}>{w.date_walked}</div>}
                   </div>
                 ))}
               </div>
@@ -6594,26 +6594,26 @@ const PWAInstallBanner = ({ onDismiss }) => {
           <Mountain size={22} color="#F8F8F8" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: "13px", fontWeight: 800, color: "#F8F8F8", marginBottom: "2px" }}>Add TrailSync to your home screen</div>
-          <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.4 }}>Works better as an app — faster, offline-ready, full screen</div>
+          <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", marginBottom: "2px" }}>Add TrailSync to your home screen</div>
+          <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.4 }}>Works better as an app — faster, offline-ready, full screen</div>
         </div>
         <button onClick={onDismiss} style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.4, cursor: "pointer", padding: "4px", flexShrink: 0 }}><X size={16} /></button>
       </div>
       {installPrompt && !isIos ? (
-        <button onClick={handleInstall} disabled={installing} style={{ marginTop: "12px", width: "100%", padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+        <button onClick={handleInstall} disabled={installing} style={{ marginTop: "12px", width: "100%", padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
           {installing ? "Installing…" : "📲 Install TrailSync"}
         </button>
       ) : (
         <div style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
           {isIos ? (
             <div style={{ flex: 1, background: "rgba(90,152,227,0.08)", borderRadius: "10px", padding: "10px 12px" }}>
-              <div style={{ fontSize: "10px", fontWeight: 700, color: "#5A98E3", marginBottom: "4px" }}>📱 iPhone / iPad</div>
-              <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.5 }}>Tap <strong style={{ color: "#F8F8F8" }}>Share ↑</strong> then <strong style={{ color: "#F8F8F8" }}>Add to Home Screen</strong></div>
+              <div style={{ fontSize: "12px", fontWeight: 700, color: "#5A98E3", marginBottom: "4px" }}>📱 iPhone / iPad</div>
+              <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.5 }}>Tap <strong style={{ color: "#F8F8F8" }}>Share ↑</strong> then <strong style={{ color: "#F8F8F8" }}>Add to Home Screen</strong></div>
             </div>
           ) : (
             <div style={{ flex: 1, background: "rgba(90,152,227,0.08)", borderRadius: "10px", padding: "10px 12px" }}>
-              <div style={{ fontSize: "10px", fontWeight: 700, color: "#5A98E3", marginBottom: "4px" }}>🤖 Android / Chrome</div>
-              <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.5 }}>Tap <strong style={{ color: "#F8F8F8" }}>⋮ Menu</strong> then <strong style={{ color: "#F8F8F8" }}>Add to Home Screen</strong></div>
+              <div style={{ fontSize: "12px", fontWeight: 700, color: "#5A98E3", marginBottom: "4px" }}>🤖 Android / Chrome</div>
+              <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.5 }}>Tap <strong style={{ color: "#F8F8F8" }}>⋮ Menu</strong> then <strong style={{ color: "#F8F8F8" }}>Add to Home Screen</strong></div>
             </div>
           )}
         </div>
@@ -7054,7 +7054,7 @@ export default function TrailSync() {
           <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "linear-gradient(135deg,#E85D3A,#F49D37)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", animation: "glow 3s ease infinite" }}>
             <Mountain size={24} color="#F8F8F8" />
           </div>
-          <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.5 }}>Loading TrailSync…</div>
+          <div style={{ fontSize: "15px", color: "#BDD6F4", opacity: 0.5 }}>Loading TrailSync…</div>
         </div>
       </div>
     );
@@ -7135,12 +7135,12 @@ export default function TrailSync() {
                     onChange={e => setHeaderSearch(e.target.value)}
                     onFocus={() => setHeaderSearchFocused(true)}
                     onBlur={() => { setTimeout(() => setHeaderSearchFocused(false), 150); }}
-                    style={{ background: "none", border: "none", outline: "none", color: "#041e3d", fontSize: "12px", fontFamily: "'DM Sans'", flex: 1, minWidth: 0 }}
+                    style={{ background: "none", border: "none", outline: "none", color: "#041e3d", fontSize: "14px", fontFamily: "'DM Sans'", flex: 1, minWidth: 0 }}
                   />
                   {headerSearch && <button onClick={e => { e.stopPropagation(); setHeaderSearch(""); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#5A98E3", padding: 0, display: "flex", flexShrink: 0 }}><X size={12} /></button>}
                 </div>
                 {(headerSearchFocused || headerSearch) && (
-                  <button onMouseDown={() => { setHeaderSearch(""); setHeaderSearchFocused(false); document.getElementById("header-search-input")?.blur(); }} style={{ background: "none", border: "none", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", padding: "4px 2px", flexShrink: 0, fontFamily: "'DM Sans'", whiteSpace: "nowrap" }}>Cancel</button>
+                  <button onMouseDown={() => { setHeaderSearch(""); setHeaderSearchFocused(false); document.getElementById("header-search-input")?.blur(); }} style={{ background: "none", border: "none", color: "#BDD6F4", fontSize: "14px", fontWeight: 600, cursor: "pointer", padding: "4px 2px", flexShrink: 0, fontFamily: "'DM Sans'", whiteSpace: "nowrap" }}>Cancel</button>
                 )}
               </div>
             ) : (
@@ -7167,13 +7167,13 @@ export default function TrailSync() {
                       {/* Arrow caret — inner (panel fill) */}
                       <div style={{ position: "absolute", top: "-7px", right: "12px", width: 0, height: 0, borderLeft: "8px solid transparent", borderRight: "8px solid transparent", borderBottom: "8px solid #0a2240" }} />
                       <div style={{ padding: "12px 16px", borderBottom: "1px solid rgba(90,152,227,0.1)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>Notifications</div>
+                        <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>Notifications</div>
                         <button onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#BDD6F4", opacity: 0.5, padding: "2px", display: "flex", lineHeight: 1 }}><X size={14} /></button>
                       </div>
                       <div style={{ padding: "28px 16px", textAlign: "center" }}>
                         <Bell size={28} color="#5A98E3" style={{ opacity: 0.25, marginBottom: "10px" }} />
-                        <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.4 }}>No notifications yet</div>
-                        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.25, marginTop: "4px" }}>Follow others to see their activity here</div>
+                        <div style={{ fontSize: "14px", color: "#BDD6F4", opacity: 0.4 }}>No notifications yet</div>
+                        <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.25, marginTop: "4px" }}>Follow others to see their activity here</div>
                       </div>
                     </div>
                   </>
@@ -7182,7 +7182,7 @@ export default function TrailSync() {
 
               {/* Avatar — user menu dropdown */}
               <div style={{ position: "relative" }}>
-                <div onClick={() => { setShowUserMenu(m => !m); setShowNotifications(false); }} style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: "#F8F8F8", border: "2px solid rgba(90,152,227,0.25)", cursor: "pointer" }}>
+                <div onClick={() => { setShowUserMenu(m => !m); setShowNotifications(false); }} style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "15px", fontWeight: 700, color: "#F8F8F8", border: "2px solid rgba(90,152,227,0.25)", cursor: "pointer" }}>
                   {userName ? userName[0].toUpperCase() : "A"}
                 </div>
                 {showUserMenu && (
@@ -7196,10 +7196,10 @@ export default function TrailSync() {
                       {/* Arrow caret — inner */}
                       <div style={{ position: "absolute", top: "-7px", right: "12px", width: 0, height: 0, borderLeft: "8px solid transparent", borderRight: "8px solid transparent", borderBottom: "8px solid #0a2240" }} />
                       <div style={{ padding: "10px 14px", borderBottom: "1px solid rgba(90,152,227,0.1)" }}>
-                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8" }}>{userName}</div>
-                        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>Signed in</div>
+                        <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{userName}</div>
+                        <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>Signed in</div>
                       </div>
-                      <button onClick={() => { setShowUserMenu(false); setTab("profile"); }} style={{ width: "100%", padding: "10px 14px", border: "none", background: "transparent", color: "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", textAlign: "left", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <button onClick={() => { setShowUserMenu(false); setTab("profile"); }} style={{ width: "100%", padding: "10px 14px", border: "none", background: "transparent", color: "#BDD6F4", fontSize: "14px", fontWeight: 600, cursor: "pointer", textAlign: "left", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "8px" }}>
                         <UserCircle size={14} /> Profile
                       </button>
                       <button onClick={async () => {
@@ -7210,7 +7210,7 @@ export default function TrailSync() {
                         setSavedWalks([]);
                         setDbPeaks(null);
                         setAuthState("login");
-                      }} style={{ width: "100%", padding: "10px 14px", border: "none", borderTop: "1px solid rgba(90,152,227,0.08)", background: "transparent", color: "#E85D3A", fontSize: "12px", fontWeight: 600, cursor: "pointer", textAlign: "left", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "8px" }}>
+                      }} style={{ width: "100%", padding: "10px 14px", border: "none", borderTop: "1px solid rgba(90,152,227,0.08)", background: "transparent", color: "#E85D3A", fontSize: "14px", fontWeight: 600, cursor: "pointer", textAlign: "left", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "8px" }}>
                         <ArrowRight size={14} style={{ transform: "rotate(180deg)" }} /> Sign out
                       </button>
                     </div>
@@ -7226,25 +7226,25 @@ export default function TrailSync() {
       {/* Search dropdown — fixed overlay that floats below header regardless of parent overflow */}
       {tab === "home" && headerSearch && headerSearch.length >= 2 && (
         <div style={{ position: "fixed", top: "calc(60px + env(safe-area-inset-top, 0px))", left: "16px", right: "16px", zIndex: 200, background: "rgba(4,30,61,0.99)", backdropFilter: "blur(20px)", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.25)", overflow: "hidden", maxHeight: "70vh", overflowY: "auto", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
-          {searching && <div style={{ padding: "14px", textAlign: "center", fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>Searching…</div>}
+          {searching && <div style={{ padding: "14px", textAlign: "center", fontSize: "14px", color: "#BDD6F4", opacity: 0.5 }}>Searching…</div>}
           {!searching && searchResults.posts.length === 0 && searchResults.users.length === 0 && searchResults.routes.length === 0 && searchResults.peaks.length === 0 && (
             <div style={{ padding: "24px 14px", textAlign: "center" }}>
-              <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.4, marginBottom: "4px" }}>No results for "{headerSearch}"</div>
-              <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.25 }}>Try a mountain name, person, or post topic</div>
+              <div style={{ fontSize: "15px", color: "#BDD6F4", opacity: 0.4, marginBottom: "4px" }}>No results for "{headerSearch}"</div>
+              <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.25 }}>Try a mountain name, person, or post topic</div>
             </div>
           )}
           {searchResults.users.length > 0 && (
             <div>
-              <div style={{ padding: "10px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>People</div>
+              <div style={{ padding: "10px 14px 4px", fontSize: "11px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>People</div>
               {searchResults.users.map(u => (
                 <div key={u.id} style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid rgba(90,152,227,0.06)", cursor: "pointer" }} onClick={() => { setViewingProfile(u); setHeaderSearch(""); }}>
                   <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>{(u.username || u.name || "?")[0].toUpperCase()}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{u.name || u.username}</div>
-                    {u.username && <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>@{u.username}{u.location ? ` · ${u.location}` : ""}</div>}
+                    <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>{u.name || u.username}</div>
+                    {u.username && <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>@{u.username}{u.location ? ` · ${u.location}` : ""}</div>}
                   </div>
                   {u.id !== userId && (
-                    <button onClick={e => { e.stopPropagation(); handleFollowFromSearch(u.id); }} style={{ padding: "5px 12px", borderRadius: "8px", cursor: "pointer", flexShrink: 0, background: followingIds?.has(u.id) ? "rgba(90,152,227,0.12)" : "linear-gradient(135deg,#E85D3A,#d04a2a)", color: followingIds?.has(u.id) ? "#5A98E3" : "#F8F8F8", fontSize: "11px", fontWeight: 700, fontFamily: "'DM Sans'", border: followingIds?.has(u.id) ? "1px solid rgba(90,152,227,0.2)" : "none" }}>
+                    <button onClick={e => { e.stopPropagation(); handleFollowFromSearch(u.id); }} style={{ padding: "5px 12px", borderRadius: "8px", cursor: "pointer", flexShrink: 0, background: followingIds?.has(u.id) ? "rgba(90,152,227,0.12)" : "linear-gradient(135deg,#E85D3A,#d04a2a)", color: followingIds?.has(u.id) ? "#5A98E3" : "#F8F8F8", fontSize: "13px", fontWeight: 700, fontFamily: "'DM Sans'", border: followingIds?.has(u.id) ? "1px solid rgba(90,152,227,0.2)" : "none" }}>
                       {followingIds?.has(u.id) ? "Following" : "Follow"}
                     </button>
                   )}
@@ -7254,47 +7254,47 @@ export default function TrailSync() {
           )}
           {searchResults.routes.length > 0 && (
             <div>
-              <div style={{ padding: "10px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Routes</div>
+              <div style={{ padding: "10px 14px 4px", fontSize: "11px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Routes</div>
               {searchResults.routes.map(r => (
                 <div key={r.id} onClick={() => { setHeaderSearch(""); setTab("routes"); setPendingRouteDetail(r); }} style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid rgba(90,152,227,0.06)", cursor: "pointer" }}>
                   <div style={{ width: "34px", height: "34px", borderRadius: "10px", background: "rgba(232,93,58,0.1)", border: "1px solid rgba(232,93,58,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Route size={16} color="#E85D3A" /></div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
-                    <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>{r.reg} · {r.dist}km · {r.diff}</div>
+                    <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
+                    <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>{r.reg} · {r.dist}km · {r.diff}</div>
                   </div>
-                  <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "5px", background: "rgba(90,152,227,0.12)", color: "#5A98E3", fontWeight: 700, flexShrink: 0 }}>View route →</span>
+                  <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "5px", background: "rgba(90,152,227,0.12)", color: "#5A98E3", fontWeight: 700, flexShrink: 0 }}>View route →</span>
                 </div>
               ))}
             </div>
           )}
           {searchResults.peaks.length > 0 && (
             <div>
-              <div style={{ padding: "10px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Mountains</div>
+              <div style={{ padding: "10px 14px 4px", fontSize: "11px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Mountains</div>
               {searchResults.peaks.map(p => (
                 <div key={p.id} style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid rgba(90,152,227,0.06)" }}>
                   <div style={{ width: "34px", height: "34px", borderRadius: "10px", background: `${CLS[p.cls]?.color}15`, border: `1px solid ${CLS[p.cls]?.color}30`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Mountain size={16} color={CLS[p.cls]?.color || "#5A98E3"} /></div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{p.name}</div>
-                    <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>{p.ht}m · {p.reg}</div>
+                    <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>{p.name}</div>
+                    <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>{p.ht}m · {p.reg}</div>
                   </div>
-                  <span style={{ fontSize: "9px", padding: "2px 7px", borderRadius: "5px", background: `${CLS[p.cls]?.color}15`, color: CLS[p.cls]?.color, fontWeight: 700, flexShrink: 0 }}>{CLS[p.cls]?.name}</span>
+                  <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "5px", background: `${CLS[p.cls]?.color}15`, color: CLS[p.cls]?.color, fontWeight: 700, flexShrink: 0 }}>{CLS[p.cls]?.name}</span>
                 </div>
               ))}
             </div>
           )}
           {searchResults.posts.length > 0 && (
             <div>
-              <div style={{ padding: "10px 14px 4px", fontSize: "9px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Posts & Events</div>
+              <div style={{ padding: "10px 14px 4px", fontSize: "11px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Posts & Events</div>
               {searchResults.posts.map(p => (
                 <div key={p.id} style={{ padding: "10px 14px", borderBottom: "1px solid rgba(90,152,227,0.06)", cursor: "pointer" }} onClick={() => setHeaderSearch("")}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "5px" }}>
-                    <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: p.type === "fundraiser" ? "rgba(107,203,119,0.15)" : p.type === "event" ? "rgba(90,152,227,0.15)" : "#264f80", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>{p.av}</div>
-                    <span style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8" }}>{p.user}</span>
-                    <span style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", background: p.type === "fundraiser" ? "rgba(107,203,119,0.12)" : p.type === "event" ? "rgba(90,152,227,0.12)" : "rgba(232,93,58,0.1)", color: p.type === "fundraiser" ? "#6BCB77" : p.type === "event" ? "#5A98E3" : "#E85D3A", fontWeight: 600 }}>{p.type}</span>
-                    <span style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.35, marginLeft: "auto" }}>{p.time}</span>
+                    <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: p.type === "fundraiser" ? "rgba(107,203,119,0.15)" : p.type === "event" ? "rgba(90,152,227,0.15)" : "#264f80", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>{p.av}</div>
+                    <span style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{p.user}</span>
+                    <span style={{ fontSize: "11px", padding: "1px 6px", borderRadius: "4px", background: p.type === "fundraiser" ? "rgba(107,203,119,0.12)" : p.type === "event" ? "rgba(90,152,227,0.12)" : "rgba(232,93,58,0.1)", color: p.type === "fundraiser" ? "#6BCB77" : p.type === "event" ? "#5A98E3" : "#E85D3A", fontWeight: 600 }}>{p.type}</span>
+                    <span style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.35, marginLeft: "auto" }}>{p.time}</span>
                   </div>
-                  <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.45, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{p.text}</div>
-                  {p.peaks?.length > 0 && <div style={{ display: "flex", gap: "4px", marginTop: "5px", flexWrap: "wrap" }}>{p.peaks.map(pk => <span key={pk} style={{ fontSize: "9px", padding: "1px 6px", borderRadius: "4px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}</div>}
+                  <div style={{ fontSize: "14px", color: "#BDD6F4", lineHeight: 1.45, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{p.text}</div>
+                  {p.peaks?.length > 0 && <div style={{ display: "flex", gap: "4px", marginTop: "5px", flexWrap: "wrap" }}>{p.peaks.map(pk => <span key={pk} style={{ fontSize: "11px", padding: "1px 6px", borderRadius: "4px", background: "rgba(232,93,58,0.1)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}</div>}
                 </div>
               ))}
             </div>
@@ -7409,7 +7409,7 @@ export default function TrailSync() {
                 <div style={{ padding: "3px", borderRadius: "8px", background: a ? "rgba(232,93,58,.1)" : "transparent" }}><I size={18} /></div>
               )}
 
-              <span style={{ fontSize: "9px", fontWeight: a ? 700 : 500 }}>{t.label}</span>
+              <span style={{ fontSize: "11px", fontWeight: a ? 700 : 500 }}>{t.label}</span>
             </button>
           );
         })}
