@@ -2583,7 +2583,7 @@ const RouteWeatherPanel = ({ routeWeather, elevProfile, onElevHover, onElevLeave
   );
 };
 
-const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGpx, dbPeaks }) => {
+const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGpx, dbPeaks, isVisible }) => {
   const [layer, setLayer] = useState("standard");
   const [lm, setLm] = useState(false);
   const [wo, setWo] = useState(null);
@@ -2963,7 +2963,14 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     };
   }, []);
 
-
+  // When this tab becomes visible, tell Mapbox to recalculate its dimensions
+  useEffect(() => {
+    if (isVisible && mapRef.current) {
+      // Small delay ensures the CSS display:flex has painted before resize
+      const t = setTimeout(() => { try { mapRef.current.resize(); } catch(e) {} }, 50);
+      return () => clearTimeout(t);
+    }
+  }, [isVisible]);
 
   // Live hikers overlay
   useEffect(() => {
@@ -4288,6 +4295,13 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
   const [pwMsg, setPwMsg] = useState(null); const [pwLoading, setPwLoading] = useState(false);
   const [delStep, setDelStep] = useState(0); const [deacStep, setDeacStep] = useState(0);
   const [comments, setComments] = useState([]); const [actLoaded, setActLoaded] = useState(false);
+  // Edit profile state
+  const [epName, setEpName] = useState("");
+  const [epUsername, setEpUsername] = useState("");
+  const [epLocation, setEpLocation] = useState("");
+  const [epBio, setEpBio] = useState("");
+  const [epLoading, setEpLoading] = useState(false);
+  const [epMsg, setEpMsg] = useState(null);
   const [distUnit, setDistUnit] = useState(() => { try { return localStorage.getItem("ts_dist") || "km"; } catch { return "km"; }});
   const [elevUnit, setElevUnit] = useState(() => { try { return localStorage.getItem("ts_elev") || "m"; } catch { return "m"; }});
   const [speedUnit, setSpeedUnit] = useState(() => { try { return localStorage.getItem("ts_speed") || "kmh"; } catch { return "kmh"; }});
@@ -4351,6 +4365,13 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
           </button>
         </div>
         <Sec title="Profile & Activity" />
+        <Row icon="✏️" label="Edit Profile" sub="Name, username, location, bio" onClick={async () => {
+          if (userId) {
+            const { data } = await supabase.from("profiles").select("name, username, location, bio").eq("id", userId).single();
+            if (data) { setEpName(data.name || ""); setEpUsername(data.username || ""); setEpLocation(data.location || ""); setEpBio(data.bio || ""); }
+          }
+          setEpMsg(null); setPage("edit-profile");
+        }} />
         <Row icon="📊" label="Activity" sub="Your comments and interactions" onClick={() => setPage("activity")} />
         <Row icon="🔒" label="Privacy" sub="Account visibility, live hikers" onClick={() => setPage("privacy")} />
         <Row icon="📐" label="Preferences" sub="Units: distance, elevation, speed" onClick={() => setPage("preferences")} />
@@ -4363,6 +4384,58 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
         <Row icon="💳" label="Payment" sub="Payment methods" onClick={() => setPage("payment")} />
         <div style={{ marginTop: "24px", paddingBottom: "8px" }}>
           <button onClick={onSignOut} style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "1px solid rgba(232,93,58,0.2)", background: "rgba(232,93,58,0.05)", color: "#E85D3A", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Sign Out</button>
+        </div>
+      </>
+    );
+
+    if (page === "edit-profile") return (
+      <>
+        <Hdr title="Edit Profile" />
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {[
+            { label: "Display Name", val: epName, set: setEpName, placeholder: "Your name", type: "text" },
+            { label: "Username", val: epUsername, set: setEpUsername, placeholder: "username", type: "text" },
+            { label: "Location", val: epLocation, set: setEpLocation, placeholder: "e.g. Scottish Highlands", type: "text" },
+          ].map(({ label, val, set, placeholder, type }) => (
+            <div key={label}>
+              <div style={{ fontSize: "11px", fontWeight: 600, color: "#BDD6F4", opacity: 0.55, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
+              <input
+                type={type} value={val} onChange={e => set(e.target.value)} placeholder={placeholder}
+                style={{ width: "100%", padding: "11px 13px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#F8F8F8", fontSize: "13px", fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }}
+              />
+            </div>
+          ))}
+          <div>
+            <div style={{ fontSize: "11px", fontWeight: 600, color: "#BDD6F4", opacity: 0.55, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Bio</div>
+            <textarea
+              value={epBio} onChange={e => setEpBio(e.target.value)} placeholder="A short bio..." rows={3}
+              style={{ width: "100%", padding: "11px 13px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#F8F8F8", fontSize: "13px", fontFamily: "'DM Sans'", outline: "none", resize: "none", boxSizing: "border-box", lineHeight: 1.5 }}
+            />
+          </div>
+          {epMsg && (
+            <div style={{ padding: "10px 12px", borderRadius: "8px", background: epMsg.ok ? "rgba(107,203,119,0.1)" : "rgba(232,93,58,0.1)", border: `1px solid ${epMsg.ok ? "rgba(107,203,119,0.25)" : "rgba(232,93,58,0.25)"}`, color: epMsg.ok ? "#6BCB77" : "#E85D3A", fontSize: "12px", fontWeight: 600 }}>
+              {epMsg.text}
+            </div>
+          )}
+          <button
+            disabled={epLoading}
+            onClick={async () => {
+              if (!userId) return;
+              const uname = epUsername.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+              if (!uname) { setEpMsg({ ok: false, text: "Username can't be empty." }); return; }
+              setEpLoading(true); setEpMsg(null);
+              // Check username uniqueness (skip if unchanged)
+              const { data: existing } = await supabase.from("profiles").select("id").eq("username", uname).neq("id", userId).maybeSingle();
+              if (existing) { setEpMsg({ ok: false, text: "That username is already taken." }); setEpLoading(false); return; }
+              const { error } = await supabase.from("profiles").update({ name: epName.trim(), username: uname, location: epLocation.trim(), bio: epBio.trim() }).eq("id", userId);
+              setEpLoading(false);
+              if (error) { setEpMsg({ ok: false, text: "Save failed. Please try again." }); }
+              else { setEpMsg({ ok: true, text: "Profile updated!" }); setEpUsername(uname); }
+            }}
+            style={{ width: "100%", padding: "13px", borderRadius: "11px", border: "none", background: epLoading ? "rgba(90,152,227,0.15)" : "linear-gradient(135deg,#5A98E3,#4a7fcb)", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: epLoading ? "default" : "pointer", fontFamily: "'DM Sans'" }}
+          >
+            {epLoading ? "Saving…" : "Save Changes"}
+          </button>
         </div>
       </>
     );
@@ -7211,7 +7284,7 @@ export default function TrailSync() {
         {tab === "routes" && <RoutesPage openRoute={openRouteOnMap} pendingRouteDetail={pendingRouteDetail} onClearPendingRoute={() => setPendingRouteDetail(null)} />}
         {/* MapPage always mounted so GPX/Mapbox state survives tab switches — hidden with CSS when not active */}
         <div style={{ display: tab === "map" ? "flex" : "none", flex: 1, flexDirection: "column", overflow: "hidden" }}>
-          <MapPage dbPeaks={dbPeaks} goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={async (walk) => {
+          <MapPage isVisible={tab === "map"} dbPeaks={dbPeaks} goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={async (walk) => {
               // Optimistic update with DB-compatible shape
               const today = new Date();
               const dateWalked = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
