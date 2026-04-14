@@ -1852,11 +1852,11 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                     value={commentText}
                     onChange={e => setCommentText(e.target.value)}
                     onKeyDown={async e => {
-                      if (e.key === "Enter" && commentText.trim()) {
+                      if (e.key === "Enter" && commentText.trim() && userId) {
                         const txt = commentText.trim();
-                        setPostComments(prev => ({ ...prev, [p.id]: [...(prev[p.id] || []), { user: userName, av: (userName||"U")[0].toUpperCase(), text: txt }] }));
                         setCommentText("");
-                        await supabase.from("post_comments").insert({ post_id: p.id, user_id: userId, username: userName, text: txt }).catch(() => {});
+                        const { error } = await supabase.from("post_comments").insert({ post_id: p.id, user_id: userId, username: userName, text: txt });
+                        if (error) { console.error("Comment insert error:", JSON.stringify(error)); setCommentText(txt); return; }
                         fetchComments(p.id);
                       }
                     }}
@@ -1864,11 +1864,11 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                     style={{ flex: 1, padding: "8px 12px", borderRadius: "20px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#F8F8F8", fontSize: "14px", fontFamily: "'DM Sans'", outline: "none" }}
                   />
                   <button onClick={async () => {
-                    if (!commentText.trim()) return;
+                    if (!commentText.trim() || !userId) return;
                     const txt = commentText.trim();
-                    setPostComments(prev => ({ ...prev, [p.id]: [...(prev[p.id] || []), { user: userName, av: (userName||"U")[0].toUpperCase(), text: txt }] }));
                     setCommentText("");
-                    await supabase.from("post_comments").insert({ post_id: p.id, user_id: userId, username: userName, text: txt }).catch(() => {});
+                    const { error } = await supabase.from("post_comments").insert({ post_id: p.id, user_id: userId, username: userName, text: txt });
+                    if (error) { console.error("Comment insert error:", JSON.stringify(error)); setCommentText(txt); return; }
                     fetchComments(p.id);
                   }} style={{ padding: "8px 14px", borderRadius: "20px", border: "none", background: "linear-gradient(135deg,#5A98E3,#264f80)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", flexShrink: 0 }}>Post</button>
                 </div>
