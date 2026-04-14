@@ -4,7 +4,7 @@
 import {
   MapPin, Mountain, Cloud, Users, Trophy, Search, X, ChevronDown, ChevronRight, ChevronLeft,
   Star, Wind, Droplets, Eye, Thermometer, Navigation, Download, Calendar, Clock,
-  Heart, MessageCircle, Share2, Layers, AlertTriangle, Award,
+  Heart, MessageCircle, Share2, Repeat2, Layers, AlertTriangle, Award,
   TrendingUp, Compass, CloudSnow, CheckCircle, Globe,
   BookOpen, Bell, User, Play, Pause, Route,
   Home, Map, UserCircle, ArrowRight, Camera,
@@ -1012,6 +1012,8 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   const [wxOpen, setWxOpen] = useState(false);
   const [ff, setFf] = useState(initialFilter || "all");
   const [expandedArea, setExpandedArea] = useState(null);
+  const [wxCarouselIdx, setWxCarouselIdx] = useState(0);
+  const wxCarouselRef = useRef(null);
   const [showSAIS, setShowSAIS] = useState(false);
   const [windUnit, setWindUnit] = useState("mph");
   const fmtWind = (mph) => windUnit === "mph" ? Math.round(mph) : Math.round(mph * 1.60934);
@@ -1027,6 +1029,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   const [commentOpen, setCommentOpen] = useState(null); // postId
   const [commentText, setCommentText] = useState("");
   const [postComments, setPostComments] = useState({}); // { postId: [{user, text, time}] }
+  const [repostingId, setRepostingId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
 
@@ -1145,6 +1148,18 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
       const { data: post } = await supabase.from("posts").select("likes").eq("id", postId).single();
       if (post) await supabase.from("posts").update({ likes: (post.likes || 0) + 1 }).eq("id", postId);
     }
+  };
+
+  const fetchComments = async (postId) => {
+    const { data } = await supabase
+      .from("post_comments")
+      .select("username, text, created_at")
+      .eq("post_id", postId)
+      .order("created_at", { ascending: true });
+    if (data) setPostComments(prev => ({
+      ...prev,
+      [postId]: data.map(c => ({ user: c.username || "Hiker", av: (c.username || "H")[0].toUpperCase(), text: c.text }))
+    }));
   };
 
   const handleFollowInSearch = async (targetId) => {
@@ -1416,145 +1431,200 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
             <div style={{ padding: "0 14px 4px", fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>
               Ranked: wind 30% · feels-like 25% · precip 25% · vis 20% · summit altitude adjusted
             </div>
-            {sorted.map((a, i) => {
-              const isExpanded = expandedArea === i;
-              // Always use PEAKS_FALLBACK for weather display — Supabase peaks use different region names
-              const regionPeaks = PEAKS_FALLBACK.filter(p => p.reg === a.region);
-              const loosePeaks = regionPeaks.length > 0 ? regionPeaks : PEAKS_FALLBACK.filter(p => {
-                const rWords = a.region.toLowerCase().split(" ").filter(w => w.length > 3);
-                return rWords.some(w => p.reg.toLowerCase().includes(w));
-              });
-              const displayPeaks = loosePeaks.slice(0, 6);
+            {/* Carousel scroll container */}
+            <div
+              ref={wxCarouselRef}
+              onScroll={(e) => {
+                const el = e.currentTarget;
+                const cardWidth = el.scrollWidth / sorted.length;
+                setWxCarouselIdx(Math.round(el.scrollLeft / cardWidth));
+              }}
+              style={{
+                display: "flex", overflowX: "auto", scrollSnapType: "x mandatory",
+                scrollBehavior: "smooth", WebkitOverflowScrolling: "touch",
+                scrollbarWidth: "none", msOverflowStyle: "none",
+                padding: "10px 14px 4px", gap: "0"
+              }}>
+              {sorted.map((a, i) => {
+                const isExpanded = expandedArea === i;
+                const regionPeaks = PEAKS_FALLBACK.filter(p => p.reg === a.region);
+                const loosePeaks = regionPeaks.length > 0 ? regionPeaks : PEAKS_FALLBACK.filter(p => {
+                  const rWords = a.region.toLowerCase().split(" ").filter(w => w.length > 3);
+                  return rWords.some(w => p.reg.toLowerCase().includes(w));
+                });
+                const displayPeaks = loosePeaks.slice(0, 4);
+                const cardBg = a.score >= 85
+                  ? "linear-gradient(135deg, #0d3320, #1a4a2a)"
+                  : "linear-gradient(135deg, #0d2d54, #1a3a6a)";
+                const rankColor = a.score >= 85 ? "#6BCB77" : a.score >= 70 ? "#EBCB8B" : "#E85D3A";
 
-              return (
-                <div key={i}>
-                  <div onClick={() => !a.loading && setExpandedArea(isExpanded ? null : i)} style={{
-                    padding: "12px 14px", display: "flex", alignItems: "center", gap: "12px",
-                    borderTop: "1px solid rgba(90,152,227,0.1)", cursor: a.loading ? "default" : "pointer",
-                    background: isExpanded ? "rgba(90,152,227,0.06)" : i === 0 && !a.loading ? "rgba(107,203,119,0.04)" : "transparent",
-                    animation: `fi .3s ease ${i * .04}s both`,
-                    transition: "background .2s", opacity: a.loading ? 0.5 : 1
+                return (
+                  <div key={i} style={{
+                    scrollSnapAlign: "start", flex: "0 0 85%", marginRight: i < sorted.length - 1 ? "10px" : "0",
+                    background: cardBg, borderRadius: "16px",
+                    border: `1px solid ${a.score >= 85 ? "rgba(107,203,119,0.2)" : "rgba(90,152,227,0.2)"}`,
+                    padding: "14px", animation: `fi .3s ease ${i * .04}s both`,
+                    opacity: a.loading ? 0.6 : 1
                   }}>
-                    <div style={{
-                      width: "30px", height: "30px", borderRadius: "9px",
-                      background: a.loading ? "rgba(90,152,227,0.08)" :
-                        a.score >= 85 ? "rgba(107,203,119,0.12)" : a.score >= 70 ? "rgba(235,203,139,0.12)" : "rgba(232,93,58,0.12)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: "14px", fontWeight: 800,
-                      color: a.loading ? "#BDD6F4" : a.score >= 85 ? "#6BCB77" : a.score >= 70 ? "#EBCB8B" : "#E85D3A"
-                    }}>{a.loading ? "—" : a.score}</div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                    {/* Card header: rank + score */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        <span style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>{a.region}</span>
+                        <span style={{ fontSize: "11px", fontWeight: 800, color: rankColor, background: `${rankColor}18`, padding: "2px 8px", borderRadius: "6px" }}>
+                          #{i + 1}{i === 0 ? " BEST" : ""}
+                        </span>
                         <span style={{ fontSize: "11px", padding: "1px 6px", borderRadius: "4px", background: `${CLS[a.cls]?.color}18`, color: CLS[a.cls]?.color, fontWeight: 600 }}>
                           {CLS[a.cls]?.name}
                         </span>
-                        {a.isBestDay && a.bestDayName && !a.loading && (
-                          <span style={{ fontSize: "11px", padding: "1px 6px", borderRadius: "4px", background: "rgba(107,203,119,0.12)", color: "#6BCB77", fontWeight: 600 }}>
-                            {a.bestDayName}
-                          </span>
-                        )}
                       </div>
-                      <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6, marginTop: "1px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {a.peaks.join(" · ")}
+                      <div style={{ fontSize: "18px", fontWeight: 800, color: rankColor, fontFamily: "'JetBrains Mono'" }}>
+                        {a.loading ? "—" : a.score}
                       </div>
                     </div>
-                    <div style={{ display: "flex", gap: "10px", alignItems: "center", flexShrink: 0 }}>
-                      {a.loading ? (
-                        <div style={{ width: "60px", height: "28px", borderRadius: "6px", background: "rgba(90,152,227,0.08)" }} />
-                      ) : (
-                        <>
-                          <WI type={a.ic} size={18} />
-                          <div style={{ textAlign: "right", minWidth: "42px" }}>
-                            <div style={{ fontSize: "14px", fontWeight: 700, color: a.feels < -5 ? "#BDD6F4" : "#F8F8F8" }}>{a.feels}°</div>
-                            <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>feels</div>
-                          </div>
-                          <div style={{ textAlign: "right", minWidth: "36px" }}>
-                            <div style={{ fontSize: "14px", fontWeight: 700, color: a.wind > 35 ? "#E85D3A" : a.wind >= 20 ? "#F49D37" : "#F8F8F8" }}>{fmtWind(a.wind)}</div>
-                            <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.5 }}>{windUnit}</div>
-                          </div>
-                        </>
-                      )}
-                      <ChevronRight size={14} color="#F8F8F8" style={{ opacity: 0.8, transform: isExpanded ? "rotate(90deg)" : "none", transition: ".2s", flexShrink: 0 }} />
-                    </div>
-                  </div>
 
-                  {/* Expanded region detail */}
-                  {isExpanded && (
-                    <div style={{ padding: "0 14px 14px", background: "rgba(90,152,227,0.04)", borderTop: "1px solid rgba(90,152,227,0.06)", animation: "fi .2s ease" }}>
-                      <div style={{ padding: "10px 0 6px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div style={{ fontSize: "13px", fontWeight: 700, color: "#BDD6F4", opacity: 0.7 }}>Best mountains in {a.region}</div>
-                        <div style={{ display: "flex", gap: "8px", fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>
+                    {/* Region name */}
+                    <div style={{ fontSize: "22px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif", marginBottom: "2px", lineHeight: 1.2 }}>{a.region}</div>
+                    {a.isBestDay && a.bestDayName && !a.loading && (
+                      <span style={{ fontSize: "11px", padding: "1px 6px", borderRadius: "4px", background: "rgba(107,203,119,0.15)", color: "#6BCB77", fontWeight: 600, display: "inline-block", marginBottom: "10px" }}>{a.bestDayName}</span>
+                    )}
+
+                    {/* Weather summary row */}
+                    {a.loading ? (
+                      <div style={{ height: "36px", borderRadius: "8px", background: "rgba(90,152,227,0.08)", marginTop: "10px", marginBottom: "10px" }} />
+                    ) : (
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "10px", marginBottom: "6px" }}>
+                        <WI type={a.ic} size={22} />
+                        <span style={{ fontSize: "16px", fontWeight: 700, color: a.feels < -5 ? "#BDD6F4" : "#F8F8F8" }}>{a.feels}°</span>
+                        <span style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6 }}>feels</span>
+                        <span style={{ fontSize: "13px", fontWeight: 600, color: a.wind > 35 ? "#E85D3A" : a.wind >= 20 ? "#F49D37" : "#BDD6F4" }}>{fmtWind(a.wind)}{windUnit} wind</span>
+                      </div>
+                    )}
+
+                    {/* Precip bar */}
+                    {!a.loading && (
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                        <div style={{ flex: 1, height: "5px", borderRadius: "3px", background: "rgba(90,152,227,0.15)", overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: `${Math.min(100, (a.precip || 0) * 10)}%`, background: a.precip > 5 ? "#5A98E3" : "#BDD6F4", borderRadius: "3px", opacity: 0.7 }} />
+                        </div>
+                        <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, whiteSpace: "nowrap" }}>{a.precip || 0}mm precip</span>
+                      </div>
+                    )}
+
+                    {/* Best mountains */}
+                    {displayPeaks.length > 0 && (
+                      <div style={{ marginBottom: "10px" }}>
+                        <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>Best mountains</div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                          {displayPeaks.map(pk => (
+                            <div key={pk.id} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <Mountain size={11} color={CLS[pk.cls]?.color || "#BDD6F4"} />
+                              <span style={{ fontSize: "13px", color: "#F8F8F8", fontWeight: 600 }}>{pk.name}</span>
+                              <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4 }}>{pk.ht}m</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Expand toggle */}
+                    <button onClick={() => !a.loading && setExpandedArea(isExpanded ? null : i)} style={{
+                      width: "100%", padding: "8px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)",
+                      background: "rgba(90,152,227,0.08)", color: "#5A98E3", fontSize: "12px", fontWeight: 700,
+                      cursor: a.loading ? "default" : "pointer", fontFamily: "'DM Sans'",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: "4px"
+                    }}>
+                      {isExpanded ? "Hide detail" : "View weather detail"} <ChevronRight size={12} style={{ transform: isExpanded ? "rotate(90deg)" : "none", transition: ".2s" }} />
+                    </button>
+
+                    {/* Expanded peak detail */}
+                    {isExpanded && (
+                      <div style={{ marginTop: "10px", borderTop: "1px solid rgba(90,152,227,0.1)", paddingTop: "10px", animation: "fi .2s ease" }}>
+                        <div style={{ display: "flex", gap: "8px", fontSize: "12px", color: "#BDD6F4", opacity: 0.5, marginBottom: "8px", flexWrap: "wrap" }}>
                           <span>Temp: {a.temp}°</span>
                           <span>Precip: {a.precip}mm</span>
                           <span>Vis: {a.vis}</span>
                           <span>Wind: {fmtWind(a.wind)}{windUnit}</span>
                         </div>
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                        {displayPeaks.map((pk, j) => {
-                          const key = `${pk.id}-${wxDay}`;
-                          const lw = peakWx[key];
-                          const loading = peakWxLoading[key];
-                          return (
-                          <div key={pk.id}
-                            onClick={() => {
-                              // Open card immediately — fetch if not yet loaded
-                              setSelPeakWx({ peak: pk, wx: lw || null });
-                              if (!lw && !loading) {
-                                const offset = Math.max(0, wxDay);
-                                setPeakWxLoading(prev => ({ ...prev, [key]: true }));
-                                fetchPeakWeather(pk, offset).then(w => {
-                                  if (w) {
-                                    setPeakWx(prev => ({ ...prev, [key]: w }));
-                                    setSelPeakWx({ peak: pk, wx: w });
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          {loosePeaks.slice(0, 6).map((pk, j) => {
+                            const key = `${pk.id}-${wxDay}`;
+                            const lw = peakWx[key];
+                            const loading = peakWxLoading[key];
+                            return (
+                              <div key={pk.id}
+                                onClick={() => {
+                                  setSelPeakWx({ peak: pk, wx: lw || null });
+                                  if (!lw && !loading) {
+                                    const offset = Math.max(0, wxDay);
+                                    setPeakWxLoading(prev => ({ ...prev, [key]: true }));
+                                    fetchPeakWeather(pk, offset).then(w => {
+                                      if (w) { setPeakWx(prev => ({ ...prev, [key]: w })); setSelPeakWx({ peak: pk, wx: w }); }
+                                      setPeakWxLoading(prev => ({ ...prev, [key]: false }));
+                                    });
                                   }
-                                  setPeakWxLoading(prev => ({ ...prev, [key]: false }));
-                                });
-                              }
-                            }}
-                            style={{
-                              display: "flex", alignItems: "center", gap: "10px",
-                              padding: "9px 10px", borderRadius: "10px",
-                              background: "#041e3d", border: "1px solid rgba(90,152,227,0.08)",
-                              animation: `fi .2s ease ${j * .05}s both`,
-                              cursor: "pointer",
-                              transition: "border .15s"
-                            }}>
-                            <Mountain size={14} color={CLS[pk.cls]?.color} />
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{pk.name}</div>
-                              <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5 }}>{pk.ht}m · {pk.reg}</div>
-                            </div>
-                            {loading && <div style={{ width: "70px", height: "28px", borderRadius: "6px", background: "rgba(90,152,227,0.08)" }} />}
-                            {!loading && lw && lw.wi !== undefined && (
-                              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                                <WI type={lw.ic || "cloudsun"} size={14} />
-                                <div style={{ textAlign: "center" }}>
-                                  <div style={{ fontSize: "13px", fontWeight: 700, color: lw.f < -5 ? "#BDD6F4" : "#F8F8F8" }}>{lw.f}°</div>
-                                  <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.4 }}>feels</div>
+                                }}
+                                style={{
+                                  display: "flex", alignItems: "center", gap: "10px",
+                                  padding: "9px 10px", borderRadius: "10px",
+                                  background: "#041e3d", border: "1px solid rgba(90,152,227,0.08)",
+                                  animation: `fi .2s ease ${j * .05}s both`, cursor: "pointer"
+                                }}>
+                                <Mountain size={14} color={CLS[pk.cls]?.color} />
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{pk.name}</div>
+                                  <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5 }}>{pk.ht}m · {pk.reg}</div>
                                 </div>
-                                <div style={{ textAlign: "center" }}>
-                                  <div style={{ fontSize: "13px", fontWeight: 700, color: lw.wi > 35 ? "#E85D3A" : lw.wi >= 20 ? "#F49D37" : "#F8F8F8" }}>{fmtWind(lw.wi)}<span style={{ fontSize: "10px" }}>{windUnit}</span></div>
-                                  <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.4 }}>wind</div>
-                                </div>
-                                {lw.sn && <Snowflake size={12} color="#BDD6F4" />}
-                                <ChevronRight size={12} color="#BDD6F4" style={{ opacity: 0.4 }} />
+                                {loading && <div style={{ width: "70px", height: "28px", borderRadius: "6px", background: "rgba(90,152,227,0.08)" }} />}
+                                {!loading && lw && lw.wi !== undefined && (
+                                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                    <WI type={lw.ic || "cloudsun"} size={14} />
+                                    <div style={{ textAlign: "center" }}>
+                                      <div style={{ fontSize: "13px", fontWeight: 700, color: lw.f < -5 ? "#BDD6F4" : "#F8F8F8" }}>{lw.f}°</div>
+                                      <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.4 }}>feels</div>
+                                    </div>
+                                    <div style={{ textAlign: "center" }}>
+                                      <div style={{ fontSize: "13px", fontWeight: 700, color: lw.wi > 35 ? "#E85D3A" : lw.wi >= 20 ? "#F49D37" : "#F8F8F8" }}>{fmtWind(lw.wi)}<span style={{ fontSize: "10px" }}>{windUnit}</span></div>
+                                      <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.4 }}>wind</div>
+                                    </div>
+                                    {lw.sn && <Snowflake size={12} color="#BDD6F4" />}
+                                    <ChevronRight size={12} color="#BDD6F4" style={{ opacity: 0.4 }} />
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                        );})}
-                      </div>
-                      {a.peaks.length > displayPeaks.length && (
-                        <div style={{ fontSize: "12px", color: "#5A98E3", textAlign: "center", marginTop: "8px", fontWeight: 600, cursor: "pointer" }}>
-                          + {a.peaks.length - displayPeaks.length} more peaks in this area
+                            );
+                          })}
                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                        {a.peaks.length > loosePeaks.slice(0, 6).length && (
+                          <div style={{ fontSize: "12px", color: "#5A98E3", textAlign: "center", marginTop: "8px", fontWeight: 600 }}>
+                            + {a.peaks.length - loosePeaks.slice(0, 6).length} more peaks in this area
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Dot indicators */}
+            {sorted.length > 1 && (
+              <div style={{ display: "flex", justifyContent: "center", gap: "6px", padding: "8px 0 10px" }}>
+                {sorted.map((_, i) => (
+                  <div key={i} onClick={() => {
+                    if (wxCarouselRef.current) {
+                      const cardWidth = wxCarouselRef.current.scrollWidth / sorted.length;
+                      wxCarouselRef.current.scrollTo({ left: cardWidth * i, behavior: "smooth" });
+                      setWxCarouselIdx(i);
+                    }
+                  }} style={{
+                    width: wxCarouselIdx === i ? "8px" : "6px",
+                    height: wxCarouselIdx === i ? "8px" : "6px",
+                    borderRadius: "50%",
+                    background: wxCarouselIdx === i ? "#5A98E3" : "rgba(90,152,227,0.3)",
+                    cursor: "pointer", transition: "all .2s"
+                  }} />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1778,8 +1848,24 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
             )}
             <div style={{ display: "flex", gap: "16px", marginTop: "12px" }}>
               <button onClick={() => handleLike(p.id)} style={{ background: "none", border: "none", color: likedPosts.has(p.id) ? "#E85D3A" : "#BDD6F4", opacity: likedPosts.has(p.id) ? 1 : 0.5, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Heart size={14} fill={likedPosts.has(p.id) ? "#E85D3A" : "none"} /> {p.likes}</button>
-              <button onClick={() => setCommentOpen(commentOpen === p.id ? null : p.id)} style={{ background: "none", border: "none", color: commentOpen === p.id ? "#5A98E3" : "#BDD6F4", opacity: commentOpen === p.id ? 1 : 0.5, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><MessageCircle size={14} /> {(postComments[p.id] || []).length || p.comments || 0}</button>
-              <button style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.5, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Share2 size={14} /></button>
+              <button onClick={(e) => { e.stopPropagation(); const opening = commentOpen !== p.id; setCommentOpen(opening ? p.id : null); if (opening) fetchComments(p.id); }} style={{ background: "none", border: "none", color: commentOpen === p.id ? "#5A98E3" : "#BDD6F4", opacity: commentOpen === p.id ? 1 : 0.5, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><MessageCircle size={14} /> {(postComments[p.id] || []).length || p.comments || 0}</button>
+              <button onClick={async (e) => {
+                e.stopPropagation();
+                if (!userId || repostingId) return;
+                setRepostingId(p.id);
+                const txt = `🔁 @${p.user}: ${p.text.slice(0, 120)}${p.text.length > 120 ? "…" : ""}`;
+                await supabase.from("posts").insert({ user_id: userId, username: userName, type: "repost", text: txt, likes: 0 });
+                setRepostingId(null);
+                fetchPosts();
+              }} style={{ background: "none", border: "none", color: repostingId === p.id ? "#5A98E3" : "#BDD6F4", opacity: repostingId === p.id ? 1 : 0.5, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}>
+                {repostingId === p.id ? <div style={{ width: "14px", height: "14px", borderRadius: "50%", border: "2px solid rgba(90,152,227,0.3)", borderTop: "2px solid #5A98E3", animation: "spin 0.7s linear infinite" }} /> : <Repeat2 size={14} />}
+              </button>
+              <button onClick={async (e) => {
+                e.stopPropagation();
+                try { await navigator.share({ title: `TrailSync — ${p.user}`, text: p.text, url: "https://trailsync-zeta.vercel.app" }); } catch {}
+              }} style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.5, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}>
+                <Share2 size={14} />
+              </button>
               {p.user_id === userId && (
                 <button onClick={(e) => {
                   e.stopPropagation();
@@ -1810,6 +1896,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                         setPostComments(prev => ({ ...prev, [p.id]: [...(prev[p.id] || []), { user: userName, av: (userName||"U")[0].toUpperCase(), text: txt }] }));
                         setCommentText("");
                         await supabase.from("post_comments").insert({ post_id: p.id, user_id: userId, username: userName, text: txt }).catch(() => {});
+                        fetchComments(p.id);
                       }
                     }}
                     placeholder="Add a comment…"
@@ -1821,6 +1908,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                     setPostComments(prev => ({ ...prev, [p.id]: [...(prev[p.id] || []), { user: userName, av: (userName||"U")[0].toUpperCase(), text: txt }] }));
                     setCommentText("");
                     await supabase.from("post_comments").insert({ post_id: p.id, user_id: userId, username: userName, text: txt }).catch(() => {});
+                    fetchComments(p.id);
                   }} style={{ padding: "8px 14px", borderRadius: "20px", border: "none", background: "linear-gradient(135deg,#5A98E3,#264f80)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", flexShrink: 0 }}>Post</button>
                 </div>
               </div>
@@ -6387,6 +6475,29 @@ const UserProfileModal = ({ user, userId, followingIds, onFollow, onClose }) => 
   const [followerCount, setFollowerCount] = useState(user.follower_count || 0);
   const [followingCount, setFollowingCount] = useState(user.following_count || 0);
   const [sec, setSec] = useState("mountains");
+  const [showFollowList, setShowFollowList] = useState(null); // null | "followers" | "following"
+  const [followList, setFollowList] = useState([]);
+  const [followListLoading, setFollowListLoading] = useState(false);
+
+  const loadFollowList = async (type) => {
+    setShowFollowList(type);
+    setFollowListLoading(true);
+    setFollowList([]);
+    if (type === "followers") {
+      const { data } = await supabase
+        .from("follows")
+        .select("follower_id, profiles!follows_follower_id_fkey(id, username, name, location)")
+        .eq("following_id", user.id);
+      setFollowList((data || []).map(r => r.profiles).filter(Boolean));
+    } else {
+      const { data } = await supabase
+        .from("follows")
+        .select("following_id, profiles!follows_following_id_fkey(id, username, name, location)")
+        .eq("follower_id", user.id);
+      setFollowList((data || []).map(r => r.profiles).filter(Boolean));
+    }
+    setFollowListLoading(false);
+  };
 
   useEffect(() => {
     async function loadProfile() {
@@ -6456,10 +6567,12 @@ const UserProfileModal = ({ user, userId, followingIds, onFollow, onClose }) => 
 
           {/* Stats row */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px", marginBottom: "16px" }}>
-            {[[walks.length, "Walks"], [peaks.length, "Peaks"], [followerCount, "Followers"], [followingCount, "Following"]].map(([val, label]) => (
-              <div key={label} style={{ textAlign: "center", padding: "10px 4px", background: "#0a2240", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.1)" }}>
+            {[[walks.length, "Walks", null], [peaks.length, "Peaks", null], [followerCount, "Followers", "followers"], [followingCount, "Following", "following"]].map(([val, label, listType]) => (
+              <div key={label}
+                onClick={() => listType && loadFollowList(listType)}
+                style={{ textAlign: "center", padding: "10px 4px", background: "#0a2240", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.1)", cursor: listType ? "pointer" : "default" }}>
                 <div style={{ fontSize: "18px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
-                <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4, marginTop: "3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
+                <div style={{ fontSize: "10px", color: listType ? "#5A98E3" : "#BDD6F4", opacity: listType ? 0.8 : 0.4, marginTop: "3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
               </div>
             ))}
           </div>
@@ -6558,6 +6671,45 @@ const UserProfileModal = ({ user, userId, followingIds, onFollow, onClose }) => 
           )}
         </div>
       </div>
+
+      {/* Follow list overlay */}
+      {showFollowList && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 90, background: "#041e3d", display: "flex", flexDirection: "column", animation: "fi .2s ease" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "calc(14px + env(safe-area-inset-top, 0px)) 16px 14px", borderBottom: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,0.95)", backdropFilter: "blur(12px)", flexShrink: 0 }}>
+            <button onClick={() => setShowFollowList(null)} style={{ background: "rgba(90,152,227,0.1)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", padding: "7px 12px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "15px", fontWeight: 600, fontFamily: "'DM Sans'" }}>
+              <ChevronLeft size={16} /> Back
+            </button>
+            <div style={{ fontSize: "17px", fontWeight: 700, color: "#F8F8F8", fontFamily: "'DM Sans'" }}>{showFollowList === "followers" ? "Followers" : "Following"}</div>
+          </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
+            {followListLoading ? (
+              <div style={{ textAlign: "center", padding: "40px" }}>
+                <div style={{ width: "24px", height: "24px", borderRadius: "50%", border: "3px solid rgba(90,152,227,0.2)", borderTop: "3px solid #5A98E3", animation: "spin 0.7s linear infinite", margin: "0 auto" }} />
+              </div>
+            ) : followList.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                <Users size={36} color="#BDD6F4" style={{ opacity: 0.2, marginBottom: "12px" }} />
+                <div style={{ fontSize: "15px", color: "#BDD6F4", opacity: 0.4 }}>No {showFollowList} yet</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {followList.map(u => (
+                  <div key={u.id} style={{ background: "#0a2240", borderRadius: "12px", padding: "12px 14px", border: "1px solid rgba(90,152,227,0.1)", display: "flex", alignItems: "center", gap: "12px" }}>
+                    <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>
+                      {(u.name || u.username || "H")[0].toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>{u.name || u.username || "Hiker"}</div>
+                      {u.username && <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.5 }}>@{u.username}</div>}
+                      {u.location && <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.35, marginTop: "1px" }}>📍 {u.location}</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
