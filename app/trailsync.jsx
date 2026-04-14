@@ -1131,22 +1131,18 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   const handleLike = async (postId) => {
     if (!userId) return;
     const liked = likedPosts.has(postId);
-    // Optimistic update
+    // Optimistic update — flips heart and adjusts count immediately
     setLikedPosts(prev => {
       const next = new Set(prev);
       liked ? next.delete(postId) : next.add(postId);
       return next;
     });
     setLivePosts(prev => prev.map(p => p.id === postId ? { ...p, likes: Math.max(0, p.likes + (liked ? -1 : 1)) } : p));
-    if (liked) {
-      await supabase.from("post_likes").delete().eq("post_id", postId).eq("user_id", userId);
-      // Get current likes then decrement
-      const { data: post } = await supabase.from("posts").select("likes").eq("id", postId).single();
-      if (post) await supabase.from("posts").update({ likes: Math.max(0, (post.likes || 0) - 1) }).eq("id", postId);
-    } else {
-      await supabase.from("post_likes").insert({ post_id: postId, user_id: userId });
-      const { data: post } = await supabase.from("posts").select("likes").eq("id", postId).single();
-      if (post) await supabase.from("posts").update({ likes: (post.likes || 0) + 1 }).eq("id", postId);
+    // Single atomic RPC — no race condition, no manual read-then-write
+    const { data: newCount, error } = await supabase.rpc("toggle_post_like", { p_post_id: postId, p_user_id: userId });
+    if (!error && newCount !== null) {
+      // Reconcile with server count in case of concurrent likes
+      setLivePosts(prev => prev.map(p => p.id === postId ? { ...p, likes: newCount } : p));
     }
   };
 
