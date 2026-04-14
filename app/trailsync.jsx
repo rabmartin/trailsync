@@ -1456,59 +1456,48 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
 
                 return (
                   <div key={i} style={{
-                    scrollSnapAlign: "start", flex: "0 0 91%", marginRight: i < sorted.length - 1 ? "10px" : "0",
-                    background: cardBg, borderRadius: "16px",
+                    scrollSnapAlign: "start", flex: "0 0 88%", marginRight: i < sorted.length - 1 ? "8px" : "0",
+                    background: cardBg, borderRadius: "14px",
                     border: `1px solid ${a.score >= 85 ? "rgba(107,203,119,0.2)" : "rgba(90,152,227,0.2)"}`,
-                    padding: "14px", animation: `fi .3s ease ${i * .04}s both`,
-                    opacity: a.loading ? 0.6 : 1
+                    padding: "10px 12px", animation: `fi .3s ease ${i * .04}s both`,
+                    opacity: a.loading ? 0.6 : 1, display: "flex", flexDirection: "column", alignItems: "center"
                   }}>
-                    {/* Card header: rank + score */}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        <span style={{ fontSize: "11px", fontWeight: 800, color: rankColor, background: `${rankColor}18`, padding: "2px 8px", borderRadius: "6px" }}>
-                          #{i + 1}{i === 0 ? " BEST" : ""}
-                        </span>
-                        <span style={{ fontSize: "11px", padding: "1px 6px", borderRadius: "4px", background: `${CLS[a.cls]?.color}18`, color: CLS[a.cls]?.color, fontWeight: 600 }}>
-                          {CLS[a.cls]?.name}
-                        </span>
-                      </div>
-                      <div style={{ fontSize: "18px", fontWeight: 800, color: rankColor, fontFamily: "'JetBrains Mono'" }}>
+                    {/* Card header: rank + score — centred */}
+                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "8px", marginBottom: "6px", width: "100%" }}>
+                      <span style={{ fontSize: "11px", fontWeight: 800, color: rankColor, background: `${rankColor}18`, padding: "2px 8px", borderRadius: "6px" }}>
+                        #{i + 1}{i === 0 ? " BEST" : ""}
+                      </span>
+                      <span style={{ fontSize: "11px", padding: "1px 6px", borderRadius: "4px", background: `${CLS[a.cls]?.color}18`, color: CLS[a.cls]?.color, fontWeight: 600 }}>
+                        {CLS[a.cls]?.name}
+                      </span>
+                      <span style={{ fontSize: "15px", fontWeight: 800, color: rankColor, fontFamily: "'JetBrains Mono'", marginLeft: "auto" }}>
                         {a.loading ? "—" : a.score}
-                      </div>
+                      </span>
                     </div>
 
-                    {/* Region name */}
-                    <div style={{ fontSize: "22px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif", marginBottom: "2px", lineHeight: 1.2 }}>{a.region}</div>
+                    {/* Region name — centred, smaller */}
+                    <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'DM Sans',sans-serif", textAlign: "center", lineHeight: 1.2, marginBottom: "4px" }}>{a.region}</div>
                     {a.isBestDay && a.bestDayName && !a.loading && (
-                      <span style={{ fontSize: "11px", padding: "1px 6px", borderRadius: "4px", background: "rgba(107,203,119,0.15)", color: "#6BCB77", fontWeight: 600, display: "inline-block", marginBottom: "10px" }}>{a.bestDayName}</span>
+                      <span style={{ fontSize: "10px", padding: "1px 6px", borderRadius: "4px", background: "rgba(107,203,119,0.15)", color: "#6BCB77", fontWeight: 600, display: "inline-block", marginBottom: "6px" }}>{a.bestDayName}</span>
                     )}
 
-                    {/* Weather summary row */}
+                    {/* Weather summary row — centred */}
                     {a.loading ? (
-                      <div style={{ height: "36px", borderRadius: "8px", background: "rgba(90,152,227,0.08)", marginTop: "10px", marginBottom: "10px" }} />
+                      <div style={{ height: "28px", borderRadius: "8px", background: "rgba(90,152,227,0.08)", margin: "6px 0", width: "100%" }} />
                     ) : (
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "10px", marginBottom: "6px" }}>
-                        <WI type={a.ic} size={22} />
-                        <span style={{ fontSize: "16px", fontWeight: 700, color: a.feels < -5 ? "#BDD6F4" : "#F8F8F8" }}>{a.feels}°</span>
-                        <span style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.6 }}>feels</span>
-                        <span style={{ fontSize: "13px", fontWeight: 600, color: a.wind > 35 ? "#E85D3A" : a.wind >= 20 ? "#F49D37" : "#BDD6F4" }}>{fmtWind(a.wind)}{windUnit} wind</span>
-                      </div>
-                    )}
-
-                    {/* Precip bar */}
-                    {!a.loading && (
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-                        <div style={{ flex: 1, height: "5px", borderRadius: "3px", background: "rgba(90,152,227,0.15)", overflow: "hidden" }}>
-                          <div style={{ height: "100%", width: `${Math.min(100, (a.precip || 0) * 10)}%`, background: a.precip > 5 ? "#5A98E3" : "#BDD6F4", borderRadius: "3px", opacity: 0.7 }} />
-                        </div>
-                        <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, whiteSpace: "nowrap" }}>{a.precip || 0}mm precip</span>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginBottom: "4px" }}>
+                        <WI type={a.ic} size={18} />
+                        <span style={{ fontSize: "14px", fontWeight: 700, color: a.feels < -5 ? "#BDD6F4" : "#F8F8F8" }}>{a.feels}°</span>
+                        <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6 }}>feels</span>
+                        <span style={{ fontSize: "11px", fontWeight: 600, color: a.wind > 35 ? "#E85D3A" : a.wind >= 20 ? "#F49D37" : "#BDD6F4" }}>{fmtWind(a.wind)}{windUnit}</span>
+                        <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5 }}>{a.precip || 0}mm</span>
                       </div>
                     )}
 
                     {/* Mountains with per-peak weather — always visible */}
                     {loosePeaks.length > 0 && (
-                      <div style={{ borderTop: "1px solid rgba(90,152,227,0.1)", paddingTop: "10px" }}>
-                        <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.45, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Mountains in this area</div>
+                      <div style={{ borderTop: "1px solid rgba(90,152,227,0.1)", paddingTop: "8px", width: "100%", marginTop: "4px" }}>
+                        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.45, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px", textAlign: "center" }}>Mountains</div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                           {loosePeaks.slice(0, 6).map((pk, j) => {
                             const key = `${pk.id}-${wxDay}`;
@@ -1527,32 +1516,25 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                                   }
                                 }}
                                 style={{
-                                  display: "flex", alignItems: "center", gap: "10px",
-                                  padding: "9px 10px", borderRadius: "10px",
-                                  background: "rgba(4,30,61,0.5)", border: "1px solid rgba(90,152,227,0.1)",
+                                  display: "flex", alignItems: "center", gap: "8px",
+                                  padding: "5px 8px", borderRadius: "8px",
+                                  background: "rgba(4,30,61,0.5)", border: "1px solid rgba(90,152,227,0.08)",
                                   cursor: "pointer", animation: `fi .2s ease ${j * .05}s both`
                                 }}>
-                                <Mountain size={14} color={CLS[pk.cls]?.color || "#BDD6F4"} />
+                                <Mountain size={12} color={CLS[pk.cls]?.color || "#BDD6F4"} style={{ flexShrink: 0 }} />
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pk.name}</div>
-                                  <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4 }}>{pk.ht}m · {CLS[pk.cls]?.name || pk.cls}</div>
+                                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pk.name}</div>
+                                  <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4 }}>{pk.ht}m</div>
                                 </div>
                                 {pkLoading && (
-                                  <div style={{ width: "16px", height: "16px", borderRadius: "50%", border: "2px solid rgba(90,152,227,0.2)", borderTop: "2px solid #5A98E3", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
+                                  <div style={{ width: "12px", height: "12px", borderRadius: "50%", border: "2px solid rgba(90,152,227,0.2)", borderTop: "2px solid #5A98E3", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
                                 )}
                                 {!pkLoading && lw && (
-                                  <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
-                                    <WI type={lw.ic || "cloudsun"} size={16} />
-                                    <div style={{ textAlign: "center" }}>
-                                      <div style={{ fontSize: "14px", fontWeight: 700, color: lw.f < -5 ? "#BDD6F4" : "#F8F8F8" }}>{lw.f}°</div>
-                                      <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4 }}>feels</div>
-                                    </div>
-                                    <div style={{ textAlign: "center" }}>
-                                      <div style={{ fontSize: "13px", fontWeight: 700, color: lw.wi > 35 ? "#E85D3A" : lw.wi >= 20 ? "#F49D37" : "#F8F8F8" }}>{fmtWind(lw.wi)}<span style={{ fontSize: "10px" }}>{windUnit}</span></div>
-                                      <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4 }}>wind</div>
-                                    </div>
-                                    {lw.sn && <Snowflake size={12} color="#BDD6F4" />}
-                                    <ChevronRight size={12} color="#BDD6F4" style={{ opacity: 0.3 }} />
+                                  <div style={{ display: "flex", gap: "6px", alignItems: "center", flexShrink: 0 }}>
+                                    <WI type={lw.ic || "cloudsun"} size={13} />
+                                    <span style={{ fontSize: "12px", fontWeight: 700, color: lw.f < -5 ? "#BDD6F4" : "#F8F8F8" }}>{lw.f}°</span>
+                                    <span style={{ fontSize: "11px", color: lw.wi > 35 ? "#E85D3A" : lw.wi >= 20 ? "#F49D37" : "#BDD6F4", opacity: 0.8 }}>{fmtWind(lw.wi)}{windUnit}</span>
+                                    {lw.sn && <Snowflake size={10} color="#BDD6F4" />}
                                   </div>
                                 )}
                               </div>
@@ -1835,9 +1817,9 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
               )}
             </div>
 
-            {/* Comment section */}
+            {/* Comment section — stopPropagation prevents card click closing it while typing */}
             {commentOpen === p.id && (
-              <div style={{ marginTop: "10px", borderTop: "1px solid rgba(90,152,227,0.08)", paddingTop: "10px" }}>
+              <div onClick={e => e.stopPropagation()} style={{ marginTop: "10px", borderTop: "1px solid rgba(90,152,227,0.08)", paddingTop: "10px" }}>
                 {(postComments[p.id] || []).map((c, ci) => (
                   <div key={ci} style={{ display: "flex", gap: "8px", marginBottom: "8px", alignItems: "flex-start" }}>
                     <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>{c.av}</div>
@@ -1863,7 +1845,8 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                     placeholder="Add a comment…"
                     style={{ flex: 1, padding: "8px 12px", borderRadius: "20px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#F8F8F8", fontSize: "14px", fontFamily: "'DM Sans'", outline: "none" }}
                   />
-                  <button onClick={async () => {
+                  <button onClick={async (e) => {
+                    e.stopPropagation();
                     if (!commentText.trim() || !userId) return;
                     const txt = commentText.trim();
                     setCommentText("");
