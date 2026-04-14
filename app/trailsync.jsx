@@ -1009,7 +1009,7 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
    TAB 1: HOME
    ═══════════════════════════════════════════════════════════════════ */
 const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingIds, setFollowingCount, headerSearch, setHeaderSearch, openRoute, searchResults, setSearchResults, searching, setSearching, onViewProfile }) => {
-  const [wxOpen, setWxOpen] = useState(false);
+  const [wxOpen, setWxOpen] = useState(true);
   const [ff, setFf] = useState(initialFilter || "all");
   const [expandedArea, setExpandedArea] = useState(null);
   const [wxCarouselIdx, setWxCarouselIdx] = useState(0);
@@ -1294,29 +1294,29 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
     };
   }).sort((a, b) => b.score - a.score);
 
-  // Fetch peak weather when a region is expanded
+  // Fetch peak weather for the currently visible carousel card (and prefetch neighbours)
   useEffect(() => {
-    if (expandedArea === null) return;
-    const area = sorted[expandedArea];
-    if (!area) return;
-    const regionPeaks = (() => {
-      const exact = PEAKS_FALLBACK.filter(p => p.reg === area.region);
-      if (exact.length > 0) return exact.slice(0, 6);
-      const rWords = area.region.toLowerCase().split(" ").filter(w => w.length > 3);
-      return PEAKS_FALLBACK.filter(p => rWords.some(w => p.reg.toLowerCase().includes(w))).slice(0, 6);
-    })();
-
-    regionPeaks.forEach(pk => {
-      const key = `${pk.id}-${wxDay}`;
-      if (peakWx[key] || peakWxLoading[key]) return;
-      setPeakWxLoading(prev => ({ ...prev, [key]: true }));
-      const offset = wxDay === -1 ? 0 : wxDay;
-      fetchPeakWeather(pk, offset).then(w => {
-        if (w) setPeakWx(prev => ({ ...prev, [key]: w }));
-        setPeakWxLoading(prev => ({ ...prev, [key]: false }));
+    [wxCarouselIdx - 1, wxCarouselIdx, wxCarouselIdx + 1].forEach(idx => {
+      const area = sorted[idx];
+      if (!area || area.loading) return;
+      const regionPeaks = (() => {
+        const exact = PEAKS_FALLBACK.filter(p => p.reg === area.region);
+        if (exact.length > 0) return exact.slice(0, 6);
+        const rWords = area.region.toLowerCase().split(" ").filter(w => w.length > 3);
+        return PEAKS_FALLBACK.filter(p => rWords.some(w => p.reg.toLowerCase().includes(w))).slice(0, 6);
+      })();
+      regionPeaks.forEach(pk => {
+        const key = `${pk.id}-${wxDay}`;
+        if (peakWx[key] || peakWxLoading[key]) return;
+        setPeakWxLoading(prev => ({ ...prev, [key]: true }));
+        const offset = wxDay === -1 ? 0 : wxDay;
+        fetchPeakWeather(pk, offset).then(w => {
+          if (w) setPeakWx(prev => ({ ...prev, [key]: w }));
+          setPeakWxLoading(prev => ({ ...prev, [key]: false }));
+        });
       });
     });
-  }, [expandedArea, wxDay, wxData]);
+  }, [wxCarouselIdx, wxDay, wxData]);
 
   return (
     <div
@@ -1456,7 +1456,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
 
                 return (
                   <div key={i} style={{
-                    scrollSnapAlign: "start", flex: "0 0 85%", marginRight: i < sorted.length - 1 ? "10px" : "0",
+                    scrollSnapAlign: "start", flex: "0 0 91%", marginRight: i < sorted.length - 1 ? "10px" : "0",
                     background: cardBg, borderRadius: "16px",
                     border: `1px solid ${a.score >= 85 ? "rgba(107,203,119,0.2)" : "rgba(90,152,227,0.2)"}`,
                     padding: "14px", animation: `fi .3s ease ${i * .04}s both`,
@@ -1505,54 +1505,22 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                       </div>
                     )}
 
-                    {/* Best mountains */}
-                    {displayPeaks.length > 0 && (
-                      <div style={{ marginBottom: "10px" }}>
-                        <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>Best mountains</div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-                          {displayPeaks.map(pk => (
-                            <div key={pk.id} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                              <Mountain size={11} color={CLS[pk.cls]?.color || "#BDD6F4"} />
-                              <span style={{ fontSize: "13px", color: "#F8F8F8", fontWeight: 600 }}>{pk.name}</span>
-                              <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4 }}>{pk.ht}m</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Expand toggle */}
-                    <button onClick={() => !a.loading && setExpandedArea(isExpanded ? null : i)} style={{
-                      width: "100%", padding: "8px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)",
-                      background: "rgba(90,152,227,0.08)", color: "#5A98E3", fontSize: "12px", fontWeight: 700,
-                      cursor: a.loading ? "default" : "pointer", fontFamily: "'DM Sans'",
-                      display: "flex", alignItems: "center", justifyContent: "center", gap: "4px"
-                    }}>
-                      {isExpanded ? "Hide detail" : "View weather detail"} <ChevronRight size={12} style={{ transform: isExpanded ? "rotate(90deg)" : "none", transition: ".2s" }} />
-                    </button>
-
-                    {/* Expanded peak detail */}
-                    {isExpanded && (
-                      <div style={{ marginTop: "10px", borderTop: "1px solid rgba(90,152,227,0.1)", paddingTop: "10px", animation: "fi .2s ease" }}>
-                        <div style={{ display: "flex", gap: "8px", fontSize: "12px", color: "#BDD6F4", opacity: 0.5, marginBottom: "8px", flexWrap: "wrap" }}>
-                          <span>Temp: {a.temp}°</span>
-                          <span>Precip: {a.precip}mm</span>
-                          <span>Vis: {a.vis}</span>
-                          <span>Wind: {fmtWind(a.wind)}{windUnit}</span>
-                        </div>
+                    {/* Mountains with per-peak weather — always visible */}
+                    {loosePeaks.length > 0 && (
+                      <div style={{ borderTop: "1px solid rgba(90,152,227,0.1)", paddingTop: "10px" }}>
+                        <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.45, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Mountains in this area</div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                           {loosePeaks.slice(0, 6).map((pk, j) => {
                             const key = `${pk.id}-${wxDay}`;
                             const lw = peakWx[key];
-                            const loading = peakWxLoading[key];
+                            const pkLoading = peakWxLoading[key];
                             return (
                               <div key={pk.id}
                                 onClick={() => {
                                   setSelPeakWx({ peak: pk, wx: lw || null });
-                                  if (!lw && !loading) {
-                                    const offset = Math.max(0, wxDay);
+                                  if (!lw && !pkLoading) {
                                     setPeakWxLoading(prev => ({ ...prev, [key]: true }));
-                                    fetchPeakWeather(pk, offset).then(w => {
+                                    fetchPeakWeather(pk, Math.max(0, wxDay)).then(w => {
                                       if (w) { setPeakWx(prev => ({ ...prev, [key]: w })); setSelPeakWx({ peak: pk, wx: w }); }
                                       setPeakWxLoading(prev => ({ ...prev, [key]: false }));
                                     });
@@ -1561,39 +1529,36 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                                 style={{
                                   display: "flex", alignItems: "center", gap: "10px",
                                   padding: "9px 10px", borderRadius: "10px",
-                                  background: "#041e3d", border: "1px solid rgba(90,152,227,0.08)",
-                                  animation: `fi .2s ease ${j * .05}s both`, cursor: "pointer"
+                                  background: "rgba(4,30,61,0.5)", border: "1px solid rgba(90,152,227,0.1)",
+                                  cursor: "pointer", animation: `fi .2s ease ${j * .05}s both`
                                 }}>
-                                <Mountain size={14} color={CLS[pk.cls]?.color} />
+                                <Mountain size={14} color={CLS[pk.cls]?.color || "#BDD6F4"} />
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{pk.name}</div>
-                                  <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5 }}>{pk.ht}m · {pk.reg}</div>
+                                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pk.name}</div>
+                                  <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4 }}>{pk.ht}m · {CLS[pk.cls]?.name || pk.cls}</div>
                                 </div>
-                                {loading && <div style={{ width: "70px", height: "28px", borderRadius: "6px", background: "rgba(90,152,227,0.08)" }} />}
-                                {!loading && lw && lw.wi !== undefined && (
-                                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                                    <WI type={lw.ic || "cloudsun"} size={14} />
+                                {pkLoading && (
+                                  <div style={{ width: "16px", height: "16px", borderRadius: "50%", border: "2px solid rgba(90,152,227,0.2)", borderTop: "2px solid #5A98E3", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
+                                )}
+                                {!pkLoading && lw && (
+                                  <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
+                                    <WI type={lw.ic || "cloudsun"} size={16} />
                                     <div style={{ textAlign: "center" }}>
-                                      <div style={{ fontSize: "13px", fontWeight: 700, color: lw.f < -5 ? "#BDD6F4" : "#F8F8F8" }}>{lw.f}°</div>
-                                      <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.4 }}>feels</div>
+                                      <div style={{ fontSize: "14px", fontWeight: 700, color: lw.f < -5 ? "#BDD6F4" : "#F8F8F8" }}>{lw.f}°</div>
+                                      <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4 }}>feels</div>
                                     </div>
                                     <div style={{ textAlign: "center" }}>
                                       <div style={{ fontSize: "13px", fontWeight: 700, color: lw.wi > 35 ? "#E85D3A" : lw.wi >= 20 ? "#F49D37" : "#F8F8F8" }}>{fmtWind(lw.wi)}<span style={{ fontSize: "10px" }}>{windUnit}</span></div>
-                                      <div style={{ fontSize: "7px", color: "#BDD6F4", opacity: 0.4 }}>wind</div>
+                                      <div style={{ fontSize: "9px", color: "#BDD6F4", opacity: 0.4 }}>wind</div>
                                     </div>
                                     {lw.sn && <Snowflake size={12} color="#BDD6F4" />}
-                                    <ChevronRight size={12} color="#BDD6F4" style={{ opacity: 0.4 }} />
+                                    <ChevronRight size={12} color="#BDD6F4" style={{ opacity: 0.3 }} />
                                   </div>
                                 )}
                               </div>
                             );
                           })}
                         </div>
-                        {a.peaks.length > loosePeaks.slice(0, 6).length && (
-                          <div style={{ fontSize: "12px", color: "#5A98E3", textAlign: "center", marginTop: "8px", fontWeight: 600 }}>
-                            + {a.peaks.length - loosePeaks.slice(0, 6).length} more peaks in this area
-                          </div>
-                        )}
                       </div>
                     )}
                   </div>
