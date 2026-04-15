@@ -1479,7 +1479,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
 
                 return (
                   <div key={i} style={{
-                    scrollSnapAlign: "center", flex: "0 0 80%", marginRight: i < sorted.length - 1 ? "8px" : "0",
+                    scrollSnapAlign: "center", flex: "0 0 86%", marginRight: i < sorted.length - 1 ? "8px" : "0",
                     background: cardBg, borderRadius: "14px",
                     border: `1px solid ${a.score >= 85 ? "rgba(107,203,119,0.2)" : "rgba(90,152,227,0.2)"}`,
                     padding: "10px 12px", animation: `fi .3s ease ${i * .04}s both`,
@@ -7009,6 +7009,23 @@ export default function TrailSync() {
     { id: "profile", icon: UserCircle, label: "Profile" },
   ];
 
+  // Subtle UI tap sound via Web Audio API — no external files needed
+  const playTabSound = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(520, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(820, ctx.currentTime + 0.045);
+      gain.gain.setValueAtTime(0.07, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.09);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.09);
+      setTimeout(() => ctx.close(), 200);
+    } catch(e) {}
+  };
+
   // Handle tutorial step changes - auto switch tabs
   // ── Load user data from Supabase on mount / auth change ──
   useEffect(() => {
@@ -7444,7 +7461,10 @@ export default function TrailSync() {
 
       {/* Content — flex:1 fills between header and tab bar */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        {tab === "home" && <HomePage userName={userName} initialFilter={feedFilter} userId={userId} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowingCount={setFollowingCount} headerSearch={headerSearch} setHeaderSearch={setHeaderSearch} openRoute={openRouteOnMap} searchResults={searchResults} setSearchResults={setSearchResults} searching={searching} setSearching={setSearching} onViewProfile={setViewingProfile} />}
+        {/* HomePage always mounted (like MapPage) so feed state/comments survive tab switches */}
+        <div style={{ display: tab === "home" ? "flex" : "none", flex: 1, flexDirection: "column", overflow: "hidden" }}>
+          <HomePage userName={userName} initialFilter={feedFilter} userId={userId} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowingCount={setFollowingCount} headerSearch={headerSearch} setHeaderSearch={setHeaderSearch} openRoute={openRouteOnMap} searchResults={searchResults} setSearchResults={setSearchResults} searching={searching} setSearching={setSearching} onViewProfile={setViewingProfile} />
+        </div>
         {tab === "routes" && <RoutesPage openRoute={openRouteOnMap} pendingRouteDetail={pendingRouteDetail} onClearPendingRoute={() => setPendingRouteDetail(null)} />}
         {/* MapPage always mounted so GPX/Mapbox state survives tab switches — hidden with CSS when not active */}
         <div style={{ display: tab === "map" ? "flex" : "none", flex: 1, flexDirection: "column", overflow: "hidden" }}>
@@ -7540,7 +7560,7 @@ export default function TrailSync() {
         {tabs.map((t, i) => {
           const I = t.icon; const a = tab === t.id; const ctr = i === 2;
           return (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{ background: "none", border: "none", padding: ctr ? "0" : "4px 10px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", color: a ? (ctr ? "#F8F8F8" : "#E85D3A") : "#BDD6F4", transition: "color .2s", opacity: ctr ? 1 : (a ? 1 : 0.45) }}>
+            <button key={t.id} onClick={() => { playTabSound(); setTab(t.id); }} style={{ background: "none", border: "none", padding: ctr ? "0" : "4px 10px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", color: a ? (ctr ? "#F8F8F8" : "#E85D3A") : "#BDD6F4", transition: "color .2s", opacity: ctr ? 1 : (a ? 1 : 0.45) }}>
               {ctr ? (
                 <div style={{ width: "46px", height: "46px", borderRadius: "50%", background: a ? "linear-gradient(135deg,#E85D3A,#d04a2a)" : "#1a3a6e", display: "flex", alignItems: "center", justifyContent: "center", marginTop: "-12px", border: `2px solid ${a ? "#E85D3A" : "#2a5298"}`, boxShadow: a ? "0 4px 16px rgba(232,93,58,.35)" : "none", transition: "all .2s" }}>
                   <I size={20} color="#F8F8F8" />
