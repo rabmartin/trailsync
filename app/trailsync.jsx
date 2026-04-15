@@ -83,9 +83,9 @@ const CLS = {
 // Static region config — weather data fetched live from Open-Meteo
 const WX_REGIONS = [
   { region: "Ben Nevis & Mamores", lat: 56.80, lng: -5.00, alt: 900, peaks: ["Ben Nevis", "Carn Mor Dearg", "Aonach Mor"], cls: "munros" },
-  { region: "Loch Lomond & Trossachs", lat: 56.17, lng: -4.58, alt: 500, peaks: ["Conic Hill", "Beinn Eich", "Ben Vane"], cls: "munros" },
-  { region: "Southern Highlands",  lat: 56.19, lng: -4.63, alt: 600, peaks: ["Ben Lomond", "Ben Vorlich", "Stuc a' Chroin"], cls: "munros" },
-  { region: "Arrochar Alps",       lat: 56.22, lng: -4.82, alt: 700, peaks: ["The Cobbler", "Ben Narnain", "Beinn Ime"], cls: "corbetts" },
+  { region: "Loch Lomond & Trossachs", lat: 56.15, lng: -4.56, alt: 400, peaks: ["Ben Lomond", "Conic Hill", "Beinn Eich"], cls: "munros" },
+  { region: "Arrochar Alps",       lat: 56.22, lng: -4.82, alt: 700, peaks: ["The Cobbler", "Ben Vane", "Beinn Ime"], cls: "corbetts" },
+  { region: "Southern Highlands",  lat: 56.55, lng: -4.10, alt: 700, peaks: ["Schiehallion", "Ben Lawers", "Ben Vorlich"], cls: "munros" },
   { region: "Glen Coe",            lat: 56.65, lng: -5.05, alt: 800, peaks: ["Buachaille Etive Mor", "Bidean nam Bian"], cls: "munros" },
   { region: "Cairngorms",          lat: 57.07, lng: -3.67, alt: 900, peaks: ["Cairn Gorm", "Ben Macdui", "Braeriach"], cls: "munros" },
   { region: "Torridon",            lat: 57.58, lng: -5.47, alt: 700, peaks: ["Liathach", "Beinn Eighe", "Beinn Alligin"], cls: "munros" },
@@ -259,7 +259,7 @@ const PEAKS_FALLBACK = [
   { id: 4,  name: "Buachaille Etive Mor",   cls: "munros",      ht: 1022, reg: "Glen Coe",            lat: 56.652, lng: -4.954, done: false },
   { id: 5,  name: "Liathach",               cls: "munros",      ht: 1055, reg: "Torridon",            lat: 57.581, lng: -5.468, done: false },
   { id: 6,  name: "An Teallach",            cls: "munros",      ht: 1062, reg: "Fisherfield",         lat: 57.806, lng: -5.238, done: false },
-  { id: 7,  name: "Ben Lomond",             cls: "munros",      ht: 974,  reg: "Southern Highlands",  lat: 56.190, lng: -4.632, done: false },
+  { id: 7,  name: "Ben Lomond",             cls: "munros",      ht: 974,  reg: "Loch Lomond & Trossachs", lat: 56.190, lng: -4.632, done: false },
   { id: 8,  name: "Schiehallion",           cls: "munros",      ht: 1083, reg: "Southern Highlands",  lat: 56.666, lng: -4.098, done: false },
   { id: 9,  name: "The Cobbler",            cls: "corbetts",    ht: 884,  reg: "Arrochar Alps",       lat: 56.219, lng: -4.819, done: false },
   { id: 10, name: "Scafell Pike",           cls: "hewitts",     ht: 978,  reg: "Lake District",       lat: 54.454, lng: -3.212, done: false },
@@ -279,9 +279,8 @@ const PEAKS_FALLBACK = [
   { id: 23, name: "Conic Hill",            cls: "grahams",     ht: 361,  reg: "Loch Lomond & Trossachs", lat: 56.093, lng: -4.524, done: false },
   { id: 24, name: "Beinn Eich",            cls: "corbetts",    ht: 702,  reg: "Loch Lomond & Trossachs", lat: 56.200, lng: -4.736, done: false },
   { id: 25, name: "Doune Hill",            cls: "corbetts",    ht: 734,  reg: "Loch Lomond & Trossachs", lat: 56.222, lng: -4.742, done: false },
-  { id: 26, name: "Ben Vane",              cls: "munros",      ht: 915,  reg: "Loch Lomond & Trossachs", lat: 56.243, lng: -4.747, done: false },
-  { id: 27, name: "Beinn Ime",             cls: "munros",      ht: 1011, reg: "Loch Lomond & Trossachs", lat: 56.217, lng: -4.808, done: false },
-  { id: 28, name: "Ben Lomond",            cls: "munros",      ht: 974,  reg: "Loch Lomond & Trossachs", lat: 56.190, lng: -4.632, done: false },
+  { id: 26, name: "Ben Vane",              cls: "munros",      ht: 915,  reg: "Arrochar Alps",           lat: 56.243, lng: -4.747, done: false },
+  { id: 27, name: "Beinn Ime",             cls: "munros",      ht: 1011, reg: "Arrochar Alps",           lat: 56.217, lng: -4.808, done: false },
 ];
 // PEAKS will be populated from Supabase in the main app component
 let PEAKS = PEAKS_FALLBACK;
@@ -340,13 +339,58 @@ const FEED = [
 ];
 
 const MODULES = [
-  { id: 1, title: "Navigation Fundamentals", desc: "Map reading, compass use, and navigating in poor visibility", les: 8, done: 5, ic: "🧭", lvl: "Beginner", time: "2h" },
-  { id: 2, title: "Winter Mountain Skills", desc: "Ice axe arrest, crampon technique, avalanche awareness", les: 10, done: 3, ic: "❄️", lvl: "Intermediate", time: "3h" },
-  { id: 3, title: "Weather Reading", desc: "Understanding mountain forecasts, cloud types, and pressure systems", les: 6, done: 6, ic: "🌦️", lvl: "Beginner", time: "1.5h" },
+  { id: 1, title: "Navigation Fundamentals", desc: "Map reading, compass use, and navigating in poor visibility", les: 8, done: 0, ic: "🧭", lvl: "Beginner", time: "2h" },
+  { id: 2, title: "Winter Mountain Skills", desc: "Ice axe arrest, crampon technique, avalanche awareness", les: 10, done: 0, ic: "❄️", lvl: "Intermediate", time: "3h" },
+  { id: 3, title: "Weather Reading", desc: "Understanding mountain forecasts, cloud types, and pressure systems", les: 6, done: 0, ic: "🌦️", lvl: "Beginner", time: "1.5h" },
   { id: 4, title: "Mountain First Aid", desc: "Emergency response, hypothermia, fractures, and calling for rescue", les: 8, done: 0, ic: "🩹", lvl: "All levels", time: "2.5h" },
   { id: 5, title: "Scrambling Skills", desc: "Grade 1-3 scrambles, route finding on rock, exposure management", les: 7, done: 0, ic: "🧗", lvl: "Intermediate", time: "2h" },
-  { id: 6, title: "Wild Camping", desc: "Kit selection, Leave No Trace, Scottish access rights, pitch selection", les: 5, done: 2, ic: "⛺", lvl: "Beginner", time: "1h" },
+  { id: 6, title: "Wild Camping", desc: "Kit selection, Leave No Trace, Scottish access rights, pitch selection", les: 5, done: 0, ic: "⛺", lvl: "Beginner", time: "1h" },
 ];
+
+const QUIZZES = {
+  1: { title: "Navigation Fundamentals", questions: [
+    { q: "What does a contour line represent on a map?", opts: ["A footpath", "A fixed elevation", "A water feature", "A road"], ans: 1 },
+    { q: "Which compass bearing is due East?", opts: ["090°", "180°", "270°", "360°"], ans: 0 },
+    { q: "How do contour lines appear on a steep slope?", opts: ["Far apart", "At equal intervals always", "Close together", "In a spiral"], ans: 2 },
+    { q: "What is the standard contour interval on a 1:50,000 OS map?", opts: ["5m", "10m", "20m", "50m"], ans: 1 },
+    { q: "What is 'dead reckoning' in navigation?", opts: ["Using GPS", "Estimating position from speed, direction and time", "Following a stream downhill", "Using a mobile signal"], ans: 1 },
+  ]},
+  2: { title: "Winter Mountain Skills", questions: [
+    { q: "What is an ice axe arrest used for?", opts: ["Cutting steps in ice", "Stopping a fall on snow", "Self-belaying on a climb", "Testing snow depth"], ans: 1 },
+    { q: "Which slope angle poses the highest avalanche risk?", opts: ["10–20°", "20–30°", "35–45°", "60–70°"], ans: 2 },
+    { q: "A 'cornice' is:", opts: ["A type of crampon", "An overhanging lip of wind-deposited snow", "A rock formation", "A navigation feature"], ans: 1 },
+    { q: "The French crampon technique means:", opts: ["Front-pointing only", "Flat-footing all points into slope", "Walking on tiptoes", "Heel strikes only"], ans: 1 },
+    { q: "What is the first sign of an avalanche victim search area?", opts: ["Call rescue immediately", "Mark last seen point and search likely run-out", "Probe randomly downslope", "Wait 30 minutes"], ans: 1 },
+  ]},
+  3: { title: "Weather Reading", questions: [
+    { q: "Which cloud type typically signals an approaching warm front?", opts: ["Cumulus", "Cumulonimbus", "Cirrus", "Stratus"], ans: 2 },
+    { q: "A rapidly falling barometer indicates:", opts: ["Settled weather", "Deteriorating weather", "Dry clear conditions", "Wind dropping"], ans: 1 },
+    { q: "The average temperature lapse rate in the hills is approximately:", opts: ["1°C per 100m", "3°C per 300m", "0.65°C per 100m", "5°C per 1000m"], ans: 2 },
+    { q: "A 'valley inversion' occurs when:", opts: ["Wind increases with altitude", "Cold air pools in the valley under warm air above", "Rain falls uphill", "Cloud forms at summit level"], ans: 1 },
+    { q: "Isobars close together on a synoptic chart indicate:", opts: ["Calm light winds", "Strong winds", "Settled high pressure", "Fog risk"], ans: 1 },
+  ]},
+  4: { title: "Mountain First Aid", questions: [
+    { q: "What is the FIRST priority at any mountain incident?", opts: ["Call mountain rescue", "Move casualty to shelter", "Assess scene safety", "Apply a bandage"], ans: 2 },
+    { q: "Early signs of hypothermia include:", opts: ["Sweating and confusion", "Shivering and slurred speech", "Red skin and high pulse", "Nausea only"], ans: 1 },
+    { q: "The UK emergency number for mountain rescue is:", opts: ["999 — ask for Police", "112 only", "111", "Direct dial to SARDA"], ans: 0 },
+    { q: "RICE stands for:", opts: ["Rest, Ice, Compress, Elevate", "Run, Inject, Compress, Exit", "Rest, Inspect, Clean, Elevate", "Rinse, Immobilise, Cool, Examine"], ans: 0 },
+    { q: "Altitude sickness (AMS) typically occurs above:", opts: ["500m", "1000m", "2500m", "5000m"], ans: 2 },
+  ]},
+  5: { title: "Scrambling Skills", questions: [
+    { q: "Which scramble grade may require a rope for protection?", opts: ["Grade 1", "Grade 2", "Grade 3", "Grade 4"], ans: 2 },
+    { q: "What is 'exposure' on a scramble?", opts: ["Amount of sunlight", "A significant drop below you", "Wind chill factor", "Distance from a road"], ans: 1 },
+    { q: "Three points of contact means:", opts: ["Using three ropes", "Two hands and one foot, or vice versa", "Three climbers roped", "Three anchors"], ans: 1 },
+    { q: "Why avoid pulling on loose or detached rocks?", opts: ["Environmental damage", "Can cause a fall or hit people below", "Rocks are protected by law", "It's always avoidable"], ans: 1 },
+    { q: "Best footwear for Grade 2+ scrambling?", opts: ["Trail running shoes", "Wellington boots", "Stiff-soled mountain boots", "Sandals"], ans: 2 },
+  ]},
+  6: { title: "Wild Camping", questions: [
+    { q: "Wild camping in Scotland is:", opts: ["Illegal without permission", "Legal under the Land Reform Act 2003", "Only legal above 600m", "Restricted to marked sites"], ans: 1 },
+    { q: "'Leave No Trace' primarily means:", opts: ["Pack out all rubbish and minimise impact", "Never light a fire", "Camp only in designated spots", "Avoid all vegetation"], ans: 0 },
+    { q: "How far from open water should you bury human waste?", opts: ["5 metres", "30 metres", "100 metres", "200 metres"], ans: 1 },
+    { q: "A 'wild bivi' differs from a tent because:", opts: ["No shelter at all", "Uses a bivi bag or tarp, not a freestanding tent", "Must be beside a river", "It is illegal"], ans: 1 },
+    { q: "The most important factor when choosing a wild camp pitch?", opts: ["Distance from a path", "Level, wind-sheltered ground with good drainage", "Close to a summit", "Near mobile signal"], ans: 1 },
+  ]},
+};
 
 const DISCOVER = [
   { id: 1, title: "The Lost Observatory of Ben Nevis", cat: "History", region: "Ben Nevis & Mamores", peak: "Ben Nevis", lat: 56.797, lng: -5.004, author: "Rachel M.", excerpt: "For twenty years, a team of scientists lived and worked at the summit of Britain's highest mountain, recording weather data that changed our understanding of Atlantic storms forever.", read: "8 min", icon: "🏛️",
@@ -825,9 +869,9 @@ const LoginScreen = ({ onLogin, onGoSignup }) => {
   };
 
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px", background: "#041e3d", minHeight: "100vh" }}>
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", overflowY: "auto", padding: "40px 24px 200px", background: "#041e3d", minHeight: "100vh" }}>
       {/* Logo */}
-      <div style={{ marginBottom: "32px", textAlign: "center", animation: "fi .5s ease" }}>
+      <div style={{ marginBottom: "28px", textAlign: "center", animation: "fi .5s ease" }}>
         <div style={{ width: "56px", height: "56px", borderRadius: "14px", background: "linear-gradient(135deg,#E85D3A,#F49D37)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", animation: "glow 3s ease infinite" }}>
           <Mountain size={28} color="#F8F8F8" />
         </div>
@@ -836,28 +880,25 @@ const LoginScreen = ({ onLogin, onGoSignup }) => {
       </div>
 
       <div style={{ width: "100%", maxWidth: "360px", animation: "su .4s ease .1s both" }}>
-        {/* Social sign-in buttons */}
-        <button onClick={onLogin} style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", fontFamily: "'DM Sans'", marginBottom: "10px" }}>
-          <Mail size={16} /> Sign in with email
-        </button>
-        <button disabled style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.1)", background: "#0a2240", color: "#BDD6F4", fontSize: "15px", fontWeight: 600, cursor: "default", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", fontFamily: "'DM Sans'", marginBottom: "10px", opacity: 0.4 }}>
-          <Apple size={16} /> Sign in with Apple <span style={{ fontSize: "12px", opacity: 0.6 }}>(coming soon)</span>
-        </button>
+        {/* Google sign-in */}
         <button onClick={handleGoogleLogin} disabled={!!oauthLoading} style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", fontWeight: 600, cursor: oauthLoading ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", fontFamily: "'DM Sans'", marginBottom: "10px", opacity: oauthLoading ? 0.7 : 1 }}>
           {oauthLoading === "google" ? <div style={{ width: "16px", height: "16px", border: "2px solid rgba(248,248,248,0.3)", borderTop: "2px solid #F8F8F8", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> : <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>}
-          {oauthLoading === "google" ? "Redirecting…" : "Sign in with Google"}
+          {oauthLoading === "google" ? "Redirecting…" : "Continue with Google"}
+        </button>
+        <button disabled style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.1)", background: "#0a2240", color: "#BDD6F4", fontSize: "15px", fontWeight: 600, cursor: "default", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", fontFamily: "'DM Sans'", marginBottom: "16px", opacity: 0.35 }}>
+          <Apple size={16} /> Continue with Apple <span style={{ fontSize: "12px", opacity: 0.6 }}>(coming soon)</span>
         </button>
 
         {/* Divider */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "20px 0" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
           <div style={{ flex: 1, height: "1px", background: "rgba(90,152,227,0.12)" }} />
-          <span style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.4 }}>or sign in with email</span>
+          <span style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.4 }}>or</span>
           <div style={{ flex: 1, height: "1px", background: "rgba(90,152,227,0.12)" }} />
         </div>
 
         {/* Email/password fields */}
-        <input type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "10px" }} />
-        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "16px" }} />
+        <input type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} onFocus={e => e.target.scrollIntoView({ behavior: "smooth", block: "center" })} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "10px", boxSizing: "border-box" }} />
+        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()} onFocus={e => e.target.scrollIntoView({ behavior: "smooth", block: "center" })} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "16px", boxSizing: "border-box" }} />
 
         {error && (
           <div style={{ padding: "10px 12px", borderRadius: "8px", background: "rgba(232,93,58,0.1)", border: "1px solid rgba(232,93,58,0.2)", marginBottom: "12px", fontSize: "14px", color: "#E85D3A" }}>
@@ -865,11 +906,11 @@ const LoginScreen = ({ onLogin, onGoSignup }) => {
           </div>
         )}
 
-        <button onClick={handleLogin} disabled={loading} style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "none", background: loading ? "#264f80" : "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: loading ? "default" : "pointer", fontFamily: "'DM Sans'", opacity: loading ? 0.7 : 1 }}>
+        <button onClick={handleLogin} disabled={loading} style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "none", background: loading ? "#264f80" : "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: loading ? "default" : "pointer", fontFamily: "'DM Sans'", opacity: loading ? 0.7 : 1 }}>
           {loading ? "Signing in…" : "Sign In"}
         </button>
 
-        <div style={{ textAlign: "center", marginTop: "14px" }}>
+        <div style={{ textAlign: "center", marginTop: "12px" }}>
           <span onClick={async () => {
             if (!email) { setError("Enter your email address above first."); return; }
             setLoading(true);
@@ -879,13 +920,17 @@ const LoginScreen = ({ onLogin, onGoSignup }) => {
             setLoading(false);
             if (resetError) setError(resetError.message || "Could not send reset email.");
             else setError("✓ Password reset email sent — check your inbox.");
-          }} style={{ fontSize: "14px", color: "#5A98E3", cursor: "pointer", fontWeight: 600 }}>
-            Forgot your password?
+          }} style={{ fontSize: "14px", color: "#BDD6F4", cursor: "pointer", opacity: 0.6 }}>
+            Forgot password?
           </span>
         </div>
 
-        <div style={{ textAlign: "center", marginTop: "14px", fontSize: "15px", color: "#BDD6F4", opacity: 0.6 }}>
-          Don't have an account? <span onClick={onGoSignup} style={{ color: "#5A98E3", fontWeight: 700, cursor: "pointer", opacity: 1 }}>Sign up here</span>
+        {/* Prominent sign-up CTA */}
+        <div style={{ marginTop: "24px", padding: "16px", borderRadius: "14px", background: "rgba(90,152,227,0.08)", border: "1px solid rgba(90,152,227,0.15)", textAlign: "center" }}>
+          <div style={{ fontSize: "14px", color: "#BDD6F4", opacity: 0.7, marginBottom: "10px" }}>New to TrailSync?</div>
+          <button onClick={onGoSignup} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.3)", background: "rgba(90,152,227,0.12)", color: "#5A98E3", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+            Create a free account →
+          </button>
         </div>
       </div>
     </div>
@@ -956,8 +1001,10 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
     }
   };
 
+  const fldStyle = { width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'", boxSizing: "border-box" };
+
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px", background: "#041e3d", minHeight: "100vh" }}>
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", overflowY: "auto", padding: "40px 24px 200px", background: "#041e3d", minHeight: "100vh" }}>
       {showPrivacy && <PrivacyPopup onClose={() => setShowPrivacy(false)} />}
 
       {/* Logo */}
@@ -973,31 +1020,25 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
         {/* Name */}
         <div style={{ marginBottom: "10px" }}>
           <label style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Full name</label>
-          <input type="text" placeholder="Your name" value={name} onChange={e => setName(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'" }} />
+          <input type="text" placeholder="Your name" value={name} onChange={e => setName(e.target.value)} onFocus={e => e.target.scrollIntoView({ behavior: "smooth", block: "center" })} style={fldStyle} />
         </div>
 
         {/* Date of birth */}
         <div style={{ marginBottom: "10px" }}>
           <label style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Date of birth</label>
-          <input type="date" value={dob} onChange={e => setDob(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'" }} />
+          <input type="date" value={dob} onChange={e => setDob(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'", boxSizing: "border-box", colorScheme: "dark" }} />
         </div>
 
         {/* Email */}
         <div style={{ marginBottom: "10px" }}>
           <label style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Email address</label>
-          <input type="email" placeholder="you@email.com" value={email} onChange={e => setEmail(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'" }} />
+          <input type="email" placeholder="you@email.com" value={email} onChange={e => setEmail(e.target.value)} onFocus={e => e.target.scrollIntoView({ behavior: "smooth", block: "center" })} style={fldStyle} />
         </div>
 
         {/* Password */}
         <div style={{ marginBottom: "10px" }}>
           <label style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Password</label>
-          <input type="password" placeholder="Create a password" value={password} onChange={e => setPassword(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'" }} />
-        </div>
-
-        {/* Location */}
-        <div style={{ marginBottom: "16px" }}>
-          <label style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, fontWeight: 600, display: "block", marginBottom: "4px" }}>Location</label>
-          <input type="text" placeholder="(Optional)" value={location} onChange={e => setLocation(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: location ? "#F8F8F8" : "#BDD6F4", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'" }} />
+          <input type="password" placeholder="Create a password" value={password} onChange={e => setPassword(e.target.value)} onFocus={e => e.target.scrollIntoView({ behavior: "smooth", block: "center" })} style={fldStyle} />
         </div>
 
         {error && (
@@ -1038,6 +1079,11 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   const [showSAIS, setShowSAIS] = useState(false);
   const [windUnit, setWindUnit] = useState("mph");
   const fmtWind = (mph) => windUnit === "mph" ? Math.round(mph) : Math.round(mph * 1.60934);
+  // Weather search
+  const [wxSearchQ, setWxSearchQ] = useState("");
+  const [wxSearchPeak, setWxSearchPeak] = useState(null); // selected peak object
+  const [wxSearchWx, setWxSearchWx] = useState(null);     // fetched weather for that peak
+  const [wxSearchLoading, setWxSearchLoading] = useState(false);
 
   // Live posts
   const [livePosts, setLivePosts] = useState(FEED);
@@ -1448,6 +1494,109 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
             <div style={{ padding: "0 14px 4px", fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>
               Ranked: wind 30% · feels-like 25% · precip 25% · vis 20% · summit altitude adjusted
             </div>
+
+            {/* ── Weather Search ── */}
+            {(() => {
+              const suggestions = wxSearchQ.trim().length >= 2
+                ? PEAKS_FALLBACK.filter(p => p.name.toLowerCase().includes(wxSearchQ.toLowerCase())).slice(0, 5)
+                : [];
+              const selectPeak = async (pk) => {
+                setWxSearchQ(pk.name);
+                setWxSearchPeak(pk);
+                setWxSearchWx(null);
+                setWxSearchLoading(true);
+                try {
+                  const w = await fetchPeakWeather(pk, wxDay === -1 ? 0 : wxDay);
+                  setWxSearchWx(w);
+                } catch(e) {}
+                finally { setWxSearchLoading(false); }
+              };
+              return (
+                <div style={{ padding: "6px 14px 10px", position: "relative" }}>
+                  {/* Search input */}
+                  <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                    <Search size={14} color="#5A98E3" style={{ position: "absolute", left: "11px", pointerEvents: "none" }} />
+                    <input
+                      value={wxSearchQ}
+                      onChange={e => { setWxSearchQ(e.target.value); setWxSearchPeak(null); setWxSearchWx(null); }}
+                      placeholder="Search any peak…"
+                      style={{ width: "100%", padding: "9px 32px 9px 32px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "14px", outline: "none", fontFamily: "'DM Sans'", boxSizing: "border-box" }}
+                    />
+                    {wxSearchQ.length > 0 && (
+                      <button onClick={() => { setWxSearchQ(""); setWxSearchPeak(null); setWxSearchWx(null); }} style={{ position: "absolute", right: "10px", background: "none", border: "none", color: "#BDD6F4", cursor: "pointer", padding: "2px", display: "flex", alignItems: "center", opacity: 0.6 }}>
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Suggestions dropdown */}
+                  {suggestions.length > 0 && !wxSearchPeak && (
+                    <div style={{ position: "absolute", left: 14, right: 14, zIndex: 50, background: "#0a2240", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", marginTop: "4px", overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
+                      {suggestions.map((pk, i) => (
+                        <button key={pk.id} onClick={() => selectPeak(pk)} style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "10px 14px", background: "none", border: "none", borderBottom: i < suggestions.length - 1 ? "1px solid rgba(90,152,227,0.08)" : "none", color: "#F8F8F8", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans'", textAlign: "left" }}>
+                          <Mountain size={13} color="#5A98E3" style={{ flexShrink: 0 }} />
+                          <span style={{ flex: 1, fontWeight: 600 }}>{pk.name}</span>
+                          <span style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>{pk.ht}m · {pk.reg}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Search result card */}
+                  {wxSearchPeak && (
+                    <div style={{ marginTop: "10px", background: "#041e3d", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.2)", overflow: "hidden", animation: "fi .25s ease" }}>
+                      {wxSearchLoading ? (
+                        <div style={{ padding: "18px", textAlign: "center", color: "#BDD6F4", fontSize: "13px", opacity: 0.6 }}>
+                          <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: "2px solid rgba(90,152,227,0.2)", borderTop: "2px solid #5A98E3", animation: "spin .7s linear infinite", margin: "0 auto 8px" }} />
+                          Fetching summit weather…
+                        </div>
+                      ) : wxSearchWx ? (
+                        <div style={{ padding: "14px" }}>
+                          {/* Peak header */}
+                          {(() => {
+                            const sc = scoreWeather(wxSearchWx.f, wxSearchWx.wi, wxSearchWx.p, wxSearchWx.v);
+                            return (<>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "12px" }}>
+                                <div>
+                                  <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>{wxSearchPeak.name}</div>
+                                  <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.55, marginTop: "2px" }}>{wxSearchPeak.ht}m · {wxSearchPeak.reg}</div>
+                                </div>
+                                <div style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "6px", background: sc >= 85 ? "rgba(107,203,119,0.15)" : sc >= 60 ? "rgba(90,152,227,0.15)" : "rgba(232,93,58,0.12)", color: sc >= 85 ? "#6BCB77" : sc >= 60 ? "#5A98E3" : "#E85D3A", fontWeight: 700 }}>
+                                  Score {sc}
+                                </div>
+                              </div>
+                              {/* Weather stats row */}
+                              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                                {[
+                                  ["🌡️", `${wxSearchWx.t}°C`, "Summit temp"],
+                                  ["🤔", `${wxSearchWx.f}°C`, "Feels like"],
+                                  ["💨", `${fmtWind(wxSearchWx.wi)} ${windUnit}`, "Wind"],
+                                  ["🌧️", `${wxSearchWx.p}mm`, "Precip"],
+                                ].map(([ic, val, label]) => (
+                                  <div key={label} style={{ flex: "1 1 calc(50% - 4px)", background: "rgba(90,152,227,0.06)", borderRadius: "9px", padding: "9px 10px", minWidth: "calc(50% - 4px)" }}>
+                                    <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginBottom: "2px" }}>{ic} {label}</div>
+                                    <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</div>
+                                  </div>
+                                ))}
+                              </div>
+                              {/* Condition badge */}
+                              <div style={{ marginTop: "10px", display: "flex", alignItems: "center", gap: "8px" }}>
+                                <WI type={wxSearchWx.ic} size={22} />
+                                <span style={{ fontSize: "13px", color: "#BDD6F4", fontWeight: 600 }}>{wxSearchWx.v === "good" ? "Good visibility" : wxSearchWx.v === "moderate" ? "Moderate visibility" : "Poor visibility"}</span>
+                                {wxSearchWx.sn && <span style={{ fontSize: "12px", padding: "1px 7px", borderRadius: "6px", background: "rgba(189,214,244,0.12)", color: "#BDD6F4", fontWeight: 700 }}>❄️ Snow</span>}
+                              </div>
+                            </>);
+                          })()}
+                        </div>
+                      ) : (
+                        <div style={{ padding: "14px", textAlign: "center", color: "#E85D3A", fontSize: "13px" }}>Could not load weather. Check connection.</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             {/* Carousel scroll container */}
             <div
               ref={wxCarouselRef}
@@ -1479,7 +1628,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
 
                 return (
                   <div key={i} style={{
-                    scrollSnapAlign: "center", flex: "0 0 86%", marginRight: i < sorted.length - 1 ? "8px" : "0",
+                    scrollSnapAlign: "center", flex: "0 0 90%", marginRight: i < sorted.length - 1 ? "8px" : "0",
                     background: cardBg, borderRadius: "14px",
                     border: `1px solid ${a.score >= 85 ? "rgba(107,203,119,0.2)" : "rgba(90,152,227,0.2)"}`,
                     padding: "10px 12px", animation: `fi .3s ease ${i * .04}s both`,
@@ -1835,7 +1984,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
               </div>
             )}
             <div style={{ display: "flex", gap: "16px", marginTop: "12px" }}>
-              <button onClick={() => handleLike(p.id)} style={{ background: "none", border: "none", color: likedPosts.has(p.id) ? "#E85D3A" : "#BDD6F4", opacity: likedPosts.has(p.id) ? 1 : 0.5, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Heart size={14} fill={likedPosts.has(p.id) ? "#E85D3A" : "none"} /> {p.likes}</button>
+              <button onClick={(e) => { e.stopPropagation(); handleLike(p.id); }} style={{ background: "none", border: "none", color: likedPosts.has(p.id) ? "#E85D3A" : "#BDD6F4", opacity: likedPosts.has(p.id) ? 1 : 0.5, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><Heart size={14} fill={likedPosts.has(p.id) ? "#E85D3A" : "none"} /> {p.likes}</button>
               <button onClick={(e) => { e.stopPropagation(); const opening = commentOpen !== p.id; setCommentOpen(opening ? p.id : null); if (opening) fetchComments(p.id); }} style={{ background: "none", border: "none", color: commentOpen === p.id ? "#5A98E3" : "#BDD6F4", opacity: commentOpen === p.id ? 1 : 0.5, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}><MessageCircle size={14} /> {(postComments[p.id] || []).length || p.comments || 0}</button>
               <button onClick={async (e) => {
                 e.stopPropagation();
@@ -4087,6 +4236,164 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
 };
 
 /* ═══════════════════════════════════════════════════════════════════
+   QUIZ MODAL — shown when a module is completed
+   ═══════════════════════════════════════════════════════════════════ */
+const QuizModal = ({ module: mod, onClose, onComplete }) => {
+  const quiz = QUIZZES[mod.id] || { title: mod.title, questions: [] };
+  const [qIdx, setQIdx] = useState(0);
+  const [chosen, setChosen] = useState(null);
+  const [score, setScore] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
+  const [done, setDone] = useState(false);
+  const [animIn, setAnimIn] = useState(true);
+
+  const q = quiz.questions[qIdx];
+  const total = quiz.questions.length;
+  const stars = score === total ? 3 : score >= Math.ceil(total * 0.8) ? 2 : score >= Math.ceil(total * 0.6) ? 1 : 0;
+
+  const playChime = (correct) => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = correct ? "sine" : "sawtooth";
+      osc.frequency.setValueAtTime(correct ? 660 : 220, ctx.currentTime);
+      if (correct) osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.09, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (correct ? 0.22 : 0.14));
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + (correct ? 0.22 : 0.14));
+      setTimeout(() => ctx.close(), 400);
+    } catch(e) {}
+  };
+
+  const choose = (i) => {
+    if (chosen !== null) return;
+    setChosen(i);
+    const correct = i === q.ans;
+    playChime(correct);
+    const newScore = correct ? score + 1 : score;
+    const newStreak = correct ? streak + 1 : 0;
+    if (correct) setScore(newScore);
+    setStreak(newStreak);
+    if (newStreak > bestStreak) setBestStreak(newStreak);
+
+    setTimeout(() => {
+      setAnimIn(false);
+      setTimeout(() => {
+        if (qIdx + 1 >= total) {
+          setDone(true);
+        } else {
+          setQIdx(qIdx + 1);
+          setChosen(null);
+          setAnimIn(true);
+        }
+      }, 200);
+    }, 900);
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(2,12,27,0.98)", display: "flex", flexDirection: "column", overflowY: "auto" }}>
+      {/* Header */}
+      <div style={{ position: "sticky", top: 0, background: "rgba(4,30,61,0.98)", backdropFilter: "blur(14px)", borderBottom: "1px solid rgba(90,152,227,0.12)", padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px", zIndex: 10 }}>
+        <button onClick={onClose} style={{ background: "rgba(90,152,227,0.12)", border: "none", borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <X size={16} />
+        </button>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: "11px", color: "#5A98E3", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>{mod.ic} {quiz.title}</div>
+          {!done && <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.55, marginTop: "1px" }}>Question {qIdx + 1} of {total}</div>}
+        </div>
+        {!done && streak >= 2 && (
+          <div style={{ background: "rgba(232,93,58,0.15)", border: "1px solid rgba(232,93,58,0.3)", borderRadius: "20px", padding: "3px 10px", fontSize: "12px", fontWeight: 700, color: "#E85D3A", display: "flex", alignItems: "center", gap: "4px" }}>
+            🔥 {streak}
+          </div>
+        )}
+      </div>
+
+      {/* Progress bar */}
+      {!done && (
+        <div style={{ height: "3px", background: "#0a2240" }}>
+          <div style={{ width: `${((qIdx) / total) * 100}%`, height: "100%", background: "linear-gradient(90deg,#5A98E3,#6BCB77)", transition: "width .4s ease" }} />
+        </div>
+      )}
+
+      {/* Question or Results */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "24px 18px", gap: "16px" }}>
+        {!done ? (
+          <div style={{ opacity: animIn ? 1 : 0, transform: animIn ? "translateY(0)" : "translateY(-8px)", transition: "opacity .2s, transform .2s" }}>
+            {/* Question */}
+            <div style={{ background: "#0a2240", borderRadius: "16px", padding: "22px 18px", border: "1px solid rgba(90,152,227,0.15)", marginBottom: "16px" }}>
+              <div style={{ fontSize: "18px", fontWeight: 800, color: "#F8F8F8", lineHeight: 1.4, fontFamily: "'Playfair Display',serif" }}>{q.q}</div>
+            </div>
+            {/* Options */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {q.opts.map((opt, i) => {
+                const isChosen = chosen === i;
+                const isCorrect = i === q.ans;
+                const revealed = chosen !== null;
+                let bg = "#0a2240", border = "rgba(90,152,227,0.15)", color = "#F8F8F8";
+                if (revealed && isCorrect) { bg = "rgba(107,203,119,0.12)"; border = "rgba(107,203,119,0.5)"; color = "#6BCB77"; }
+                else if (revealed && isChosen && !isCorrect) { bg = "rgba(232,93,58,0.1)"; border = "rgba(232,93,58,0.4)"; color = "#E85D3A"; }
+                return (
+                  <button key={i} onClick={() => choose(i)} style={{ background: bg, border: `1px solid ${border}`, borderRadius: "12px", padding: "14px 16px", textAlign: "left", color, fontSize: "15px", fontWeight: revealed && (isChosen || isCorrect) ? 700 : 500, cursor: chosen !== null ? "default" : "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "12px", transition: "all .25s" }}>
+                    <span style={{ width: "26px", height: "26px", borderRadius: "50%", background: revealed && isCorrect ? "rgba(107,203,119,0.2)" : revealed && isChosen ? "rgba(232,93,58,0.2)" : "rgba(90,152,227,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 800, flexShrink: 0, color: "inherit" }}>
+                      {revealed && isCorrect ? "✓" : revealed && isChosen && !isCorrect ? "✗" : String.fromCharCode(65 + i)}
+                    </span>
+                    {opt}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          /* Results screen */
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "20px", padding: "20px 0", animation: "fi .4s ease" }}>
+            <div style={{ fontSize: "56px" }}>{stars === 3 ? "🏆" : stars === 2 ? "⭐" : stars === 1 ? "👍" : "💪"}</div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: "28px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>{stars === 3 ? "Perfect score!" : stars === 2 ? "Well done!" : stars === 1 ? "Good effort!" : "Keep practising!"}</div>
+              <div style={{ fontSize: "15px", color: "#BDD6F4", opacity: 0.6, marginTop: "6px" }}>{score} of {total} correct</div>
+            </div>
+            {/* Stars */}
+            <div style={{ display: "flex", gap: "12px" }}>
+              {[1,2,3].map(s => (
+                <div key={s} style={{ fontSize: "32px", opacity: stars >= s ? 1 : 0.2, filter: stars >= s ? "drop-shadow(0 0 8px rgba(255,200,0,0.6))" : "none", transition: `opacity .3s ${s * 0.12}s` }}>⭐</div>
+              ))}
+            </div>
+            {/* Stats */}
+            <div style={{ display: "flex", gap: "12px", width: "100%" }}>
+              {[["Score", `${Math.round((score/total)*100)}%`, "#5A98E3"], ["Best Streak", `${bestStreak} 🔥`, "#E85D3A"]].map(([label, val, col]) => (
+                <div key={label} style={{ flex: 1, background: "#0a2240", borderRadius: "14px", padding: "14px", textAlign: "center", border: "1px solid rgba(90,152,227,0.1)" }}>
+                  <div style={{ fontSize: "22px", fontWeight: 800, color: col, fontFamily: "'JetBrains Mono'" }}>{val}</div>
+                  <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, marginTop: "4px" }}>{label}</div>
+                </div>
+              ))}
+            </div>
+            {/* Module info */}
+            <div style={{ width: "100%", background: "rgba(107,203,119,0.06)", border: "1px solid rgba(107,203,119,0.15)", borderRadius: "14px", padding: "14px", display: "flex", alignItems: "center", gap: "12px" }}>
+              <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: "rgba(107,203,119,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px" }}>{mod.ic}</div>
+              <div>
+                <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{mod.title}</div>
+                <div style={{ fontSize: "12px", color: "#6BCB77", marginTop: "2px", fontWeight: 600 }}>✓ Module complete</div>
+              </div>
+            </div>
+            {/* CTA */}
+            <button onClick={() => { onComplete(); onClose(); }} style={{ width: "100%", padding: "14px", borderRadius: "14px", border: "none", background: "linear-gradient(135deg,#5A98E3,#4080cc)", color: "#F8F8F8", fontSize: "16px", fontWeight: 800, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+              Mark Complete & Continue
+            </button>
+            {stars < 2 && (
+              <button onClick={() => { setQIdx(0); setChosen(null); setScore(0); setStreak(0); setBestStreak(0); setDone(false); setAnimIn(true); }} style={{ width: "100%", padding: "12px", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#5A98E3", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+                Try Again
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════════════
    TAB 4: LEARN
    ═══════════════════════════════════════════════════════════════════ */
 const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
@@ -4096,6 +4403,7 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
   const [discCat, setDiscCat] = useState(null);
   const [selArticle, setSelArticle] = useState(null);
   const [readingArticle, setReadingArticle] = useState(null);
+  const [quizModule, setQuizModule] = useState(null);
 
   const filteredArticles = DISCOVER.filter(a => !discCat || a.cat === discCat);
   const categories = [...new Set(DISCOVER.map(a => a.cat))];
@@ -4156,7 +4464,23 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
                 </div>
                 {sel === m.id && <div style={{ padding: "0 14px 14px", borderTop: "1px solid rgba(90,152,227,0.1)", paddingTop: "12px" }}>
                   <div style={{ fontSize: "14px", color: "#BDD6F4", lineHeight: 1.5, marginBottom: "12px" }}>{m.desc}</div>
-                  <button onClick={() => { if (pct < 100 && onCourseProgress) { const next = Math.min(doneLessons + 1, m.les); onCourseProgress(m.id, next); } }} style={{ padding: "9px 22px", borderRadius: "10px", border: "none", background: pct === 100 ? "#264f80" : "linear-gradient(135deg,#5A98E3,#4080cc)", color: pct === 100 ? "#BDD6F4" : "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>{pct === 100 ? "Review" : pct > 0 ? "Continue" : "Start"}</button>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    <button onClick={() => {
+                      if (pct < 100 && onCourseProgress) {
+                        const next = Math.min(doneLessons + 1, m.les);
+                        onCourseProgress(m.id, next);
+                        // Trigger quiz when last lesson is completed
+                        if (next === m.les) { setQuizModule(m); }
+                      }
+                    }} style={{ padding: "9px 22px", borderRadius: "10px", border: "none", background: pct === 100 ? "#264f80" : "linear-gradient(135deg,#5A98E3,#4080cc)", color: pct === 100 ? "#BDD6F4" : "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+                      {pct === 100 ? "✓ Complete" : pct > 0 ? "Continue" : "Start"}
+                    </button>
+                    {pct === 100 && QUIZZES[m.id] && (
+                      <button onClick={() => setQuizModule(m)} style={{ padding: "9px 16px", borderRadius: "10px", border: "1px solid rgba(232,93,58,0.3)", background: "rgba(232,93,58,0.08)", color: "#E85D3A", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "5px" }}>
+                        📝 Quiz
+                      </button>
+                    )}
+                  </div>
                 </div>}
               </div>
             ); })}
@@ -4225,6 +4549,15 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
       )}
 
       {/* ═══ ARTICLE READER MODAL ═══ */}
+      {/* ═══ QUIZ MODAL ═══ */}
+      {quizModule && (
+        <QuizModal
+          module={quizModule}
+          onClose={() => setQuizModule(null)}
+          onComplete={() => { if (onCourseProgress) onCourseProgress(quizModule.id, quizModule.les); }}
+        />
+      )}
+
       {readingArticle && (
         <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(2,12,27,0.97)", display: "flex", flexDirection: "column", overflowY: "auto" }}>
           {/* Header */}
