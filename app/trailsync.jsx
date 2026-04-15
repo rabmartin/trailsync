@@ -97,8 +97,7 @@ const WX_REGIONS = [
   { region: "Fisherfield",         lat: 57.80, lng: -5.24, alt: 800, peaks: ["An Teallach", "Beinn Dearg Mor"], cls: "munros" },
   { region: "Skye Cuillin",        lat: 57.25, lng: -6.20, alt: 700, peaks: ["Sgurr nan Gillean", "Bruach na Frithe", "Sgurr Alasdair"], cls: "munros" },
   { region: "Loch Lomond & Trossachs", lat: 56.17, lng: -4.60, alt: 200, peaks: ["Loch Katrine", "Loch Lomond Shores", "The Trossachs"], cls: "non-mountain" },
-  { region: "Cairngorms Lochside", lat: 57.08, lng: -3.62, alt: 300, peaks: ["Loch an Eilein", "Loch Morlich", "Loch Muick"], cls: "non-mountain" },
-  { region: "Glen Nevis & Great Glen", lat: 56.82, lng: -5.08, alt: 150, peaks: ["Glen Nevis Gorge", "Great Glen Way", "Loch Ness"], cls: "non-mountain" },
+  { region: "Great Glen", lat: 57.15, lng: -4.55, alt: 100, peaks: ["Loch Ness", "Great Glen Way", "Glen Affric"], cls: "non-mountain" },
 ];
 
 // Keep WX_AREAS as alias for backward compat with any refs
@@ -390,6 +389,65 @@ const QUIZZES = {
     { q: "A 'wild bivi' differs from a tent because:", opts: ["No shelter at all", "Uses a bivi bag or tarp, not a freestanding tent", "Must be beside a river", "It is illegal"], ans: 1 },
     { q: "The most important factor when choosing a wild camp pitch?", opts: ["Distance from a path", "Level, wind-sheltered ground with good drainage", "Close to a summit", "Near mobile signal"], ans: 1 },
   ]},
+};
+
+const LESSON_CONTENT = {
+  1: [
+    { title: "What an OS Map Shows", icon: "🗺️", content: "Ordnance Survey maps are the gold standard for UK hillwalking. The 1:25,000 scale (Explorer) shows features 4× larger than the 1:50,000 (Landranger) and is preferred for navigation on foot. Colours carry meaning: blue for water, green for woodland, yellow for open land, and grey for urban areas.", points: ["Always check the scale before navigating — 1:25,000 vs 1:50,000 makes a huge difference", "The legend explains every symbol; study it before your walk", "Grid lines run north–south and east–west, 1km apart on 1:50,000", "Map datum is OSGB36 — important if you use a GPS device"] },
+    { title: "Contour Lines", icon: "〰️", content: "Contour lines connect points of equal elevation. On a 1:50,000 map, lines are 10m apart; index contours (thicker) appear every 50m. Close lines = steep slope; wide apart = gentle ground. Contours that form a V pointing uphill indicate a valley; pointing downhill indicate a ridge.", points: ["Ring contours with the highest value inside = hill summit", "Two lines very close together often means a cliff — don't walk there", "Practice identifying spurs (ridges) vs re-entrants (valleys) from contours", "Count contour lines to estimate height gain before a walk"] },
+    { title: "Compass Basics", icon: "🧭", content: "A baseplate compass has a rotating bezel marked in degrees 0–360 and a magnetic needle that always points to magnetic north. The red end of the needle is north. Declination in Scotland is currently about 2°W — in practice, add 2° to your map bearing to get a magnetic bearing.", points: ["Never place a compass near metal objects or phones — they deflect the needle", "Rotate the bezel so the orienting arrow aligns with map north lines", "Walk on the bearing shown by the direction-of-travel arrow", "Always double-check your bearing before moving off in poor visibility"] },
+    { title: "Grid References", icon: "📍", content: "OS grid references use two letters (the 100km square) followed by numbers. A 6-figure reference (e.g. NN 166 712) gives accuracy to 100m — good enough for most navigation. The first three digits are Eastings (how far right), the last three are Northings (how far up). Remember: 'along the corridor, then up the stairs'.", points: ["Eastings always come before Northings", "A 4-figure reference covers a 1km × 1km square; 6-figure gives 100m accuracy", "Use the romer scale on your compass baseplate to read precise grid refs", "Practice converting between what3words and grid references for rescue scenarios"] },
+    { title: "Taking a Bearing", icon: "🎯", content: "To take a bearing from the map: place the compass edge along your intended line of travel, rotate the bezel until the orienting lines align with the north grid lines, then read the bearing. Add magnetic declination. To walk the bearing, hold the compass flat and rotate your body until the needle aligns with the orienting arrow.", points: ["Always take the bearing from where you are, not from a feature you can already see", "Walk for timed legs — know your pace count over 100m on flat and uphill terrain", "Confirm your bearing against visible landmarks before committing to it in mist", "Re-check your bearing every few minutes in cloud"] },
+    { title: "Relocation Techniques", icon: "🔍", content: "If you're unsure of your position, stop immediately and reason your way back. Tick-off features you've passed; use linear features (streams, fences, ridges) as handrails. Catching features (a known cliff, loch edge, or path junction) can tell you exactly where you are if you've gone slightly off course.", points: ["Never walk on if you're uncertain — uncertainty compounds quickly", "Cast back to your last known position and re-calculate", "Resection: take bearings to two or three known features to fix your position", "In thick cloud, use timing and pacing to estimate distance travelled"] },
+    { title: "Navigation in Poor Visibility", icon: "🌫️", content: "Mist and cloud remove the visual reference points that make navigation feel easy. In these conditions, rely entirely on compass bearings and timing. Break your route into short legs between identifiable features. Move slowly and methodically — speed is irrelevant if you're heading the wrong way.", points: ["Reduce leg length in poor visibility — 100m at a time in very bad conditions", "Use a group member as a walking pole — send them ahead to the limit of visibility on your bearing", "Whistle blasts and shout to maintain contact in thick mist", "Always know your escape route before you need it"] },
+    { title: "Route Planning", icon: "📋", content: "A good route plan includes: objective, total distance, total height gain, estimated time (Naismith's Rule: 1 hour per 5km + 1 hour per 600m ascent), escape routes, and emergency contacts. Share your plan with someone not on the walk before you leave.", points: ["Naismith's Rule: 5km/hr on flat + 1hr per 600m gain — adjust for fitness and conditions", "Plan escape routes at regular intervals — not just at the start", "Check weather for summit level, not valley level", "Leave your route card with a trusted contact and tell them when to call mountain rescue if they haven't heard from you"] },
+  ],
+  2: [
+    { title: "Why Winter Changes Everything", icon: "❄️", content: "The same hill that takes 3 hours in August can take 8 hours in winter. Snow and ice dramatically increase the technical difficulty and risk. Short days, cold temperatures that cause hypothermia rapidly, and avalanche hazard are all additional factors. Winter mountaineering is a separate discipline that requires specific skills and equipment.", points: ["Never underestimate cold — wind chill at high altitude can be extreme", "Daylight hours in the Scottish Highlands can be as short as 7 hours in December", "Turn back early — more accidents happen on descent when people are tired", "Full winter kit should be carried even on short days if conditions are snowy"] },
+    { title: "The Ice Axe", icon: "⛏️", content: "An ice axe has three main parts: the pick (curved point at top for self-arrest), the adze (flat blade for cutting steps), and the spike (bottom tip for balance). Carry it with the pick facing backwards when walking. In self-arrest position, grip the head with thumb under the adze.", points: ["Always carry your axe where you can access it instantly — never in a rucsac on steep ground", "Practice the self-arrest position in a safe location before venturing onto steep snow", "A wrist leash prevents losing your axe if you drop it", "Keep the pick sharp — a blunt pick is dangerous as it won't bite quickly"] },
+    { title: "Ice Axe Arrest", icon: "🛑", content: "Self-arrest stops an uncontrolled slide on steep snow. On feeling yourself fall: roll onto your front, dig the pick of the axe into the snow at shoulder height, arch your back to press the pick in, and lift your feet to prevent your crampons catching. It requires immediate decisive action — hesitation means gathering speed.", points: ["Practice on gentle slopes first, sliding feet-first on your front and back", "The pick must be pressed into the snow with your body weight — not just your arms", "Self-arrest becomes harder with increasing speed — react immediately on any slip", "Long-shafted axes are harder to arrest with — a 55–60cm shaft suits most people"] },
+    { title: "Crampons", icon: "🦵", content: "Crampons attach to boots and provide grip on ice and hard snow. General mountaineering crampons have 12 points including two front points for front-pointing technique. Always check the fit before leaving home — a crampon coming loose on a steep slope is very dangerous. Match your crampon type to your boot sole rigidity.", points: ["C1 crampons fit flexible boots; C2 fits semi-stiff; C3 fits full rigid mountaineering boots", "Walk flat-footed (French technique) on moderate snow to engage all points", "Front-pointing (German technique) is used on steep ice and hard snow", "Clear balled-up snow (balling) from underfoot frequently with your axe shaft"] },
+    { title: "Snow Assessment", icon: "🌨️", content: "Snow conditions change dramatically over a day and after weather events. Hard névé (consolidated snow) offers reliable crampon purchase. Soft wet snow in afternoon sun is unstable. Wind slab — a firm, hollow-sounding, often opaque layer of wind-deposited snow — is the most common avalanche trigger.", points: ["Tap the slope with your axe shaft — a hollow 'whumpf' sound indicates a weak layer below wind slab", "Shooting cracks in the snow surface are a serious warning sign", "Avoid convex rolls on slopes between 30–45°, especially after recent snowfall or wind", "Observe what slopes above you could avalanche onto your planned route"] },
+    { title: "Avalanche Awareness", icon: "⚠️", content: "Most avalanche victims trigger the avalanche themselves or are caught by a member of their group. High-risk terrain includes: leeward slopes collecting wind slab, convex rolls, gullies and bowls in avalanche runout zones. Scotland's SAIS service issues regional forecasts — always check before a winter hill day.", points: ["Check SAIS (Scottish Avalanche Information Service) for a regional forecast every day", "Avoid crossing beneath cornices — they can collapse without warning", "Travel one at a time on suspect slopes; others watch from safe ground", "Carry avalanche transceiver, probe, and shovel on any serious winter day"] },
+    { title: "Route Finding in Winter", icon: "🏔️", content: "Summer paths disappear under snow. Navigate from prominent features: boulder fields, cliff edges, ridgelines. Avoid the lee side of ridges where cornices build. In Scotland, the northern and eastern aspects typically hold snow longest. Summit plateaux can be completely featureless in cloud and snow — dead-reckoning becomes critical.", points: ["Use contour lines to identify ridges vs valleys even when ground features are buried", "Don't walk on corniced ridges — stay well back from the edge", "Check for wind direction and use it as a backup navigational cue", "Recognise when conditions are beyond your experience and retreat"] },
+    { title: "Emergency Bivouac", icon: "🏕️", content: "An emergency bivouac (bivi) may be required if you are benighted or too exhausted to continue safely. A bivi bag (emergency foil or breathable fabric sack) retains body heat dramatically better than a survival bag alone. Get out of the wind, insulate from the ground, and stay as dry as possible.", points: ["Always carry an emergency bivi bag — they weigh under 150g", "Insulation from the ground is as important as staying out of wind", "A group huddle in a bivi shares body heat effectively", "Conserve phone battery and signal; call for help as soon as practical"] },
+    { title: "Winter Weather Hazards", icon: "🌬️", content: "Spindrift (windblown snow particles) reduces visibility to metres and can fill in tracks in minutes. Rime ice coats everything at high altitude in cloud. Summit temperatures can be 20°C colder than valley temperatures. Wind chill at 60mph in -5°C gives an effective temperature of around -25°C.", points: ["Wind chill formula: effective temp ≈ air temp - (wind speed in mph × 0.7) roughly", "Rime ice on clothing and equipment can be significant weight — check compass needle regularly", "Goggles are essential in spindrift — they prevent losing vision", "Know when to turn back: if you can't see 20m in blowing snow, you shouldn't be on exposed ridges"] },
+    { title: "Moving Safely as a Group", icon: "👥", content: "Faster walkers should wait at junctions and when visibility drops. Keep the group together — lone stragglers in winter are a rescue statistic waiting to happen. Brief the group before departure: the plan, the escape routes, and what to do if someone becomes separated.", points: ["Set a turnaround time and stick to it regardless of how close the summit is", "Slower walkers set the pace — don't let the group split", "Each person should carry personal emergency kit: food, warm layer, bivi bag, whistle, torch", "Agree a communication plan: 6 whistle blasts = emergency"] },
+  ],
+  3: [
+    { title: "Mountain Weather Basics", icon: "☁️", content: "Mountains create their own micro-climate. Air cools at approximately 0.65°C per 100m of altitude gain (the environmental lapse rate). This means a summit at 1000m could easily be 6–7°C colder than the car park. Summits also experience stronger winds as air is forced over them, and clouds form readily as moist air is lifted and cools.", points: ["Temperature decreases with altitude; allow for this when planning what to wear", "Summits receive 20–30% more precipitation than nearby valleys", "Wind accelerates over ridges and through cols — gusts at summit may be 50% stronger than valley readings", "Orographic cloud forms on windward slopes even in otherwise clear conditions"] },
+    { title: "Reading Clouds", icon: "🌤️", content: "Cloud type is the most visible weather indicator available. High, thin cirrus clouds often precede a warm front by 24 hours. Cumulus clouds indicate atmospheric instability — if they grow tall and anvil-topped (cumulonimbus) in the afternoon, expect thunderstorms. Lenticular (lens-shaped) clouds form over summits in strong winds and indicate wave rotor turbulence.", points: ["Cirrus → warm front approaching, expect rain in 24 hours", "Cumulonimbus = thunderstorm cell — get off ridges immediately", "Lenticular clouds = very strong summit winds, even in apparently calm valleys", "Stratus covering summits typically means poor visibility at altitude all day"] },
+    { title: "Pressure Systems", icon: "🌐", content: "High pressure (anticyclone) brings settled weather. Low pressure (depression) brings wind and rain, especially on its southern flank. Fronts — warm, cold, and occluded — are the boundaries between air masses. A rapidly deepening low (dropping more than 1mb/hour) signals deteriorating conditions quickly.", points: ["A steady or rising barometer = settled weather; falling barometer = deterioration incoming", "Cold fronts pass quickly (1–3 hours) but bring heavy showers and wind shifts behind them", "A warm sector between fronts often brings prolonged drizzle and low cloud", "Occluded fronts are complex — expect variable and changeable conditions"] },
+    { title: "Using Forecasts", icon: "📡", content: "The Mountain Weather Information Service (MWIS) provides UK mountain-specific forecasts — not valley-level. They give summit temperature, wind speed at height, freezing level, and precipitation chance. SAIS provides avalanche forecasts for Scottish regions in winter. Never rely solely on a smartphone's general weather app for mountain decisions.", points: ["MWIS forecasts cover specific mountain ranges at summit altitude", "Check the freezing level — if it's at 800m and your summit is 900m, expect ice", "Read the confidence level in the forecast — high uncertainty requires a conservative plan", "Met Office Mountain Forecasts are also reliable for UK hills"] },
+    { title: "On-the-Ground Signs", icon: "🌿", content: "Nature provides weather cues if you learn to read them. Wind direction indicates which air mass is dominant. Clear, sharp horizons often mean good visibility ahead; hazy horizons suggest moisture in the air. Animals descend before storms. A red sky at night reliably indicates high pressure and settled air to the west.", points: ["'Red sky at night, shepherd's delight' — high pressure west of you is moving in", "Dew on grass overnight indicates clear skies and high pressure", "If you can see distant features sharply, good visibility will continue", "Spiders spin large webs on clear mornings — a traditional settled weather indicator"] },
+    { title: "Making the Go/No-Go Decision", icon: "✅", content: "Weather decisions are the most important you make in the mountains. The key factors: summit forecast (not valley forecast), wind speed at altitude, freezing level vs your route height, time constraints, and group experience. If any one of these is marginal, consider an alternative objective or a different day.", points: ["Establish your personal go/no-go criteria before leaving home, not on the hill", "Wind: 30–40mph is uncomfortable; 50mph+ can knock you off your feet on an exposed ridge", "Freezing level below your summit = potential for icing — carry ice axe and crampons", "Always have an alternative objective at lower altitude in case of deterioration"] },
+  ],
+  4: [
+    { title: "Scene Safety & DRSABC", icon: "🔴", content: "At any mountain incident, the first priority is your own safety. DRSABC: Danger (make scene safe), Response (check consciousness), Shout (call for help), Airway (open and clear), Breathing (check), Circulation (control bleeding). An unconscious, non-breathing casualty requires immediate CPR — compressions at 100–120 beats/min.", points: ["Don't become a second casualty — assess the scene before rushing in", "DRSABC is the universal primary survey protocol used by mountain rescue teams", "Even trained rescuers call for help first (or assign someone to do it immediately)", "CPR ratio: 30 compressions to 2 rescue breaths — or hands-only CPR if not trained in rescue breaths"] },
+    { title: "Calling Mountain Rescue", icon: "📞", content: "In Scotland, call 999 and ask for Police, who coordinate mountain rescue. In areas with mobile signal, you can also try 112. Give: your 6-figure grid reference or what3words location, number of casualties, nature of injuries, your group size, and current conditions. Stay on the line. If signal is weak, text 999 (register first at gov.uk).", points: ["Register for emergency SMS at emergencysms.net before going to the hills", "Your 6-figure grid reference is the most critical piece of information you can give", "Preserve phone battery — put it on low-power mode after the call", "Stay with the casualty and shelter them while awaiting rescue"] },
+    { title: "Hypothermia", icon: "🥶", content: "Hypothermia occurs when core body temperature drops below 35°C. Mild hypothermia: shivering, stumbling, slurred speech, poor decision-making. Severe hypothermia: shivering stops (dangerously), very confused, may appear unconscious. Wet clothing loses 90% of its insulating value — remove and replace or add a vapour barrier.", points: ["Mild hypothermia: shelter, insulation, warm drinks, food, dry clothing", "Never give alcohol — it dilates blood vessels and causes further heat loss", "Severe hypothermia: handle gently (cardiac arrest risk), insulate, call mountain rescue immediately", "A hypothermic casualty is never dead until warm and dead — always continue rewarming and CPR"] },
+    { title: "Heat Illness", icon: "🌡️", content: "Heat exhaustion (body still regulating temperature): heavy sweating, pale skin, weakness, dizziness. Heat stroke (temperature control has failed): hot dry skin, high temperature, confusion, possible loss of consciousness — this is a medical emergency. Prevention: drink 500ml/hour of water in warm weather, wear a hat, avoid exertion in midday heat.", points: ["Heat exhaustion: move to shade, cool with water, drink electrolyte solution", "Heat stroke: cool the person immediately with whatever water is available, call 999", "Acclimatise to warm weather gradually — don't push hard on the first hot day of the year", "Check the urine colour — pale yellow means well hydrated; dark yellow means drink more"] },
+    { title: "Altitude Sickness", icon: "🏔️", content: "Acute Mountain Sickness (AMS) rarely occurs in UK mountains (max altitude ~1345m), but can affect some people on Snowdon or Ben Nevis, especially when going too fast. Symptoms: headache, nausea, dizziness, fatigue. The only reliable treatment is descent. In the Alps or higher ranges, acclimatise with rest days and 'climb high, sleep low'.", points: ["AMS symptoms at UK altitudes are rare but possible in susceptible individuals", "Headache + nausea after rapid ascent = stop, drink water, consider descent", "Never ascend with existing AMS symptoms — they will worsen", "HACE (cerebral oedema) and HAPE (pulmonary oedema) are life-threatening at higher altitudes"] },
+    { title: "Fractures & Sprains", icon: "🦵", content: "A sprained ankle is the most common walking injury. RICE: Rest, Ice (snow is perfect in the mountains), Compression (bandage or sock), Elevation. A fracture is more serious — the priority is immobilisation before movement. A walking pole makes a reasonable improvised splint when padded.", points: ["If in doubt whether broken or sprained, treat as broken", "A simple ankle fracture can sometimes be walked out with good strapping — get medical advice as soon as possible", "Open fractures (bone through skin) require urgent evacuation — cover with clean dressing, don't push bone back", "Spinal injuries: don't move the casualty unless there is immediate danger"] },
+    { title: "Blisters & Wilderness Wounds", icon: "🩹", content: "Blisters form from friction and heat — prevention is better than treatment: well broken-in boots, quality wool socks, and anti-friction stick. A blister should not be drained unless it's impairing movement — if you do drain it, use a sterile needle and apply antiseptic. In the mountains, even small wounds can become serious if infected.", points: ["Moleskin (Compeed) applied at first 'hot spot' prevents most blisters", "Drain a blister at the edge, not the centre, keeping the roof intact as protection", "Clean all wounds with bottled water or treated water — river water can contain Giardia", "Watch for signs of infection: increasing redness, warmth, swelling, discharge, red streaks"] },
+    { title: "Planning for Emergencies", icon: "📋", content: "Every walk should include a written or mental emergency plan: nearest mountain rescue post, your grid reference at trailhead, expected return time, who knows your plan. Your emergency kit should always include: whistle (6 blasts = emergency), torch, emergency bivouac bag, first aid kit, fully charged phone, and written grid reference of your start point.", points: ["Leave your route plan with a responsible contact who will call police if they don't hear from you", "6 whistle blasts = emergency; 3 blasts = acknowledgement", "A PLB (Personal Locator Beacon) activates a satellite rescue signal anywhere — worth it for remote routes", "Know the nearest mountain rescue team for your area before you set off"] },
+  ],
+  5: [
+    { title: "What Is Scrambling?", icon: "🧗", content: "Scrambling sits between walking and rock climbing — you use your hands as well as your feet, but protection is not usually required on lower grades. Grade 1 scrambles are little more than steep rough walking with occasional use of hands. Grade 2 requires more commitment and route-finding skill. Grade 3 approaches climbing, and a rope is usually needed.", points: ["Grade 1: hands occasionally needed; mostly walking on steep rough terrain", "Grade 2: hands regularly needed; route-finding important; rope advisable for beginners", "Grade 3: sustained difficulty, significant exposure; rope and protection required", "Know the grade before you commit — many accidents happen because scramblers underestimate the route"] },
+    { title: "Reading the Rock", icon: "🪨", content: "Good rock is rough, solid, and 'rings' when tapped with a knuckle. Poor rock (common in Scotland after wet weather) is wet, mossy, or has a 'thud' when tapped — it may be hollow, about to flake, or unstable. Light-coloured rock often provides better grip than dark, especially when wet. Aim for routes where natural features guide you upward.", points: ["Always test a handhold before committing weight to it — pull, don't push", "Wet quartzite can be extremely slippery; gabbro (Cuillin) is grippy even when wet", "Look for the line of weakness — scrambles follow natural features, not straight lines", "Avoid lichen-covered rock — it can be slicker than ice when wet"] },
+    { title: "Footwork & Movement", icon: "👟", content: "The most important principle in scrambling is trust in your feet. Rigid mountain boots grip much better than trail shoes on rock because you can stand on small holds with the edge of the sole. Keep weight over your feet — not leaning into the rock. Move one limb at a time, maintaining three points of contact.", points: ["Three points of contact at all times: two hands and one foot, or two feet and one hand", "Stand on your feet, not your knees — knees have no grip and bad body position leads to falls", "Face the rock on ascent; face outward (and use hands on rock above) on descent where possible", "Smooth, deliberate movement is safer than fast, jerky movement"] },
+    { title: "Managing Exposure", icon: "😰", content: "Exposure refers to the feeling of significant empty space below you — a big drop. It's a psychological as well as physical challenge. Some people find exposure manageable; others find it paralyses them. The key: keep your eyes on the rock in front of you, breathe steadily, and focus on the next three moves rather than the total height.", points: ["Focus on handholds and footholds — don't look down", "Regular, steady breathing is crucial — holding your breath increases anxiety", "Choose routes that match your experience of exposure — Grade 1 first to build confidence", "Guided scrambles with an experienced leader are the best way to learn exposure management safely"] },
+    { title: "Roping Up", icon: "🪢", content: "On Grade 2+ scrambles, a rope gives both practical protection and psychological confidence. A 30m or 40m half-rope or single rope is appropriate. Basic techniques: the shoulder belay (for experienced parties on moderate ground), or thread/spike anchors for belaying on harder ground. A helmut is essential on any roped scramble.", points: ["Helmets are non-negotiable on roped scrambles — rockfall risk is real", "Learn to tie a figure-8 on a bight and a clove hitch before attempting roped scrambles", "A guided day with a qualified Mountain Leader or Climbing Instructor is the safest introduction", "Communication is essential — agree your system of 'safe', 'climb', 'take in' before starting"] },
+    { title: "Descending", icon: "⬇️", content: "More accidents happen on descent than on ascent. On Grade 1 ground, face outward and use your eyes to read the terrain. On steeper Grade 2+ ground, face in and descend as you would climb — methodically and with three points of contact. Never jump between holds. Abseiling (rappelling) provides a safe, controlled descent on Grade 3 and above.", points: ["Always know your descent route before committing to the ascent — check the guidebook", "Facing in allows you to use your hands and see holds clearly", "Never solo descend steep ground in poor visibility or rain — turn back earlier", "A simple abseil from a fixed thread is often faster and safer than downclimbing on hard ground"] },
+    { title: "Group Safety & Leadership", icon: "👫", content: "Scrambling in a group requires a clear leader who decides on the line and sets the pace. The slowest or least experienced person sets the speed. Keep the group together — do not let faster scramblers get so far ahead they can dislodge rocks unseen. Helmets protect against rockfall from those above as much as from personal falls.", points: ["Dislodged rocks are the most common cause of serious injury in scrambling groups", "Call 'Below!' loudly and immediately if a rock is dislodged", "Space out on steep ground — don't cluster directly above each other", "The leader should reach a secure ledge before the next person moves"] },
+  ],
+  6: [
+    { title: "Scottish Access Rights", icon: "🏴󠁧󠁢󠁳󠁣󠁴󠁿", content: "Scotland has some of the most progressive access laws in the world. The Land Reform (Scotland) Act 2003 grants a right of responsible access to most land and inland water, including wild camping. This means you can pitch a tent on unenclosed ground almost anywhere in Scotland — no permission needed. The corresponding responsibility is to Leave No Trace and not damage the environment.", points: ["Access rights apply to camping, walking, and watersports on most Scottish land", "You must act responsibly: camp for 2-3 nights maximum in one spot, take all litter out, respect crops and livestock", "Access rights do not apply to private gardens, buildings, or golf courses", "Byelaws apply around some lochs — e.g. Loch Lomond has camping management zones"] },
+    { title: "Choosing a Pitch", icon: "⛺", content: "A good wild camp site is level, sheltered from wind, not in a flood risk area, and away from sensitive vegetation. Never camp on bog or rush-dominated areas (they're fragile and uncomfortable). Higher ground is often drier and windier — balance shelter against drainage. Aim to pitch on mineral soil or grass rather than heather.", points: ["Pitch at least 30m from open water to protect riparian (riverside) ecosystems", "Look for natural windbreaks: boulders, natural hollows, tree lines — without pitching under dead branches", "Test ground firmness before pitching — boggy ground collapses tent pegs", "Face the tent door away from prevailing wind; orient the tent's pointed end into the wind"] },
+    { title: "Leave No Trace", icon: "♻️", content: "Leave No Trace (LNT) is a set of principles to minimise your impact on wild places. The core rule: pack out everything you brought in, and leave the site looking as if you were never there. In Scotland, campfires are permitted on most ground but use existing fire rings, keep fires small, never cut living vegetation, and drown the fire completely before leaving.", points: ["Never bury rubbish — animals dig it up; always pack it out", "Human waste: bury in a 'cathole' 15cm deep, at least 30m from water, use biodegradable toilet paper or pack it out", "Avoid washing with soap directly in streams — even biodegradable soap harms aquatic life", "If you must have a fire: use deadfall only, keep it small, leave no trace of the fire ring"] },
+    { title: "Wild Camping Kit", icon: "🎒", content: "A wild camping kit balances weight against comfort and safety. Essential items: shelter (tent, bivy, or tarp), sleeping bag rated to below expected temperature, sleeping mat (both insulation and padding), stove and fuel, water filter or treatment tablets, head torch with spare batteries, first aid kit, and navigation kit. The biggest weight savings come from choosing a lighter tent and sleeping bag.", points: ["Down sleeping bags are lighter but lose insulation when wet; synthetic are heavier but still warm when damp", "A closed-cell foam mat costs almost nothing and weighs 200g — it's as important as your sleeping bag", "Water treatment: Steripen UV (fast, light), filter (no chemicals), tablets (slowest but lightest)", "One-pot cooking with a titanium pot and alcohol stove saves significant weight"] },
+    { title: "Safety & Emergency Planning", icon: "🆘", content: "Wild camping introduces additional risks — primarily cold and isolation. Always tell someone your plans before heading out. A personal locator beacon (PLB) or satellite communicator (e.g. Garmin inReach) allows you to call for help from anywhere on Earth with no mobile signal. Carry a first aid kit, emergency bivi bag, and whistle as a minimum.", points: ["Register a PLB with the Maritime & Coastguard Agency before use in the UK", "Check weather forecasts for mountain level, not valley level — temperatures can plummet overnight", "Know your exit routes in daylight before it gets dark — navigating out in the dark is significantly harder", "Hypothermia risk at night is real even in summer — always have more insulation than you think you need"] },
+  ],
 };
 
 const DISCOVER = [
@@ -1252,7 +1310,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
       // Live DB queries — posts and people
       const [postsRes, usersRes] = await Promise.all([
         supabase.from("posts").select("*").ilike("text", `%${q}%`).order("created_at", { ascending: false }).limit(8),
-        supabase.from("profiles").select("id, username, name, location, follower_count").or(`username.ilike.%${q}%,name.ilike.%${q}%`).limit(6),
+        supabase.from("profiles").select("id, username, full_name, location, follower_count").or(`username.ilike.%${q}%,full_name.ilike.%${q}%`).limit(6),
       ]);
 
       // Also search hardcoded FEED posts (events, fundraisers, summits)
@@ -1511,6 +1569,22 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                 } catch(e) {}
                 finally { setWxSearchLoading(false); }
               };
+              const geocodeAndSearch = async () => {
+                if (wxSearchQ.trim().length < 2) return;
+                setWxSearchLoading(true);
+                try {
+                  const geo = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(wxSearchQ)}&count=1&language=en&format=json`).then(r => r.json());
+                  if (geo.results && geo.results.length > 0) {
+                    const r = geo.results[0];
+                    const fakePk = { id: `geo-${r.id}`, name: r.name, ht: Math.round(r.elevation || 0), reg: [r.admin3, r.admin2, r.admin1, r.country].filter(Boolean).join(", "), lat: r.latitude, lng: r.longitude, cls: "non-mountain" };
+                    setWxSearchPeak(fakePk);
+                    setWxSearchQ(r.name);
+                    const w = await fetchPeakWeather(fakePk, wxDay === -1 ? 0 : wxDay);
+                    setWxSearchWx(w);
+                  }
+                } catch(e) {}
+                finally { setWxSearchLoading(false); }
+              };
               return (
                 <div style={{ padding: "6px 14px 10px", position: "relative" }}>
                   {/* Search input */}
@@ -1519,7 +1593,8 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                     <input
                       value={wxSearchQ}
                       onChange={e => { setWxSearchQ(e.target.value); setWxSearchPeak(null); setWxSearchWx(null); }}
-                      placeholder="Search any peak…"
+                      onKeyDown={e => { if (e.key === "Enter") { const found = PEAKS_FALLBACK.find(p => p.name.toLowerCase() === wxSearchQ.toLowerCase()); found ? selectPeak(found) : geocodeAndSearch(); } }}
+                      placeholder="Search any area or peak…"
                       style={{ width: "100%", padding: "9px 32px 9px 32px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "14px", outline: "none", fontFamily: "'DM Sans'", boxSizing: "border-box" }}
                     />
                     {wxSearchQ.length > 0 && (
@@ -1628,7 +1703,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
 
                 return (
                   <div key={i} style={{
-                    scrollSnapAlign: "center", flex: "0 0 90%", marginRight: i < sorted.length - 1 ? "8px" : "0",
+                    scrollSnapAlign: "center", flex: "0 0 95%", marginRight: i < sorted.length - 1 ? "8px" : "0",
                     background: cardBg, borderRadius: "14px",
                     border: `1px solid ${a.score >= 85 ? "rgba(107,203,119,0.2)" : "rgba(90,152,227,0.2)"}`,
                     padding: "10px 12px", animation: `fi .3s ease ${i * .04}s both`,
@@ -1668,7 +1743,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                       <div style={{ borderTop: "1px solid rgba(90,152,227,0.1)", paddingTop: "8px", width: "100%", marginTop: "4px" }}>
                         <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.45, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px", textAlign: "center" }}>Walks & Peaks</div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                          {loosePeaks.slice(0, 6).map((pk, j) => {
+                          {loosePeaks.slice(0, 3).map((pk, j) => {
                             const key = `${pk.id}-${wxDay}`;
                             const lw = peakWx[key];
                             const pkLoading = peakWxLoading[key];
@@ -1710,7 +1785,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                             );
                           })}
                           {/* Non-mountain walks for this region */}
-                          {regionWalks.slice(0, loosePeaks.length > 0 ? 2 : 6).map((wk, j) => (
+                          {regionWalks.slice(0, loosePeaks.length > 0 ? 1 : 3).map((wk, j) => (
                             <div key={`w${wk.id}`} style={{
                               display: "flex", alignItems: "center", gap: "8px",
                               padding: "5px 8px", borderRadius: "8px",
@@ -2391,7 +2466,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
             <path d="M0 120 L60 60 L110 90 L180 20 L240 70 L290 40 L350 80 L400 50 L400 120Z" fill="#5A98E3" />
           </svg>
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 50%, rgba(4,30,61,0.9) 100%)" }} />
-          <div style={{ position: "relative", padding: "14px 16px 20px" }}>
+          <div style={{ position: "relative", padding: "calc(14px + env(safe-area-inset-top, 0px)) 16px 20px" }}>
             <button onClick={() => setShowRouteDetail(null)} style={{ background: "rgba(4,30,61,0.6)", border: "none", borderRadius: "10px", padding: "8px 14px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "15px", fontWeight: 600, fontFamily: "'DM Sans'", marginBottom: "50px", backdropFilter: "blur(8px)" }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg> Back
             </button>
@@ -4236,6 +4311,83 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
 };
 
 /* ═══════════════════════════════════════════════════════════════════
+   LESSON VIEWER — full-screen lesson reader
+   ═══════════════════════════════════════════════════════════════════ */
+const LessonViewer = ({ module: mod, startLesson, doneLessons, onClose, onProgress }) => {
+  const lessons = LESSON_CONTENT[mod.id] || [];
+  const [idx, setIdx] = useState(Math.min(startLesson, lessons.length - 1));
+  const [animDir, setAnimDir] = useState("slideInRight");
+  const lesson = lessons[idx] || {};
+  const isLast = idx === lessons.length - 1;
+  const alreadyDone = idx < doneLessons;
+
+  const goTo = (newIdx, dir) => {
+    setAnimDir(dir);
+    setTimeout(() => setIdx(newIdx), 20);
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 250, background: "#041e3d", display: "flex", flexDirection: "column" }}>
+      {/* Header */}
+      <div style={{ background: "rgba(4,30,61,0.98)", backdropFilter: "blur(14px)", borderBottom: "1px solid rgba(90,152,227,0.12)", padding: "calc(14px + env(safe-area-inset-top, 0px)) 16px 14px", display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
+        <button onClick={onClose} style={{ background: "rgba(90,152,227,0.12)", border: "none", borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <X size={16} />
+        </button>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: "11px", color: "#5A98E3", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>{mod.ic} {mod.title}</div>
+          <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.55, marginTop: "1px" }}>Lesson {idx + 1} of {mod.les}</div>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div style={{ height: "3px", background: "#0a2240", flexShrink: 0 }}>
+        <div style={{ width: `${((idx + 1) / mod.les) * 100}%`, height: "100%", background: "linear-gradient(90deg,#5A98E3,#6BCB77)", transition: "width .35s ease" }} />
+      </div>
+
+      {/* Content */}
+      <div key={idx} style={{ flex: 1, overflowY: "auto", padding: "28px 18px 20px", animation: `${animDir} .25s ease` }}>
+        <div style={{ fontSize: "38px", marginBottom: "12px" }}>{lesson.icon || mod.ic}</div>
+        <div style={{ fontSize: "22px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif", lineHeight: 1.3, marginBottom: "16px" }}>{lesson.title}</div>
+        <div style={{ fontSize: "15px", color: "#D6E8FF", lineHeight: 1.75, marginBottom: "24px" }}>{lesson.content}</div>
+        <div style={{ background: "#0a2240", borderRadius: "14px", padding: "16px", border: "1px solid rgba(90,152,227,0.15)" }}>
+          <div style={{ fontSize: "11px", color: "#5A98E3", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "10px" }}>Key Points</div>
+          {(lesson.points || []).map((pt, i) => (
+            <div key={i} style={{ display: "flex", gap: "10px", marginBottom: "8px", alignItems: "flex-start" }}>
+              <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#5A98E3", flexShrink: 0, marginTop: "6px" }} />
+              <div style={{ fontSize: "14px", color: "#BDD6F4", lineHeight: 1.55 }}>{pt}</div>
+            </div>
+          ))}
+        </div>
+        {alreadyDone && <div style={{ marginTop: "12px", textAlign: "center", fontSize: "12px", color: "#6BCB77", fontWeight: 700 }}>✓ Completed</div>}
+      </div>
+
+      {/* Footer nav */}
+      <div style={{ padding: "14px 18px calc(18px + env(safe-area-inset-bottom, 0px))", borderTop: "1px solid rgba(90,152,227,0.1)", display: "flex", gap: "10px", flexShrink: 0, background: "#041e3d" }}>
+        <button
+          onClick={() => { if (idx > 0) goTo(idx - 1, "slideInLeft"); }}
+          disabled={idx === 0}
+          style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: idx === 0 ? "rgba(189,214,244,0.2)" : "#BDD6F4", fontSize: "14px", fontWeight: 700, cursor: idx === 0 ? "default" : "pointer", fontFamily: "'DM Sans'" }}
+        >← Previous</button>
+        {isLast ? (
+          <button
+            onClick={() => { if (!alreadyDone && idx >= doneLessons) { onProgress(mod.id, mod.les); } onClose(); }}
+            style={{ flex: 2, padding: "12px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg,#6BCB77,#4aaa5a)", color: "#fff", fontSize: "14px", fontWeight: 800, cursor: "pointer", fontFamily: "'DM Sans'" }}
+          >Complete Module ✓</button>
+        ) : (
+          <button
+            onClick={() => {
+              if (idx >= doneLessons) { onProgress(mod.id, idx + 1); }
+              goTo(idx + 1, "slideInRight");
+            }}
+            style={{ flex: 2, padding: "12px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg,#5A98E3,#4080cc)", color: "#fff", fontSize: "14px", fontWeight: 800, cursor: "pointer", fontFamily: "'DM Sans'" }}
+          >Next Lesson →</button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════════════
    QUIZ MODAL — shown when a module is completed
    ═══════════════════════════════════════════════════════════════════ */
 const QuizModal = ({ module: mod, onClose, onComplete }) => {
@@ -4296,7 +4448,7 @@ const QuizModal = ({ module: mod, onClose, onComplete }) => {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(2,12,27,0.98)", display: "flex", flexDirection: "column", overflowY: "auto" }}>
       {/* Header */}
-      <div style={{ position: "sticky", top: 0, background: "rgba(4,30,61,0.98)", backdropFilter: "blur(14px)", borderBottom: "1px solid rgba(90,152,227,0.12)", padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px", zIndex: 10 }}>
+      <div style={{ position: "sticky", top: 0, background: "rgba(4,30,61,0.98)", backdropFilter: "blur(14px)", borderBottom: "1px solid rgba(90,152,227,0.12)", padding: "calc(14px + env(safe-area-inset-top, 0px)) 16px 14px", display: "flex", alignItems: "center", gap: "12px", zIndex: 10 }}>
         <button onClick={onClose} style={{ background: "rgba(90,152,227,0.12)", border: "none", borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <X size={16} />
         </button>
@@ -4404,6 +4556,7 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
   const [selArticle, setSelArticle] = useState(null);
   const [readingArticle, setReadingArticle] = useState(null);
   const [quizModule, setQuizModule] = useState(null);
+  const [lessonOpen, setLessonOpen] = useState(null);
 
   const filteredArticles = DISCOVER.filter(a => !discCat || a.cat === discCat);
   const categories = [...new Set(DISCOVER.map(a => a.cat))];
@@ -4465,15 +4618,8 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
                 {sel === m.id && <div style={{ padding: "0 14px 14px", borderTop: "1px solid rgba(90,152,227,0.1)", paddingTop: "12px" }}>
                   <div style={{ fontSize: "14px", color: "#BDD6F4", lineHeight: 1.5, marginBottom: "12px" }}>{m.desc}</div>
                   <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                    <button onClick={() => {
-                      if (pct < 100 && onCourseProgress) {
-                        const next = Math.min(doneLessons + 1, m.les);
-                        onCourseProgress(m.id, next);
-                        // Trigger quiz when last lesson is completed
-                        if (next === m.les) { setQuizModule(m); }
-                      }
-                    }} style={{ padding: "9px 22px", borderRadius: "10px", border: "none", background: pct === 100 ? "#264f80" : "linear-gradient(135deg,#5A98E3,#4080cc)", color: pct === 100 ? "#BDD6F4" : "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
-                      {pct === 100 ? "✓ Complete" : pct > 0 ? "Continue" : "Start"}
+                    <button onClick={() => { setLessonOpen({ module: m, startLesson: Math.min(doneLessons, m.les - 1) }); }} style={{ padding: "9px 22px", borderRadius: "10px", border: "none", background: pct === 100 ? "#264f80" : "linear-gradient(135deg,#5A98E3,#4080cc)", color: pct === 100 ? "#BDD6F4" : "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+                      {pct === 100 ? "Review Lessons" : pct > 0 ? "Continue" : "Start"}
                     </button>
                     {pct === 100 && QUIZZES[m.id] && (
                       <button onClick={() => setQuizModule(m)} style={{ padding: "9px 16px", borderRadius: "10px", border: "1px solid rgba(232,93,58,0.3)", background: "rgba(232,93,58,0.08)", color: "#E85D3A", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "5px" }}>
@@ -4548,6 +4694,23 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
         </div>
       )}
 
+      {/* ═══ LESSON VIEWER ═══ */}
+      {lessonOpen && (
+        <LessonViewer
+          module={lessonOpen.module}
+          startLesson={lessonOpen.startLesson}
+          doneLessons={courseProgress[lessonOpen.module.id] ?? 0}
+          onClose={() => { setLessonOpen(null); }}
+          onProgress={(modId, count) => {
+            if (onCourseProgress) onCourseProgress(modId, count);
+            if (count >= lessonOpen.module.les) {
+              setLessonOpen(null);
+              setQuizModule(lessonOpen.module);
+            }
+          }}
+        />
+      )}
+
       {/* ═══ ARTICLE READER MODAL ═══ */}
       {/* ═══ QUIZ MODAL ═══ */}
       {quizModule && (
@@ -4561,7 +4724,7 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
       {readingArticle && (
         <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(2,12,27,0.97)", display: "flex", flexDirection: "column", overflowY: "auto" }}>
           {/* Header */}
-          <div style={{ position: "sticky", top: 0, background: "rgba(4,30,61,0.98)", backdropFilter: "blur(14px)", borderBottom: "1px solid rgba(90,152,227,0.12)", padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px", zIndex: 10 }}>
+          <div style={{ position: "sticky", top: 0, background: "rgba(4,30,61,0.98)", backdropFilter: "blur(14px)", borderBottom: "1px solid rgba(90,152,227,0.12)", padding: "calc(14px + env(safe-area-inset-top, 0px)) 16px 14px", display: "flex", alignItems: "center", gap: "12px", zIndex: 10 }}>
             <button onClick={() => setReadingArticle(null)} style={{ background: "rgba(90,152,227,0.12)", border: "none", borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <X size={16} />
             </button>
@@ -5663,10 +5826,10 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             ) : (showFollowers === "followers" ? followerList : followingList).map(u => (
               <div key={u.id} onClick={() => { setShowFollowers(null); if (onViewProfile) onViewProfile(u); }} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 16px", borderBottom: "1px solid rgba(90,152,227,0.07)", cursor: "pointer" }}>
                 <div style={{ width: "46px", height: "46px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>
-                  {(u.username || u.name || "?")[0].toUpperCase()}
+                  {(u.username || u.full_name || "?")[0].toUpperCase()}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{u.name || u.username}</div>
+                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{u.full_name || u.username}</div>
                   <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.5, marginTop: "2px" }}>
                     {u.username ? `@${u.username}` : ""}{u.location ? ` · ${u.location}` : ""}
                   </div>
@@ -7018,10 +7181,10 @@ const UserProfileModal = ({ user, userId, followingIds, onFollow, onClose }) => 
                 {followList.map(u => (
                   <div key={u.id} style={{ background: "#0a2240", borderRadius: "12px", padding: "12px 14px", border: "1px solid rgba(90,152,227,0.1)", display: "flex", alignItems: "center", gap: "12px" }}>
                     <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>
-                      {(u.name || u.username || "H")[0].toUpperCase()}
+                      {(u.full_name || u.username || "H")[0].toUpperCase()}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>{u.name || u.username || "Hiker"}</div>
+                      <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>{u.full_name || u.username || "Hiker"}</div>
                       {u.username && <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.5 }}>@{u.username}</div>}
                       {u.location && <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.35, marginTop: "1px" }}>📍 {u.location}</div>}
                     </div>
@@ -7111,6 +7274,9 @@ export default function TrailSync() {
   useEffect(() => {
     try { sessionStorage.setItem("ts_tab", tab); } catch {}
   }, [tab]);
+
+  const [prevTab, setPrevTab] = useState("home");
+  const tabOrder = { home: 0, routes: 1, map: 2, learn: 3, profile: 4 };
 
   // Register service worker for PWA offline support
   useEffect(() => {
@@ -7341,6 +7507,7 @@ export default function TrailSync() {
     { id: "learn", icon: BookOpen, label: "Learn" },
     { id: "profile", icon: UserCircle, label: "Profile" },
   ];
+  const swipeStartX = useRef(null);
 
   // Subtle UI tap sound via Web Audio API — no external files needed
   const playTabSound = () => {
@@ -7594,6 +7761,9 @@ export default function TrailSync() {
         @keyframes su { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fl { 0%,100% { transform: translate(-50%,-50%) scale(1); } 50% { transform: translate(-50%,-50%) scale(1.04); } }
         @keyframes glow { 0%,100% { box-shadow: 0 0 8px rgba(232,93,58,.25); } 50% { box-shadow: 0 0 18px rgba(232,93,58,.45); } }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(22px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-22px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideDown { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
         @keyframes pulse { 0%,100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.08); } }
         @keyframes locationPulse { 0% { transform: translate(-50%,-50%) scale(0.5); opacity: 0.8; } 100% { transform: translate(-50%,-50%) scale(2.5); opacity: 0; } }
         .route-wx-popup .mapboxgl-popup-content { background: transparent !important; padding: 0 !important; box-shadow: none !important; border-radius: 0 !important; }
@@ -7728,9 +7898,9 @@ export default function TrailSync() {
               <div style={{ padding: "10px 14px 4px", fontSize: "11px", color: "#BDD6F4", opacity: 0.4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>People</div>
               {searchResults.users.map(u => (
                 <div key={u.id} style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid rgba(90,152,227,0.06)", cursor: "pointer" }} onClick={() => { setViewingProfile(u); setHeaderSearch(""); }}>
-                  <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>{(u.username || u.name || "?")[0].toUpperCase()}</div>
+                  <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>{(u.username || u.full_name || "?")[0].toUpperCase()}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>{u.name || u.username}</div>
+                    <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>{u.full_name || u.username}</div>
                     {u.username && <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>@{u.username}{u.location ? ` · ${u.location}` : ""}</div>}
                   </div>
                   {u.id !== userId && (
@@ -7793,12 +7963,25 @@ export default function TrailSync() {
       )}
 
       {/* Content — flex:1 fills between header and tab bar */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}
+        onTouchStart={e => { swipeStartX.current = e.touches[0].clientX; }}
+        onTouchEnd={e => {
+          if (swipeStartX.current === null) return;
+          const dx = e.changedTouches[0].clientX - swipeStartX.current;
+          swipeStartX.current = null;
+          const TABS = ["home","routes","map","learn","profile"];
+          const curIdx = TABS.indexOf(tab);
+          if (Math.abs(dx) > 60) {
+            if (dx < 0 && curIdx < TABS.length - 1) { setPrevTab(tab); setTab(TABS[curIdx + 1]); }
+            else if (dx > 0 && curIdx > 0) { setPrevTab(tab); setTab(TABS[curIdx - 1]); }
+          }
+        }}
+      >
         {/* HomePage always mounted (like MapPage) so feed state/comments survive tab switches */}
         <div style={{ display: tab === "home" ? "flex" : "none", flex: 1, flexDirection: "column", overflow: "hidden" }}>
           <HomePage userName={userName} initialFilter={feedFilter} userId={userId} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowingCount={setFollowingCount} headerSearch={headerSearch} setHeaderSearch={setHeaderSearch} openRoute={openRouteOnMap} searchResults={searchResults} setSearchResults={setSearchResults} searching={searching} setSearching={setSearching} onViewProfile={setViewingProfile} />
         </div>
-        {tab === "routes" && <RoutesPage openRoute={openRouteOnMap} pendingRouteDetail={pendingRouteDetail} onClearPendingRoute={() => setPendingRouteDetail(null)} />}
+        {tab === "routes" && <div key="routes" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", animation: `${(tabOrder[tab]||0) > (tabOrder[prevTab]||0) ? "slideInRight" : "slideInLeft"} .26s ease` }}><RoutesPage openRoute={openRouteOnMap} pendingRouteDetail={pendingRouteDetail} onClearPendingRoute={() => setPendingRouteDetail(null)} /></div>}
         {/* MapPage always mounted so GPX/Mapbox state survives tab switches — hidden with CSS when not active */}
         <div style={{ display: tab === "map" ? "flex" : "none", flex: 1, flexDirection: "column", overflow: "hidden" }}>
           <MapPage isVisible={tab === "map"} dbPeaks={dbPeaks} goHome={() => setTab("home")} goProfile={(sec) => { setProfileSec(sec || "mountains"); setTab("profile"); }} onSaveWalk={async (walk) => {
@@ -7847,15 +8030,15 @@ export default function TrailSync() {
               } catch (e) { console.error("Failed to save walk:", e); }
             }} openRoute={openRouteOnMap} gpxRoute={gpxRoute} onCloseGpx={closeGpxRoute} />
         </div>
-        {tab === "learn" && <LearnPage courseProgress={userCourseProgress} onCourseProgress={async (courseId, lessonsCompleted) => { setUserCourseProgress(prev => { const next = { ...prev }; if (lessonsCompleted === 0) { delete next[courseId]; } else { next[courseId] = lessonsCompleted; } return next; }); const { data: { user } } = await supabase.auth.getUser(); if (!user) return; if (lessonsCompleted === 0) { await supabase.from("user_courses").delete().eq("user_id", user.id).eq("course_id", courseId); } else { await supabase.from("user_courses").upsert({ user_id: user.id, course_id: courseId, lessons_completed: lessonsCompleted, updated_at: new Date().toISOString() }, { onConflict: "user_id,course_id" }); } }} />}
-        {tab === "profile" && <ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} setSavedWalks={setSavedWalks} dbPeaks={dbPeaks} userName={userName} userLocation={userLocation} setUserLocation={setUserLocation} followerCount={followerCount} followingCount={followingCount} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowerCount={setFollowerCount} setFollowingCount={setFollowingCount} userId={userId} onViewProfile={setViewingProfile} onPublishPost={post => setLivePosts(prev => [post, ...prev])} onSignOut={async () => {
+        {tab === "learn" && <div key="learn" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", animation: `${(tabOrder[tab]||0) > (tabOrder[prevTab]||0) ? "slideInRight" : "slideInLeft"} .26s ease` }}><LearnPage courseProgress={userCourseProgress} onCourseProgress={async (courseId, lessonsCompleted) => { setUserCourseProgress(prev => { const next = { ...prev }; if (lessonsCompleted === 0) { delete next[courseId]; } else { next[courseId] = lessonsCompleted; } return next; }); const { data: { user } } = await supabase.auth.getUser(); if (!user) return; if (lessonsCompleted === 0) { await supabase.from("user_courses").delete().eq("user_id", user.id).eq("course_id", courseId); } else { await supabase.from("user_courses").upsert({ user_id: user.id, course_id: courseId, lessons_completed: lessonsCompleted, updated_at: new Date().toISOString() }, { onConflict: "user_id,course_id" }); } }} /></div>}
+        {tab === "profile" && <div key="profile" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", animation: `${(tabOrder[tab]||0) > (tabOrder[prevTab]||0) ? "slideInRight" : "slideInLeft"} .26s ease` }}><ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} setSavedWalks={setSavedWalks} dbPeaks={dbPeaks} userName={userName} userLocation={userLocation} setUserLocation={setUserLocation} followerCount={followerCount} followingCount={followingCount} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowerCount={setFollowerCount} setFollowingCount={setFollowingCount} userId={userId} onViewProfile={setViewingProfile} onPublishPost={post => setLivePosts(prev => [post, ...prev])} onSignOut={async () => {
   await supabase.auth.signOut();
   try { localStorage.clear(); } catch {}
   setUserName("Alex");
   setSavedWalks([]);
   setDbPeaks(null);
   setAuthState("login");
-}} />}
+}} /></div>}
       </div>
 
       {/* ── PWA INSTALL BANNER ── */}
@@ -7889,11 +8072,11 @@ export default function TrailSync() {
       )}
 
       {/* Bottom nav — fixed to physical screen bottom, never affected by layout */}
-      <div style={{ position: "relative", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "space-around", padding: "4px 6px 10px", borderTop: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,.96)", backdropFilter: "blur(12px)" }}>
+      <div style={{ position: "relative", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "space-around", padding: "4px 6px calc(8px + env(safe-area-inset-bottom, 0px))", borderTop: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,.96)", backdropFilter: "blur(12px)" }}>
         {tabs.map((t, i) => {
           const I = t.icon; const a = tab === t.id; const ctr = i === 2;
           return (
-            <button key={t.id} onClick={() => { playTabSound(); setTab(t.id); }} style={{ background: "none", border: "none", padding: ctr ? "0" : "4px 10px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", color: a ? (ctr ? "#F8F8F8" : "#E85D3A") : "#BDD6F4", transition: "color .2s", opacity: ctr ? 1 : (a ? 1 : 0.45) }}>
+            <button key={t.id} onClick={() => { playTabSound(); setPrevTab(tab); setTab(t.id); }} style={{ background: "none", border: "none", padding: ctr ? "0" : "4px 10px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", color: a ? (ctr ? "#F8F8F8" : "#E85D3A") : "#BDD6F4", transition: "color .2s", opacity: ctr ? 1 : (a ? 1 : 0.45) }}>
               {ctr ? (
                 <div style={{ width: "46px", height: "46px", borderRadius: "50%", background: a ? "linear-gradient(135deg,#E85D3A,#d04a2a)" : "#1a3a6e", display: "flex", alignItems: "center", justifyContent: "center", marginTop: "-12px", border: `2px solid ${a ? "#E85D3A" : "#2a5298"}`, boxShadow: a ? "0 4px 16px rgba(232,93,58,.35)" : "none", transition: "all .2s" }}>
                   <I size={20} color="#F8F8F8" />
