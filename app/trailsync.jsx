@@ -94,6 +94,10 @@ const WX_REGIONS = [
   { region: "Brecon Beacons",      lat: 51.88, lng: -3.44, alt: 600, peaks: ["Pen y Fan", "Corn Du", "Cribyn"], cls: "hewitts" },
   { region: "Galloway Hills",      lat: 55.15, lng: -4.62, alt: 500, peaks: ["Merrick", "Corserine"], cls: "donalds" },
   { region: "Fisherfield",         lat: 57.80, lng: -5.24, alt: 800, peaks: ["An Teallach", "Beinn Dearg Mor"], cls: "munros" },
+  { region: "Skye Cuillin",        lat: 57.25, lng: -6.20, alt: 700, peaks: ["Sgurr nan Gillean", "Bruach na Frithe", "Sgurr Alasdair"], cls: "munros" },
+  { region: "Loch Lomond & Trossachs", lat: 56.17, lng: -4.60, alt: 200, peaks: ["Loch Katrine", "Loch Lomond Shores", "The Trossachs"], cls: "non-mountain" },
+  { region: "Cairngorms Lochside", lat: 57.08, lng: -3.62, alt: 300, peaks: ["Loch an Eilein", "Loch Morlich", "Loch Muick"], cls: "non-mountain" },
+  { region: "Glen Nevis & Great Glen", lat: 56.82, lng: -5.08, alt: 150, peaks: ["Glen Nevis Gorge", "Great Glen Way", "Loch Ness"], cls: "non-mountain" },
 ];
 
 // Keep WX_AREAS as alias for backward compat with any refs
@@ -131,6 +135,15 @@ function altAdjust(tempC, altM) {
 
 // mph from km/h
 const toMph = kph => Math.round(kph * 0.621371);
+
+// Met Office specialist forecast URL for a region
+function metOfficeUrl(regionName) {
+  const engWales = ["Lake District", "Snowdonia", "Brecon Beacons"];
+  if (engWales.some(r => regionName.includes(r))) {
+    return "https://www.metoffice.gov.uk/weather/specialist-forecasts/mountain/england-and-wales";
+  }
+  return "https://www.metoffice.gov.uk/weather/specialist-forecasts/mountain/scotland";
+}
 
 // Score a set of weather values (0-100, higher = better conditions)
 function scoreWeather(feels, windMph, precipMm, vis) {
@@ -1290,7 +1303,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
       ic:     day.ic,
       loading: false,
       isBestDay: wxDay === -1,
-      bestDayName: wxDay === -1 ? new Date(data.bestDay.date).toLocaleDateString("en-GB", { weekday: "short" }) : null,
+      bestDayName: wxDay === -1 ? (() => { const d = new Date(data.bestDay.date + "T12:00:00"); return `${d.toLocaleDateString("en-GB", { weekday: "long" })} ${d.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`; })() : null,
     };
   }).sort((a, b) => b.score - a.score);
 
@@ -1444,11 +1457,13 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
               {sorted.map((a, i) => {
                 const isExpanded = expandedArea === i;
                 const regionPeaks = PEAKS_FALLBACK.filter(p => p.reg === a.region);
-                const loosePeaks = regionPeaks.length > 0 ? regionPeaks : PEAKS_FALLBACK.filter(p => {
-                  const rWords = a.region.toLowerCase().split(" ").filter(w => w.length > 3);
-                  return rWords.some(w => p.reg.toLowerCase().includes(w));
-                });
-                const displayPeaks = loosePeaks.slice(0, 4);
+                const rWords = a.region.toLowerCase().split(/[\s&]+/).filter(w => w.length > 3);
+                const loosePeaks = regionPeaks.length > 0 ? regionPeaks : PEAKS_FALLBACK.filter(p =>
+                  rWords.some(w => p.reg.toLowerCase().includes(w))
+                );
+                const regionWalks = ROUTES.filter(r => r.cls === "non-mountain" &&
+                  (r.reg === a.region || rWords.some(w => r.reg.toLowerCase().includes(w)))
+                );
                 const cardBg = a.score >= 85
                   ? "linear-gradient(135deg, #0d3320, #1a4a2a)"
                   : "linear-gradient(135deg, #0d2d54, #1a3a6a)";
@@ -1456,7 +1471,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
 
                 return (
                   <div key={i} style={{
-                    scrollSnapAlign: "start", flex: "0 0 88%", marginRight: i < sorted.length - 1 ? "8px" : "0",
+                    scrollSnapAlign: "start", flex: "0 0 100%", marginRight: 0,
                     background: cardBg, borderRadius: "14px",
                     border: `1px solid ${a.score >= 85 ? "rgba(107,203,119,0.2)" : "rgba(90,152,227,0.2)"}`,
                     padding: "10px 12px", animation: `fi .3s ease ${i * .04}s both`,
@@ -1494,10 +1509,10 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                       </div>
                     )}
 
-                    {/* Mountains with per-peak weather — always visible */}
-                    {loosePeaks.length > 0 && (
+                    {/* Walks & Peaks section */}
+                    {(loosePeaks.length > 0 || regionWalks.length > 0) && (
                       <div style={{ borderTop: "1px solid rgba(90,152,227,0.1)", paddingTop: "8px", width: "100%", marginTop: "4px" }}>
-                        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.45, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px", textAlign: "center" }}>Mountains</div>
+                        <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.45, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px", textAlign: "center" }}>Walks & Peaks</div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                           {loosePeaks.slice(0, 6).map((pk, j) => {
                             const key = `${pk.id}-${wxDay}`;
@@ -1540,9 +1555,34 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                               </div>
                             );
                           })}
+                          {/* Non-mountain walks for this region */}
+                          {regionWalks.slice(0, loosePeaks.length > 0 ? 2 : 6).map((wk, j) => (
+                            <div key={`w${wk.id}`} style={{
+                              display: "flex", alignItems: "center", gap: "8px",
+                              padding: "5px 8px", borderRadius: "8px",
+                              background: "rgba(4,30,61,0.5)", border: "1px solid rgba(90,152,227,0.08)",
+                              animation: `fi .2s ease ${(loosePeaks.length + j) * .05}s both`
+                            }}>
+                              <MapPin size={12} color="#6BCB77" style={{ flexShrink: 0 }} />
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{wk.name}</div>
+                                <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4 }}>{wk.dist}km · {wk.diff}</div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}
+                    {/* Met Office link */}
+                    <a
+                      href={metOfficeUrl(a.region)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={e => e.stopPropagation()}
+                      style={{ fontSize: "11px", color: "#5A98E3", textDecoration: "none", marginTop: "10px", display: "flex", alignItems: "center", gap: "4px", justifyContent: "center", opacity: 0.7 }}
+                    >
+                      View on Met Office ↗
+                    </a>
                   </div>
                 );
               })}
