@@ -83,6 +83,7 @@ const CLS = {
 // Static region config — weather data fetched live from Open-Meteo
 const WX_REGIONS = [
   { region: "Ben Nevis & Mamores", lat: 56.80, lng: -5.00, alt: 900, peaks: ["Ben Nevis", "Carn Mor Dearg", "Aonach Mor"], cls: "munros" },
+  { region: "Loch Lomond & Trossachs", lat: 56.17, lng: -4.58, alt: 500, peaks: ["Conic Hill", "Beinn Eich", "Ben Vane"], cls: "munros" },
   { region: "Southern Highlands",  lat: 56.19, lng: -4.63, alt: 600, peaks: ["Ben Lomond", "Ben Vorlich", "Stuc a' Chroin"], cls: "munros" },
   { region: "Arrochar Alps",       lat: 56.22, lng: -4.82, alt: 700, peaks: ["The Cobbler", "Ben Narnain", "Beinn Ime"], cls: "corbetts" },
   { region: "Glen Coe",            lat: 56.65, lng: -5.05, alt: 800, peaks: ["Buachaille Etive Mor", "Bidean nam Bian"], cls: "munros" },
@@ -274,6 +275,13 @@ const PEAKS_FALLBACK = [
   { id: 20, name: "Sgùrr na Ciste Duibhe", cls: "munros",      ht: 1027, reg: "Kintail",              lat: 57.204, lng: -5.321, done: false },
   { id: 21, name: "Sgùrr na Càrnach",      cls: "munros",      ht: 1002, reg: "Kintail",              lat: 57.202, lng: -5.333, done: false },
   { id: 22, name: "Sgùrr Fhuaran",         cls: "munros",      ht: 1067, reg: "Kintail",              lat: 57.199, lng: -5.349, done: false },
+  // Loch Lomond & Trossachs
+  { id: 23, name: "Conic Hill",            cls: "grahams",     ht: 361,  reg: "Loch Lomond & Trossachs", lat: 56.093, lng: -4.524, done: false },
+  { id: 24, name: "Beinn Eich",            cls: "corbetts",    ht: 702,  reg: "Loch Lomond & Trossachs", lat: 56.200, lng: -4.736, done: false },
+  { id: 25, name: "Doune Hill",            cls: "corbetts",    ht: 734,  reg: "Loch Lomond & Trossachs", lat: 56.222, lng: -4.742, done: false },
+  { id: 26, name: "Ben Vane",              cls: "munros",      ht: 915,  reg: "Loch Lomond & Trossachs", lat: 56.243, lng: -4.747, done: false },
+  { id: 27, name: "Beinn Ime",             cls: "munros",      ht: 1011, reg: "Loch Lomond & Trossachs", lat: 56.217, lng: -4.808, done: false },
+  { id: 28, name: "Ben Lomond",            cls: "munros",      ht: 974,  reg: "Loch Lomond & Trossachs", lat: 56.190, lng: -4.632, done: false },
 ];
 // PEAKS will be populated from Supabase in the main app component
 let PEAKS = PEAKS_FALLBACK;
@@ -1452,7 +1460,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                 display: "flex", overflowX: "auto", scrollSnapType: "x mandatory",
                 scrollBehavior: "smooth", WebkitOverflowScrolling: "touch",
                 scrollbarWidth: "none", msOverflowStyle: "none",
-                padding: "10px 14px 4px", gap: "0"
+                padding: "10px 10% 4px", gap: "0"
               }}>
               {sorted.map((a, i) => {
                 const isExpanded = expandedArea === i;
@@ -1471,7 +1479,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
 
                 return (
                   <div key={i} style={{
-                    scrollSnapAlign: "start", flex: "0 0 100%", marginRight: 0,
+                    scrollSnapAlign: "center", flex: "0 0 80%", marginRight: i < sorted.length - 1 ? "8px" : "0",
                     background: cardBg, borderRadius: "14px",
                     border: `1px solid ${a.score >= 85 ? "rgba(107,203,119,0.2)" : "rgba(90,152,227,0.2)"}`,
                     padding: "10px 12px", animation: `fi .3s ease ${i * .04}s both`,
@@ -1481,9 +1489,6 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "8px", marginBottom: "6px", width: "100%" }}>
                       <span style={{ fontSize: "11px", fontWeight: 800, color: rankColor, background: `${rankColor}18`, padding: "2px 8px", borderRadius: "6px" }}>
                         #{i + 1}{i === 0 ? " BEST" : ""}
-                      </span>
-                      <span style={{ fontSize: "11px", padding: "1px 6px", borderRadius: "4px", background: `${CLS[a.cls]?.color}18`, color: CLS[a.cls]?.color, fontWeight: 600 }}>
-                        {CLS[a.cls]?.name}
                       </span>
                       <span style={{ fontSize: "15px", fontWeight: 800, color: rankColor, fontFamily: "'JetBrains Mono'", marginLeft: "auto" }}>
                         {a.loading ? "—" : a.score}
