@@ -1675,6 +1675,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
             {/* Carousel scroll container */}
             <div
               ref={wxCarouselRef}
+              data-no-swipe="1"
               onScroll={(e) => {
                 const el = e.currentTarget;
                 const cardWidth = el.scrollWidth / sorted.length;
@@ -4567,6 +4568,7 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
       {/* Header with sub-tabs */}
       <div style={{ padding: "24px 0 12px", display: "flex", alignItems: "baseline", gap: "16px" }}>
         <div onClick={() => setSubTab("learn")} style={{ fontSize: "24px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif", cursor: "pointer", opacity: subTab === "learn" ? 1 : 0.45, transition: "opacity .2s" }}>Learn</div>
+        <span style={{ color: "rgba(189,214,244,0.25)", fontSize: "22px", fontWeight: 300, userSelect: "none" }}>|</span>
         <div onClick={() => setSubTab("discover")} style={{ fontSize: "24px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif", cursor: "pointer", opacity: subTab === "discover" ? 1 : 0.45, transition: "opacity .2s", display: "flex", alignItems: "center", gap: "8px" }}>
           Discover
           <Sparkles size={16} color={subTab === "discover" ? "#E85D3A" : "#BDD6F4"} style={{ opacity: subTab === "discover" ? 1 : 0.45 }} />
@@ -7964,7 +7966,11 @@ export default function TrailSync() {
 
       {/* Content — flex:1 fills between header and tab bar */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}
-        onTouchStart={e => { swipeStartX.current = e.touches[0].clientX; }}
+        onTouchStart={e => {
+          // Don't intercept touches that start inside a horizontally-scrollable element (e.g. weather carousel)
+          if (e.target.closest('[data-no-swipe]')) { swipeStartX.current = null; return; }
+          swipeStartX.current = e.touches[0].clientX;
+        }}
         onTouchEnd={e => {
           if (swipeStartX.current === null) return;
           const dx = e.changedTouches[0].clientX - swipeStartX.current;
@@ -8072,7 +8078,7 @@ export default function TrailSync() {
       )}
 
       {/* Bottom nav — fixed to physical screen bottom, never affected by layout */}
-      <div style={{ position: "relative", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "space-around", padding: "4px 6px calc(8px + env(safe-area-inset-bottom, 0px))", borderTop: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,.96)", backdropFilter: "blur(12px)" }}>
+      <div style={{ position: "relative", zIndex: 60, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-around", padding: "4px 6px 8px", borderTop: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,.96)", backdropFilter: "blur(12px)" }}>
         {tabs.map((t, i) => {
           const I = t.icon; const a = tab === t.id; const ctr = i === 2;
           return (
