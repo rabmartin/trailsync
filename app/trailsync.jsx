@@ -1134,6 +1134,8 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   const [wxCarouselIdx, setWxCarouselIdx] = useState(0);
   const wxCarouselRef = useRef(null);
   const [showSAIS, setShowSAIS] = useState(false);
+  const [saisAreas, setSaisAreas] = useState(null);  // null=loading, []=none active, [...]= active
+  const [saisPos, setSaisPos]   = useState(null);    // { lat, lng } from GPS
   const [windUnit, setWindUnit] = useState("mph");
   const fmtWind = (mph) => windUnit === "mph" ? Math.round(mph) : Math.round(mph * 1.60934);
   // Weather search
@@ -1213,6 +1215,25 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   useEffect(() => {
     fetchPosts();
   }, [userId]);
+
+  // Fetch live SAIS avalanche data via our Vercel proxy (cached 1hr server-side)
+  useEffect(() => {
+    fetch("/api/sais")
+      .then(r => r.json())
+      .then(data => {
+        // Only keep areas with an active hazard level
+        setSaisAreas((data.areas || []).filter(a => a.level));
+      })
+      .catch(() => setSaisAreas([]));
+
+    // Best-effort GPS for proximity filtering — failure is silent, falls back to all areas
+    if (typeof navigator !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => setSaisPos({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => {} // no location → show all active areas
+      );
+    }
+  }, []);
 
   // Pull to refresh handler
   const handleTouchStart = (e) => {
@@ -1991,31 +2012,75 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
         </div>
       )}
 
-      {/* SAIS Alert - only shows Dec-Apr when forecasts are active */}
+      {/* SAIS Alert — live data via /api/sais proxy, hidden when no active forecasts */}
       {(() => {
-        const month = new Date().getMonth(); // 0-indexed
-        const isSAISSeason = month >= 11 || month <= 3; // Dec-Apr
-        if (!isSAISSeason) return null;
+        // Still loading or no active hazard areas → show nothing
+        if (!saisAreas || saisAreas.length === 0) return null;
+
+        // Haversine distance in km between two lat/lng points
+        const saisHav = (lat1, lng1, lat2, lng2) => {
+          const R = 6371, toRad = d => d * Math.PI / 180;
+          const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+          const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
+          return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        };
+
+        // Filter to areas within 120 km of user; fall back to all active if none nearby
+        const RADIUS_KM = 120;
+        let nearby = saisAreas;
+        if (saisPos) {
+          const withinRange = saisAreas.filter(a => saisHav(saisPos.lat, saisPos.lng, a.lat, a.lng) <= RADIUS_KM);
+          if (withinRange.length > 0) nearby = withinRange;
+        }
+
+        // Find the highest hazard level among nearby areas for the condensed header
+        const LEVEL_ORDER = ["Very High", "High", "Considerable", "Moderate", "Low"];
+        const topLevel = LEVEL_ORDER.find(l => nearby.some(a => a.level === l)) || nearby[0]?.level;
+        const areaWord = nearby.length === 1 ? "area" : "areas";
+        const summaryText = `${topLevel} hazard in ${nearby.length} nearby ${areaWord}`;
+
         return (
           <div style={{ marginBottom: "16px", animation: "su .4s ease .2s both" }}>
-            <div onClick={() => setShowSAIS(!showSAIS)} style={{ padding: "10px 14px", borderRadius: showSAIS ? "12px 12px 0 0" : "12px", background: "rgba(232,93,58,0.08)", border: "1px solid rgba(232,93,58,0.2)", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", transition: "border-radius .2s" }}>
+            {/* Collapsed header row */}
+            <div
+              onClick={() => setShowSAIS(!showSAIS)}
+              style={{ padding: "10px 14px", borderRadius: showSAIS ? "12px 12px 0 0" : "12px", background: "rgba(232,93,58,0.08)", border: "1px solid rgba(232,93,58,0.2)", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", transition: "border-radius .2s" }}
+            >
               <AlertTriangle size={16} color="#E85D3A" />
-              <div style={{ flex: 1, fontSize: "13px", color: "#BDD6F4" }}><span style={{ fontWeight: 700, color: "#E85D3A" }}>SAIS Alert:</span> Considerable (3) hazard – Northern Cairngorms & Lochaber</div>
+              <div style={{ flex: 1, fontSize: "13px", color: "#BDD6F4" }}>
+                <span style={{ fontWeight: 700, color: "#E85D3A" }}>SAIS Alert: </span>
+                {summaryText}
+              </div>
               <ChevronDown size={14} color="#BDD6F4" style={{ opacity: 0.5, transform: showSAIS ? "rotate(180deg)" : "none", transition: ".2s" }} />
             </div>
+
+            {/* Expanded panel */}
             {showSAIS && (
               <div style={{ padding: "12px 14px", background: "rgba(232,93,58,0.04)", borderRadius: "0 0 12px 12px", border: "1px solid rgba(232,93,58,0.15)", borderTop: "none", animation: "fi .2s ease" }}>
-                <div style={{ fontSize: "13px", color: "#BDD6F4", lineHeight: 1.5, marginBottom: "12px" }}>
-                  Unstable windslab on N-NE aspects above 900m across Northern Cairngorms and Lochaber. Cornices building on lee slopes. Avoid steep terrain in affected areas.
+                {/* Per-area rows — each links to that area's SAIS page */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "12px" }}>
+                  {nearby.map(area => (
+                    <a
+                      key={area.name}
+                      href={area.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", borderRadius: "8px", background: "rgba(232,93,58,0.06)", border: "1px solid rgba(232,93,58,0.12)", textDecoration: "none" }}
+                    >
+                      <span style={{ fontSize: "13px", color: "#BDD6F4", fontWeight: 500 }}>{area.name}</span>
+                      <span style={{ fontSize: "12px", fontWeight: 700, color: "#E85D3A" }}>{area.level} ↗</span>
+                    </a>
+                  ))}
                 </div>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <a href="https://www.sais.gov.uk" target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "9px", borderRadius: "9px", background: "rgba(232,93,58,0.12)", border: "1px solid rgba(232,93,58,0.25)", color: "#E85D3A", fontSize: "13px", fontWeight: 700, cursor: "pointer", textAlign: "center", textDecoration: "none", fontFamily: "'DM Sans'" }}>
-                    View on SAIS ↗
-                  </a>
-                  <a href="https://apps.apple.com/gb/app/be-avalanche-aware/id1477589689" target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "9px", borderRadius: "9px", background: "#0a2240", border: "1px solid rgba(90,152,227,0.15)", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", textAlign: "center", textDecoration: "none", fontFamily: "'DM Sans'" }}>
-                    Get SAIS App
-                  </a>
-                </div>
+                {/* Footer link to main SAIS site */}
+                <a
+                  href="https://www.sais.gov.uk"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ display: "block", padding: "9px", borderRadius: "9px", background: "rgba(232,93,58,0.12)", border: "1px solid rgba(232,93,58,0.25)", color: "#E85D3A", fontSize: "13px", fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'DM Sans'" }}
+                >
+                  View full forecast on SAIS ↗
+                </a>
               </div>
             )}
           </div>
