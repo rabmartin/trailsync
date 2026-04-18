@@ -97,7 +97,6 @@ const WX_REGIONS = [
   { region: "Fisherfield",         lat: 57.80, lng: -5.24, alt: 800, peaks: ["An Teallach", "Beinn Dearg Mor"], cls: "munros" },
   { region: "Skye Cuillin",        lat: 57.25, lng: -6.20, alt: 700, peaks: ["Sgurr nan Gillean", "Bruach na Frithe", "Sgurr Alasdair"], cls: "munros" },
   { region: "Loch Lomond & Trossachs", lat: 56.17, lng: -4.60, alt: 200, peaks: ["Loch Katrine", "Loch Lomond Shores", "The Trossachs"], cls: "non-mountain" },
-  { region: "Great Glen", lat: 57.15, lng: -4.55, alt: 100, peaks: ["Loch Ness", "Great Glen Way", "Glen Affric"], cls: "non-mountain" },
 ];
 
 // Keep WX_AREAS as alias for backward compat with any refs
@@ -750,7 +749,7 @@ const MiniMap = ({ height, center, zoom, markers, onMarkerClick, showGPS, onMapR
   }, [markers, mapReady]);
 
   return (
-    <div style={{ position: "relative", height: height === "100%" ? "100%" : (height || "380px"), flex: height === "100%" ? 1 : undefined, minHeight: height === "100%" ? "200px" : undefined, borderRadius: height === "100%" ? 0 : "14px", overflow: "hidden", border: height === "100%" ? "none" : "1px solid rgba(90,152,227,0.12)" }}>
+    <div data-no-swipe="1" style={{ position: "relative", height: height === "100%" ? "100%" : (height || "380px"), flex: height === "100%" ? 1 : undefined, minHeight: height === "100%" ? "200px" : undefined, borderRadius: height === "100%" ? 0 : "14px", overflow: "hidden", border: height === "100%" ? "none" : "1px solid rgba(90,152,227,0.12)" }}>
       <div ref={containerRef} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" }} />
       {children}
     </div>
@@ -1307,10 +1306,11 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
     try {
       const ql = q.toLowerCase();
 
-      // Live DB queries — posts and people
-      const [postsRes, usersRes] = await Promise.all([
+      // Live DB queries — posts and people (also search posts table for users who may lack a profile row)
+      const [postsRes, usersRes, postUserRes] = await Promise.all([
         supabase.from("posts").select("*").ilike("text", `%${q}%`).order("created_at", { ascending: false }).limit(8),
         supabase.from("profiles").select("id, username, full_name, location, follower_count").or(`username.ilike.%${q}%,full_name.ilike.%${q}%`).limit(6),
+        supabase.from("posts").select("user_id, username, full_name").or(`username.ilike.%${q}%,full_name.ilike.%${q}%`).limit(10),
       ]);
 
       // Also search hardcoded FEED posts (events, fundraisers, summits)
@@ -1349,9 +1349,21 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
       const hardcodedMatches = feedMatches.filter(p => !liveIds.has(String(p.id)));
       const allPosts = [...livePostsMapped, ...hardcodedMatches].slice(0, 10);
 
+      // Merge profile results with fallback users found via their posts (catches users who skipped the username prompt)
+      const profileIds = new Set((usersRes.data || []).map(u => u.id));
+      const extraUsers = [];
+      const seenPostUserIds = new Set();
+      for (const p of (postUserRes.data || [])) {
+        if (!p.user_id || profileIds.has(p.user_id) || seenPostUserIds.has(p.user_id)) continue;
+        if (!p.username && !p.full_name) continue;
+        seenPostUserIds.add(p.user_id);
+        extraUsers.push({ id: p.user_id, username: p.username, full_name: p.full_name, location: null, follower_count: 0 });
+      }
+      const allUsers = [...(usersRes.data || []), ...extraUsers].slice(0, 8);
+
       setSearchResults({
         posts: allPosts,
-        users: usersRes.data || [],
+        users: allUsers,
         routes: routeMatches,
         peaks: peakMatches,
       });
@@ -1475,7 +1487,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
 
       {/* Floating create post button — fixed bottom right above tab bar */}
       {!feedPostOpen && (
-        <button onClick={() => setFeedPostOpen(true)} style={{ position: "fixed", bottom: "82px", right: "16px", width: "52px", height: "52px", borderRadius: "50%", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "26px", fontWeight: 300, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, boxShadow: "0 4px 16px rgba(232,93,58,0.45)", lineHeight: 1 }}>+</button>
+        <button onClick={() => setFeedPostOpen(true)} style={{ position: "fixed", bottom: "calc(70px + env(safe-area-inset-bottom, 0px))", right: "16px", width: "52px", height: "52px", borderRadius: "50%", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "26px", fontWeight: 300, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, boxShadow: "0 4px 16px rgba(232,93,58,0.45)", lineHeight: 1 }}>+</button>
       )}
 
       {/* Expanded create post form */}
@@ -2329,7 +2341,7 @@ const RoutesClusterMap = ({ filtered, selRegion, setSelRegion, onMapReady }) => 
   }, [filtered]);
 
   return (
-    <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+    <div data-no-swipe="1" style={{ flex: 1, position: "relative", overflow: "hidden" }}>
       <div ref={containerRef} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
       {gpxLoading && (
         <div style={{ position: "absolute", top: 12, left: "50%", transform: "translateX(-50%)", zIndex: 25,
@@ -2591,7 +2603,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
 
     {/* ═══ FULL-SCREEN ROUTES MAP OVERLAY ═══ */}
     {subTab === "map" && (
-      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "62px", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
+      <div data-no-swipe="1" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "62px", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
         {/* Back chevron */}
         <button
           onClick={() => { setSubTab("list"); setSelRegion(null); }}
@@ -2656,15 +2668,17 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
 
     <div style={{ padding: "0 16px 16px", overflowY: "auto", flex: 1, display: "flex", flexDirection: "column" }}>
       {/* Header with sub-tabs */}
-      <div style={{ padding: "24px 0 12px", display: "flex", alignItems: "baseline", gap: "16px" }}>
+      <div style={{ padding: "24px 0 12px", display: "flex", alignItems: "center", gap: "10px" }}>
         <div onClick={() => setSubTab("list")} style={{ fontSize: "24px", fontWeight: 800, color: subTab === "list" ? "#F8F8F8" : "#BDD6F4", fontFamily: "'Playfair Display',serif", cursor: "pointer", opacity: subTab === "list" ? 1 : 0.4, transition: "all .2s" }}>Routes</div>
-        <div onClick={() => setSubTab("map")} style={{ fontSize: "24px", fontWeight: 800, color: subTab === "map" ? "#F8F8F8" : "#BDD6F4", fontFamily: "'Playfair Display',serif", cursor: "pointer", opacity: subTab === "map" ? 1 : 0.4, transition: "all .2s", display: "flex", alignItems: "center", gap: "8px" }}>
+        <span style={{ color: "rgba(189,214,244,0.25)", fontSize: "22px", fontWeight: 300, userSelect: "none" }}>|</span>
+        <div onClick={() => setSubTab("map")} style={{ fontSize: "24px", fontWeight: 800, color: subTab === "map" ? "#F8F8F8" : "#BDD6F4", fontFamily: "'Playfair Display',serif", cursor: "pointer", opacity: subTab === "map" ? 1 : 0.4, transition: "all .2s", display: "flex", alignItems: "center", gap: "6px" }}>
           Map
-          <Map size={16} color={subTab === "map" ? "#5A98E3" : "#BDD6F4"} style={{ opacity: subTab === "map" ? 1 : 0.4 }} />
+          <Map size={15} color={subTab === "map" ? "#5A98E3" : "#BDD6F4"} style={{ opacity: subTab === "map" ? 1 : 0.4 }} />
         </div>
-        <div onClick={() => setSubTab("downloaded")} style={{ fontSize: "24px", fontWeight: 800, color: subTab === "downloaded" ? "#F8F8F8" : "#BDD6F4", fontFamily: "'Playfair Display',serif", cursor: "pointer", opacity: subTab === "downloaded" ? 1 : 0.4, transition: "all .2s", display: "flex", alignItems: "center", gap: "8px" }}>
+        <span style={{ color: "rgba(189,214,244,0.25)", fontSize: "22px", fontWeight: 300, userSelect: "none" }}>|</span>
+        <div onClick={() => setSubTab("downloaded")} style={{ fontSize: "24px", fontWeight: 800, color: subTab === "downloaded" ? "#F8F8F8" : "#BDD6F4", fontFamily: "'Playfair Display',serif", cursor: "pointer", opacity: subTab === "downloaded" ? 1 : 0.4, transition: "all .2s", display: "flex", alignItems: "center", gap: "6px" }}>
           Downloaded
-          <Download size={16} color={subTab === "downloaded" ? "#5A98E3" : "#BDD6F4"} style={{ opacity: subTab === "downloaded" ? 1 : 0.4 }} />
+          <Download size={15} color={subTab === "downloaded" ? "#5A98E3" : "#BDD6F4"} style={{ opacity: subTab === "downloaded" ? 1 : 0.4 }} />
         </div>
       </div>
 
@@ -3783,7 +3797,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   }, [d3]);
 
   return (
-    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "62px", zIndex: 0 }}>
+    <div data-no-swipe="1" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "62px", zIndex: 0 }}>
       {/* Real Mapbox Map */}
       <div ref={mapContainer} style={{ position: "absolute", inset: 0 }} />
 
@@ -4547,11 +4561,276 @@ const QuizModal = ({ module: mod, onClose, onComplete }) => {
 };
 
 /* ═══════════════════════════════════════════════════════════════════
+   SWIPE CARD GAME DATA — true/false cards per module
+   ═══════════════════════════════════════════════════════════════════ */
+const SWIPE_CARDS = {
+  1: [ // Navigation
+    { fact: "A compass always points to True North.", ans: false, tip: "It points to Magnetic North — you must apply declination to get True North." },
+    { fact: "Grid squares on an OS Explorer map are 1 km × 1 km.", ans: true, tip: "Each blue grid square = 1 km² — great for estimating distances." },
+    { fact: "A 4-figure grid reference pinpoints a single point on the map.", ans: false, tip: "4-figure = 1 km square; 6-figure narrows it to a 100 m square." },
+    { fact: "Contour lines close together mean steep ground.", ans: true, tip: "The closer the lines, the steeper the slope — read them before you walk." },
+    { fact: "You can navigate in fog using only a compass bearing.", ans: true, tip: "Bearing + counting paces = accurate dead reckoning in zero visibility." },
+    { fact: "Magnetic declination in the UK is currently east of grid north.", ans: false, tip: "It's west (negative) in the UK — you add it when converting from map to compass." },
+    { fact: "A yellow OS Explorer map covers a larger scale area than an orange Landranger.", ans: false, tip: "Explorer (1:25,000) covers less ground but shows more detail than Landranger (1:50,000)." },
+    { fact: "You should always walk on a compass bearing, never off it.", ans: false, tip: "Sometimes it's safer to detour around hazards — bearings are a guide, not a rail." },
+    { fact: "Naismith's Rule adds 1 hour per 600m of ascent.", ans: true, tip: "Standard formula: 5 km/hr on flat + 1hr per 600 m up — adjust for fitness." },
+    { fact: "Aspect of slope tells you which direction a slope faces.", ans: true, tip: "Knowing aspect helps identify your position and predict avalanche risk." },
+  ],
+  2: [ // Mountain Safety
+    { fact: "You should always tell someone your route and expected return time.", ans: true, tip: "A route card left with a trusted contact could save your life if things go wrong." },
+    { fact: "The international distress signal is 3 whistle blasts.", ans: false, tip: "It's 6 blasts (or flashes) repeated every minute — the response is 3." },
+    { fact: "Heat exhaustion is more dangerous than hypothermia in Scotland.", ans: false, tip: "Hypothermia is a far greater risk in the Scottish hills year-round." },
+    { fact: "Walking poles reduce knee strain on descents by up to 25%.", ans: true, tip: "Studies show poles significantly reduce impact forces on descents." },
+    { fact: "A bothy is always unlocked and free to use.", ans: true, tip: "MBA bothies are open to all — no booking needed, no charge, leave it clean." },
+    { fact: "You should cross a river at the widest, shallowest point.", ans: true, tip: "Wider = shallower and slower. Never cross where the water narrows and speeds up." },
+    { fact: "Mobile phones reliably work in all Scottish glens.", ans: false, tip: "Signal is patchy across much of the Highlands — always carry a map and compass." },
+    { fact: "SAIS provides avalanche forecasts for Scottish mountains in winter.", ans: true, tip: "Check the Scottish Avalanche Information Service before any winter hill day." },
+    { fact: "Windchill can make 5°C feel like -15°C at high wind speeds.", ans: true, tip: "60 mph winds turn a cold-but-manageable day into a survival situation fast." },
+    { fact: "You should always descend via the route you came up.", ans: false, tip: "Sometimes the route you came up is not the safest down — know your options." },
+  ],
+  3: [ // Weather
+    { fact: "Orographic lift causes more rainfall on the east side of Scottish mountains.", ans: false, tip: "Prevailing westerly winds hit the west side — the east is in the 'rain shadow'." },
+    { fact: "A rapidly falling barometer predicts improving weather.", ans: false, tip: "A falling barometer = approaching low pressure = deteriorating conditions." },
+    { fact: "Lenticular clouds over a summit indicate high winds at altitude.", ans: true, tip: "Those smooth lens-shaped clouds form in strong mountain wave winds." },
+    { fact: "Temperature drops approximately 1°C for every 100 m of ascent.", ans: false, tip: "The lapse rate is ~6.5°C per 1,000 m, or about 0.65°C per 100 m." },
+    { fact: "Cumulonimbus clouds can produce lightning, hail, and tornadoes.", ans: true, tip: "The anvil-topped storm cloud is the most dangerous cloud type on the hill." },
+    { fact: "Wind speed typically increases with altitude in the mountains.", ans: true, tip: "The boundary layer effect disappears above the valley — expect stronger winds on ridges." },
+    { fact: "Scotland's wettest month is typically January.", ans: false, tip: "October and November are generally the wettest months in western Scotland." },
+    { fact: "UV radiation is stronger at altitude, increasing sunburn risk.", ans: true, tip: "UV increases ~4% per 300 m — use SPF 50+ on snow days." },
+    { fact: "A red sky at night always means good weather tomorrow.", ans: false, tip: "'Red sky at night, shepherd's delight' is unreliable — always check the forecast." },
+    { fact: "Fog forms more readily in valleys than on ridges.", ans: true, tip: "Cold air sinks into valleys — radiation fog fills hollows overnight." },
+  ],
+  4: [ // Wildlife
+    { fact: "The red deer is Britain's largest native land mammal.", ans: true, tip: "Stags can weigh over 200 kg — give them space especially during the autumn rut." },
+    { fact: "Golden eagles are more common in Scotland than the rest of the UK combined.", ans: true, tip: "Scotland holds 99%+ of the UK's golden eagle population." },
+    { fact: "Adders are venomous and should be handled with care.", ans: true, tip: "Britain's only venomous snake — bites are rare but seek medical help immediately." },
+    { fact: "Red squirrels have been completely replaced by grey squirrels in Scotland.", ans: false, tip: "Scotland has thriving red squirrel populations, particularly in Highlands pine forests." },
+    { fact: "Mountain hares turn white in winter as camouflage.", ans: true, tip: "Their white winter coat helps them blend into snow — and increasingly sticks out on bare ground." },
+    { fact: "Ptarmigan are found on all Scottish mountains above 500m.", ans: false, tip: "They prefer high alpine plateau above 700–800 m — look for them on Cairngorm tops." },
+    { fact: "The capercaillie is the UK's largest native grouse.", ans: true, tip: "Males can weigh 4.5 kg. They're critically threatened — stay on paths in their habitat." },
+    { fact: "Ospreys migrate to Scotland from West Africa every spring.", ans: true, tip: "They return to the same nests year after year — spectacular dive-fishers." },
+    { fact: "Wild cats in Scotland are the same species as domestic cats.", ans: false, tip: "Scottish wildcats (Felis silvestris) are a distinct species — critically endangered." },
+    { fact: "Deer stalking season in Scotland runs year-round with no closed period.", ans: false, tip: "Stags: 1 Jul–20 Oct; hinds: 21 Oct–15 Feb. Check before walking in stalking areas." },
+  ],
+  5: [ // History
+    { fact: "Sir Hugh Munro published his famous tables in 1891.", ans: true, tip: "He identified 283 peaks over 3,000ft — he never completed his own list." },
+    { fact: "The word 'glen' comes from the Gaelic word for valley.", ans: true, tip: "'Gleann' means a narrow mountain valley — one of hundreds of Gaelic landscape words." },
+    { fact: "The Highland Clearances began in the 12th century.", ans: false, tip: "They occurred mainly in the late 18th and 19th centuries, displacing thousands of crofters." },
+    { fact: "Ben Nevis has been the UK's highest peak since records began.", ans: true, tip: "At 1,345 m it's been the clear highest point of the British Isles throughout recorded history." },
+    { fact: "The Jacobite risings were primarily a fight over religious rights.", ans: false, tip: "They were about restoring the House of Stuart to the British throne." },
+    { fact: "Glencoe was the site of a massacre of the MacDonald clan in 1692.", ans: true, tip: "Government troops killed 38 MacDonalds after accepting their hospitality — a notorious breach of trust." },
+    { fact: "The Great Glen fault is one of the longest geological faults in Europe.", ans: true, tip: "It stretches 100 km from Fort William to Inverness, forming a chain of lochs." },
+    { fact: "Scotland's mountains have been significantly higher in geological history.", ans: true, tip: "The Scottish Highlands were once as tall as the Himalayas — worn down over 400 million years." },
+    { fact: "The Cairngorms were named after their distinctive granite geology.", ans: false, tip: "'Càrn Gorm' means 'blue rocky hill' in Gaelic — a description of colour, not rock type." },
+    { fact: "Wade's military roads were built before the 1745 Jacobite uprising.", ans: true, tip: "General Wade built 400+ km of roads from 1725 to control the Highlands after the 1715 rising." },
+  ],
+  6: [ // Fitness
+    { fact: "Stretching cold muscles before a walk reduces injury risk.", ans: false, tip: "Warm up first with easy movement — static stretches are better saved for after." },
+    { fact: "You should drink water before you feel thirsty on a long walk.", ans: true, tip: "By the time you feel thirsty, you're already mildly dehydrated — sip regularly." },
+    { fact: "Blisters are caused primarily by moisture and friction.", ans: true, tip: "Wet feet + rubbing = blisters. Wool socks, good boots, and Vaseline help prevent them." },
+    { fact: "Descents are easier on the muscles than ascents.", ans: false, tip: "Descents cause eccentric (lengthening) muscle contractions — more micro-damage and DOMS." },
+    { fact: "A rucksack should weigh no more than 10% of your body weight.", ans: false, tip: "Day walking: 10–15% is fine. Heavier loads (20–30%) are manageable with hip-belt use." },
+    { fact: "Carbohydrates are the primary fuel for sustained hill walking.", ans: true, tip: "Your body preferentially burns carbs at moderate-high intensity — eat little and often." },
+    { fact: "Altitude above 3,000m causes significant acclimatisation issues.", ans: false, tip: "UK mountains barely reach 1,345m — altitude sickness is not a real concern on British hills." },
+    { fact: "Walking poles should be shortened when ascending and lengthened when descending.", ans: true, tip: "Shorter on the way up (push down more efficiently); longer going down for braking support." },
+    { fact: "Heart rate variability (HRV) is a useful measure of recovery readiness.", ans: true, tip: "Low HRV = your body is stressed — consider a lighter day on the hill." },
+    { fact: "Wool socks are warmer than synthetic when wet.", ans: true, tip: "Merino wool retains significant warmth when wet — unlike cotton which goes cold fast." },
+  ],
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   CARD SWIPE GAME — DuoLingo-style swipe left (FALSE) / right (TRUE)
+   ═══════════════════════════════════════════════════════════════════ */
+const CardSwipeGame = ({ module: mod, onClose }) => {
+  const cards = SWIPE_CARDS[mod.id] || [];
+  const total = cards.length;
+  const [idx, setIdx] = useState(0);
+  const [lives, setLives] = useState(3);
+  const [score, setScore] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [flying, setFlying] = useState(null); // "left" | "right" | null
+  const [result, setResult] = useState(null); // { correct, tip }
+  const [done, setDone] = useState(false);
+  const startXRef = useRef(null);
+  const cardRef = useRef(null);
+
+  const card = cards[idx];
+
+  const playSound = (correct) => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator(); const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = correct ? "sine" : "sawtooth";
+      if (correct) {
+        osc.frequency.setValueAtTime(660, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(990, ctx.currentTime + 0.18);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.28);
+        osc.start(); osc.stop(ctx.currentTime + 0.28);
+      } else {
+        osc.frequency.setValueAtTime(280, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(160, ctx.currentTime + 0.18);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+        osc.start(); osc.stop(ctx.currentTime + 0.22);
+      }
+      setTimeout(() => ctx.close(), 400);
+    } catch(e) {}
+  };
+
+  const answer = (swipedRight) => {
+    if (flying || result) return;
+    const correct = swipedRight === card.ans;
+    playSound(correct);
+    const dir = swipedRight ? "right" : "left";
+    setFlying(dir);
+    const newStreak = correct ? streak + 1 : 0;
+    const newLives = correct ? lives : lives - 1;
+    if (correct) setScore(s => s + 1);
+    setStreak(newStreak);
+    if (newStreak > bestStreak) setBestStreak(newStreak);
+    setResult({ correct, tip: card.tip });
+    setTimeout(() => {
+      setFlying(null); setDragX(0); setResult(null);
+      if (newLives <= 0 || idx + 1 >= total) { setDone(true); }
+      else { setIdx(i => i + 1); }
+      if (!correct) setLives(newLives);
+    }, 1400);
+  };
+
+  const onTouchStart = (e) => { startXRef.current = e.touches[0].clientX; setDragging(true); };
+  const onTouchMove = (e) => {
+    if (startXRef.current === null || flying || result) return;
+    const dx = e.touches[0].clientX - startXRef.current;
+    setDragX(dx);
+  };
+  const onTouchEnd = () => {
+    setDragging(false);
+    if (Math.abs(dragX) > 80) { answer(dragX > 0); }
+    else { setDragX(0); }
+    startXRef.current = null;
+  };
+
+  const rotation = flying === "right" ? 30 : flying === "left" ? -30 : dragX / 12;
+  const translateX = flying === "right" ? 500 : flying === "left" ? -500 : dragX;
+  const opacity = flying ? 0 : 1;
+  const swipeHint = Math.abs(dragX) > 40 ? (dragX > 0 ? "TRUE" : "FALSE") : null;
+  const hintColor = dragX > 0 ? "#6BCB77" : "#E85D3A";
+  const starsTotal = total;
+  const stars = score >= starsTotal ? 3 : score >= Math.ceil(starsTotal * 0.8) ? 2 : score >= Math.ceil(starsTotal * 0.5) ? 1 : 0;
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "#020c1b", display: "flex", flexDirection: "column" }}>
+      {/* Header */}
+      <div style={{ padding: "calc(14px + env(safe-area-inset-top,0px)) 16px 12px", display: "flex", alignItems: "center", gap: "12px", borderBottom: "1px solid rgba(90,152,227,0.1)" }}>
+        <button onClick={onClose} style={{ background: "rgba(90,152,227,0.12)", border: "none", borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><X size={16} /></button>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: "12px", color: "#5A98E3", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>{mod.ic} Swipe Challenge</div>
+          <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.55 }}>{mod.title}</div>
+        </div>
+        {/* Lives */}
+        <div style={{ display: "flex", gap: "3px" }}>
+          {[0,1,2].map(i => <span key={i} style={{ fontSize: "18px", opacity: i < lives ? 1 : 0.2 }}>❤️</span>)}
+        </div>
+        {/* Streak */}
+        {streak >= 2 && <div style={{ background: "rgba(232,93,58,0.15)", border: "1px solid rgba(232,93,58,0.3)", borderRadius: "20px", padding: "3px 10px", fontSize: "12px", fontWeight: 700, color: "#E85D3A" }}>🔥 {streak}</div>}
+      </div>
+
+      {/* Progress bar */}
+      <div style={{ height: "3px", background: "#0a2240" }}><div style={{ width: `${(idx / total) * 100}%`, height: "100%", background: "linear-gradient(90deg,#5A98E3,#6BCB77)", transition: "width .4s" }} /></div>
+
+      {!done ? (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px 16px", gap: "16px" }}>
+          {/* Swipe hint labels */}
+          <div style={{ display: "flex", justifyContent: "space-between", width: "100%", maxWidth: "360px", padding: "0 8px" }}>
+            <div style={{ fontSize: "18px", fontWeight: 800, color: "#E85D3A", opacity: dragX < -30 ? Math.min(1, Math.abs(dragX) / 100) : 0.12, transition: "opacity .1s" }}>✗ FALSE</div>
+            <div style={{ fontSize: "18px", fontWeight: 800, color: "#6BCB77", opacity: dragX > 30 ? Math.min(1, dragX / 100) : 0.12, transition: "opacity .1s" }}>TRUE ✓</div>
+          </div>
+
+          {/* Card */}
+          <div
+            ref={cardRef}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            style={{
+              width: "100%", maxWidth: "360px",
+              background: result ? (result.correct ? "rgba(107,203,119,0.08)" : "rgba(232,93,58,0.08)") : "#0a2240",
+              borderRadius: "24px",
+              border: result ? `2px solid ${result.correct ? "rgba(107,203,119,0.4)" : "rgba(232,93,58,0.4)"}` : "2px solid rgba(90,152,227,0.15)",
+              padding: "32px 24px",
+              minHeight: "220px",
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "16px",
+              transform: `translateX(${translateX}px) rotate(${rotation}deg)`,
+              opacity,
+              transition: flying ? "transform .35s ease-in, opacity .35s ease-in" : dragging ? "none" : "transform .25s ease-out",
+              cursor: "grab", userSelect: "none", touchAction: "none",
+            }}
+          >
+            <div style={{ fontSize: "36px" }}>{result ? (result.correct ? "✅" : "❌") : mod.ic}</div>
+            <div style={{ fontSize: "18px", fontWeight: 800, color: "#F8F8F8", textAlign: "center", lineHeight: 1.45, fontFamily: "'Playfair Display',serif" }}>
+              {card.fact}
+            </div>
+            {result && (
+              <div style={{ background: result.correct ? "rgba(107,203,119,0.12)" : "rgba(232,93,58,0.12)", borderRadius: "12px", padding: "12px 14px", width: "100%", animation: "su .2s ease" }}>
+                <div style={{ fontSize: "13px", fontWeight: 700, color: result.correct ? "#6BCB77" : "#E85D3A", marginBottom: "4px" }}>{result.correct ? "Correct! 🎉" : "Not quite…"}</div>
+                <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.55, opacity: 0.8 }}>{result.tip}</div>
+              </div>
+            )}
+          </div>
+
+          {/* Card counter */}
+          <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.35 }}>{idx + 1} / {total}</div>
+
+          {/* Tap buttons as alternative to swipe */}
+          <div style={{ display: "flex", gap: "12px", width: "100%", maxWidth: "360px" }}>
+            <button
+              onClick={() => answer(false)}
+              disabled={!!flying || !!result}
+              style={{ flex: 1, padding: "14px", borderRadius: "16px", border: "2px solid rgba(232,93,58,0.3)", background: "rgba(232,93,58,0.07)", color: "#E85D3A", fontSize: "16px", fontWeight: 800, cursor: "pointer", fontFamily: "'DM Sans'", opacity: (flying || result) ? 0.4 : 1 }}
+            >✗ False</button>
+            <button
+              onClick={() => answer(true)}
+              disabled={!!flying || !!result}
+              style={{ flex: 1, padding: "14px", borderRadius: "16px", border: "2px solid rgba(107,203,119,0.3)", background: "rgba(107,203,119,0.07)", color: "#6BCB77", fontSize: "16px", fontWeight: 800, cursor: "pointer", fontFamily: "'DM Sans'", opacity: (flying || result) ? 0.4 : 1 }}
+            >True ✓</button>
+          </div>
+
+          <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.25, textAlign: "center" }}>Swipe left for False · Swipe right for True</div>
+        </div>
+      ) : (
+        /* Results screen */
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 20px", gap: "20px" }}>
+          <div style={{ fontSize: "64px" }}>{stars === 3 ? "🏆" : stars === 2 ? "🥈" : stars === 1 ? "🥉" : "💪"}</div>
+          <div style={{ fontSize: "24px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif", textAlign: "center" }}>
+            {lives <= 0 ? "Out of lives!" : "Round complete!"}
+          </div>
+          <div style={{ display: "flex", gap: "6px" }}>{[0,1,2].map(i => <span key={i} style={{ fontSize: "32px", opacity: i < stars ? 1 : 0.18 }}>⭐</span>)}</div>
+          <div style={{ display: "flex", gap: "20px", textAlign: "center" }}>
+            <div><div style={{ fontSize: "28px", fontWeight: 800, color: "#5A98E3", fontFamily: "'JetBrains Mono'" }}>{score}/{total}</div><div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>Correct</div></div>
+            {bestStreak >= 2 && <div><div style={{ fontSize: "28px", fontWeight: 800, color: "#E85D3A", fontFamily: "'JetBrains Mono'" }}>🔥{bestStreak}</div><div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>Best streak</div></div>}
+          </div>
+          <div style={{ display: "flex", gap: "10px", width: "100%", maxWidth: "340px" }}>
+            <button onClick={onClose} style={{ flex: 1, padding: "13px", borderRadius: "14px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Done</button>
+            <button onClick={() => { setIdx(0); setScore(0); setLives(3); setStreak(0); setBestStreak(0); setDone(false); setResult(null); setFlying(null); setDragX(0); }} style={{ flex: 1, padding: "13px", borderRadius: "14px", border: "none", background: "linear-gradient(135deg,#5A98E3,#4080cc)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>🔄 Play Again</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════════════
    TAB 4: LEARN
    ═══════════════════════════════════════════════════════════════════ */
-const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
+const LearnPage = ({ courseProgress = {}, onCourseProgress, onResetAllCourses }) => {
   const [sel, setSel] = useState(null);
   const [subTab, setSubTab] = useState("learn");
+  const [swipeGameModule, setSwipeGameModule] = useState(null);
   const [discView, setDiscView] = useState("list");
   const [discCat, setDiscCat] = useState(null);
   const [selArticle, setSelArticle] = useState(null);
@@ -4581,7 +4860,7 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
             <div style={{ fontSize: "15px", color: "#BDD6F4", opacity: 0.6 }}>Build your skills, stay safe on the hill</div>
             {Object.values(courseProgress).some(v => v > 0) && (
-              <button onClick={() => onCourseProgress && MODULES.forEach(m => onCourseProgress(m.id, 0))} style={{ background: "none", border: "1px solid rgba(232,93,58,0.25)", borderRadius: "8px", padding: "4px 10px", color: "#E85D3A", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: 0.7 }}>Reset</button>
+              <button onClick={() => onResetAllCourses && onResetAllCourses()} style={{ background: "none", border: "1px solid rgba(232,93,58,0.25)", borderRadius: "8px", padding: "4px 10px", color: "#E85D3A", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: 0.7 }}>Reset</button>
             )}
           </div>
           <div style={{ padding: "14px", marginBottom: "16px", borderRadius: "14px", background: "linear-gradient(135deg,rgba(90,152,227,0.12),rgba(107,203,119,0.06))", border: "1px solid rgba(90,152,227,0.15)" }}>
@@ -4619,12 +4898,17 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
                 </div>
                 {sel === m.id && <div style={{ padding: "0 14px 14px", borderTop: "1px solid rgba(90,152,227,0.1)", paddingTop: "12px" }}>
                   <div style={{ fontSize: "14px", color: "#BDD6F4", lineHeight: 1.5, marginBottom: "12px" }}>{m.desc}</div>
-                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
                     <button onClick={() => { setLessonOpen({ module: m, startLesson: Math.min(doneLessons, m.les - 1) }); }} style={{ padding: "9px 22px", borderRadius: "10px", border: "none", background: pct === 100 ? "#264f80" : "linear-gradient(135deg,#5A98E3,#4080cc)", color: pct === 100 ? "#BDD6F4" : "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
-                      {pct === 100 ? "Review Lessons" : pct > 0 ? "Continue" : "Start"}
+                      {pct === 100 ? "Review" : pct > 0 ? "Continue" : "Start"}
                     </button>
+                    {SWIPE_CARDS[m.id] && (
+                      <button onClick={() => setSwipeGameModule(m)} style={{ padding: "9px 14px", borderRadius: "10px", border: "1px solid rgba(107,203,119,0.3)", background: "rgba(107,203,119,0.08)", color: "#6BCB77", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "5px" }}>
+                        🃏 Game
+                      </button>
+                    )}
                     {pct === 100 && QUIZZES[m.id] && (
-                      <button onClick={() => setQuizModule(m)} style={{ padding: "9px 16px", borderRadius: "10px", border: "1px solid rgba(232,93,58,0.3)", background: "rgba(232,93,58,0.08)", color: "#E85D3A", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "5px" }}>
+                      <button onClick={() => setQuizModule(m)} style={{ padding: "9px 14px", borderRadius: "10px", border: "1px solid rgba(232,93,58,0.3)", background: "rgba(232,93,58,0.08)", color: "#E85D3A", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "5px" }}>
                         📝 Quiz
                       </button>
                     )}
@@ -4713,13 +4997,20 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
         />
       )}
 
-      {/* ═══ ARTICLE READER MODAL ═══ */}
       {/* ═══ QUIZ MODAL ═══ */}
       {quizModule && (
         <QuizModal
           module={quizModule}
           onClose={() => setQuizModule(null)}
           onComplete={() => { if (onCourseProgress) onCourseProgress(quizModule.id, quizModule.les); }}
+        />
+      )}
+
+      {/* ═══ SWIPE CARD GAME ═══ */}
+      {swipeGameModule && (
+        <CardSwipeGame
+          module={swipeGameModule}
+          onClose={() => setSwipeGameModule(null)}
         />
       )}
 
@@ -4771,7 +5062,7 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress }) => {
 
     {/* ═══ FULL-SCREEN DISCOVER MAP OVERLAY ═══ */}
     {subTab === "discover" && discView === "map" && (
-      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "62px", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
+      <div data-no-swipe="1" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "62px", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
         {/* Back button */}
         <button
           onClick={() => { setDiscView("list"); setSelArticle(null); }}
@@ -4900,6 +5191,7 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
   const [epBio, setEpBio] = useState("");
   const [epLoading, setEpLoading] = useState(false);
   const [epMsg, setEpMsg] = useState(null);
+  const [editingName, setEditingName] = useState(false);
   const [distUnit, setDistUnit] = useState(() => { try { return localStorage.getItem("ts_dist") || "km"; } catch { return "km"; }});
   const [elevUnit, setElevUnit] = useState(() => { try { return localStorage.getItem("ts_elev") || "m"; } catch { return "m"; }});
   const [speedUnit, setSpeedUnit] = useState(() => { try { return localStorage.getItem("ts_speed") || "kmh"; } catch { return "kmh"; }});
@@ -4963,12 +5255,12 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
           </button>
         </div>
         <Sec title="Profile & Activity" />
-        <Row icon="✏️" label="Edit Profile" sub="Name, username, location, bio" onClick={async () => {
+        <Row icon="✏️" label="Edit Profile" sub="Name, username, location" onClick={async () => {
           if (userId) {
-            const { data } = await supabase.from("profiles").select("name, username, location, bio").eq("id", userId).single();
-            if (data) { setEpName(data.name || ""); setEpUsername(data.username || ""); setEpLocation(data.location || ""); setEpBio(data.bio || ""); }
+            const { data } = await supabase.from("profiles").select("full_name, username, location").eq("id", userId).single();
+            if (data) { setEpName(data.full_name || userName || ""); setEpUsername(data.username || ""); setEpLocation(data.location || ""); }
           }
-          setEpMsg(null); setPage("edit-profile");
+          setEpMsg(null); setEditingName(false); setPage("edit-profile");
         }} />
         <Row icon="📊" label="Activity" sub="Your comments and interactions" onClick={() => setPage("activity")} />
         <Row icon="🔒" label="Privacy" sub="Account visibility, live hikers" onClick={() => setPage("privacy")} />
@@ -4989,27 +5281,45 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
     if (page === "edit-profile") return (
       <>
         <Hdr title="Edit Profile" />
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          {[
-            { label: "Display Name", val: epName, set: setEpName, placeholder: "Your name", type: "text" },
-            { label: "Username", val: epUsername, set: setEpUsername, placeholder: "username", type: "text" },
-            { label: "Location", val: epLocation, set: setEpLocation, placeholder: "e.g. Scottish Highlands", type: "text" },
-          ].map(({ label, val, set, placeholder, type }) => (
-            <div key={label}>
-              <div style={{ fontSize: "13px", fontWeight: 600, color: "#BDD6F4", opacity: 0.55, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
-              <input
-                type={type} value={val} onChange={e => set(e.target.value)} placeholder={placeholder}
-                style={{ width: "100%", padding: "11px 13px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }}
-              />
-            </div>
-          ))}
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {/* Name — editable via pencil icon */}
           <div>
-            <div style={{ fontSize: "13px", fontWeight: 600, color: "#BDD6F4", opacity: 0.55, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Bio</div>
-            <textarea
-              value={epBio} onChange={e => setEpBio(e.target.value)} placeholder="A short bio..." rows={3}
-              style={{ width: "100%", padding: "11px 13px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", fontFamily: "'DM Sans'", outline: "none", resize: "none", boxSizing: "border-box", lineHeight: 1.5 }}
+            <div style={{ fontSize: "13px", fontWeight: 600, color: "#BDD6F4", opacity: 0.55, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Display Name</div>
+            <div style={{ position: "relative" }}>
+              <input
+                type="text" value={epName} onChange={e => setEpName(e.target.value)}
+                readOnly={!editingName}
+                placeholder="Your name"
+                style={{ width: "100%", padding: "11px 44px 11px 13px", borderRadius: "10px", border: `1px solid ${editingName ? "rgba(90,152,227,0.4)" : "rgba(90,152,227,0.15)"}`, background: editingName ? "#0a2240" : "rgba(10,34,64,0.4)", color: "#F8F8F8", fontSize: "15px", fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box", transition: "border .2s" }}
+              />
+              <button onClick={() => setEditingName(e => !e)} style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: editingName ? "#6BCB77" : "#5A98E3", padding: "4px", display: "flex" }}>
+                {editingName
+                  ? <CheckCircle size={16} />
+                  : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                }
+              </button>
+            </div>
+          </div>
+
+          {/* Username — read-only, shown for reference */}
+          <div>
+            <div style={{ fontSize: "13px", fontWeight: 600, color: "#BDD6F4", opacity: 0.55, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Username</div>
+            <div style={{ padding: "11px 13px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.08)", background: "rgba(10,34,64,0.25)", color: "rgba(248,248,248,0.4)", fontSize: "15px", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "8px" }}>
+              <span>@{epUsername || "—"}</span>
+              <span style={{ marginLeft: "auto", fontSize: "11px", color: "#5A98E3", opacity: 0.6, fontWeight: 600 }}>Locked</span>
+            </div>
+            <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.35, marginTop: "4px" }}>Username cannot be changed after account creation.</div>
+          </div>
+
+          {/* Location — always editable */}
+          <div>
+            <div style={{ fontSize: "13px", fontWeight: 600, color: "#BDD6F4", opacity: 0.55, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Your Location</div>
+            <input
+              type="text" value={epLocation} onChange={e => setEpLocation(e.target.value)} placeholder="e.g. Scottish Highlands, Glasgow…"
+              style={{ width: "100%", padding: "11px 13px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }}
             />
           </div>
+
           {epMsg && (
             <div style={{ padding: "10px 12px", borderRadius: "8px", background: epMsg.ok ? "rgba(107,203,119,0.1)" : "rgba(232,93,58,0.1)", border: `1px solid ${epMsg.ok ? "rgba(107,203,119,0.25)" : "rgba(232,93,58,0.25)"}`, color: epMsg.ok ? "#6BCB77" : "#E85D3A", fontSize: "14px", fontWeight: 600 }}>
               {epMsg.text}
@@ -5019,16 +5329,12 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
             disabled={epLoading}
             onClick={async () => {
               if (!userId) return;
-              const uname = epUsername.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
-              if (!uname) { setEpMsg({ ok: false, text: "Username can't be empty." }); return; }
               setEpLoading(true); setEpMsg(null);
-              // Check username uniqueness (skip if unchanged)
-              const { data: existing } = await supabase.from("profiles").select("id").eq("username", uname).neq("id", userId).maybeSingle();
-              if (existing) { setEpMsg({ ok: false, text: "That username is already taken." }); setEpLoading(false); return; }
-              const { error } = await supabase.from("profiles").update({ name: epName.trim(), username: uname, location: epLocation.trim(), bio: epBio.trim() }).eq("id", userId);
+              const { error } = await supabase.from("profiles").update({ full_name: epName.trim(), location: epLocation.trim() }).eq("id", userId);
+              if (!error) await supabase.auth.updateUser({ data: { full_name: epName.trim(), location: epLocation.trim() } });
               setEpLoading(false);
               if (error) { setEpMsg({ ok: false, text: "Save failed. Please try again." }); }
-              else { setEpMsg({ ok: true, text: "Profile updated!" }); setEpUsername(uname); }
+              else { setEpMsg({ ok: true, text: "Profile updated!" }); if (epName.trim() && onNameChange) onNameChange(epName.trim().split(" ")[0]); }
             }}
             style={{ width: "100%", padding: "13px", borderRadius: "11px", border: "none", background: epLoading ? "rgba(90,152,227,0.15)" : "linear-gradient(135deg,#5A98E3,#4a7fcb)", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: epLoading ? "default" : "pointer", fontFamily: "'DM Sans'" }}
           >
@@ -5085,9 +5391,27 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
         )}
         {delStep === 2 && (
           <div style={{ background: "rgba(232,93,58,0.05)", borderRadius: "12px", border: "1px solid rgba(232,93,58,0.2)", padding: "14px" }}>
-            <div style={{ fontSize: "15px", fontWeight: 700, color: "#6BCB77", marginBottom: "6px" }}>Request submitted</div>
-            <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.55, marginBottom: "12px" }}>We'll delete all your data within 30 days and send a confirmation to your email. You'll be signed out now.</div>
-            <button onClick={async () => { await supabase.auth.updateUser({ data: { deletion_requested: true, deletion_requested_at: new Date().toISOString() } }); onSignOut(); }} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "none", background: "#E85D3A", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Sign Out & Submit</button>
+            <div style={{ fontSize: "15px", fontWeight: 700, color: "#E85D3A", marginBottom: "6px" }}>Final confirmation</div>
+            <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, lineHeight: 1.55, marginBottom: "12px" }}>This will immediately delete your walks, courses, posts, follows, and profile. Your login account will be signed out and your data cannot be recovered.</div>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button onClick={() => setDelStep(0)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
+              <button onClick={async () => {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
+                // Delete all user data in parallel
+                await Promise.allSettled([
+                  supabase.from("user_walks").delete().eq("user_id", user.id),
+                  supabase.from("user_courses").delete().eq("user_id", user.id),
+                  supabase.from("user_peaks").delete().eq("user_id", user.id),
+                  supabase.from("posts").delete().eq("user_id", user.id),
+                  supabase.from("follows").delete().eq("follower_id", user.id),
+                  supabase.from("follows").delete().eq("following_id", user.id),
+                  supabase.from("profiles").delete().eq("id", user.id),
+                ]);
+                await supabase.auth.signOut();
+                onSignOut();
+              }} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "none", background: "#E85D3A", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Delete Everything</button>
+            </div>
           </div>
         )}
       </>
@@ -5342,7 +5666,7 @@ const SettingsPage = ({ onClose, onSignOut, userName, userId }) => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 5: PROFILE
    ═══════════════════════════════════════════════════════════════════ */
-const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRoute, onSignOut, savedWalks, setSavedWalks, dbPeaks, userName, userLocation, setUserLocation, followerCount, followingCount, followingIds, setFollowingIds, setFollowerCount, setFollowingCount, userId, onViewProfile, onPublishPost }) => {
+const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRoute, onSignOut, savedWalks, setSavedWalks, dbPeaks, userName, userLocation, setUserLocation, followerCount, followingCount, followingIds, setFollowingIds, setFollowerCount, setFollowingCount, userId, onViewProfile, onPublishPost, onNameChange }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [showFollowers, setShowFollowers] = useState(null); // null | "followers" | "following"
   const [followerFilter, setFollowerFilter] = useState("recent");
@@ -5363,6 +5687,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   // My social posts (loaded from posts table)
   const [myDbPosts, setMyDbPosts] = useState([]);
+  const [confirmDeleteProfilePost, setConfirmDeleteProfilePost] = useState(null); // post id
 
   useEffect(() => {
     if (!userId) return;
@@ -6618,10 +6943,39 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                       {p.type === "event" ? " · 📅 Event" : p.type === "fundraiser" ? " · ❤️ Fundraiser" : ""}
                     </div>
                   </div>
+                  {/* Delete button — only for posts that exist in the DB (have an id) */}
+                  {p.id && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setConfirmDeleteProfilePost(p.id); }}
+                      style={{ background: "none", border: "none", color: "#E85D3A", opacity: 0.45, cursor: "pointer", padding: "4px", display: "flex", alignItems: "center", borderRadius: "6px", flexShrink: 0 }}
+                    ><Trash2 size={14} /></button>
+                  )}
                 </div>
                 <div style={{ fontSize: "15px", color: "#BDD6F4", lineHeight: 1.55 }}>{p.text}</div>
               </div>
             ))}
+
+            {/* Delete post confirmation modal */}
+            {confirmDeleteProfilePost && (
+              <div style={{ position: "fixed", inset: 0, zIndex: 180, background: "rgba(4,30,61,0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", animation: "fi .15s ease" }}>
+                <div style={{ background: "#0a2240", borderRadius: "16px", border: "1px solid rgba(232,93,58,0.2)", padding: "24px", width: "100%", maxWidth: "300px", textAlign: "center" }}>
+                  <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "rgba(232,93,58,0.1)", border: "1px solid rgba(232,93,58,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+                    <Trash2 size={20} color="#E85D3A" />
+                  </div>
+                  <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", marginBottom: "6px" }}>Delete Post?</div>
+                  <div style={{ fontSize: "14px", color: "#BDD6F4", opacity: 0.6, marginBottom: "20px" }}>This can't be undone.</div>
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    <button onClick={() => setConfirmDeleteProfilePost(null)} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
+                    <button onClick={async () => {
+                      const pid = confirmDeleteProfilePost;
+                      setConfirmDeleteProfilePost(null);
+                      setMyDbPosts(prev => prev.filter(p => p.id !== pid));
+                      await supabase.from("posts").delete().eq("id", pid).eq("user_id", userId);
+                    }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Delete</button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -6869,82 +7223,141 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
    TUTORIAL OVERLAY
    ═══════════════════════════════════════════════════════════════════ */
 const TUTORIAL_STEPS = [
-  { tab: "map", title: "Welcome to TrailSync!", text: "This is your interactive map. Every peak in the UK is plotted here by classification. Let's show you how it all works.", pos: "center", arrow: null },
-  { tab: "map", title: "Map Layers", text: "Tap Layers to switch between Standard, Topographical (OS/Harvey), and Satellite views. Toggle 3D terrain and weather overlays for wind, precipitation, and cloud cover.", pos: "top-left", arrow: "top-right" },
-  { tab: "map", title: "Community Layer", text: "Inside Layers, you'll find the Community section. Toggle on Live Hikers to see who's on the hills right now, and Community Walks to see planned group hikes. Sharing your status is always optional.", pos: "top-left", arrow: "top-right" },
-  { tab: "map", title: "Peak Markers", text: "Each coloured pin is a mountain — colour-coded by classification. Tap any peak to see its summit weather, height, and a button to log it as bagged.", pos: "center", arrow: "center" },
-  { tab: "map", title: "Filter by Classification", text: "Use these chips to filter the map by Munros, Corbetts, Wainwrights, and more. Quickly find exactly what you're looking for.", pos: "top", arrow: "bottom-center" },
-  { tab: "home", title: "Best Weather Areas", text: "This is the heart of TrailSync. Areas ranked by wind, feels-like temperature, and precipitation. Tap any region to see individual mountain forecasts. Find where the best conditions are in seconds.", pos: "bottom", arrow: "top-center" },
-  { tab: "home", title: "Community Feed", text: "Scroll down for summit posts, events, and safety alerts including SAIS avalanche warnings during winter. Filter by summits, events, and news.", pos: "center", arrow: null },
-  { tab: "routes", title: "Discover Routes", text: "Browse verified walks and community routes. Filter by classification (including non-mountain walks), difficulty, and toggle community routes on or off. Every route shows the start point, distance, and reviews.", pos: "center", arrow: null },
-  { tab: "learn", title: "Learn & Discover", text: "Build your mountain skills with guided modules, or switch to Discover for local history, folklore, wildlife, and geology stories pinned to places on the map.", pos: "center", arrow: null },
-  { tab: "profile", title: "Your Mountains", text: "Track every peak you've bagged. Map view shows green (done) and red (to do) dots — tap to log or review. Switch to list view to sort and filter. Tick and untick peaks anytime.", pos: "center", arrow: null },
-  { tab: "profile", title: "You're all set!", text: "Explore, bag peaks, check the weather, and connect with the community. Happy walking! You can replay this guide anytime from Settings.", pos: "center", arrow: null },
+  { tab: "map",     title: "Welcome to TrailSync! 🏔️", text: "Your map is loaded with every UK peak, colour-coded by classification. Let's take a quick tour — it takes under a minute.", pos: "center", arrow: null, spot: null },
+  { tab: "map",     title: "🗺️ Map Layers",            text: "See that Layers button in the top-right? Tap it to switch to Topographic or Satellite view, enable 3D terrain, or overlay live wind and precipitation data.", pos: "top-left", arrow: "top-right", spot: { x: 85, y: 12, r: 44 } },
+  { tab: "map",     title: "👥 Live Hikers",            text: "Inside Layers → Community, you can toggle Live Hikers to see other TrailSync users on the hills right now. Your location is always optional and rounded to ~100m.", pos: "top-left", arrow: "top-right", spot: { x: 85, y: 12, r: 44 } },
+  { tab: "map",     title: "📍 Peak Markers",           text: "Each coloured pin is a mountain. Orange = Munro, amber = Corbett, green = Graham. Tap any marker to see summit weather, height, and log it as bagged.", pos: "bottom", arrow: "center-map", spot: { x: 50, y: 45, r: 80 } },
+  { tab: "map",     title: "🔍 Filter Peaks",           text: "Use the filter chips along the bottom of the map to show only Munros, Wainwrights, or any other classification you're working through.", pos: "top-center", arrow: "bottom-center", spot: { x: 50, y: 82, r: 55 } },
+  { tab: "home",    title: "☁️ Best Weather Areas",    text: "Swipe through the cards at the top — mountain regions ranked live by conditions right now. Green score = great day out. Tap any card to see the detailed forecast for that area.", pos: "bottom", arrow: "top-center", spot: { x: 50, y: 35, r: 90 } },
+  { tab: "home",    title: "🏕️ Community Feed",         text: "Scroll down for summit posts, events, and SAIS avalanche warnings. Use the filter row to show just summits, events, or news. You can post your own walk after recording one.", pos: "center", arrow: null, spot: null },
+  { tab: "routes",  title: "🥾 Routes",                 text: "Browse hundreds of verified walks filtered by difficulty and classification. Tap Map to see them on a regional map, or Downloaded to access offline copies.", pos: "center", arrow: null, spot: null },
+  { tab: "learn",   title: "📚 Learn & Discover",       text: "Work through skill modules on Navigation, Safety, and Wildlife — each with real lessons and a quiz at the end. Switch to Discover for articles pinned to places on the map.", pos: "center", arrow: null, spot: null },
+  { tab: "profile", title: "⛰️ Your Mountains",         text: "Every peak you bag appears here as a green dot. Red dots are still on your list. Tap any dot to log it or see more info. Your stats and walk history are here too.", pos: "center", arrow: null, spot: null },
+  { tab: "profile", title: "🎉 You're all set!",         text: "Happy walking! Tap the ? button anytime to replay this guide. Found a bug or have a suggestion? Let us know at hello@trailsync.app", pos: "center", arrow: null, spot: null },
 ];
 
 const TutorialOverlay = ({ step, totalSteps, currentStep, onNext, onSkip }) => {
-  // Position the card based on what we're pointing at
-  const getCardStyle = () => {
-    const base = { background: "rgba(10,34,64,0.95)", backdropFilter: "blur(12px)", borderRadius: "16px", border: "1px solid rgba(90,152,227,0.25)", maxWidth: "340px", width: "calc(100% - 32px)", padding: "18px", animation: "su .3s ease", position: "absolute", zIndex: 92 };
-    if (step.pos === "top" || step.pos === "top-left") return { ...base, top: "60px", left: "16px" };
-    if (step.pos === "bottom") return { ...base, bottom: "80px", left: "16px" };
-    return { ...base, top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
-  };
+  const isLast = currentStep === totalSteps - 1;
 
-  // Arrow pointing to the UI element
-  const getArrow = () => {
-    if (!step.arrow) return null;
-    const arrowBase = { position: "absolute", zIndex: 91 };
+  // Spotlight mask — cuts a transparent circle out of the dim overlay
+  const spotlightStyle = step.spot
+    ? {
+        position: "absolute", inset: 0,
+        background: `radial-gradient(circle ${step.spot.r}px at ${step.spot.x}% ${step.spot.y}%, transparent ${step.spot.r - 4}px, rgba(4,30,61,0.82) ${step.spot.r + 10}px)`,
+      }
+    : { position: "absolute", inset: 0, background: "rgba(4,30,61,0.80)" };
+
+  // Pulsing ring at the spotlight centre
+  const ring = step.spot ? (
+    <div style={{
+      position: "absolute",
+      left: `${step.spot.x}%`, top: `${step.spot.y}%`,
+      transform: "translate(-50%, -50%)",
+      width: step.spot.r * 2, height: step.spot.r * 2,
+      borderRadius: "50%",
+      border: "2.5px solid rgba(232,93,58,0.7)",
+      animation: "pulse 2s ease-in-out infinite",
+      zIndex: 91, pointerEvents: "none",
+    }} />
+  ) : null;
+
+  // Card position
+  const cardPos = (() => {
+    const base = {
+      position: "absolute", zIndex: 92,
+      background: "rgba(8,28,58,0.97)", backdropFilter: "blur(18px)",
+      borderRadius: "20px", border: "1px solid rgba(90,152,227,0.3)",
+      maxWidth: "340px", width: "calc(100% - 32px)", padding: "20px",
+      boxShadow: "0 12px 48px rgba(0,0,0,0.6)",
+      animation: "su .3s ease",
+    };
+    if (step.pos === "top-left") return { ...base, top: "68px", left: "16px" };
+    if (step.pos === "top-center") return { ...base, top: "68px", left: "50%", transform: "translateX(-50%)" };
+    if (step.pos === "bottom") return { ...base, bottom: "90px", left: "16px", right: "16px", maxWidth: "none", width: "auto" };
+    return { ...base, top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
+  })();
+
+  // Curved arrow SVG — from card toward spotlight
+  const arrowEl = (() => {
+    if (!step.arrow || !step.spot) return null;
     if (step.arrow === "top-right") return (
-      <div style={{ ...arrowBase, top: "52px", right: "80px" }}>
-        <svg width="60" height="30" viewBox="0 0 60 30"><path d="M5 25 Q30 5 55 8" stroke="#E85D3A" strokeWidth="2" fill="none" strokeDasharray="4 3" /><polygon points="55,3 60,10 52,10" fill="#E85D3A" /></svg>
+      <div style={{ position: "absolute", top: "56px", right: "12px", zIndex: 91, pointerEvents: "none" }}>
+        <svg width="70" height="50" viewBox="0 0 70 50" fill="none">
+          <path d="M8 42 Q35 10 62 14" stroke="#E85D3A" strokeWidth="2.5" strokeDasharray="5 4" strokeLinecap="round"/>
+          <polygon points="62,7 70,16 60,18" fill="#E85D3A"/>
+        </svg>
       </div>
     );
     if (step.arrow === "bottom-center") return (
-      <div style={{ ...arrowBase, bottom: "50px", left: "50%", transform: "translateX(-50%)" }}>
-        <svg width="30" height="40" viewBox="0 0 30 40"><path d="M15 5 Q15 20 15 35" stroke="#E85D3A" strokeWidth="2" fill="none" strokeDasharray="4 3" /><polygon points="10,35 20,35 15,42" fill="#E85D3A" /></svg>
+      <div style={{ position: "absolute", bottom: "80px", left: "50%", transform: "translateX(-50%)", zIndex: 91, pointerEvents: "none" }}>
+        <svg width="30" height="52" viewBox="0 0 30 52" fill="none">
+          <path d="M15 4 Q15 26 15 46" stroke="#E85D3A" strokeWidth="2.5" strokeDasharray="5 4" strokeLinecap="round"/>
+          <polygon points="7,42 23,42 15,52" fill="#E85D3A"/>
+        </svg>
       </div>
     );
     if (step.arrow === "top-center") return (
-      <div style={{ ...arrowBase, top: "55px", left: "50%", transform: "translateX(-50%)" }}>
-        <svg width="30" height="40" viewBox="0 0 30 40"><path d="M15 35 Q15 20 15 5" stroke="#E85D3A" strokeWidth="2" fill="none" strokeDasharray="4 3" /><polygon points="10,5 20,5 15,-2" fill="#E85D3A" /></svg>
+      <div style={{ position: "absolute", top: "58px", left: "50%", transform: "translateX(-50%)", zIndex: 91, pointerEvents: "none" }}>
+        <svg width="30" height="52" viewBox="0 0 30 52" fill="none">
+          <path d="M15 48 Q15 26 15 6" stroke="#E85D3A" strokeWidth="2.5" strokeDasharray="5 4" strokeLinecap="round"/>
+          <polygon points="7,10 23,10 15,0" fill="#E85D3A"/>
+        </svg>
       </div>
     );
-    if (step.arrow === "center") return (
-      <div style={{ ...arrowBase, top: "45%", left: "50%", transform: "translate(-50%, -50%)" }}>
-        <div style={{ width: "120px", height: "120px", borderRadius: "50%", border: "2px dashed rgba(232,93,58,0.4)", animation: "pulse 2s ease-in-out infinite" }} />
+    if (step.arrow === "center-map") return (
+      <div style={{ position: "absolute", top: "46%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 91, pointerEvents: "none" }}>
+        <div style={{ width: "90px", height: "90px", borderRadius: "50%", border: "2px dashed rgba(232,93,58,0.5)", animation: "pulse 2s ease-in-out infinite" }} />
       </div>
     );
     return null;
-  };
+  })();
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 89, pointerEvents: "auto" }}>
-      {/* Semi-transparent overlay */}
-      <div style={{ position: "absolute", inset: 0, background: "rgba(4,30,61,0.6)" }} />
+    <div style={{ position: "fixed", inset: 0, zIndex: 300, pointerEvents: "auto" }}>
+      {/* Dimmed spotlight overlay */}
+      <div style={spotlightStyle} />
 
-      {/* Arrow */}
-      {getArrow()}
+      {/* Pulsing ring around spotlight */}
+      {ring}
 
-      {/* Card */}
-      <div style={getCardStyle()}>
-        {/* Progress dots */}
-        <div style={{ display: "flex", gap: "4px", marginBottom: "12px", justifyContent: "center" }}>
+      {/* Directional arrow */}
+      {arrowEl}
+
+      {/* Tutorial card */}
+      <div style={cardPos}>
+        {/* Step progress bar */}
+        <div style={{ display: "flex", gap: "4px", marginBottom: "14px" }}>
           {[...Array(totalSteps)].map((_, i) => (
-            <div key={i} style={{ width: i === currentStep ? "18px" : "6px", height: "5px", borderRadius: "3px", background: i === currentStep ? "#E85D3A" : i < currentStep ? "#5A98E3" : "#264f80", transition: "all .3s" }} />
+            <div key={i} style={{
+              flex: i === currentStep ? 2 : 1, height: "4px", borderRadius: "4px",
+              background: i === currentStep ? "#E85D3A" : i < currentStep ? "#5A98E3" : "rgba(90,152,227,0.2)",
+              transition: "all .35s ease",
+            }} />
           ))}
         </div>
 
-        <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", marginBottom: "6px", fontFamily: "'Playfair Display',serif" }}>{step.title}</div>
-        <div style={{ fontSize: "14px", color: "#BDD6F4", lineHeight: 1.6, marginBottom: "16px" }}>{step.text}</div>
+        {/* Step counter */}
+        <div style={{ fontSize: "11px", color: "#5A98E3", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "8px" }}>
+          Step {currentStep + 1} of {totalSteps}
+        </div>
 
-        <div style={{ display: "flex", gap: "8px" }}>
-          <button onClick={onSkip} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>
-            Skip
+        <div style={{ fontSize: "17px", fontWeight: 800, color: "#F8F8F8", marginBottom: "8px", fontFamily: "'Playfair Display',serif", lineHeight: 1.3 }}>{step.title}</div>
+        <div style={{ fontSize: "14px", color: "#BDD6F4", lineHeight: 1.65, marginBottom: "18px", opacity: 0.85 }}>{step.text}</div>
+
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button onClick={onSkip} style={{ padding: "10px 16px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.18)", background: "transparent", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'", whiteSpace: "nowrap" }}>
+            {isLast ? "Done" : "Skip tour"}
           </button>
-          <button onClick={onNext} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: currentStep === totalSteps - 1 ? "linear-gradient(135deg,#6BCB77,#55a866)" : "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
-            {currentStep === totalSteps - 1 ? "Get Started" : `Next (${currentStep + 1}/${totalSteps})`}
-          </button>
+          {!isLast && (
+            <button onClick={onNext} style={{ flex: 1, padding: "10px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+              Next →
+            </button>
+          )}
+          {isLast && (
+            <button onClick={onNext} style={{ flex: 1, padding: "10px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg,#6BCB77,#4aaa5a)", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
+              🏔️ Let's go!
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -7226,7 +7639,7 @@ const PWAInstallBanner = ({ onDismiss }) => {
   };
 
   return (
-    <div style={{ position: "fixed", bottom: 80, left: 12, right: 12, zIndex: 90, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px", border: "1px solid rgba(90,152,227,0.25)", padding: "14px 16px", boxShadow: "0 8px 32px rgba(0,0,0,0.4)", animation: "su .3s ease" }}>
+    <div style={{ position: "fixed", bottom: "calc(68px + env(safe-area-inset-bottom, 0px))", left: 12, right: 12, zIndex: 90, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px", border: "1px solid rgba(90,152,227,0.25)", padding: "14px 16px", boxShadow: "0 8px 32px rgba(0,0,0,0.4)", animation: "su .3s ease" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
         <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <Mountain size={22} color="#F8F8F8" />
@@ -7361,6 +7774,7 @@ export default function TrailSync() {
   useEffect(() => { setShowUserMenu(false); setShowNotifications(false); }, [tab]);
 
   const [userCourseProgress, setUserCourseProgress] = useState({});
+  const [showTutorial, setShowTutorial] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [userId, setUserId] = useState(null);
   const [followerCount, setFollowerCount] = useState(0);
@@ -7542,6 +7956,17 @@ export default function TrailSync() {
       setSavedWalks([]);
       setDbPeaks(null);
 
+      // Ensure a profile row exists for this user (catches users who skipped the username prompt at signup)
+      await supabase.from("profiles").upsert(
+        {
+          id: user.id,
+          full_name: user.user_metadata?.full_name || null,
+          username: user.user_metadata?.username || null,
+          location: user.user_metadata?.location || null,
+        },
+        { onConflict: "id", ignoreDuplicates: true }
+      );
+
       // Fetch all peaks from Supabase
       // Fetch all peaks in two batches to bypass the 1000 row default limit
       const [batch1, batch2] = await Promise.all([
@@ -7670,16 +8095,6 @@ export default function TrailSync() {
     return () => document.removeEventListener("visibilitychange", onVisible);
   }, [userId]);
 
-  const handleTutNext = () => {
-    if (tutStep >= TUTORIAL_STEPS.length - 1) {
-      setAuthState("app");
-      setTab("map");
-      return;
-    }
-    const nextStep = tutStep + 1;
-    setTutStep(nextStep);
-    setTab(TUTORIAL_STEPS[nextStep].tab);
-  };
 
 
   // Auth screens
@@ -8036,8 +8451,8 @@ export default function TrailSync() {
               } catch (e) { console.error("Failed to save walk:", e); }
             }} openRoute={openRouteOnMap} gpxRoute={gpxRoute} onCloseGpx={closeGpxRoute} />
         </div>
-        {tab === "learn" && <div key="learn" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", animation: `${(tabOrder[tab]||0) > (tabOrder[prevTab]||0) ? "slideInRight" : "slideInLeft"} .26s ease` }}><LearnPage courseProgress={userCourseProgress} onCourseProgress={async (courseId, lessonsCompleted) => { setUserCourseProgress(prev => { const next = { ...prev }; if (lessonsCompleted === 0) { delete next[courseId]; } else { next[courseId] = lessonsCompleted; } return next; }); const { data: { user } } = await supabase.auth.getUser(); if (!user) return; if (lessonsCompleted === 0) { await supabase.from("user_courses").delete().eq("user_id", user.id).eq("course_id", courseId); } else { await supabase.from("user_courses").upsert({ user_id: user.id, course_id: courseId, lessons_completed: lessonsCompleted, updated_at: new Date().toISOString() }, { onConflict: "user_id,course_id" }); } }} /></div>}
-        {tab === "profile" && <div key="profile" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", animation: `${(tabOrder[tab]||0) > (tabOrder[prevTab]||0) ? "slideInRight" : "slideInLeft"} .26s ease` }}><ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} setSavedWalks={setSavedWalks} dbPeaks={dbPeaks} userName={userName} userLocation={userLocation} setUserLocation={setUserLocation} followerCount={followerCount} followingCount={followingCount} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowerCount={setFollowerCount} setFollowingCount={setFollowingCount} userId={userId} onViewProfile={setViewingProfile} onPublishPost={post => setLivePosts(prev => [post, ...prev])} onSignOut={async () => {
+        {tab === "learn" && <div key="learn" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", animation: `${(tabOrder[tab]||0) > (tabOrder[prevTab]||0) ? "slideInRight" : "slideInLeft"} .26s ease` }}><LearnPage courseProgress={userCourseProgress} onCourseProgress={async (courseId, lessonsCompleted) => { setUserCourseProgress(prev => { const next = { ...prev }; if (lessonsCompleted === 0) { delete next[courseId]; } else { next[courseId] = lessonsCompleted; } return next; }); const { data: { session } } = await supabase.auth.getSession(); const user = session?.user; if (!user) return; if (lessonsCompleted === 0) { await supabase.from("user_courses").delete().eq("user_id", user.id).eq("course_id", courseId); } else { await supabase.from("user_courses").upsert({ user_id: user.id, course_id: courseId, lessons_completed: lessonsCompleted, updated_at: new Date().toISOString() }, { onConflict: "user_id,course_id" }); } }} onResetAllCourses={async () => { setUserCourseProgress({}); const { data: { session } } = await supabase.auth.getSession(); const user = session?.user; if (!user) return; await supabase.from("user_courses").delete().eq("user_id", user.id); }} /></div>}
+        {tab === "profile" && <div key="profile" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", animation: `${(tabOrder[tab]||0) > (tabOrder[prevTab]||0) ? "slideInRight" : "slideInLeft"} .26s ease` }}><ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} setSavedWalks={setSavedWalks} dbPeaks={dbPeaks} userName={userName} userLocation={userLocation} setUserLocation={setUserLocation} followerCount={followerCount} followingCount={followingCount} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowerCount={setFollowerCount} setFollowingCount={setFollowingCount} userId={userId} onViewProfile={setViewingProfile} onPublishPost={post => setLivePosts(prev => [post, ...prev])} onNameChange={setUserName} onSignOut={async () => {
   await supabase.auth.signOut();
   try { localStorage.clear(); } catch {}
   setUserName("Alex");
@@ -8066,19 +8481,54 @@ export default function TrailSync() {
         />
       )}
 
-      {/* Tutorial overlay */}
-      {authState === "tutorial" && (
+      {/* Tutorial overlay — shown on first signup OR when user taps "?" */}
+      {(authState === "tutorial" || showTutorial) && (
         <TutorialOverlay
           step={TUTORIAL_STEPS[tutStep]}
           totalSteps={TUTORIAL_STEPS.length}
           currentStep={tutStep}
-          onNext={handleTutNext}
-          onSkip={() => { setAuthState("app"); setTab("map"); }}
+          onNext={() => {
+            if (tutStep >= TUTORIAL_STEPS.length - 1) {
+              if (authState === "tutorial") setAuthState("app");
+              setShowTutorial(false);
+              setTab("map");
+              return;
+            }
+            const nextStep = tutStep + 1;
+            setTutStep(nextStep);
+            setTab(TUTORIAL_STEPS[nextStep].tab);
+          }}
+          onSkip={() => {
+            if (authState === "tutorial") setAuthState("app");
+            setShowTutorial(false);
+            setTab("map");
+          }}
         />
       )}
 
-      {/* Bottom nav — fixed to physical screen bottom, never affected by layout */}
-      <div style={{ position: "relative", zIndex: 60, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-around", padding: "4px 6px 8px", borderTop: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,.96)", backdropFilter: "blur(12px)" }}>
+      {/* Floating "?" help button — always visible in the app, re-triggers tutorial */}
+      {!showTutorial && authState !== "tutorial" && (
+        <button
+          onClick={() => { setTutStep(0); setTab(TUTORIAL_STEPS[0].tab); setShowTutorial(true); }}
+          style={{
+            position: "fixed", bottom: "calc(66px + env(safe-area-inset-bottom, 0px))", left: "12px", zIndex: 55,
+            width: "32px", height: "32px", borderRadius: "50%",
+            background: "rgba(10,34,64,0.9)", backdropFilter: "blur(8px)",
+            border: "1px solid rgba(90,152,227,0.25)",
+            color: "#5A98E3", fontSize: "15px", fontWeight: 800,
+            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.3)", fontFamily: "'DM Sans'",
+            lineHeight: 1,
+          }}
+          title="App guide"
+        >?</button>
+      )}
+
+      {/* Spacer so content doesn't hide under the fixed tab bar */}
+      <div style={{ height: "calc(58px + env(safe-area-inset-bottom, 0px))", flexShrink: 0 }} />
+
+      {/* Bottom nav — truly fixed to physical screen bottom, above home indicator */}
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 60, display: "flex", alignItems: "center", justifyContent: "space-around", paddingTop: "4px", paddingBottom: "env(safe-area-inset-bottom, 6px)", paddingLeft: "6px", paddingRight: "6px", borderTop: "1px solid rgba(90,152,227,0.1)", background: "rgba(4,30,61,.96)", backdropFilter: "blur(12px)" }}>
         {tabs.map((t, i) => {
           const I = t.icon; const a = tab === t.id; const ctr = i === 2;
           return (
