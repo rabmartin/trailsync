@@ -2668,7 +2668,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
 
     {/* ═══ FULL-SCREEN ROUTES MAP OVERLAY ═══ */}
     {subTab === "map" && (
-      <div data-no-swipe="1" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "62px", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
+      <div data-no-swipe="1" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "calc(62px + env(safe-area-inset-bottom, 0px))", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
         {/* Back chevron */}
         <button
           onClick={() => { setSubTab("list"); setSelRegion(null); }}
@@ -3862,7 +3862,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   }, [d3]);
 
   return (
-    <div data-no-swipe="1" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "62px", zIndex: 0 }}>
+    <div data-no-swipe="1" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "calc(62px + env(safe-area-inset-bottom, 0px))", zIndex: 0 }}>
       {/* Real Mapbox Map */}
       <div ref={mapContainer} style={{ position: "absolute", inset: 0 }} />
 
@@ -5153,7 +5153,7 @@ const LearnPage = ({ courseProgress = {}, onCourseProgress, onResetAllCourses })
 
     {/* ═══ FULL-SCREEN DISCOVER MAP OVERLAY ═══ */}
     {subTab === "discover" && discView === "map" && (
-      <div data-no-swipe="1" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "62px", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
+      <div data-no-swipe="1" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "calc(62px + env(safe-area-inset-bottom, 0px))", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
         {/* Back button */}
         <button
           onClick={() => { setDiscView("list"); setSelArticle(null); }}
