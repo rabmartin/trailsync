@@ -80,6 +80,16 @@ const CLS = {
   "non-mountain": { name: "Non-Mountain", count: 0, color: "#7FB069", desc: "Valley, lochside & long-distance walks" },
 };
 
+// Personal saved-spot types — used for map markers and the add-spot sheet
+const SPOT_TYPES = [
+  { id: "camp",      emoji: "🏕️", label: "Wild Camp",  color: "#6BCB77" },
+  { id: "waterfall", emoji: "💧", label: "Waterfall",   color: "#5A98E3" },
+  { id: "viewpoint", emoji: "👁️", label: "Viewpoint",  color: "#F49D37" },
+  { id: "bothy",     emoji: "🏚️", label: "Bothy",      color: "#BDD6F4" },
+  { id: "coffee",    emoji: "☕", label: "Coffee",      color: "#E85D3A" },
+  { id: "other",     emoji: "📍", label: "Other",       color: "#9B8EC4" },
+];
+
 // Static region config — weather data fetched live from Open-Meteo
 const WX_REGIONS = [
   { region: "Ben Nevis & Mamores", lat: 56.80, lng: -5.00, alt: 900, peaks: ["Ben Nevis", "Carn Mor Dearg", "Aonach Mor"], cls: "munros" },
@@ -2963,7 +2973,7 @@ const RouteWeatherPanel = ({ routeWeather, elevProfile, onElevHover, onElevLeave
   );
 };
 
-const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGpx, dbPeaks, isVisible }) => {
+const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGpx, dbPeaks, isVisible, savedSpots, onAddSpot, onDeleteSpot }) => {
   const [layer, setLayer] = useState("standard");
   const [lm, setLm] = useState(false);
   const [wo, setWo] = useState(null);
@@ -2973,6 +2983,16 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   const [sw, setSw] = useState(null);
   const [cf, setCf] = useState(null);
   const [d3, setD3] = useState(false);
+
+  // Saved spots state
+  const [showSpots, setShowSpots] = useState(true);
+  const [pendingSpot, setPendingSpot] = useState(null);     // { lat, lng } — set by long-press
+  const [newSpotName, setNewSpotName] = useState("");
+  const [newSpotType, setNewSpotType] = useState("other");
+  const [newSpotNotes, setNewSpotNotes] = useState("");
+  const [savingSpot, setSavingSpot] = useState(false);
+  const [viewingSpot, setViewingSpot] = useState(null);     // spot object being viewed/deleted
+  const spotMarkersRef = useRef([]);                        // Mapbox Marker objects for cleanup
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
 
@@ -3338,6 +3358,19 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     map.on("dragstart", onUserMove);
     map.on("touchstart", onUserMove);
 
+    // Long-press on the map → open "Pin a Spot" sheet
+    let longPressTimer = null;
+    const onLongPressStart = (e) => {
+      if (e.originalEvent?.touches?.length !== 1) return;
+      const { lat, lng } = e.lngLat;
+      longPressTimer = setTimeout(() => { setPendingSpot({ lat, lng }); }, 650);
+    };
+    const onLongPressCancel = () => { clearTimeout(longPressTimer); };
+    map.on("touchstart", onLongPressStart);
+    map.on("touchend",   onLongPressCancel);
+    map.on("touchmove",  onLongPressCancel);
+    map.on("dragstart",  onLongPressCancel);
+
     }); return () => {
       mapLoadedRef.current = false;
       if (mapRef.current) mapRef.current.remove();
@@ -3460,6 +3493,36 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       map.off("click", layerId, onClick);
     };
   }, [sc, dbEvents, mapLoadedRef.current]);
+
+  // Render / refresh saved-spot markers whenever the list or visibility toggle changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoadedRef.current) return;
+
+    // Remove all existing spot markers first
+    spotMarkersRef.current.forEach(m => m.remove());
+    spotMarkersRef.current = [];
+
+    if (!showSpots || !savedSpots?.length) return;
+
+    import("mapbox-gl").then(mod => {
+      const mapboxgl = mod.default;
+      (savedSpots).forEach(spot => {
+        const info = SPOT_TYPES.find(t => t.id === spot.type) || SPOT_TYPES.find(t => t.id === "other");
+        const el = document.createElement("div");
+        el.style.cssText = `width:36px;height:36px;border-radius:50%;background:${info.color}22;border:2.5px solid ${info.color};display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.4);transition:transform .15s;`;
+        el.textContent = info.emoji;
+        el.title = spot.name;
+        el.onmouseenter = () => { el.style.transform = "scale(1.2)"; };
+        el.onmouseleave = () => { el.style.transform = "scale(1)"; };
+        el.onclick = (e) => { e.stopPropagation(); setViewingSpot(spot); };
+        const marker = new mapboxgl.Marker({ element: el, anchor: "center" })
+          .setLngLat([spot.lng, spot.lat])
+          .addTo(map);
+        spotMarkersRef.current.push(marker);
+      });
+    });
+  }, [savedSpots, showSpots, mapLoadedRef.current]);
 
   // Draw GPX route when gpxRoute prop is set (or changes)
   useEffect(() => {
@@ -3950,6 +4013,11 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
               <div style={{ padding: "6px 12px 4px", fontSize: "11px", color: "#BDD6F4", opacity: 0.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Community</div>
               <button onClick={() => setSh(!sh)} style={{ display: "flex", width: "100%", padding: "8px 12px", borderRadius: "8px", border: "none", alignItems: "center", gap: "8px", background: sh ? "rgba(90,152,227,0.15)" : "transparent", color: sh ? "#5A98E3" : "#BDD6F4", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans'" }}><Eye size={12} /> Live Hikers ({HIKERS.length})</button>
               <button onClick={() => setSc(!sc)} style={{ display: "flex", width: "100%", padding: "8px 12px", borderRadius: "8px", border: "none", alignItems: "center", gap: "8px", background: sc ? "rgba(90,152,227,0.15)" : "transparent", color: sc ? "#5A98E3" : "#BDD6F4", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans'" }}><Users size={12} /> Community Walks ({C_WALKS.length})</button>
+              <div style={{ height: "1px", background: "rgba(90,152,227,0.1)", margin: "4px 0" }} />
+              <div style={{ padding: "6px 12px 4px", fontSize: "11px", color: "#BDD6F4", opacity: 0.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>My Spots</div>
+              <button onClick={() => setShowSpots(!showSpots)} style={{ display: "flex", width: "100%", padding: "8px 12px", borderRadius: "8px", border: "none", alignItems: "center", gap: "8px", background: showSpots ? "rgba(107,203,119,0.15)" : "transparent", color: showSpots ? "#6BCB77" : "#BDD6F4", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans'" }}>
+                <span style={{ fontSize: "13px" }}>📍</span> My Saved Spots ({savedSpots?.length || 0})
+              </button>
             </div>
           )}
         </div>
@@ -4386,6 +4454,59 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
           </div>
         </div>
       )}
+
+      {/* ── PIN A SPOT bottom sheet ── */}
+      {pendingSpot && (
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 40, background: "rgba(4,30,61,0.98)", backdropFilter: "blur(16px)", borderRadius: "20px 20px 0 0", border: "1px solid rgba(90,152,227,0.2)", borderBottom: "none", padding: "20px 16px 28px", animation: "su .3s ease" }}>
+          <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: "rgba(90,152,227,0.25)", margin: "0 auto 16px" }} />
+          <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8", marginBottom: "14px" }}>📍 Pin a Spot</div>
+          <div style={{ display: "flex", gap: "7px", marginBottom: "14px", flexWrap: "wrap" }}>
+            {SPOT_TYPES.map(t => (
+              <button key={t.id} onClick={() => setNewSpotType(t.id)} style={{ padding: "7px 11px", borderRadius: "20px", border: `1.5px solid ${newSpotType === t.id ? t.color : "rgba(90,152,227,0.2)"}`, background: newSpotType === t.id ? `${t.color}22` : "transparent", color: newSpotType === t.id ? t.color : "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "5px", transition: "all .15s" }}>
+                <span>{t.emoji}</span> {t.label}
+              </button>
+            ))}
+          </div>
+          <input type="text" placeholder="Name this spot…" value={newSpotName} onChange={e => setNewSpotName(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "10px", boxSizing: "border-box" }} />
+          <textarea placeholder="Notes (optional)…" value={newSpotNotes} onChange={e => setNewSpotNotes(e.target.value)} rows={2} style={{ width: "100%", padding: "10px 12px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'", resize: "none", marginBottom: "12px", boxSizing: "border-box" }} />
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button onClick={() => { setPendingSpot(null); setNewSpotName(""); setNewSpotType("other"); setNewSpotNotes(""); }} style={{ flex: 1, padding: "11px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
+            <button disabled={!newSpotName.trim() || savingSpot} onClick={async () => {
+              if (!newSpotName.trim() || savingSpot) return;
+              setSavingSpot(true);
+              await onAddSpot?.({ lat: pendingSpot.lat, lng: pendingSpot.lng, type: newSpotType, name: newSpotName.trim(), notes: newSpotNotes.trim() });
+              setPendingSpot(null); setNewSpotName(""); setNewSpotType("other"); setNewSpotNotes(""); setSavingSpot(false);
+            }} style={{ flex: 2, padding: "11px", borderRadius: "12px", border: "none", background: newSpotName.trim() ? "linear-gradient(135deg,#6BCB77,#55a866)" : "#264f80", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: newSpotName.trim() ? "pointer" : "default", fontFamily: "'DM Sans'", opacity: newSpotName.trim() ? 1 : 0.5, transition: "all .2s" }}>
+              {savingSpot ? "Saving…" : "Save Spot"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── SPOT DETAIL / DELETE popup ── */}
+      {viewingSpot && (() => {
+        const info = SPOT_TYPES.find(t => t.id === viewingSpot.type) || SPOT_TYPES.find(t => t.id === "other");
+        return (
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 40, background: "rgba(4,30,61,0.98)", backdropFilter: "blur(16px)", borderRadius: "20px 20px 0 0", border: "1px solid rgba(90,152,227,0.2)", borderBottom: "none", padding: "20px 16px 28px", animation: "su .3s ease" }}>
+            <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: "rgba(90,152,227,0.25)", margin: "0 auto 16px" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+              <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: `${info.color}22`, border: `2px solid ${info.color}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", flexShrink: 0 }}>{info.emoji}</div>
+              <div>
+                <div style={{ fontSize: "16px", fontWeight: 700, color: "#F8F8F8" }}>{viewingSpot.name}</div>
+                <div style={{ fontSize: "11px", color: info.color, fontWeight: 600, marginTop: "2px" }}>{info.label}</div>
+              </div>
+            </div>
+            {viewingSpot.notes && <div style={{ fontSize: "13px", color: "#BDD6F4", lineHeight: 1.5, background: "rgba(90,152,227,0.06)", borderRadius: "10px", padding: "10px 12px", marginBottom: "14px" }}>{viewingSpot.notes}</div>}
+            <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4, marginBottom: "16px" }}>{viewingSpot.lat?.toFixed(5)}, {viewingSpot.lng?.toFixed(5)}</div>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button onClick={() => setViewingSpot(null)} style={{ flex: 1, padding: "11px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Close</button>
+              <button onClick={async () => { await onDeleteSpot?.(viewingSpot.id); setViewingSpot(null); }} style={{ flex: 1, padding: "11px", borderRadius: "12px", border: "1px solid rgba(232,93,58,0.3)", background: "rgba(232,93,58,0.08)", color: "#E85D3A", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "5px" }}>
+                <Trash2 size={13} /> Delete
+              </button>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };
@@ -7836,6 +7957,7 @@ export default function TrailSync() {
   const [profileSec, setProfileSec] = useState("mountains");
   const [feedFilter, setFeedFilter] = useState("all");
   const [savedWalks, setSavedWalks] = useState([]);
+  const [savedSpots, setSavedSpots] = useState([]);
   const [tutStep, setTutStep] = useState(0);
   const [dbPeaks, setDbPeaks] = useState(null);
   const [dbRoutes, setDbRoutes] = useState(null);
@@ -8172,6 +8294,14 @@ export default function TrailSync() {
         setFollowingIds(new Set(followingList.map(f => f.following_id)));
         setFollowingCount(followingList.length);
       }
+
+      // Load saved spots
+      const { data: spots } = await supabase
+        .from("saved_spots")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      setSavedSpots(spots || []);
     }
 
     loadUserData();
@@ -8552,7 +8682,29 @@ export default function TrailSync() {
                 });
                 if (postErr) console.error("posts insert error:", JSON.stringify(postErr));
               } catch (e) { console.error("Failed to save walk:", e); }
-            }} openRoute={openRouteOnMap} gpxRoute={gpxRoute} onCloseGpx={closeGpxRoute} />
+            }}
+            openRoute={openRouteOnMap}
+            gpxRoute={gpxRoute}
+            onCloseGpx={closeGpxRoute}
+            savedSpots={savedSpots}
+            onAddSpot={async (spot) => {
+              const { data: { user } } = await supabase.auth.getUser();
+              if (!user) return;
+              const { data, error } = await supabase.from("saved_spots").insert({
+                user_id: user.id,
+                lat: spot.lat,
+                lng: spot.lng,
+                type: spot.type,
+                name: spot.name,
+                notes: spot.notes || null,
+              }).select().single();
+              if (!error && data) setSavedSpots(prev => [data, ...prev]);
+            }}
+            onDeleteSpot={async (id) => {
+              await supabase.from("saved_spots").delete().eq("id", id);
+              setSavedSpots(prev => prev.filter(s => s.id !== id));
+            }}
+          />
         </div>
         {tab === "learn" && <div key="learn" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", animation: `${(tabOrder[tab]||0) > (tabOrder[prevTab]||0) ? "slideInRight" : "slideInLeft"} .26s ease` }}><LearnPage courseProgress={userCourseProgress} onCourseProgress={async (courseId, lessonsCompleted) => { setUserCourseProgress(prev => { const next = { ...prev }; if (lessonsCompleted === 0) { delete next[courseId]; } else { next[courseId] = lessonsCompleted; } return next; }); const { data: { session } } = await supabase.auth.getSession(); const user = session?.user; if (!user) return; if (lessonsCompleted === 0) { await supabase.from("user_courses").delete().eq("user_id", user.id).eq("course_id", courseId); } else { await supabase.from("user_courses").upsert({ user_id: user.id, course_id: courseId, lessons_completed: lessonsCompleted, updated_at: new Date().toISOString() }, { onConflict: "user_id,course_id" }); } }} onResetAllCourses={async () => { setUserCourseProgress({}); const { data: { session } } = await supabase.auth.getSession(); const user = session?.user; if (!user) return; await supabase.from("user_courses").delete().eq("user_id", user.id); }} /></div>}
         {tab === "profile" && <div key="profile" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", animation: `${(tabOrder[tab]||0) > (tabOrder[prevTab]||0) ? "slideInRight" : "slideInLeft"} .26s ease` }}><ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} setSavedWalks={setSavedWalks} dbPeaks={dbPeaks} userName={userName} userLocation={userLocation} setUserLocation={setUserLocation} followerCount={followerCount} followingCount={followingCount} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowerCount={setFollowerCount} setFollowingCount={setFollowingCount} userId={userId} onViewProfile={setViewingProfile} onPublishPost={post => setLivePosts(prev => [post, ...prev])} onNameChange={setUserName} onSignOut={async () => {
