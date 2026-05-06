@@ -4788,33 +4788,43 @@ const CardSwipeGame = ({ module: mod, onClose }) => {
   const starsTotal = total;
   const stars = score >= starsTotal ? 3 : score >= Math.ceil(starsTotal * 0.8) ? 2 : score >= Math.ceil(starsTotal * 0.5) ? 1 : 0;
 
+  // Dynamic tint while dragging: green for right (True), red for left (False)
+  const tintProgress = flying ? 0 : Math.min(Math.abs(dragX) / 120, 1);
+  const tintColor = dragX >= 0
+    ? `rgba(107,203,119,${(tintProgress * 0.22).toFixed(3)})`
+    : `rgba(232,93,58,${(tintProgress * 0.22).toFixed(3)})`;
+  const cardBg = result
+    ? (result.correct ? "rgba(107,203,119,0.1)" : "rgba(232,93,58,0.1)")
+    : `linear-gradient(135deg, ${tintColor}, ${tintColor}), #0a2240`;
+  const cardBorder = result
+    ? `2px solid ${result.correct ? "rgba(107,203,119,0.45)" : "rgba(232,93,58,0.45)"}`
+    : dragX > 30 ? "2px solid rgba(107,203,119,0.35)"
+    : dragX < -30 ? "2px solid rgba(232,93,58,0.35)"
+    : "2px solid rgba(90,152,227,0.15)";
+
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "#020c1b", display: "flex", flexDirection: "column" }}>
+    <div data-no-swipe="1" style={{ position: "fixed", inset: 0, zIndex: 300, background: "#020c1b", display: "flex", flexDirection: "column" }}>
       {/* Header */}
       <div style={{ padding: "calc(14px + env(safe-area-inset-top,0px)) 16px 12px", display: "flex", alignItems: "center", gap: "12px", borderBottom: "1px solid rgba(90,152,227,0.1)" }}>
         <button onClick={onClose} style={{ background: "rgba(90,152,227,0.12)", border: "none", borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><X size={16} /></button>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: "12px", color: "#5A98E3", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>{mod.ic} Swipe Challenge</div>
-          <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.55 }}>{mod.title}</div>
+          <div style={{ fontSize: "12px", color: "#5A98E3", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>{mod.ic} {mod.title}</div>
+          <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.45 }}>Fact or Myth? Swipe to answer</div>
         </div>
         {/* Lives */}
         <div style={{ display: "flex", gap: "3px" }}>
-          {[0,1,2].map(i => <span key={i} style={{ fontSize: "18px", opacity: i < lives ? 1 : 0.2 }}>❤️</span>)}
+          {[0,1,2].map(i => <span key={i} style={{ fontSize: "18px", opacity: i < lives ? 1 : 0.18, transition: "opacity .3s" }}>❤️</span>)}
         </div>
-        {/* Streak */}
         {streak >= 2 && <div style={{ background: "rgba(232,93,58,0.15)", border: "1px solid rgba(232,93,58,0.3)", borderRadius: "20px", padding: "3px 10px", fontSize: "12px", fontWeight: 700, color: "#E85D3A" }}>🔥 {streak}</div>}
       </div>
 
       {/* Progress bar */}
-      <div style={{ height: "3px", background: "#0a2240" }}><div style={{ width: `${(idx / total) * 100}%`, height: "100%", background: "linear-gradient(90deg,#5A98E3,#6BCB77)", transition: "width .4s" }} /></div>
+      <div style={{ height: "3px", background: "#0a2240" }}>
+        <div style={{ width: `${(idx / total) * 100}%`, height: "100%", background: "linear-gradient(90deg,#5A98E3,#6BCB77)", transition: "width .4s" }} />
+      </div>
 
       {!done ? (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px 16px", gap: "16px" }}>
-          {/* Swipe hint labels */}
-          <div style={{ display: "flex", justifyContent: "space-between", width: "100%", maxWidth: "360px", padding: "0 8px" }}>
-            <div style={{ fontSize: "18px", fontWeight: 800, color: "#E85D3A", opacity: dragX < -30 ? Math.min(1, Math.abs(dragX) / 100) : 0.12, transition: "opacity .1s" }}>✗ FALSE</div>
-            <div style={{ fontSize: "18px", fontWeight: 800, color: "#6BCB77", opacity: dragX > 30 ? Math.min(1, dragX / 100) : 0.12, transition: "opacity .1s" }}>TRUE ✓</div>
-          </div>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "16px 16px 20px", gap: "14px" }}>
 
           {/* Card */}
           <div
@@ -4823,49 +4833,65 @@ const CardSwipeGame = ({ module: mod, onClose }) => {
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
             style={{
+              position: "relative",
               width: "100%", maxWidth: "360px",
-              background: result ? (result.correct ? "rgba(107,203,119,0.08)" : "rgba(232,93,58,0.08)") : "#0a2240",
+              background: cardBg,
               borderRadius: "24px",
-              border: result ? `2px solid ${result.correct ? "rgba(107,203,119,0.4)" : "rgba(232,93,58,0.4)"}` : "2px solid rgba(90,152,227,0.15)",
-              padding: "32px 24px",
-              minHeight: "220px",
-              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "16px",
+              border: cardBorder,
+              padding: "28px 24px 24px",
+              minHeight: "240px",
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "14px",
               transform: `translateX(${translateX}px) rotate(${rotation}deg)`,
               opacity,
               transition: flying ? "transform .35s ease-in, opacity .35s ease-in" : dragging ? "none" : "transform .25s ease-out",
-              cursor: "grab", userSelect: "none", touchAction: "none",
+              cursor: dragging ? "grabbing" : "grab", userSelect: "none", touchAction: "none",
+              boxShadow: dragX > 30 ? "0 8px 32px rgba(107,203,119,0.2)" : dragX < -30 ? "0 8px 32px rgba(232,93,58,0.2)" : "0 4px 24px rgba(0,0,0,0.4)",
             }}
           >
-            <div style={{ fontSize: "36px" }}>{result ? (result.correct ? "✅" : "❌") : mod.ic}</div>
-            <div style={{ fontSize: "18px", fontWeight: 800, color: "#F8F8F8", textAlign: "center", lineHeight: 1.45, fontFamily: "'Playfair Display',serif" }}>
+            {/* Corner swipe-direction labels — appear while dragging */}
+            <div style={{ position: "absolute", top: 14, left: 14, padding: "3px 10px", borderRadius: "20px", border: "2px solid #E85D3A", color: "#E85D3A", fontSize: "12px", fontWeight: 800, opacity: !result && dragX < -20 ? Math.min(1, Math.abs(dragX) / 80) : 0, transition: dragging ? "opacity .05s" : "opacity .2s", pointerEvents: "none" }}>← FALSE</div>
+            <div style={{ position: "absolute", top: 14, right: 14, padding: "3px 10px", borderRadius: "20px", border: "2px solid #6BCB77", color: "#6BCB77", fontSize: "12px", fontWeight: 800, opacity: !result && dragX > 20 ? Math.min(1, dragX / 80) : 0, transition: dragging ? "opacity .05s" : "opacity .2s", pointerEvents: "none" }}>TRUE →</div>
+
+            {/* Icon */}
+            <div style={{ fontSize: "38px", lineHeight: 1 }}>{result ? (result.correct ? "✅" : "❌") : mod.ic}</div>
+
+            {/* Fact or Myth badge */}
+            {!result && (
+              <div style={{ fontSize: "10px", fontWeight: 700, color: "#5A98E3", textTransform: "uppercase", letterSpacing: "0.12em", opacity: 0.7 }}>Fact or Myth?</div>
+            )}
+
+            {/* Statement */}
+            <div style={{ fontSize: "18px", fontWeight: 800, color: "#F8F8F8", textAlign: "center", lineHeight: 1.5, fontFamily: "'Playfair Display',serif" }}>
               {card.fact}
             </div>
+
+            {/* Result feedback */}
             {result && (
-              <div style={{ background: result.correct ? "rgba(107,203,119,0.12)" : "rgba(232,93,58,0.12)", borderRadius: "12px", padding: "12px 14px", width: "100%", animation: "su .2s ease" }}>
+              <div style={{ background: result.correct ? "rgba(107,203,119,0.14)" : "rgba(232,93,58,0.14)", borderRadius: "12px", padding: "11px 14px", width: "100%", animation: "su .2s ease" }}>
                 <div style={{ fontSize: "13px", fontWeight: 700, color: result.correct ? "#6BCB77" : "#E85D3A", marginBottom: "4px" }}>{result.correct ? "Correct! 🎉" : "Not quite…"}</div>
-                <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.55, opacity: 0.8 }}>{result.tip}</div>
+                <div style={{ fontSize: "12px", color: "#BDD6F4", lineHeight: 1.55, opacity: 0.85 }}>{result.tip}</div>
               </div>
             )}
           </div>
 
           {/* Card counter */}
-          <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.35 }}>{idx + 1} / {total}</div>
+          <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.3, letterSpacing: "0.05em" }}>{idx + 1} of {total}</div>
 
-          {/* Tap buttons as alternative to swipe */}
-          <div style={{ display: "flex", gap: "12px", width: "100%", maxWidth: "360px" }}>
+          {/* Tap buttons — clearly labelled alternative to swiping */}
+          <div style={{ display: "flex", gap: "10px", width: "100%", maxWidth: "360px" }}>
             <button
               onClick={() => answer(false)}
               disabled={!!flying || !!result}
-              style={{ flex: 1, padding: "14px", borderRadius: "16px", border: "2px solid rgba(232,93,58,0.3)", background: "rgba(232,93,58,0.07)", color: "#E85D3A", fontSize: "16px", fontWeight: 800, cursor: "pointer", fontFamily: "'DM Sans'", opacity: (flying || result) ? 0.4 : 1 }}
+              style={{ flex: 1, padding: "15px 10px", borderRadius: "16px", border: "2px solid rgba(232,93,58,0.35)", background: dragX < -30 ? "rgba(232,93,58,0.18)" : "rgba(232,93,58,0.07)", color: "#E85D3A", fontSize: "15px", fontWeight: 800, cursor: "pointer", fontFamily: "'DM Sans'", opacity: (flying || result) ? 0.35 : 1, transition: "background .15s" }}
             >✗ False</button>
             <button
               onClick={() => answer(true)}
               disabled={!!flying || !!result}
-              style={{ flex: 1, padding: "14px", borderRadius: "16px", border: "2px solid rgba(107,203,119,0.3)", background: "rgba(107,203,119,0.07)", color: "#6BCB77", fontSize: "16px", fontWeight: 800, cursor: "pointer", fontFamily: "'DM Sans'", opacity: (flying || result) ? 0.4 : 1 }}
+              style={{ flex: 1, padding: "15px 10px", borderRadius: "16px", border: "2px solid rgba(107,203,119,0.35)", background: dragX > 30 ? "rgba(107,203,119,0.18)" : "rgba(107,203,119,0.07)", color: "#6BCB77", fontSize: "15px", fontWeight: 800, cursor: "pointer", fontFamily: "'DM Sans'", opacity: (flying || result) ? 0.35 : 1, transition: "background .15s" }}
             >True ✓</button>
           </div>
 
-          <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.25, textAlign: "center" }}>Swipe left for False · Swipe right for True</div>
+          <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.22, textAlign: "center" }}>Swipe the card · or tap the buttons</div>
         </div>
       ) : (
         /* Results screen */
@@ -8021,16 +8047,25 @@ export default function TrailSync() {
       setSavedWalks([]);
       setDbPeaks(null);
 
-      // Ensure a profile row exists for this user (catches users who skipped the username prompt at signup)
+      // Ensure a profile row exists and has a searchable name.
+      // Strategy: create the row if missing (DO NOTHING on conflict), then
+      // update ONLY null fields — never overwriting what the user set via Edit Profile.
       await supabase.from("profiles").upsert(
-        {
-          id: user.id,
-          full_name: user.user_metadata?.full_name || null,
-          username: user.user_metadata?.username || null,
-          location: user.user_metadata?.location || null,
-        },
+        { id: user.id },
         { onConflict: "id", ignoreDuplicates: true }
       );
+      // Email-prefix fallback so every user is searchable even without metadata
+      const metaName = user.user_metadata?.full_name || user.user_metadata?.name || null;
+      const emailFallback = user.email ? user.email.split("@")[0] : null;
+      const bestName = metaName || emailFallback;
+      if (bestName) {
+        await supabase.from("profiles").update({ full_name: bestName })
+          .eq("id", user.id).is("full_name", null);
+      }
+      if (user.user_metadata?.username) {
+        await supabase.from("profiles").update({ username: user.user_metadata.username })
+          .eq("id", user.id).is("username", null);
+      }
 
       // Fetch all peaks from Supabase
       // Fetch all peaks in two batches to bypass the 1000 row default limit
@@ -8105,6 +8140,9 @@ export default function TrailSync() {
         const courseMap = {};
         courses.forEach(c => { courseMap[c.course_id] = c.lessons_completed; });
         setUserCourseProgress(courseMap);
+      } else {
+        // DB is empty (either never started, or user reset) — make sure state matches
+        setUserCourseProgress({});
       }
 
       // Load follower/following counts + who this user follows
