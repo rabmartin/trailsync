@@ -106,7 +106,7 @@ const WX_REGIONS = [
   { region: "Galloway Hills",      lat: 55.15, lng: -4.62, alt: 500, peaks: ["Merrick", "Corserine"], cls: "donalds" },
   { region: "Fisherfield",         lat: 57.80, lng: -5.24, alt: 800, peaks: ["An Teallach", "Beinn Dearg Mor"], cls: "munros" },
   { region: "Skye Cuillin",        lat: 57.25, lng: -6.20, alt: 700, peaks: ["Sgurr nan Gillean", "Bruach na Frithe", "Sgurr Alasdair"], cls: "munros" },
-  { region: "Loch Lomond & Trossachs", lat: 56.17, lng: -4.60, alt: 200, peaks: ["Loch Katrine", "Loch Lomond Shores", "The Trossachs"], cls: "non-mountain" },
+  { region: "Loch Lomond Lochside", lat: 56.17, lng: -4.60, alt: 200, peaks: ["Loch Katrine", "Loch Lomond Shores", "The Trossachs"], cls: "non-mountain" },
 ];
 
 // Keep WX_AREAS as alias for backward compat with any refs
