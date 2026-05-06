@@ -3070,7 +3070,8 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   const [gpsError, setGpsError] = useState(null);
   const [detectedPeaks, setDetectedPeaks] = useState([]);
   const [summitToast, setSummitToast] = useState(null); // { name, cls, ht } — shown briefly when summit hit
-  const watchIdRef = useRef(null);
+  const watchIdRef = useRef(null);      // browser geolocation watch id (web)
+  const bgWatchRef = useRef(null);      // background-geolocation plugin watch id (native)
   const trackPointsRef = useRef([]);    // [{lng, lat, alt, t}]
   const lastAltRef = useRef(null);
   const userMovedMapRef = useRef(false); // true when user has manually panned away from location
@@ -3205,44 +3206,72 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   };
 
   // Start GPS watch
-  const startGps = () => {
-    if (!navigator.geolocation) { setGpsError("GPS not available on this device"); return; }
+  // Shared handler — called by both browser API and native plugin
+  const handleGpsPoint = (lat, lng, alt, speed) => {
+    const now = Date.now();
+    const prev = trackPointsRef.current[trackPointsRef.current.length - 1];
+    if (prev) {
+      const segDist = haversineDist([prev.lng, prev.lat], [lng, lat]);
+      const timeDelta = (now - prev.t) / 1000;
+      if (segDist < 0.5) {
+        setRealDist(d => parseFloat((d + segDist).toFixed(3)));
+        if (speed != null) setRealSpeed(parseFloat((speed * 3.6).toFixed(1)));
+        else if (timeDelta > 0) setRealSpeed(parseFloat(((segDist / timeDelta) * 3600).toFixed(1)));
+      }
+    }
+    if (alt !== null && alt !== undefined) {
+      setCurrentAlt(Math.round(alt));
+      if (lastAltRef.current !== null && alt > lastAltRef.current) {
+        setRealElev(e => e + (alt - lastAltRef.current));
+      }
+      lastAltRef.current = alt;
+    }
+    const point = { lng, lat, alt: alt ?? null, t: now };
+    const isGpsJump = prev && haversineDist([prev.lng, prev.lat], [lng, lat]) > 0.05;
+    if (!isGpsJump) {
+      trackPointsRef.current = [...trackPointsRef.current, point];
+      updateLiveTrack(trackPointsRef.current);
+    }
+    checkNearPeak(lat, lng);
+  };
+
+  const startGps = async () => {
     setGpsError(null);
+    // Start moving-time counter (shared for both native and web)
+    movingTimerRef.current = setInterval(() => {
+      const pts = trackPointsRef.current;
+      if (pts.length < 2) return;
+      const last = pts[pts.length - 1];
+      const prev = pts[pts.length - 2];
+      if (haversineDist([prev.lng, prev.lat], [last.lng, last.lat]) > 0.001) movingTimeRef.current += 1;
+    }, 1000);
+
+    try {
+      const { Capacitor } = await import("@capacitor/core");
+      if (Capacitor.isNativePlatform()) {
+        const { default: BackgroundGeolocation } = await import("@capacitor-community/background-geolocation");
+        const id = await BackgroundGeolocation.addWatcher(
+          { backgroundMessage: "TrailSync is tracking your walk.", backgroundTitle: "Walk Tracking Active", requestPermissions: true, stale: false, distanceFilter: 5 },
+          (location, error) => {
+            if (error) {
+              if (error.code === "NOT_AUTHORIZED") setGpsError("Location permission denied. Enable in Settings → Privacy → Location.");
+              else setGpsError("GPS unavailable.");
+              return;
+            }
+            handleGpsPoint(location.latitude, location.longitude, location.altitude ?? null, location.speed ?? null);
+          }
+        );
+        bgWatchRef.current = id;
+        return;
+      }
+    } catch (_) { /* fall through to browser API */ }
+
+    // Browser / PWA fallback
+    if (!navigator.geolocation) { setGpsError("GPS not available on this device"); return; }
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
         const { latitude: lat, longitude: lng, altitude: alt, speed } = pos.coords;
-        const now = Date.now();
-        const prev = trackPointsRef.current[trackPointsRef.current.length - 1];
-
-        // Calculate segment distance
-        if (prev) {
-          const segDist = haversineDist([prev.lng, prev.lat], [lng, lat]);
-          // Filter out GPS jumps > 500m in < 10s (noise)
-          const timeDelta = (now - prev.t) / 1000;
-          if (segDist < 0.5) {
-            setRealDist(d => parseFloat((d + segDist).toFixed(3)));
-            if (speed != null) setRealSpeed(parseFloat((speed * 3.6).toFixed(1)));
-            else if (timeDelta > 0) setRealSpeed(parseFloat(((segDist / timeDelta) * 3600).toFixed(1)));
-          }
-        }
-
-        // Elevation gain
-        if (alt !== null) {
-          setCurrentAlt(Math.round(alt));
-          if (lastAltRef.current !== null && alt > lastAltRef.current) {
-            setRealElev(e => e + (alt - lastAltRef.current));
-          }
-          lastAltRef.current = alt;
-        }
-
-        const point = { lng, lat, alt: alt ?? null, t: now };
-        // Only add point if no GPS jump > 50m (filters out satellite lock errors)
-        const isGpsJump = prev && haversineDist([prev.lng, prev.lat], [lng, lat]) > 0.05;
-        if (!isGpsJump) {
-          trackPointsRef.current = [...trackPointsRef.current, point];
-          updateLiveTrack(trackPointsRef.current);
-        }
-        checkNearPeak(lat, lng);
+        handleGpsPoint(lat, lng, alt, speed);
       },
       (err) => {
         if (err.code === 1) setGpsError("Location permission denied. Please enable in your browser settings.");
@@ -3251,20 +3280,17 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       },
       { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 }
     );
-
-    // Moving time counter — only ticks when we have recent GPS activity
-    movingTimerRef.current = setInterval(() => {
-      const pts = trackPointsRef.current;
-      if (pts.length < 2) return;
-      const last = pts[pts.length - 1];
-      const secondAgo = pts[pts.length - 2];
-      const moved = haversineDist([secondAgo.lng, secondAgo.lat], [last.lng, last.lat]);
-      if (moved > 0.001) movingTimeRef.current += 1; // only count if moved > 1m
-    }, 1000);
   };
 
   // Stop GPS watch
-  const stopGps = () => {
+  const stopGps = async () => {
+    if (bgWatchRef.current !== null) {
+      try {
+        const { default: BackgroundGeolocation } = await import("@capacitor-community/background-geolocation");
+        await BackgroundGeolocation.removeWatcher({ id: bgWatchRef.current });
+      } catch (_) {}
+      bgWatchRef.current = null;
+    }
     if (watchIdRef.current != null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;

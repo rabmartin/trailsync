@@ -9,6 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@capacitor-community/background-geolocation": "^1.2.26",
+    "@capacitor/android": "^8.3.1",
+    "@capacitor/cli": "^8.3.1",
+    "@capacitor/core": "^8.3.1",
+    "@capacitor/ios": "^8.3.1",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.99.2",
     "@vercel/analytics": "^2.0.1",
