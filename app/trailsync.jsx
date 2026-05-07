@@ -6005,7 +6005,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             .order("created_at", { ascending: followerFilter === "recent" ? false : true });
           if (followData && followData.length > 0) {
             const ids = followData.map(f => f.follower_id);
-            const { data: profiles } = await supabase.from("profiles").select("id, username, name, location").in("id", ids);
+            const { data: profiles } = await supabase.from("profiles").select("id, username, full_name, location").in("id", ids);
             setFollowerList(profiles || []);
           } else {
             setFollowerList([]);
@@ -6019,7 +6019,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             .order("created_at", { ascending: followerFilter === "recent" ? false : true });
           if (followData && followData.length > 0) {
             const ids = followData.map(f => f.following_id);
-            const { data: profiles } = await supabase.from("profiles").select("id, username, name, location").in("id", ids);
+            const { data: profiles } = await supabase.from("profiles").select("id, username, full_name, location").in("id", ids);
             setFollowingList(profiles || []);
             // Sync followingIds so Follow/Following buttons show correctly
             setFollowingIds(new Set(ids));
@@ -7621,19 +7621,21 @@ const UserProfileModal = ({ user, userId, followingIds, onFollow, onClose }) => 
     setShowFollowList(type);
     setFollowListLoading(true);
     setFollowList([]);
-    if (type === "followers") {
-      const { data } = await supabase
-        .from("follows")
-        .select("follower_id, profiles!follows_follower_id_fkey(id, username, name, location)")
-        .eq("following_id", user.id);
-      setFollowList((data || []).map(r => r.profiles).filter(Boolean));
-    } else {
-      const { data } = await supabase
-        .from("follows")
-        .select("following_id, profiles!follows_following_id_fkey(id, username, name, location)")
-        .eq("follower_id", user.id);
-      setFollowList((data || []).map(r => r.profiles).filter(Boolean));
-    }
+    // Step 1: get the relevant user IDs from follows table
+    const col = type === "followers" ? "follower_id" : "following_id";
+    const filter = type === "followers" ? "following_id" : "follower_id";
+    const { data: followData } = await supabase
+      .from("follows")
+      .select(col)
+      .eq(filter, user.id);
+    const ids = (followData || []).map(r => r[col]).filter(Boolean);
+    if (ids.length === 0) { setFollowListLoading(false); return; }
+    // Step 2: fetch profiles for those IDs
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, username, full_name, location")
+      .in("id", ids);
+    setFollowList(profiles || []);
     setFollowListLoading(false);
   };
 
