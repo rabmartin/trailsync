@@ -3521,33 +3521,105 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   }, [sc, dbEvents, mapLoadedRef.current]);
 
   // Render / refresh saved-spot markers whenever the list or visibility toggle changes
+  // Uses GeoJSON symbol layers (WebGL-rendered) so pins are perfectly geo-locked
+  // and scale smoothly with zoom rather than staying fixed pixel size.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoadedRef.current) return;
 
-    // Remove all existing spot markers first
-    spotMarkersRef.current.forEach(m => m.remove());
-    spotMarkersRef.current = [];
+    const SRC = "saved-spots-src";
+    const LAYER = "saved-spots-icons";
 
+    const cleanup = () => {
+      if (map.getLayer(LAYER)) map.removeLayer(LAYER);
+      if (map.getSource(SRC)) map.removeSource(SRC);
+    };
+    cleanup();
     if (!showSpots || !savedSpots?.length) return;
 
-    import("mapbox-gl").then(mod => {
-      const mapboxgl = mod.default;
-      (savedSpots).forEach(spot => {
-        const info = SPOT_TYPES.find(t => t.id === spot.type) || SPOT_TYPES.find(t => t.id === "other");
-        const el = document.createElement("div");
-        el.style.cssText = `width:36px;height:36px;border-radius:50%;background:${info.color}22;border:2.5px solid ${info.color};display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.4);transition:transform .15s;`;
-        el.textContent = info.emoji;
-        el.title = spot.name;
-        el.onmouseenter = () => { el.style.transform = "scale(1.2)"; };
-        el.onmouseleave = () => { el.style.transform = "scale(1)"; };
-        el.onclick = (e) => { e.stopPropagation(); setViewingSpot(spot); };
-        const marker = new mapboxgl.Marker({ element: el, anchor: "center" })
-          .setLngLat([spot.lng, spot.lat])
-          .addTo(map);
-        spotMarkersRef.current.push(marker);
-      });
+    // Register a canvas-rendered emoji image for each spot type (once per map lifetime)
+    SPOT_TYPES.forEach(({ id, emoji, color }) => {
+      const imgId = `spot-icon-${id}`;
+      if (map.hasImage(imgId)) return;
+      const SZ = 64;
+      const canvas = document.createElement("canvas");
+      canvas.width = SZ; canvas.height = SZ;
+      const ctx = canvas.getContext("2d");
+      // Coloured ring background
+      ctx.beginPath();
+      ctx.arc(SZ / 2, SZ / 2, SZ / 2 - 3, 0, Math.PI * 2);
+      ctx.fillStyle = color + "30";
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3.5;
+      ctx.stroke();
+      // Emoji centred inside
+      ctx.font = `${Math.round(SZ * 0.44)}px serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(emoji, SZ / 2, SZ / 2 + 1);
+      const { data } = ctx.getImageData(0, 0, SZ, SZ);
+      map.addImage(imgId, { width: SZ, height: SZ, data });
     });
+
+    map.addSource(SRC, {
+      type: "geojson",
+      data: {
+        type: "FeatureCollection",
+        features: savedSpots.map(spot => ({
+          type: "Feature",
+          geometry: { type: "Point", coordinates: [spot.lng, spot.lat] },
+          properties: { ...spot, _json: JSON.stringify(spot) },
+        })),
+      },
+    });
+
+    map.addLayer({
+      id: LAYER,
+      type: "symbol",
+      source: SRC,
+      layout: {
+        // Icon scales from tiny (zoomed out) to full size (zoomed in)
+        "icon-image": ["concat", "spot-icon-", ["get", "type"]],
+        "icon-size": ["interpolate", ["linear"], ["zoom"],
+          4, 0.15,
+          8, 0.28,
+          10, 0.42,
+          12, 0.58,
+          14, 0.78,
+          16, 1.0,
+        ],
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true,
+        // Name label fades in when zoomed in enough
+        "text-field": ["get", "name"],
+        "text-optional": true,
+        "text-size": 11,
+        "text-offset": [0, 1.5],
+        "text-anchor": "top",
+        "text-max-width": 9,
+        "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Regular"],
+      },
+      paint: {
+        "text-color": "#F8F8F8",
+        "text-halo-color": "rgba(4,30,61,0.95)",
+        "text-halo-width": 2,
+        // Label only visible at zoom 13+
+        "text-opacity": ["interpolate", ["linear"], ["zoom"], 12.5, 0, 13.5, 1],
+      },
+    });
+
+    const onClick = (e) => {
+      try { setViewingSpot(JSON.parse(e.features[0].properties._json)); } catch (_) {}
+    };
+    map.on("click", LAYER, onClick);
+    map.on("mouseenter", LAYER, () => { map.getCanvas().style.cursor = "pointer"; });
+    map.on("mouseleave", LAYER, () => { map.getCanvas().style.cursor = ""; });
+
+    return () => {
+      map.off("click", LAYER, onClick);
+      cleanup();
+    };
   }, [savedSpots, showSpots, mapLoadedRef.current]);
 
   // Draw GPX route when gpxRoute prop is set (or changes)
