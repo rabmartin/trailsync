@@ -185,7 +185,9 @@ async function fetchRegionWeather(region, dayOffset) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Weather fetch failed for ${region.region}`);
   const json = await res.json();
+  if (json.error) throw new Error(json.reason || `API error for ${region.region}`);
   const d = json.daily;
+  if (!d || !Array.isArray(d.time)) throw new Error(`Invalid API response for ${region.region}`);
 
   // Build 7-day array
   const days = d.time.map((date, i) => {
@@ -936,7 +938,7 @@ const LoginScreen = ({ onLogin, onGoSignup }) => {
   };
 
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", overflowY: "auto", padding: "40px 24px 200px", background: "#041e3d", minHeight: "100vh" }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#041e3d", height: "100dvh", paddingTop: "env(safe-area-inset-top, 0px)", paddingBottom: "env(safe-area-inset-bottom, 0px)", paddingLeft: "24px", paddingRight: "24px", boxSizing: "border-box", overflowY: "auto" }}>
       {/* Logo */}
       <div style={{ marginBottom: "28px", textAlign: "center", animation: "fi .5s ease" }}>
         <div style={{ width: "56px", height: "56px", borderRadius: "14px", background: "linear-gradient(135deg,#E85D3A,#F49D37)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", animation: "glow 3s ease infinite" }}>
@@ -1071,7 +1073,7 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
   const fldStyle = { width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#0a2240", color: "#F8F8F8", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'", boxSizing: "border-box" };
 
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", overflowY: "auto", padding: "40px 24px 200px", background: "#041e3d", minHeight: "100vh" }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#041e3d", height: "100dvh", paddingTop: "env(safe-area-inset-top, 0px)", paddingBottom: "env(safe-area-inset-bottom, 0px)", paddingLeft: "24px", paddingRight: "24px", boxSizing: "border-box", overflowY: "auto" }}>
       {showPrivacy && <PrivacyPopup onClose={() => setShowPrivacy(false)} />}
 
       {/* Logo */}
@@ -1423,14 +1425,17 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
       setWxLoading(true);
       setWxError(null);
       try {
-        const results = await Promise.all(
+        const results = await Promise.allSettled(
           WX_REGIONS.map(r => fetchRegionWeather(r, 0).then(data => ({ region: r.region, data })))
         );
         if (cancelled) return;
         const map = {};
-        results.forEach(({ region, data }) => { map[region] = data; });
+        let anyOk = false;
+        results.forEach(r => { if (r.status === "fulfilled") { map[r.value.region] = r.value.data; anyOk = true; } });
+        if (!anyOk) throw new Error("All weather fetches failed");
         setWxData(map);
         setWxUpdated(new Date());
+        setWxError(null);
       } catch (e) {
         if (!cancelled) setWxError("Weather unavailable — check your connection");
       } finally {
@@ -1900,7 +1905,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
             animation: "su .3s ease", maxHeight: "88vh", display: "flex", flexDirection: "column"
           }}>
             {/* Drag handle — tap to close */}
-            <div onClick={() => setShowFollowers(null)} style={{ display: "flex", justifyContent: "center", padding: "12px 0 4px", cursor: "pointer" }}>
+            <div onClick={() => setSelPeakWx(null)} style={{ display: "flex", justifyContent: "center", padding: "12px 0 4px", cursor: "pointer" }}>
               <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: "rgba(90,152,227,0.35)" }} />
             </div>
 
@@ -2097,27 +2102,29 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
         );
       })()}
 
-      {/* Feed filter dropdown */}
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px", animation: "su .4s ease .3s both" }}>
-        <select value={ff} onChange={e => setFf(e.target.value)} style={{
-          background: "#0a2240", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "20px",
-          color: ff === "all" ? "#BDD6F4" : "#5A98E3", fontSize: "14px", fontFamily: "'DM Sans'",
-          fontWeight: ff === "all" ? 500 : 700, padding: "6px 30px 6px 14px", cursor: "pointer",
-          outline: "none", WebkitAppearance: "none", appearance: "none",
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%235A98E3' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
-          backgroundRepeat: "no-repeat", backgroundPosition: "right 10px center"
-        }}>
-          <option value="all">For You</option>
-          <option value="summits">Summits</option>
-          <option value="events">Events</option>
-          <option value="news">News</option>
-          <option value="fundraiser">Fundraiser</option>
-        </select>
+      {/* Feed toggle */}
+      <div style={{ textAlign: "center", marginBottom: "16px", animation: "su .4s ease .3s both" }}>
+        <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.35, marginBottom: "8px", fontWeight: 700, letterSpacing: "1px" }}>FEED</div>
+        <div style={{ display: "inline-flex", background: "#0a2240", borderRadius: "22px", padding: "3px", border: "1px solid rgba(90,152,227,0.15)" }}>
+          {[["all", "For you"], ["following", "Following"], ["trending", "Trending"]].map(([val, label]) => (
+            <button key={val} onClick={() => setFf(val)} style={{
+              padding: "7px 16px", borderRadius: "18px", border: "none",
+              background: ff === val ? "rgba(90,152,227,0.25)" : "transparent",
+              color: ff === val ? "#F8F8F8" : "#BDD6F4",
+              fontSize: "13px", fontWeight: ff === val ? 700 : 500,
+              cursor: "pointer", fontFamily: "'DM Sans'", transition: "all 0.15s"
+            }}>{label}</button>
+          ))}
+        </div>
       </div>
 
       {/* Feed */}
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        {livePosts.filter(p => ff === "all" || (ff === "summits" && (p.type === "summit" || p.type === "walk")) || (ff === "events" && p.type === "event") || (ff === "news" && p.type === "news") || (ff === "fundraiser" && p.type === "fundraiser")).map((p, i) => (
+        {livePosts.filter(p => {
+          if (ff === "following") return followingIds?.has(p.user_id);
+          if (ff === "trending") return true;
+          return true;
+        }).sort((a, b) => ff === "trending" ? ((b.likes||0) + (b.cmts||0)) - ((a.likes||0) + (a.cmts||0)) : 0).map((p, i) => (
           <div key={p.id} onClick={() => setCommentOpen(commentOpen === p.id ? null : p.id)} style={{
             background: "#0a2240", borderRadius: "14px", padding: "14px",
             border: `1px solid ${commentOpen === p.id ? "rgba(90,152,227,0.25)" : "rgba(90,152,227,0.1)"}`,
@@ -2241,38 +2248,51 @@ const ROUTE_REGIONS = [
 ];
 
 /* ═══════════════════════════════════════════════════════════════════
-   ROUTES CLUSTER MAP (native Mapbox clustering)
+   ROUTES MAP — colored markers per route, GPX overlay on selection
    ═══════════════════════════════════════════════════════════════════ */
-const RoutesClusterMap = ({ filtered, selRegion, setSelRegion, onMapReady }) => {
+const RoutesClusterMap = ({ filtered, selIdx, onSelIdx }) => {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
-  const [activeGpxId, setActiveGpxId] = useState(null);
+  const gpxCacheRef = useRef({});
   const [gpxLoading, setGpxLoading] = useState(false);
 
-  async function loadRouteGpx(route) {
-    if (!mapRef.current) return;
-    if (!route.gpx_file) return;
-    if (activeGpxId === route.id) {
-      removeGpxFromMap(mapRef.current, route.id);
-      setActiveGpxId(null);
-      return;
-    }
-    if (activeGpxId) removeGpxFromMap(mapRef.current, activeGpxId);
+  const routeCoords = (r) => {
+    const pk = PEAKS_FALLBACK.find(p => r.peaks?.includes(p.name));
+    const reg = ROUTE_REGIONS.find(rr => rr.name === r.reg);
+    return [pk?.lng ?? reg?.lng ?? -4.5, pk?.lat ?? reg?.lat ?? 56.5];
+  };
+
+  const buildFeatures = (routes, selId) => routes.map(r => ({
+    type: "Feature",
+    properties: { id: r.id, cls: r.cls, color: CLS[r.cls]?.color || "#E85D3A", selected: r.id === selId },
+    geometry: { type: "Point", coordinates: routeCoords(r) },
+  }));
+
+  const showGpx = async (route) => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (map.getLayer("sel-gpx")) map.removeLayer("sel-gpx");
+    if (map.getSource("sel-gpx")) map.removeSource("sel-gpx");
+    if (!route?.gpx_file) return;
     setGpxLoading(true);
     try {
-      const xml = await fetchGpxText(route.gpx_file);
-      const coords = parseGpxCoords(xml);
-      if (coords.length > 1) {
-        drawGpxOnMap(mapRef.current, route.id, coords, { color: "#E85D3A", fitBounds: true });
-        setActiveGpxId(route.id);
+      let coords = gpxCacheRef.current[route.id];
+      if (!coords) {
+        const xml = await fetchGpxText(route.gpx_file);
+        coords = parseGpxCoords(xml);
+        gpxCacheRef.current[route.id] = coords;
       }
-    } catch (err) {
-      console.error("GPX draw error:", err);
-    } finally {
-      setGpxLoading(false);
-    }
-  }
+      if (!mapRef.current || coords.length < 2) return;
+      const color = CLS[route.cls]?.color || "#E85D3A";
+      map.addSource("sel-gpx", { type: "geojson", data: { type: "Feature", geometry: { type: "LineString", coordinates: coords.map(c => [c[0], c[1]]) } } });
+      map.addLayer({ id: "sel-gpx", type: "line", source: "sel-gpx", layout: { "line-join": "round", "line-cap": "round" }, paint: { "line-color": color, "line-width": 3.5, "line-opacity": 0.95 } });
+      const lngs = coords.map(c => c[0]), lats = coords.map(c => c[1]);
+      map.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]], { padding: 100, duration: 800 });
+    } catch (e) { console.error("GPX error:", e); }
+    finally { setGpxLoading(false); }
+  };
 
+  // Init map
   useEffect(() => {
     if (mapRef.current || !containerRef.current) return;
     const timer = setTimeout(() => {
@@ -2283,137 +2303,56 @@ const RoutesClusterMap = ({ filtered, selRegion, setSelRegion, onMapReady }) => 
         const map = new mapboxgl.Map({
           container: containerRef.current,
           style: "mapbox://styles/mapbox/outdoors-v12",
-          center: [-4.5, 56.5],
-          zoom: 5.5,
-          interactive: true,
+          center: [-4.5, 56.5], zoom: 5.5, interactive: true,
         });
-        map.addControl(new mapboxgl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showUserHeading: true }), "bottom-right");
         mapRef.current = map;
-
         map.on("load", () => {
-          if (onMapReady) onMapReady(map);
-          // Build GeoJSON from routes with small offsets so they spread when zoomed
-          const features = filtered.map((r, i) => {
-            // Use first matched peak coords for accuracy, fall back to region centre
-            const peakMatch = (typeof PEAKS !== "undefined" ? PEAKS : []).find(p => r.peaks && r.peaks.includes(p.name));
-            const region = ROUTE_REGIONS.find(rr => rr.name === r.reg);
-            const baseLat = peakMatch?.lat ?? region?.lat ?? 56.5;
-            const baseLng = peakMatch?.lng ?? region?.lng ?? -4.5;
-            // Tiny offset so multiple routes on the same peak spread slightly
-            const offset = 0.008;
-            const angle = (i / Math.max(filtered.length, 1)) * Math.PI * 2;
-            const routeIdx = filtered.filter(x => x.reg === r.reg).indexOf(r);
-            return {
-              type: "Feature",
-              properties: { id: r.id, name: r.name, dist: r.dist, elev: r.elev, diff: r.diff, cls: r.cls, time: r.time, region: r.reg },
-              geometry: { type: "Point", coordinates: [baseLng + Math.cos(angle) * offset * (routeIdx + 1), baseLat + Math.sin(angle) * offset * (routeIdx + 1)] }
-            };
+          map.addSource("routes-pts", { type: "geojson", data: { type: "FeatureCollection", features: buildFeatures(filtered, filtered[0]?.id) } });
+          // Glow ring around selected
+          map.addLayer({ id: "routes-pts-glow", type: "circle", source: "routes-pts",
+            filter: ["==", ["get", "selected"], true],
+            paint: { "circle-color": ["get", "color"], "circle-radius": 18, "circle-opacity": 0.18, "circle-blur": 0.6 }
           });
-
-          map.addSource("routes", {
-            type: "geojson",
-            data: { type: "FeatureCollection", features },
-            cluster: true,
-            clusterMaxZoom: 12,
-            clusterRadius: 50,
-          });
-
-          // Cluster circle layer
-          map.addLayer({
-            id: "clusters",
-            type: "circle",
-            source: "routes",
-            filter: ["has", "point_count"],
+          // All dots — larger + white stroke when selected
+          map.addLayer({ id: "routes-pts-dot", type: "circle", source: "routes-pts",
             paint: {
-              "circle-color": "#264f80",
-              "circle-radius": ["step", ["get", "point_count"], 22, 5, 28, 10, 34],
-              "circle-stroke-width": 2,
-              "circle-stroke-color": "rgba(90,152,227,0.4)",
+              "circle-color": ["get", "color"],
+              "circle-radius": ["case", ["==", ["get", "selected"], true], 11, 7],
+              "circle-stroke-width": ["case", ["==", ["get", "selected"], true], 2.5, 1.5],
+              "circle-stroke-color": ["case", ["==", ["get", "selected"], true], "#FFFFFF", "rgba(255,255,255,0.55)"],
+              "circle-opacity": ["case", ["==", ["get", "selected"], true], 1, 0.72],
             }
           });
-
-          // Cluster count label
-          map.addLayer({
-            id: "cluster-count",
-            type: "symbol",
-            source: "routes",
-            filter: ["has", "point_count"],
-            layout: {
-              "text-field": ["get", "point_count_abbreviated"],
-              "text-font": ["DIN Pro Medium", "Arial Unicode MS Bold"],
-              "text-size": 14,
-            },
-            paint: { "text-color": "#F8F8F8" }
+          map.on("click", "routes-pts-dot", (e) => {
+            const id = e.features[0].properties.id;
+            const idx = filtered.findIndex(r => r.id === id);
+            if (idx >= 0 && onSelIdx) onSelIdx(idx);
           });
-
-          // Individual route dots
-          map.addLayer({
-            id: "unclustered-point",
-            type: "circle",
-            source: "routes",
-            filter: ["!", ["has", "point_count"]],
-            paint: {
-              "circle-color": "#E85D3A",
-              "circle-radius": 8,
-              "circle-stroke-width": 2,
-              "circle-stroke-color": "rgba(255,255,255,0.8)",
-            }
-          });
-
-          // Click on cluster - zoom in
-          map.on("click", "clusters", (e) => {
-            const features = map.queryRenderedFeatures(e.point, { layers: ["clusters"] });
-            const clusterId = features[0].properties.cluster_id;
-            map.getSource("routes").getClusterExpansionZoom(clusterId, (err, zoom) => {
-              if (err) return;
-              map.easeTo({ center: features[0].geometry.coordinates, zoom: zoom });
-            });
-          });
-
-          // Click on individual route - show details
-          map.on("click", "unclustered-point", (e) => {
-            const props = e.features[0].properties;
-            const regionRoutes = filtered.filter(r => r.reg === props.region);
-            const region = ROUTE_REGIONS.find(rr => rr.name === props.region);
-            if (region) {
-              setSelRegion({ ...region, routes: regionRoutes.length === 1 ? regionRoutes : filtered.filter(r => r.id === props.id) });
-            }
-          });
-
-          // Cursor changes
-          map.on("mouseenter", "clusters", () => { map.getCanvas().style.cursor = "pointer"; });
-          map.on("mouseleave", "clusters", () => { map.getCanvas().style.cursor = ""; });
-          map.on("mouseenter", "unclustered-point", () => { map.getCanvas().style.cursor = "pointer"; });
-          map.on("mouseleave", "unclustered-point", () => { map.getCanvas().style.cursor = ""; });
+          map.on("mouseenter", "routes-pts-dot", () => { map.getCanvas().style.cursor = "pointer"; });
+          map.on("mouseleave", "routes-pts-dot", () => { map.getCanvas().style.cursor = ""; });
         });
       });
     }, 150);
     return () => { clearTimeout(timer); if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; } };
   }, []);
 
-  // Update source data when filtered routes change
+  // Sync markers + GPX when selection or filter changes
   useEffect(() => {
-    if (!mapRef.current) return;
     const map = mapRef.current;
-    const source = map.getSource("routes");
-    if (!source) return;
-
-    const features = filtered.map((r, i) => {
-      const peakMatch = (typeof PEAKS !== "undefined" ? PEAKS : []).find(p => r.peaks && r.peaks.includes(p.name));
-      const region = ROUTE_REGIONS.find(rr => rr.name === r.reg);
-      const baseLat = peakMatch?.lat ?? region?.lat ?? 56.5;
-      const baseLng = peakMatch?.lng ?? region?.lng ?? -4.5;
-      const offset = 0.008;
-      const angle = (i / Math.max(filtered.length, 1)) * Math.PI * 2;
-      const routeIdx = filtered.filter(x => x.reg === r.reg).indexOf(r);
-      return {
-        type: "Feature",
-        properties: { id: r.id, name: r.name, dist: r.dist, elev: r.elev, diff: r.diff, cls: r.cls, time: r.time, region: r.reg },
-        geometry: { type: "Point", coordinates: [baseLng + Math.cos(angle) * offset * (routeIdx + 1), baseLat + Math.sin(angle) * offset * (routeIdx + 1)] }
-      };
-    });
-    source.setData({ type: "FeatureCollection", features });
-  }, [filtered]);
+    if (!map) return;
+    const selRoute = filtered[selIdx ?? 0];
+    const update = () => {
+      const src = map.getSource("routes-pts");
+      if (src) src.setData({ type: "FeatureCollection", features: buildFeatures(filtered, selRoute?.id) });
+      if (selRoute && !selRoute.gpx_file) {
+        const [lng, lat] = routeCoords(selRoute);
+        map.easeTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 9), duration: 500 });
+      }
+      showGpx(selRoute);
+    };
+    if (map.isStyleLoaded()) update();
+    else map.once("load", update);
+  }, [selIdx, filtered]);
 
   return (
     <div data-no-swipe="1" style={{ flex: 1, position: "relative", overflow: "hidden" }}>
@@ -2423,22 +2362,9 @@ const RoutesClusterMap = ({ filtered, selRegion, setSelRegion, onMapReady }) => 
           background: "rgba(4,30,61,0.92)", backdropFilter: "blur(10px)", borderRadius: "20px",
           padding: "6px 16px", border: "1px solid rgba(90,152,227,0.2)", display: "flex", alignItems: "center", gap: "8px" }}>
           <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#E85D3A", animation: "pulse 1s ease infinite" }} />
-          <span style={{ fontSize: "13px", fontWeight: 600, color: "#BDD6F4", fontFamily: "'DM Sans'" }}>Loading route…</span>
+          <span style={{ fontSize: "13px", fontWeight: 600, color: "#BDD6F4", fontFamily: "'DM Sans'" }}>Loading GPX…</span>
         </div>
       )}
-      {activeGpxId && (
-        <div style={{ position: "absolute", top: 12, right: 12, zIndex: 25 }}>
-          <button onClick={() => { removeGpxFromMap(mapRef.current, activeGpxId); setActiveGpxId(null); }}
-            style={{ background: "rgba(4,30,61,0.92)", backdropFilter: "blur(10px)", border: "1px solid rgba(232,93,58,0.3)",
-              borderRadius: "20px", padding: "5px 12px", color: "#E85D3A", fontSize: "13px", fontWeight: 600,
-              cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "5px" }}>
-            <X size={11} /> Clear route
-          </button>
-        </div>
-      )}
-      {/* Pass loadRouteGpx up via a hidden div data attribute is not ideal —
-          instead RoutesPage passes it down and the panel calls it directly */}
-      <div style={{ display: "none" }} ref={el => { if (el) el._loadGpx = loadRouteGpx; }} />
     </div>
   );
 };
@@ -2501,8 +2427,11 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
   const [cf, setCf] = useState(null);
   const [df, setDf] = useState(null);
   const [showCommunity, setShowCommunity] = useState(true);
+  const [routeSearch, setRouteSearch] = useState("");
   const [subTab, setSubTab] = useState("list");
   const [selRegion, setSelRegion] = useState(null);
+  const [mapSelIdx, setMapSelIdx] = useState(0);
+  const mapCardsRef = useRef(null);
   const [showRouteDetail, setShowRouteDetail] = useState(null); // route object
   const [routeDetailCoords, setRouteDetailCoords] = useState(null);
   const [routeDetailCoordsLoading, setRouteDetailCoordsLoading] = useState(false);
@@ -2527,11 +2456,19 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
   }, [pendingRouteDetail]);
   // GPX drawing now happens on main map via openRoute prop
 
+  const routeSearchQ = routeSearch.toLowerCase().trim();
   const filtered = ROUTES.filter(r => {
     if (cf && r.cls !== cf) return false;
     if (df && r.diff !== df) return false;
     if (!showCommunity && r.src === "community") return false;
+    if (routeSearchQ && !r.name.toLowerCase().includes(routeSearchQ) &&
+      !r.peaks.some(p => p.toLowerCase().includes(routeSearchQ)) &&
+      !r.reg.toLowerCase().includes(routeSearchQ)) return false;
     return true;
+  }).sort((a, b) => {
+    if (a.src === "ts" && b.src !== "ts") return -1;
+    if (a.src !== "ts" && b.src === "ts") return 1;
+    return 0;
   });
 
   // Group filtered routes by region for map view
@@ -2681,7 +2618,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
       <div data-no-swipe="1" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: "calc(62px + env(safe-area-inset-bottom, 0px))", zIndex: 50, background: "#041e3d", display: "flex", flexDirection: "column" }}>
         {/* Back chevron */}
         <button
-          onClick={() => { setSubTab("list"); setSelRegion(null); }}
+          onClick={() => setSubTab("list")}
           style={{
             position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 12px)", left: 12, zIndex: 60,
             background: "rgba(4,30,61,0.92)", backdropFilter: "blur(12px)",
@@ -2694,47 +2631,101 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
         >
           <ChevronLeft size={16} /> Routes
         </button>
-        {/* Cluster map fills full screen */}
-        <RoutesClusterMap filtered={filtered} selRegion={selRegion} setSelRegion={setSelRegion} />
-        {/* Selected region route list */}
-        {selRegion && (
-          <div style={{
-            position: "absolute", bottom: 10, left: 10, right: 10, zIndex: 20,
-            background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)",
-            borderRadius: "14px", border: "1px solid rgba(90,152,227,0.15)",
-            animation: "su .25s ease", maxHeight: "200px", overflow: "auto"
-          }}>
-            <div style={{ height: "3px", background: "linear-gradient(90deg,#E85D3A,transparent)" }} />
-            <div style={{ padding: "10px 12px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8" }}>{selRegion.name} · {selRegion.routes.length} routes</div>
-                <button onClick={() => setSelRegion(null)} style={{ background: "#264f80", border: "none", borderRadius: "50%", width: "24px", height: "24px", cursor: "pointer", color: "#BDD6F4", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={11} /></button>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                {selRegion.routes.map((r, j) => (
-                  <div key={r.id}
-                    onClick={() => openRoute(r, "routes-map")}
+
+        {/* Map fills full screen */}
+        <RoutesClusterMap
+          filtered={filtered}
+          selIdx={mapSelIdx}
+          onSelIdx={(idx) => {
+            setMapSelIdx(idx);
+            if (mapCardsRef.current) {
+              const cardW = mapCardsRef.current.scrollWidth / Math.max(filtered.length, 1);
+              mapCardsRef.current.scrollTo({ left: cardW * idx, behavior: "smooth" });
+            }
+          }}
+        />
+
+        {/* ── Swipeable floating route cards ── */}
+        {filtered.length > 0 && (
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 20, paddingBottom: "12px" }}>
+            {/* Route count pill */}
+            <div style={{ textAlign: "center", marginBottom: "8px" }}>
+              <span style={{ fontSize: "12px", padding: "3px 10px", borderRadius: "10px", background: "rgba(4,30,61,0.85)", backdropFilter: "blur(8px)", border: "1px solid rgba(90,152,227,0.2)", color: "#BDD6F4", fontWeight: 600, fontFamily: "'DM Sans'" }}>
+                {mapSelIdx + 1} / {filtered.length}
+              </span>
+            </div>
+            <div
+              ref={mapCardsRef}
+              data-no-swipe="1"
+              onScroll={(e) => {
+                const el = e.currentTarget;
+                if (filtered.length === 0) return;
+                const cardW = el.scrollWidth / filtered.length;
+                const idx = Math.round(el.scrollLeft / cardW);
+                if (idx !== mapSelIdx) setMapSelIdx(idx);
+              }}
+              style={{
+                display: "flex", overflowX: "auto", scrollSnapType: "x mandatory",
+                scrollBehavior: "smooth", WebkitOverflowScrolling: "touch",
+                scrollbarWidth: "none", msOverflowStyle: "none",
+                gap: "10px", padding: "0 10%",
+              }}
+            >
+              {filtered.map((r, i) => {
+                const clsColor = CLS[r.cls]?.color || "#E85D3A";
+                const isSel = i === mapSelIdx;
+                return (
+                  <div
+                    key={r.id}
                     style={{
-                      display: "flex", alignItems: "center", gap: "10px",
-                      padding: "8px 10px", borderRadius: "10px",
-                      background: "#0a2240", border: "1px solid rgba(90,152,227,0.08)",
-                      animation: `fi .2s ease ${j * .04}s both`, cursor: r.gpx_file ? "pointer" : "default"
-                    }}>
-                    <Route size={14} color={CLS[r.cls]?.color} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
-                      <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{r.dist}km · {r.elev}m · {r.time}</div>
+                      flex: "0 0 80%", scrollSnapAlign: "center",
+                      background: "rgba(4,30,61,0.94)", backdropFilter: "blur(16px)",
+                      borderRadius: "16px",
+                      border: `1px solid ${isSel ? clsColor + "55" : "rgba(90,152,227,0.15)"}`,
+                      padding: "12px 14px",
+                      transition: "border-color .2s, transform .2s",
+                      transform: isSel ? "scale(1.01)" : "scale(0.97)",
+                      boxShadow: isSel ? `0 4px 20px ${clsColor}22` : "none",
+                    }}
+                  >
+                    {/* Top row: cls badge + difficulty */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                      <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "6px", background: clsColor + "22", color: clsColor, fontWeight: 700, fontFamily: "'DM Sans'" }}>{CLS[r.cls]?.name || r.cls}</span>
+                      <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "6px", background: `${dc(r.diff)}18`, color: dc(r.diff), fontWeight: 600, fontFamily: "'DM Sans'" }}>{r.diff}</span>
+                      {r.src === "community" && <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "5px", background: "rgba(90,152,227,0.12)", color: "#5A98E3", fontWeight: 600 }}>Community</span>}
                     </div>
-                    <div style={{ display: "flex", gap: "4px", flexShrink: 0, alignItems: "center" }}>
-                      <span style={{ fontSize: "11px", padding: "1px 5px", borderRadius: "4px", background: `${CLS[r.cls]?.color}15`, color: CLS[r.cls]?.color, fontWeight: 600 }}>{CLS[r.cls]?.name}</span>
-                      <span style={{ fontSize: "11px", padding: "1px 5px", borderRadius: "4px", background: `${dc(r.diff)}15`, color: dc(r.diff), fontWeight: 600 }}>{r.diff}</span>
-                      {(r.gpx_file || ROUTES.find(x => x.name === r.name && x.gpx_file)) && (
-                        <span style={{ fontSize: "11px", padding: "1px 6px", borderRadius: "4px", background: "rgba(232,93,58,0.12)", color: "#E85D3A", fontWeight: 700 }}>View →</span>
+                    {/* Route name */}
+                    <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'DM Sans'", lineHeight: 1.2, marginBottom: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
+                    <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, marginBottom: "10px" }}>{r.reg}</div>
+                    {/* Stats row */}
+                    <div style={{ display: "flex", gap: "14px", marginBottom: "10px" }}>
+                      {[["📏", `${r.dist}km`], ["⛰️", `${r.elev}m`], ["⏱️", r.time]].map(([ic, val]) => (
+                        <div key={ic} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          <span style={{ fontSize: "12px" }}>{ic}</span>
+                          <span style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Action buttons */}
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button
+                        onClick={() => setShowRouteDetail(r)}
+                        style={{ flex: 1, padding: "8px", borderRadius: "10px", border: "none", background: "#0a2240", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}
+                      >
+                        Details
+                      </button>
+                      {r.gpx_file && (
+                        <button
+                          onClick={() => openRoute(r, "routes-map")}
+                          style={{ flex: 1, padding: "8px", borderRadius: "10px", border: "none", background: `linear-gradient(135deg,${clsColor},${clsColor}bb)`, color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}
+                        >
+                          Track →
+                        </button>
                       )}
                     </div>
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -2756,6 +2747,21 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
           <Download size={15} color={subTab === "downloaded" ? "#5A98E3" : "#BDD6F4"} style={{ opacity: subTab === "downloaded" ? 1 : 0.4 }} />
         </div>
       </div>
+
+      {/* Search bar */}
+      {subTab === "list" && (
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#0a2240", borderRadius: "12px", padding: "10px 14px", border: "1px solid rgba(90,152,227,0.15)", marginBottom: "10px" }}>
+          <Search size={14} color="#BDD6F4" style={{ opacity: 0.4, flexShrink: 0 }} />
+          <input
+            type="text"
+            placeholder="Search routes, mountains, areas..."
+            value={routeSearch}
+            onChange={e => setRouteSearch(e.target.value)}
+            style={{ flex: 1, background: "none", border: "none", outline: "none", color: "#F8F8F8", fontSize: "15px", fontFamily: "'DM Sans'" }}
+          />
+          {routeSearch && <button onClick={() => setRouteSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "#BDD6F4", padding: 0, display: "flex" }}><X size={14} /></button>}
+        </div>
+      )}
 
       {/* Shared filters */}
       <div style={{ display: "flex", gap: "6px", marginBottom: "10px", flexWrap: "wrap", alignItems: "center" }}>
@@ -2986,6 +2992,8 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
 
   // Saved spots state
   const [showSpots, setShowSpots] = useState(true);
+  const [spotTypeFilter, setSpotTypeFilter] = useState(null); // null = all, otherwise spot type id
+  const [lastAddedSpot, setLastAddedSpot] = useState(null);   // for drop animation
   const [pendingSpot, setPendingSpot] = useState(null);     // { lat, lng } — set by long-press
   const [newSpotName, setNewSpotName] = useState("");
   const [newSpotType, setNewSpotType] = useState("other");
@@ -3036,6 +3044,10 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   const [trackMode, setTrackMode] = useState(false);
   const [recording, setRecording] = useState(false);
   const [statsCollapsed, setStatsCollapsed] = useState(false);
+  // Flyover mode
+  const [flyoverActive, setFlyoverActive] = useState(false);
+  const flyoverTimerRef = useRef(null);
+
   // Guided route walk state
   const [gpxRouteActive, setGpxRouteActive] = useState(false);
   const [gpxRouteCoords, setGpxRouteCoords] = useState(null); // parsed coords from GPX
@@ -3078,6 +3090,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   const [userMovedMap, setUserMovedMap] = useState(false); // mirror for re-centre button visibility
   const movingTimeRef = useRef(0);      // seconds actually moving
   const movingTimerRef = useRef(null);
+  const timerStartRef = useRef(null);   // Date.now() reference for elapsed time (accurate through backgrounding)
 
   const fp = PEAKS.filter(p => !cf || p.cls === cf);
 
@@ -3325,10 +3338,13 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     setActPhotos(0);
   };
 
-  // Timer for total elapsed time
+  // Timer — Date-based so phone lock / backgrounding doesn't lose time
   useEffect(() => {
     if (!recording) return;
-    const iv = setInterval(() => setElapsed(e => e + 1), 1000);
+    timerStartRef.current = Date.now() - elapsed * 1000;
+    const iv = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - timerStartRef.current) / 1000));
+    }, 1000);
     return () => clearInterval(iv);
   }, [recording]);
 
@@ -3520,53 +3536,59 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     };
   }, [sc, dbEvents, mapLoadedRef.current]);
 
-  // Render / refresh saved-spot markers whenever the list or visibility toggle changes
-  // Uses GeoJSON symbol layers (WebGL-rendered) so pins are perfectly geo-locked
-  // and scale smoothly with zoom rather than staying fixed pixel size.
+  // Render / refresh saved-spot markers — coloured pin heads, geo-locked symbol layer
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoadedRef.current) return;
 
     const SRC = "saved-spots-src";
     const LAYER = "saved-spots-icons";
+    const LAYER_TXT = "saved-spots-labels";
 
     const cleanup = () => {
+      if (map.getLayer(LAYER_TXT)) map.removeLayer(LAYER_TXT);
       if (map.getLayer(LAYER)) map.removeLayer(LAYER);
       if (map.getSource(SRC)) map.removeSource(SRC);
     };
     cleanup();
-    if (!showSpots || !savedSpots?.length) return;
 
-    // Register a canvas-rendered emoji image for each spot type (once per map lifetime)
-    SPOT_TYPES.forEach(({ id, emoji, color }) => {
-      const imgId = `spot-icon-${id}`;
+    const visibleSpots = (savedSpots || []).filter(s => showSpots && (!spotTypeFilter || s.type === spotTypeFilter));
+    if (!visibleSpots.length) return;
+
+    // Register pin-head canvas image for each spot type (once per map lifetime)
+    SPOT_TYPES.forEach(({ id, color }) => {
+      const imgId = `spot-pin-${id}`;
       if (map.hasImage(imgId)) return;
-      const SZ = 64;
+      const W = 28, H = 40;
       const canvas = document.createElement("canvas");
-      canvas.width = SZ; canvas.height = SZ;
+      canvas.width = W; canvas.height = H;
       const ctx = canvas.getContext("2d");
-      // Coloured ring background
+      const r = W / 2 - 1;
+      const cx = W / 2, cy = r + 1;
+      // Teardrop body
       ctx.beginPath();
-      ctx.arc(SZ / 2, SZ / 2, SZ / 2 - 3, 0, Math.PI * 2);
-      ctx.fillStyle = color + "30";
+      ctx.arc(cx, cy, r, Math.PI * 0.2, Math.PI * 0.8, true);
+      ctx.lineTo(cx, H - 2);
+      ctx.closePath();
+      ctx.fillStyle = color;
       ctx.fill();
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = "rgba(255,255,255,0.6)";
+      ctx.lineWidth = 1.5;
       ctx.stroke();
-      // Emoji centred inside
-      ctx.font = `${Math.round(SZ * 0.44)}px serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(emoji, SZ / 2, SZ / 2 + 1);
-      const { data } = ctx.getImageData(0, 0, SZ, SZ);
-      map.addImage(imgId, { width: SZ, height: SZ, data });
+      // White inner dot
+      ctx.beginPath();
+      ctx.arc(cx, cy, r * 0.38, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      ctx.fill();
+      const { data } = ctx.getImageData(0, 0, W, H);
+      map.addImage(imgId, { width: W, height: H, data });
     });
 
     map.addSource(SRC, {
       type: "geojson",
       data: {
         type: "FeatureCollection",
-        features: savedSpots.map(spot => ({
+        features: visibleSpots.map(spot => ({
           type: "Feature",
           geometry: { type: "Point", coordinates: [spot.lng, spot.lat] },
           properties: { ...spot, _json: JSON.stringify(spot) },
@@ -3579,23 +3601,23 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       type: "symbol",
       source: SRC,
       layout: {
-        // Icon scales from tiny (zoomed out) to full size (zoomed in)
-        "icon-image": ["concat", "spot-icon-", ["get", "type"]],
-        "icon-size": ["interpolate", ["linear"], ["zoom"],
-          4, 0.15,
-          8, 0.28,
-          10, 0.42,
-          12, 0.58,
-          14, 0.78,
-          16, 1.0,
-        ],
+        "icon-image": ["concat", "spot-pin-", ["get", "type"]],
+        "icon-size": ["interpolate", ["linear"], ["zoom"], 4, 0.3, 10, 0.6, 14, 0.9, 16, 1.1],
         "icon-allow-overlap": true,
         "icon-ignore-placement": true,
-        // Name label fades in when zoomed in enough
+        "icon-anchor": "bottom",
+      },
+    });
+
+    map.addLayer({
+      id: LAYER_TXT,
+      type: "symbol",
+      source: SRC,
+      layout: {
         "text-field": ["get", "name"],
         "text-optional": true,
         "text-size": 11,
-        "text-offset": [0, 1.5],
+        "text-offset": [0, 0.3],
         "text-anchor": "top",
         "text-max-width": 9,
         "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Regular"],
@@ -3604,7 +3626,6 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
         "text-color": "#F8F8F8",
         "text-halo-color": "rgba(4,30,61,0.95)",
         "text-halo-width": 2,
-        // Label only visible at zoom 13+
         "text-opacity": ["interpolate", ["linear"], ["zoom"], 12.5, 0, 13.5, 1],
       },
     });
@@ -3620,7 +3641,23 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       map.off("click", LAYER, onClick);
       cleanup();
     };
-  }, [savedSpots, showSpots, mapLoadedRef.current]);
+  }, [savedSpots, showSpots, spotTypeFilter, mapLoadedRef.current]);
+
+  // Drop animation for newly added spots
+  useEffect(() => {
+    if (!lastAddedSpot || !mapRef.current) return;
+    import("mapbox-gl").then(mod => {
+      const mapboxgl = mod.default;
+      const el = document.createElement("div");
+      el.style.cssText = `width:28px;height:40px;animation:spotDrop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;pointer-events:none`;
+      const spot = SPOT_TYPES.find(s => s.id === lastAddedSpot.type) || SPOT_TYPES[SPOT_TYPES.length - 1];
+      el.innerHTML = `<svg width="28" height="40" viewBox="0 0 28 40"><path d="M14 1 A13 13 0 0 1 27 14 Q27 22 14 38 Q1 22 1 14 A13 13 0 0 1 14 1Z" fill="${spot.color}" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/><circle cx="14" cy="14" r="5" fill="rgba(255,255,255,0.85)"/></svg>`;
+      const marker = new mapboxgl.Marker({ element: el, anchor: "bottom" })
+        .setLngLat([lastAddedSpot.lng, lastAddedSpot.lat])
+        .addTo(mapRef.current);
+      setTimeout(() => { try { marker.remove(); } catch (_) {} setLastAddedSpot(null); }, 600);
+    });
+  }, [lastAddedSpot]);
 
   // Draw GPX route when gpxRoute prop is set (or changes)
   useEffect(() => {
@@ -3657,11 +3694,12 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     tryDraw();
   }, [gpxRoute]);
 
-  // Clear GPX when gpxRoute is dismissed
+  // Clear GPX when gpxRoute is dismissed; stop flyover too
   useEffect(() => {
-    if (!gpxRoute && mapGpxIdRef.current && mapRef.current) {
-      removeGpxFromMap(mapRef.current, mapGpxIdRef.current);
-      mapGpxIdRef.current = null;
+    if (!gpxRoute) {
+      if (mapGpxIdRef.current && mapRef.current) { removeGpxFromMap(mapRef.current, mapGpxIdRef.current); mapGpxIdRef.current = null; }
+      if (flyoverTimerRef.current) { clearTimeout(flyoverTimerRef.current); flyoverTimerRef.current = null; }
+      setFlyoverActive(false);
     }
   }, [gpxRoute]);
 
@@ -3910,11 +3948,10 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     // Fetch Open-Meteo for start point with hourly forecast
     const startLat = gpxRouteCoords[0][1];
     const startLng = gpxRouteCoords[0][0];
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${startLat}&longitude=${startLng}&hourly=temperature_2m,precipitation_probability,windspeed_10m,weathercode&wind_speed_unit=kmh&timezone=Europe%2FLondon&forecast_days=2`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${startLat}&longitude=${startLng}&hourly=temperature_2m,precipitation_probability,windspeed_10m,weathercode&wind_speed_unit=kmh&timezone=UTC&forecast_days=2`;
 
     fetch(url).then(r => r.json()).then(data => {
       const hours = data.hourly;
-      const nowHour = now.getHours();
       const wxMap = {};
       hours.time.forEach((t, i) => { wxMap[t] = { temp: hours.temperature_2m[i], precip: hours.precipitation_probability[i], wind: hours.windspeed_10m[i], code: hours.weathercode[i] }; });
 
@@ -4027,13 +4064,15 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       {/* Real Mapbox Map */}
       <div ref={mapContainer} style={{ position: "absolute", inset: 0 }} />
 
-      {/* Re-centre button — top-right, always visible during tracking */}
-      {recording && (
+      {/* Re-centre button — visible whenever user has panned away */}
+      {userMovedMap && (
         <button
           onClick={() => {
-            const lastPt = trackPointsRef.current[trackPointsRef.current.length - 1];
-            if (lastPt && mapRef.current) {
-              mapRef.current.flyTo({ center: [lastPt.lng, lastPt.lat], duration: 600 });
+            if (recording) {
+              const lastPt = trackPointsRef.current[trackPointsRef.current.length - 1];
+              if (lastPt && mapRef.current) mapRef.current.flyTo({ center: [lastPt.lng, lastPt.lat], duration: 600 });
+            } else {
+              try { geolocateRef.current?.trigger(); } catch (_) {}
             }
             userMovedMapRef.current = false;
             setUserMovedMap(false);
@@ -4121,6 +4160,16 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
         </div>
       </div>
 
+      {/* Spot type filter pills — shown when saved spots are visible */}
+      {showSpots && savedSpots?.length > 0 && (
+        <div style={{ position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 56px)", left: 10, right: 10, zIndex: 19, display: "flex", gap: "6px", overflowX: "auto", scrollbarWidth: "none", pointerEvents: "auto" }}>
+          <button onClick={() => setSpotTypeFilter(null)} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: "14px", border: "none", background: !spotTypeFilter ? "rgba(107,203,119,0.9)" : "rgba(4,30,61,0.85)", color: !spotTypeFilter ? "#041e3d" : "#BDD6F4", fontSize: "12px", fontWeight: 700, cursor: "pointer", backdropFilter: "blur(8px)", fontFamily: "'DM Sans'" }}>All</button>
+          {SPOT_TYPES.map(({ id, label, color }) => (
+            <button key={id} onClick={() => setSpotTypeFilter(spotTypeFilter === id ? null : id)} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: "14px", border: "none", background: spotTypeFilter === id ? color : "rgba(4,30,61,0.85)", color: spotTypeFilter === id ? "#fff" : "#BDD6F4", fontSize: "12px", fontWeight: 700, cursor: "pointer", backdropFilter: "blur(8px)", fontFamily: "'DM Sans'" }}>{label}</button>
+          ))}
+        </div>
+      )}
+
       {/* Unsure prompt */}
       {wo && <div onClick={goHome} style={{ position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 56px)", left: "50%", transform: "translateX(-50%)", background: "rgba(232,93,58,.92)", backdropFilter: "blur(8px)", borderRadius: "20px", padding: "7px 18px", zIndex: 20, display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", animation: "fi .4s ease", border: "1px solid rgba(248,248,248,.15)" }}><span style={{ fontSize: "14px", color: "#F8F8F8", fontWeight: 600 }}>Unsure where to go?</span><ArrowRight size={14} color="#F8F8F8" /></div>}
 
@@ -4149,7 +4198,57 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                 </div>
               </div>
             )}
-            {gpxRoute && !gpxRouteActive && (
+            {gpxRoute && !gpxRouteActive && gpxRouteCoords && !flyoverActive && (
+              <button onClick={() => {
+                const coords = gpxRouteCoords;
+                const map = mapRef.current;
+                if (!map || coords.length < 2) return;
+                setFlyoverActive(true);
+                map.easeTo({ pitch: 60, zoom: 13, duration: 1200 });
+
+                const getBearing = (a, b) => {
+                  const toRad = x => x * Math.PI / 180;
+                  const dLng = toRad(b[0] - a[0]);
+                  const y = Math.sin(dLng) * Math.cos(toRad(b[1]));
+                  const x = Math.cos(toRad(a[1])) * Math.sin(toRad(b[1])) - Math.sin(toRad(a[1])) * Math.cos(toRad(b[1])) * Math.cos(dLng);
+                  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+                };
+                const lerp = (a, b, t) => [a[0] * (1 - t) + b[0] * t, a[1] * (1 - t) + b[1] * t];
+                const getCoord = (frac) => {
+                  const pos = frac * (coords.length - 1);
+                  const lo = Math.floor(pos), hi = Math.min(Math.ceil(pos), coords.length - 1);
+                  return lerp(coords[lo], coords[hi], pos - lo);
+                };
+
+                const STEPS = 30, STEP_MS = 3200;
+                let step = 0;
+                const fly = () => {
+                  if (step >= STEPS) { setFlyoverActive(false); map.easeTo({ pitch: 0, duration: 1000 }); return; }
+                  const frac = step / STEPS;
+                  const c = getCoord(frac);
+                  const cNext = getCoord(Math.min(1, (step + 1) / STEPS));
+                  const bearing = getBearing(c, cNext);
+                  const pitch = 55 + Math.sin(frac * Math.PI) * 15;
+                  const zoom = 12.5 + Math.sin(frac * Math.PI * 2) * 0.8;
+                  map.easeTo({ center: [c[0], c[1]], bearing, pitch, zoom, duration: STEP_MS, easing: t => t });
+                  step++;
+                  flyoverTimerRef.current = setTimeout(fly, STEP_MS * 0.85);
+                };
+                flyoverTimerRef.current = setTimeout(fly, 1300);
+              }} style={{ padding: "7px 12px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.3)", background: "rgba(90,152,227,0.12)", color: "#5A98E3", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", flexShrink: 0, display: "flex", alignItems: "center", gap: "5px" }}>
+                ✈ Flyover
+              </button>
+            )}
+            {flyoverActive && (
+              <button onClick={() => {
+                setFlyoverActive(false);
+                if (flyoverTimerRef.current) { clearTimeout(flyoverTimerRef.current); flyoverTimerRef.current = null; }
+                mapRef.current?.easeTo({ pitch: 0, duration: 800 });
+              }} style={{ padding: "7px 12px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.35)", background: "rgba(90,152,227,0.18)", color: "#5A98E3", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", flexShrink: 0 }}>
+                ✕ Stop
+              </button>
+            )}
+            {gpxRoute && !gpxRouteActive && !flyoverActive && (
               <button onClick={() => setGpxRouteActive(true)} style={{ padding: "7px 14px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", flexShrink: 0, display: "flex", alignItems: "center", gap: "6px" }}>
                 <Play size={12} /> Start
               </button>
@@ -4572,7 +4671,9 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
             <button disabled={!newSpotName.trim() || savingSpot} onClick={async () => {
               if (!newSpotName.trim() || savingSpot) return;
               setSavingSpot(true);
-              await onAddSpot?.({ lat: pendingSpot.lat, lng: pendingSpot.lng, type: newSpotType, name: newSpotName.trim(), notes: newSpotNotes.trim() });
+              const spotData = { lat: pendingSpot.lat, lng: pendingSpot.lng, type: newSpotType, name: newSpotName.trim(), notes: newSpotNotes.trim() };
+              setLastAddedSpot(spotData);
+              await onAddSpot?.(spotData);
               setPendingSpot(null); setNewSpotName(""); setNewSpotType("other"); setNewSpotNotes(""); setSavingSpot(false);
             }} style={{ flex: 2, padding: "11px", borderRadius: "12px", border: "none", background: newSpotName.trim() ? "linear-gradient(135deg,#6BCB77,#55a866)" : "#264f80", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: newSpotName.trim() ? "pointer" : "default", fontFamily: "'DM Sans'", opacity: newSpotName.trim() ? 1 : 0.5, transition: "all .2s" }}>
               {savingSpot ? "Saving…" : "Save Spot"}
