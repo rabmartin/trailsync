@@ -3742,11 +3742,16 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     };
 
     // Native touchend — resolve final lngLat from clientX/Y via unproject
-    const onNativeEnd = () => {
+    const onNativeEnd = (e) => {
       if (isDraggingGhost) {
         isDraggingGhost = false;
         map.dragPan.enable();
         removeGhost();
+        // changedTouches gives the most accurate final finger position at release
+        if (e?.changedTouches?.length > 0) {
+          const t = e.changedTouches[0];
+          fingerPos = { x: t.clientX, y: t.clientY };
+        }
         const rect = canvas.getBoundingClientRect();
         const lngLat = map.unproject([fingerPos.x - rect.left, fingerPos.y - rect.top]);
         setPendingSpot({ lat: lngLat.lat, lng: lngLat.lng });
@@ -4598,7 +4603,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       {/* Spot type filter pills — shown when saved spots are visible */}
       {(showSpots || savedSpots?.length > 0) && !flyoverActive && (
         <div style={{ position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 56px)", left: 10, right: 10, zIndex: 19, display: "flex", gap: "6px", overflowX: "auto", scrollbarWidth: "none", pointerEvents: "auto" }}>
-          <button onClick={() => { setShowSpots(true); setSpotTypeFilter(null); }} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: "14px", border: "none", background: showSpots && !spotTypeFilter ? "rgba(107,203,119,0.9)" : "rgba(4,30,61,0.85)", color: showSpots && !spotTypeFilter ? "#041e3d" : "#BDD6F4", fontSize: "12px", fontWeight: 700, cursor: "pointer", backdropFilter: "blur(8px)", fontFamily: "'DM Sans'" }}>All</button>
+          <button onClick={() => { if (showSpots && !spotTypeFilter) { setShowSpots(false); } else { setShowSpots(true); setSpotTypeFilter(null); } }} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: "14px", border: "none", background: showSpots && !spotTypeFilter ? "rgba(107,203,119,0.9)" : "rgba(4,30,61,0.85)", color: showSpots && !spotTypeFilter ? "#041e3d" : "#BDD6F4", fontSize: "12px", fontWeight: 700, cursor: "pointer", backdropFilter: "blur(8px)", fontFamily: "'DM Sans'" }}>All</button>
           {SPOT_TYPES.map(({ id, label, color }) => (
             <button key={id} onClick={() => { if (showSpots && spotTypeFilter === id) { setShowSpots(false); setSpotTypeFilter(null); } else { setShowSpots(true); setSpotTypeFilter(id); } }} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: "14px", border: "none", background: showSpots && spotTypeFilter === id ? color : "rgba(4,30,61,0.85)", color: showSpots && spotTypeFilter === id ? "#fff" : "#BDD6F4", fontSize: "12px", fontWeight: 700, cursor: "pointer", backdropFilter: "blur(8px)", fontFamily: "'DM Sans'" }}>{label}</button>
           ))}
