@@ -2399,11 +2399,31 @@ const RoutesClusterMap = ({ filtered, selIdx, onSelIdx }) => {
       geometry: { type: "Point", coordinates: routeCoords(r) },
     }));
 
+  // Map-optimised colors — avoid green (invisible on outdoors basemap)
+  const MAP_CLR = {
+    munros: "#E85D3A", "munro-tops": "#E85D3A",
+    corbetts: "#F49D37", grahams: "#F0C040", donalds: "#F0C040",
+    wainwrights: "#C084E8", hewitts: "#5A98E3", nuttalls: "#5A98E3",
+    furths: "#5A98E3", "non-mountain": "#F0C040", "sub2000": "#88C0D0",
+  };
+  // Selected = lighter/whiter version of same hue
+  const MAP_SEL_CLR = {
+    munros: "#FFA07A", "munro-tops": "#FFA07A",
+    corbetts: "#FFC87A", grahams: "#FFE080", donalds: "#FFE080",
+    wainwrights: "#DBA8F5", hewitts: "#90C0F8", nuttalls: "#90C0F8",
+    furths: "#90C0F8", "non-mountain": "#FFE080", "sub2000": "#B8DCE8",
+  };
+
   const buildLineFeatures = (routes, selId) => routes
     .filter(r => ROUTE_COORDS[r.id])
     .map(r => ({
       type: "Feature",
-      properties: { id: r.id, color: CLS[r.cls]?.color || "#E85D3A", selected: r.id === selId },
+      properties: {
+        id: r.id,
+        color: MAP_CLR[r.cls] || "#E85D3A",
+        selColor: MAP_SEL_CLR[r.cls] || "#FFA07A",
+        selected: r.id === selId,
+      },
       geometry: { type: "LineString", coordinates: ROUTE_COORDS[r.id] },
     }));
 
@@ -2440,13 +2460,13 @@ const RoutesClusterMap = ({ filtered, selIdx, onSelIdx }) => {
           // Dim lines for unselected routes
           map.addLayer({ id: "routes-lines-bg", type: "line", source: "routes-lines",
             layout: { "line-join": "round", "line-cap": "round" },
-            paint: { "line-color": ["get", "color"], "line-width": 2.5, "line-opacity": ["case", ["==", ["get", "selected"], true], 0, 0.38] }
+            paint: { "line-color": ["get", "color"], "line-width": 3, "line-opacity": ["case", ["==", ["get", "selected"], true], 0, 0.82] }
           });
           // Bright thick line for selected route
           map.addLayer({ id: "routes-lines-sel", type: "line", source: "routes-lines",
             filter: ["==", ["get", "selected"], true],
             layout: { "line-join": "round", "line-cap": "round" },
-            paint: { "line-color": ["get", "color"], "line-width": 5, "line-opacity": 0.95 }
+            paint: { "line-color": ["get", "selColor"], "line-width": 5.5, "line-opacity": 0.97 }
           });
           map.on("click", "routes-lines-bg", (e) => {
             const id = e.features[0].properties.id;
