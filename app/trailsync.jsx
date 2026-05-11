@@ -14,6 +14,9 @@ import {
 } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import { useState, useEffect, useRef, useMemo } from "react";
+import posthog from "posthog-js";
+import { App as CapApp } from "@capacitor/app";
+import { Network } from "@capacitor/network";
 
 /* Supabase client */
 // Safari-safe in-memory storage fallback
@@ -294,6 +297,41 @@ const PEAKS_FALLBACK = [
 ];
 // PEAKS will be populated from Supabase in the main app component
 let PEAKS = PEAKS_FALLBACK;
+
+// ── Hardwired route photos — drop images into public/route-photos/ ────────────
+// Keys are route IDs. Add as many paths per route as you like for the carousel.
+const ROUTE_PHOTOS = {
+  1:  ["/route-photos/1-1.jpg", "/route-photos/1-2.jpg"],
+  2:  ["/route-photos/2-1.jpg"],
+  3:  ["/route-photos/3-1.jpg"],
+  4:  ["/route-photos/4-1.jpg"],
+  5:  ["/route-photos/5-1.jpg"],
+  6:  ["/route-photos/6-1.jpg"],
+  7:  ["/route-photos/7-1.jpg"],
+  8:  ["/route-photos/8-1.jpg"],
+  9:  ["/route-photos/9-1.jpg"],
+  10: ["/route-photos/10-1.jpg"],
+};
+
+// ── Hardwired weather-region photos — drop images into public/wx-photos/ ──────
+const REGION_PHOTOS = {
+  "Ben Nevis & Mamores":        "/wx-photos/ben-nevis.jpg",
+  "Loch Lomond & Trossachs":    "/wx-photos/loch-lomond.jpg",
+  "Arrochar Alps":              "/wx-photos/arrochar.jpg",
+  "Southern Highlands":         "/wx-photos/southern-highlands.jpg",
+  "Cairngorms":                 "/wx-photos/cairngorms.jpg",
+  "Glen Coe":                   "/wx-photos/glencoe.jpg",
+  "Torridon":                   "/wx-photos/torridon.jpg",
+  "Isle of Skye":               "/wx-photos/skye.jpg",
+  "Assynt & Far North":         "/wx-photos/assynt.jpg",
+  "Breadalbane":                "/wx-photos/breadalbane.jpg",
+};
+
+function useRoutePhotos(routeId) {
+  const photos = routeId != null ? (ROUTE_PHOTOS[routeId] || []) : [];
+  return { photos };
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 // ROUTES populated from Supabase on mount; fallback hardcoded data kept as default
 let ROUTES = [
@@ -843,6 +881,7 @@ const UsernamePrompt = ({ onDone, fullName }) => {
       await supabase.auth.updateUser({ data: { ...user.user_metadata, username } });
       await supabase.from("profiles").upsert({ id: user.id, username, full_name: user.user_metadata?.full_name, location: user.user_metadata?.location }, { onConflict: "id" });
     }
+    posthog.capture("username_saved");
     onDone(username);
   };
 
@@ -906,6 +945,7 @@ const LoginScreen = ({ onLogin, onGoSignup }) => {
   const [error, setError] = useState("");
 
   const handleGoogleLogin = async () => {
+    posthog.capture("google_login_attempted");
     setOauthLoading("google");
     setError("");
     const { error: authError } = await supabase.auth.signInWithOAuth({
@@ -929,7 +969,7 @@ const LoginScreen = ({ onLogin, onGoSignup }) => {
         setError(msg);
         return;
       }
-      if (data?.user) onLogin(data.user);
+      if (data?.user) { posthog.identify(data.user.id); onLogin(data.user); }
     } catch (e) {
       setError(typeof e?.message === "string" ? e.message : "Something went wrong. Please try again.");
     } finally {
@@ -988,7 +1028,7 @@ const LoginScreen = ({ onLogin, onGoSignup }) => {
             });
             setLoading(false);
             if (resetError) setError(resetError.message || "Could not send reset email.");
-            else setError("✓ Password reset email sent — check your inbox.");
+            else { posthog.capture("password_reset_requested"); setError("✓ Password reset email sent — check your inbox."); }
           }} style={{ fontSize: "14px", color: "#BDD6F4", cursor: "pointer", opacity: 0.6 }}>
             Forgot password?
           </span>
@@ -1054,6 +1094,8 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
         // Supabase may require email confirmation — check
         if (data.session) {
           // Logged in immediately — no email confirmation required
+          posthog.identify(data.user.id);
+          posthog.capture("user_signed_up", { method: "email" });
           onSignup(name, username);
         } else {
           // Email confirmation sent
@@ -1288,6 +1330,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   const handleLike = async (postId) => {
     if (!userId) return;
     const liked = likedPosts.has(postId);
+    if (!liked) posthog.capture("post_liked", { post_id: postId });
     // Optimistic update — flips heart and adjusts count immediately
     setLikedPosts(prev => {
       const next = new Set(prev);
@@ -1326,6 +1369,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
     if (!isFollowing) {
       setFollowingCount && setFollowingCount(c => c + 1);
       await supabase.from("follows").upsert({ follower_id: userId, following_id: targetId }, { onConflict: "follower_id,following_id" });
+      posthog.capture("user_followed", { target_id: targetId });
     } else {
       setFollowingCount && setFollowingCount(c => Math.max(0, c - 1));
       await supabase.from("follows").delete().eq("follower_id", userId).eq("following_id", targetId);
@@ -1545,6 +1589,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                   const meta = user.user_metadata || {};
                   const newPost = { user_id: user.id, username: meta.username || meta.full_name?.split(" ")[0] || null, full_name: meta.full_name || null, type: "summit", text: feedPostText.trim(), peaks: [] };
                   await supabase.from("posts").insert(newPost);
+                  posthog.capture("post_created", { post_type: "summit", source: "feed" });
                   setLivePosts(prev => [{ id: Date.now(), user: meta.username || meta.full_name?.split(" ")[0] || userName, av: (userName||"U")[0].toUpperCase(), time: "just now", type: "summit", text: feedPostText.trim(), likes: 0, comments: 0, peaks: [], user_id: user.id }, ...prev]);
                 }
                 setFeedPostText(""); setFeedPostOpen(false); setFeedPosting(false);
@@ -1749,11 +1794,19 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                   ? "linear-gradient(135deg, #0d3320, #1a4a2a)"
                   : "linear-gradient(135deg, #0d2d54, #1a3a6a)";
                 const rankColor = a.score >= 85 ? "#6BCB77" : a.score >= 70 ? "#EBCB8B" : "#E85D3A";
+                const regionPhoto = REGION_PHOTOS[a.region];
+                const overlayGrad = a.score >= 85
+                  ? "linear-gradient(to bottom, rgba(13,51,32,0.52), rgba(13,51,32,0.82))"
+                  : "linear-gradient(to bottom, rgba(13,45,84,0.52), rgba(13,45,84,0.82))";
 
                 return (
                   <div key={i} style={{
                     scrollSnapAlign: "center", flex: "0 0 95%", marginRight: i < sorted.length - 1 ? "8px" : "0",
-                    background: cardBg, borderRadius: "14px",
+                    background: regionPhoto ? undefined : cardBg,
+                    backgroundImage: regionPhoto ? `${overlayGrad}, url(${regionPhoto})` : undefined,
+                    backgroundSize: regionPhoto ? "cover" : undefined,
+                    backgroundPosition: regionPhoto ? "center" : undefined,
+                    borderRadius: "14px",
                     border: `1px solid ${a.score >= 85 ? "rgba(107,203,119,0.2)" : "rgba(90,152,227,0.2)"}`,
                     padding: "10px 12px", animation: `fi .3s ease ${i * .04}s both`,
                     opacity: a.loading ? 0.6 : 1, display: "flex", flexDirection: "column", alignItems: "center"
@@ -2104,7 +2157,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
 
       {/* Feed toggle */}
       <div style={{ textAlign: "center", marginBottom: "16px", animation: "su .4s ease .3s both" }}>
-        <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.35, marginBottom: "8px", fontWeight: 700, letterSpacing: "1px" }}>FEED</div>
+        <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.85, marginBottom: "8px", fontWeight: 800, letterSpacing: "1.5px" }}>FEED</div>
         <div style={{ display: "inline-flex", background: "#0a2240", borderRadius: "22px", padding: "3px", border: "1px solid rgba(90,152,227,0.15)" }}>
           {[["all", "For you"], ["following", "Following"], ["trending", "Trending"]].map(([val, label]) => (
             <button key={val} onClick={() => setFf(val)} style={{
@@ -2162,6 +2215,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                 setRepostingId(p.id);
                 const txt = `🔁 @${p.user}: ${p.text.slice(0, 120)}${p.text.length > 120 ? "…" : ""}`;
                 await supabase.from("posts").insert({ user_id: userId, username: userName, type: "repost", text: txt, likes: 0 });
+                posthog.capture("post_reposted", { original_post_id: p.id, original_author: p.user });
                 setRepostingId(null);
                 fetchPosts();
               }} style={{ background: "none", border: "none", color: repostingId === p.id ? "#5A98E3" : "#BDD6F4", opacity: repostingId === p.id ? 1 : 0.5, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}>
@@ -2203,6 +2257,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                         setCommentText("");
                         const { error } = await supabase.from("post_comments").insert({ post_id: p.id, user_id: userId, username: userName, text: txt });
                         if (error) { console.error("Comment insert error:", JSON.stringify(error)); setCommentText(txt); return; }
+                        posthog.capture("comment_posted", { post_id: p.id });
                         fetchComments(p.id);
                       }
                     }}
@@ -2216,6 +2271,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
                     setCommentText("");
                     const { error } = await supabase.from("post_comments").insert({ post_id: p.id, user_id: userId, username: userName, text: txt });
                     if (error) { console.error("Comment insert error:", JSON.stringify(error)); setCommentText(txt); return; }
+                    posthog.capture("comment_posted", { post_id: p.id });
                     fetchComments(p.id);
                   }} style={{ padding: "8px 14px", borderRadius: "20px", border: "none", background: "linear-gradient(135deg,#5A98E3,#264f80)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", flexShrink: 0 }}>Post</button>
                 </div>
@@ -2246,6 +2302,76 @@ const ROUTE_REGIONS = [
   { name: "Galloway Hills", lat: 55.15, lng: -4.62, routes: [] },
   { name: "Kintail", lat: 57.1987, lng: -5.3487, routes: [] },
 ];
+
+/* ═══════════════════════════════════════════════════════════════════
+   ROUTE PHOTO CAROUSEL
+   ═══════════════════════════════════════════════════════════════════ */
+const RoutePhotoCarousel = ({ photos, height = 240, autoAdvance = true }) => {
+  const [idx, setIdx] = useState(0);
+  const [dragStartX, setDragStartX] = useState(null);
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    if (!autoAdvance || photos.length < 2) return;
+    timerRef.current = setInterval(() => setIdx(i => (i + 1) % photos.length), 4000);
+    return () => clearInterval(timerRef.current);
+  }, [photos.length, autoAdvance]);
+
+  useEffect(() => { setIdx(0); }, [photos]);
+
+  const prev = () => { clearInterval(timerRef.current); setIdx(i => (i - 1 + photos.length) % photos.length); };
+  const next = () => { clearInterval(timerRef.current); setIdx(i => (i + 1) % photos.length); };
+
+  const onTouchStart = (e) => setDragStartX(e.touches[0].clientX);
+  const onTouchEnd = (e) => {
+    if (dragStartX === null) return;
+    const dx = e.changedTouches[0].clientX - dragStartX;
+    if (Math.abs(dx) > 40) dx < 0 ? next() : prev();
+    setDragStartX(null);
+  };
+
+  if (photos.length === 0) {
+    return (
+      <div style={{ height, background: "linear-gradient(160deg,#0d2d54 0%,#1a4a7a 40%,#264f80 100%)", position: "relative" }}>
+        <svg viewBox="0 0 400 120" style={{ position: "absolute", bottom: 0, left: 0, right: 0, width: "100%", opacity: 0.12 }} preserveAspectRatio="none">
+          <path d="M0 120 L60 60 L110 90 L180 20 L240 70 L290 40 L350 80 L400 50 L400 120Z" fill="#5A98E3" />
+        </svg>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ height, position: "relative", overflow: "hidden", background: "#000" }}
+      onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      {photos.map((src, i) => (
+        <img key={i} src={src} alt="" style={{
+          position: "absolute", inset: 0, width: "100%", height: "100%",
+          objectFit: "cover", transition: "opacity 0.6s ease",
+          opacity: i === idx ? 1 : 0, pointerEvents: "none"
+        }} />
+      ))}
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(4,30,61,0.25) 0%, transparent 40%, rgba(4,30,61,0.75) 100%)", pointerEvents: "none" }} />
+      {photos.length > 1 && (
+        <div style={{ position: "absolute", bottom: 10, left: 0, right: 0, display: "flex", justifyContent: "center", gap: "5px", zIndex: 3 }}>
+          {photos.map((_, i) => (
+            <button key={i} onClick={() => { clearInterval(timerRef.current); setIdx(i); }}
+              style={{ width: i === idx ? 18 : 6, height: 6, borderRadius: 3, background: i === idx ? "#F8F8F8" : "rgba(255,255,255,0.4)", border: "none", cursor: "pointer", padding: 0, transition: "width 0.25s ease" }} />
+          ))}
+        </div>
+      )}
+      {photos.length > 1 && (
+        <>
+          <button onClick={prev} style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", zIndex: 3, background: "rgba(4,30,61,0.5)", border: "none", borderRadius: "50%", width: 32, height: 32, cursor: "pointer", color: "#F8F8F8", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <button onClick={next} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", zIndex: 3, background: "rgba(4,30,61,0.5)", border: "none", borderRadius: "50%", width: 32, height: 32, cursor: "pointer", color: "#F8F8F8", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </>
+      )}
+    </div>
+  );
+};
 
 /* ═══════════════════════════════════════════════════════════════════
    ROUTES MAP — colored markers per route, GPX overlay on selection
@@ -2423,6 +2549,81 @@ const ROUTE_EXTRA = {
 };
 const ROUTE_EXTRA_DEFAULT = { terrain: ["Mountain Path","Open Hillside"], description: "A classic Scottish mountain route. Always check conditions before heading out and carry full navigation equipment. Weather can change rapidly in the Scottish Highlands year-round.", history: "Scotland's mountains have a rich history of exploration, farming, and Highland culture. Many summits were first climbed in the Victorian era during the golden age of Scottish mountaineering.", flora: "Scottish uplands support rare habitats including blanket bog, montane heath, and arctic-alpine plant communities. Red deer, mountain hare, ptarmigan, and golden eagle are frequent companions." };
 
+const RouteListCard = ({ r, i, onSelect }) => {
+  const { photos } = useRoutePhotos(r.id);
+  const heroPhoto = photos[0] || null;
+  return (
+    <div
+      onClick={() => onSelect(r)}
+      style={{
+        borderRadius: "14px",
+        border: "1px solid rgba(90,152,227,0.1)",
+        cursor: "pointer",
+        animation: `fi .3s ease ${i * .04}s both`,
+        overflow: "hidden",
+        position: "relative",
+        background: "#0a2240",
+      }}
+    >
+      {/* Photo banner — only when a photo exists */}
+      {heroPhoto && (
+        <div style={{ position: "relative", height: 110, overflow: "hidden" }}>
+          <img src={heroPhoto} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(4,30,61,0.1) 0%, rgba(4,30,61,0.85) 100%)" }} />
+          {/* Name overlay on photo */}
+          <div style={{ position: "absolute", bottom: 10, left: 14, right: 14 }}>
+            <div style={{ fontSize: "17px", fontWeight: 800, color: "#F8F8F8", lineHeight: 1.2, fontFamily: "'DM Sans',sans-serif", textShadow: "0 2px 6px rgba(0,0,0,0.6)" }}>{r.name}</div>
+          </div>
+        </div>
+      )}
+      {/* Card body */}
+      <div style={{ padding: "12px 14px" }}>
+        {!heroPhoto && (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "8px" }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: "18px", fontWeight: 800, color: "#F8F8F8", lineHeight: 1.2, fontFamily: "'DM Sans',sans-serif" }}>{r.name}</div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+              {(r.gpx_file || ROUTES.find(x => x.name === r.name && x.gpx_file)) && (
+                <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "8px", background: "rgba(232,93,58,0.12)", color: "#E85D3A", fontWeight: 700 }}>View on map →</span>
+              )}
+              <Star size={12} color="#EBCB8B" fill="#EBCB8B" />
+              <span style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{r.rat}</span>
+              <span style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>({r.rev})</span>
+            </div>
+          </div>
+        )}
+        {heroPhoto && (
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0, marginBottom: "8px" }}>
+            <Star size={12} color="#EBCB8B" fill="#EBCB8B" />
+            <span style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{r.rat}</span>
+            <span style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>({r.rev})</span>
+          </div>
+        )}
+        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
+          <span style={{ fontSize: "12px", padding: "2px 8px", borderRadius: "8px", background: `${CLS[r.cls]?.color}15`, color: CLS[r.cls]?.color, fontWeight: 600 }}>{CLS[r.cls]?.name}</span>
+          <span style={{ fontSize: "12px", padding: "2px 8px", borderRadius: "8px", background: `${dc(r.diff)}18`, color: dc(r.diff), fontWeight: 600 }}>{r.diff}</span>
+          {r.src === "ts" ? (
+            <span style={{ fontSize: "12px", padding: "2px 8px", borderRadius: "8px", background: "rgba(90,152,227,0.1)", color: "#5A98E3", fontWeight: 600 }}>✓ Verified</span>
+          ) : (
+            <span style={{ fontSize: "12px", padding: "2px 8px", borderRadius: "8px", background: "rgba(244,157,55,0.1)", color: "#F49D37", fontWeight: 600 }}>Community</span>
+          )}
+        </div>
+        <div style={{ display: "flex", gap: "16px" }}>
+          <span style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "4px" }}><Navigation size={12} /> {r.dist}km</span>
+          <span style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "4px" }}><TrendingUp size={12} /> {r.elev}m</span>
+          <span style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "4px" }}><Clock size={12} /> {r.time}</span>
+        </div>
+        {r.peaks && r.peaks.length > 0 && (
+          <div style={{ display: "flex", gap: "4px", marginTop: "8px", flexWrap: "wrap" }}>
+            {r.peaks.map(pk => <span key={pk} style={{ fontSize: "11px", padding: "2px 6px", borderRadius: "5px", background: "rgba(232,93,58,0.08)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
   const [cf, setCf] = useState(null);
   const [df, setDf] = useState(null);
@@ -2435,6 +2636,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
   const [showRouteDetail, setShowRouteDetail] = useState(null); // route object
   const [routeDetailCoords, setRouteDetailCoords] = useState(null);
   const [routeDetailCoordsLoading, setRouteDetailCoordsLoading] = useState(false);
+  const { photos: detailPhotos, addPhoto: addDetailPhoto, removePhoto: removeDetailPhoto } = useRoutePhotos(showRouteDetail?.id ?? null);
 
   // Fetch GPX preview coords when route detail opens
   useEffect(() => {
@@ -2484,22 +2686,23 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
     {/* ── Route detail modal ── */}
     {showRouteDetail && (
       <div style={{ position: "fixed", inset: 0, zIndex: 80, background: "#041e3d", overflowY: "auto", animation: "su .25s ease", display: "flex", flexDirection: "column" }}>
-        {/* Hero header */}
-        <div style={{ position: "relative", minHeight: 200, background: `linear-gradient(160deg, #0d2d54 0%, #1a4a7a 40%, #264f80 100%)`, flexShrink: 0, overflow: "hidden" }}>
-          {/* Decorative mountain silhouette */}
-          <svg viewBox="0 0 400 120" style={{ position: "absolute", bottom: 0, left: 0, right: 0, width: "100%", opacity: 0.12 }} preserveAspectRatio="none">
-            <path d="M0 120 L60 60 L110 90 L180 20 L240 70 L290 40 L350 80 L400 50 L400 120Z" fill="#5A98E3" />
-          </svg>
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 50%, rgba(4,30,61,0.9) 100%)" }} />
-          <div style={{ position: "relative", padding: "calc(14px + env(safe-area-inset-top, 0px)) 16px 20px" }}>
-            <button onClick={() => setShowRouteDetail(null)} style={{ background: "rgba(4,30,61,0.6)", border: "none", borderRadius: "10px", padding: "8px 14px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "15px", fontWeight: 600, fontFamily: "'DM Sans'", marginBottom: "50px", backdropFilter: "blur(8px)" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg> Back
-            </button>
-            <div>
-              <span style={{ fontSize: "12px", padding: "3px 10px", borderRadius: "8px", background: `rgba(${dc(showRouteDetail.diff) === "#6BCB77" ? "107,203,119" : dc(showRouteDetail.diff) === "#5A98E3" ? "90,152,227" : dc(showRouteDetail.diff) === "#F49D37" ? "244,157,55" : "232,93,58"},0.2)`, color: dc(showRouteDetail.diff), fontWeight: 700, marginBottom: "8px", display: "inline-block" }}>{showRouteDetail.diff}</span>
-              <div style={{ fontSize: "22px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'DM Sans'", lineHeight: 1.2, marginBottom: "4px" }}>{showRouteDetail.name}</div>
-              <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6 }}>{showRouteDetail.reg} · Start: {showRouteDetail.start}</div>
-            </div>
+        {/* Hero header — photo carousel */}
+        <div style={{ position: "relative", flexShrink: 0 }}>
+          <RoutePhotoCarousel
+            photos={detailPhotos}
+            onAdd={addDetailPhoto}
+            onRemove={removeDetailPhoto}
+            height={220}
+          />
+          {/* Back button — always on top of carousel */}
+          <button onClick={() => setShowRouteDetail(null)} style={{ position: "absolute", top: "calc(14px + env(safe-area-inset-top, 0px))", left: 14, zIndex: 10, background: "rgba(4,30,61,0.65)", border: "none", borderRadius: "10px", padding: "8px 14px", color: "#BDD6F4", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "15px", fontWeight: 600, fontFamily: "'DM Sans'", backdropFilter: "blur(8px)" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg> Back
+          </button>
+          {/* Route title overlay at bottom of hero */}
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "0 16px 16px", zIndex: 5 }}>
+            <span style={{ fontSize: "12px", padding: "3px 10px", borderRadius: "8px", background: `rgba(${dc(showRouteDetail.diff) === "#6BCB77" ? "107,203,119" : dc(showRouteDetail.diff) === "#5A98E3" ? "90,152,227" : dc(showRouteDetail.diff) === "#F49D37" ? "244,157,55" : "232,93,58"},0.25)`, color: dc(showRouteDetail.diff), fontWeight: 700, marginBottom: "6px", display: "inline-block", backdropFilter: "blur(4px)" }}>{showRouteDetail.diff}</span>
+            <div style={{ fontSize: "22px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'DM Sans'", lineHeight: 1.2, marginBottom: "3px", textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}>{showRouteDetail.name}</div>
+            <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.75, textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>{showRouteDetail.reg} · Start: {showRouteDetail.start}</div>
           </div>
         </div>
 
@@ -2603,11 +2806,16 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5A98E3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           </a>
 
-          {/* View on map */}
-          {showRouteDetail.gpx_file && (
-            <button onClick={() => { openRoute(showRouteDetail, "routes-detail"); setShowRouteDetail(null); }} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-              <Map size={16} /> View Route on Map
-            </button>
+          {/* Flyover + Go to Route */}
+          {(showRouteDetail.gpx_file || ROUTES.find(r => r.name === showRouteDetail.name && r.gpx_file)) && (
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button onClick={() => { posthog.capture("flyover_started", { route_name: showRouteDetail?.name, route_id: showRouteDetail?.id }); openRoute(showRouteDetail, "flyover"); setShowRouteDetail(null); }} style={{ flex: 1, padding: "14px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg,#5A98E3,#3a78c3)", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                ✈ Flyover
+              </button>
+              <button onClick={() => { posthog.capture("route_navigation_started", { route_name: showRouteDetail?.name, route_id: showRouteDetail?.id }); openRoute(showRouteDetail, "routes-detail"); setShowRouteDetail(null); }} style={{ flex: 1, padding: "14px", borderRadius: "12px", border: "1px solid rgba(232,93,58,0.35)", background: "rgba(232,93,58,0.12)", color: "#E85D3A", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                <Map size={16} /> Go to Route
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -2709,7 +2917,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
                     {/* Action buttons */}
                     <div style={{ display: "flex", gap: "8px" }}>
                       <button
-                        onClick={() => setShowRouteDetail(r)}
+                        onClick={() => { setShowRouteDetail(r); posthog.capture("route_detail_viewed", { route_name: r.name, route_id: r.id, route_difficulty: r.diff }); }}
                         style={{ flex: 1, padding: "8px", borderRadius: "10px", border: "none", background: "#0a2240", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}
                       >
                         Details
@@ -2750,16 +2958,16 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
 
       {/* Search bar */}
       {subTab === "list" && (
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#0a2240", borderRadius: "12px", padding: "10px 14px", border: "1px solid rgba(90,152,227,0.15)", marginBottom: "10px" }}>
-          <Search size={14} color="#BDD6F4" style={{ opacity: 0.4, flexShrink: 0 }} />
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#ffffff", borderRadius: "12px", padding: "10px 14px", border: "1px solid rgba(0,0,0,0.08)", marginBottom: "10px" }}>
+          <Search size={14} color="#888" style={{ flexShrink: 0 }} />
           <input
             type="text"
             placeholder="Search routes, mountains, areas..."
             value={routeSearch}
             onChange={e => setRouteSearch(e.target.value)}
-            style={{ flex: 1, background: "none", border: "none", outline: "none", color: "#F8F8F8", fontSize: "15px", fontFamily: "'DM Sans'" }}
+            style={{ flex: 1, background: "none", border: "none", outline: "none", color: "#111", fontSize: "15px", fontFamily: "'DM Sans'" }}
           />
-          {routeSearch && <button onClick={() => setRouteSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "#BDD6F4", padding: 0, display: "flex" }}><X size={14} /></button>}
+          {routeSearch && <button onClick={() => setRouteSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "#888", padding: 0, display: "flex" }}><X size={14} /></button>}
         </div>
       )}
 
@@ -2787,43 +2995,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
         <div>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             {filtered.map((r, i) => (
-              <div key={r.id}
-                onClick={() => setShowRouteDetail(r)}
-                style={{ background: "#0a2240", borderRadius: "14px", padding: "14px",
-                  border: "1px solid rgba(90,152,227,0.1)",
-                  cursor: "pointer", animation: `fi .3s ease ${i * .04}s both` }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "8px" }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: "18px", fontWeight: 800, color: "#F8F8F8", lineHeight: 1.2, fontFamily: "'DM Sans',sans-serif" }}>{r.name}</div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
-                    {(r.gpx_file || ROUTES.find(x => x.name === r.name && x.gpx_file)) && (
-                      <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "8px",
-                        background: "rgba(232,93,58,0.12)", color: "#E85D3A", fontWeight: 700 }}>
-                        View on map →
-                      </span>
-                    )}
-                    <Star size={12} color="#EBCB8B" fill="#EBCB8B" />
-                    <span style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{r.rat}</span>
-                    <span style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>({r.rev})</span>
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
-                  <span style={{ fontSize: "12px", padding: "2px 8px", borderRadius: "8px", background: `${CLS[r.cls]?.color}15`, color: CLS[r.cls]?.color, fontWeight: 600 }}>{CLS[r.cls]?.name}</span>
-                  <span style={{ fontSize: "12px", padding: "2px 8px", borderRadius: "8px", background: `${dc(r.diff)}18`, color: dc(r.diff), fontWeight: 600 }}>{r.diff}</span>
-                  {r.src === "ts" ? (
-                    <span style={{ fontSize: "12px", padding: "2px 8px", borderRadius: "8px", background: "rgba(90,152,227,0.1)", color: "#5A98E3", fontWeight: 600 }}>✓ Verified</span>
-                  ) : (
-                    <span style={{ fontSize: "12px", padding: "2px 8px", borderRadius: "8px", background: "rgba(244,157,55,0.1)", color: "#F49D37", fontWeight: 600 }}>Community</span>
-                  )}
-                </div>
-                <div style={{ display: "flex", gap: "16px" }}>
-                  <span style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "4px" }}><Navigation size={12} /> {r.dist}km</span>
-                  <span style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "4px" }}><TrendingUp size={12} /> {r.elev}m</span>
-                  <span style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.6, display: "flex", alignItems: "center", gap: "4px" }}><Clock size={12} /> {r.time}</span>
-                </div>
-                {r.peaks && r.peaks.length > 0 && <div style={{ display: "flex", gap: "4px", marginTop: "8px" }}>{r.peaks.map(pk => <span key={pk} style={{ fontSize: "11px", padding: "2px 6px", borderRadius: "5px", background: "rgba(232,93,58,0.08)", color: "#E85D3A", fontWeight: 600 }}>⛰️ {pk}</span>)}</div>}
-              </div>
+              <RouteListCard key={r.id} r={r} i={i} onSelect={setShowRouteDetail} />
             ))}
           </div>
           <div style={{ padding: "14px 0", fontSize: "12px", color: "#BDD6F4", opacity: 0.4, textAlign: "center", fontStyle: "italic" }}>Community routes are not regulated. Please use at your own risk and always carry appropriate navigation equipment.</div>
@@ -2907,6 +3079,34 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
    ═══════════════════════════════════════════════════════════════════ */
 const RouteWeatherPanel = ({ routeWeather, elevProfile, onElevHover, onElevLeave }) => {
   const [wxOpen, setWxOpen] = useState(true);
+  const [scrubberFrac, setScrubberFrac] = useState(null);
+  const chartRef = useRef(null);
+
+  // Native non-passive touch listeners so e.preventDefault() works on iOS
+  useEffect(() => {
+    const el = chartRef.current;
+    if (!el || !elevProfile || !routeWeather) return;
+    const getFrac = (clientX) => {
+      const rect = el.getBoundingClientRect();
+      return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    };
+    const onTM = (e) => {
+      e.preventDefault();
+      const frac = getFrac(e.touches[0].clientX);
+      setScrubberFrac(frac);
+      const hourIdx = Math.min(Math.round(frac * routeWeather.totalHours), routeWeather.timeline.length - 1);
+      if (onElevHover) onElevHover(Math.max(0, hourIdx), frac);
+    };
+    const onTE = () => { setScrubberFrac(null); if (onElevLeave) onElevLeave(); };
+    el.addEventListener("touchmove", onTM, { passive: false });
+    el.addEventListener("touchend", onTE);
+    el.addEventListener("touchcancel", onTE);
+    return () => {
+      el.removeEventListener("touchmove", onTM);
+      el.removeEventListener("touchend", onTE);
+      el.removeEventListener("touchcancel", onTE);
+    };
+  }, [elevProfile, routeWeather, onElevHover, onElevLeave]);
   return (
     <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 24, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px 16px 0 0", border: "1px solid rgba(90,152,227,0.15)", borderBottom: "none" }}>
       <div onClick={() => setWxOpen(o => !o)} style={{ padding: "12px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px" }}>
@@ -2923,24 +3123,23 @@ const RouteWeatherPanel = ({ routeWeather, elevProfile, onElevHover, onElevLeave
         <div style={{ padding: "0 16px 16px", maxHeight: "40vh", overflowY: "auto" }}>
           {elevProfile && (
             <div style={{ marginBottom: "12px" }}>
-              <div style={{ height: "48px", background: "#0a2240", borderRadius: "8px", overflow: "hidden", position: "relative", cursor: "ew-resize" }}>
-                {(() => {
-                  const mn = Math.min(...elevProfile), mx = Math.max(...elevProfile), rng = mx - mn || 1;
-                  const w = 100, h = 40;
-                  const pts = elevProfile.map((e, i) => `${(i / (elevProfile.length - 1)) * w},${h - ((e - mn) / rng) * h}`).join(" ");
-                  const fill = `${pts} ${w},${h} 0,${h}`;
-                  const getFrac = (clientX, el) => {
-                    const rect = el.getBoundingClientRect();
-                    const frac = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-                    const hourIdx = Math.min(Math.round(frac * routeWeather.totalHours), routeWeather.timeline.length - 1);
-                    if (onElevHover) onElevHover(Math.max(0, hourIdx), frac);
-                  };
-                  const handleMove = (e) => getFrac(e.clientX, e.currentTarget);
-                  const handleLeave = () => { if (onElevLeave) onElevLeave(); };
-                  const handleTouchMove = (e) => { e.preventDefault(); getFrac(e.touches[0].clientX, e.currentTarget); };
-                  const handleTouchEnd = () => { if (onElevLeave) onElevLeave(); };
-                  return (
-                    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ width: "100%", height: "100%", display: "block", touchAction: "none" }} onMouseMove={handleMove} onMouseLeave={handleLeave} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} onTouchCancel={handleTouchEnd}>
+              {(() => {
+                const mn = Math.min(...elevProfile), mx = Math.max(...elevProfile), rng = mx - mn || 1;
+                const w = 100, h = 40;
+                const pts = elevProfile.map((e, i) => `${(i / (elevProfile.length - 1)) * w},${h - ((e - mn) / rng) * h}`).join(" ");
+                const fill = `${pts} ${w},${h} 0,${h}`;
+                const onMM = (e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const frac = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                  setScrubberFrac(frac);
+                  const hourIdx = Math.min(Math.round(frac * routeWeather.totalHours), routeWeather.timeline.length - 1);
+                  if (onElevHover) onElevHover(Math.max(0, hourIdx), frac);
+                };
+                const onML = () => { setScrubberFrac(null); if (onElevLeave) onElevLeave(); };
+                return (
+                  <div ref={chartRef} style={{ height: "48px", background: "#0a2240", borderRadius: "8px", overflow: "hidden", position: "relative", cursor: "ew-resize", touchAction: "none" }}>
+                    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ width: "100%", height: "100%", display: "block" }}
+                      onMouseMove={onMM} onMouseLeave={onML}>
                       <defs>
                         <linearGradient id="elevGrad" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor="#F49D37" stopOpacity="0.4" />
@@ -2949,10 +3148,11 @@ const RouteWeatherPanel = ({ routeWeather, elevProfile, onElevHover, onElevLeave
                       </defs>
                       <polygon points={fill} fill="url(#elevGrad)" />
                       <polyline points={pts} fill="none" stroke="#F49D37" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+                      {scrubberFrac !== null && <line x1={scrubberFrac * w} y1="0" x2={scrubberFrac * w} y2={h} stroke="rgba(255,255,255,0.9)" strokeWidth="1.2" />}
                     </svg>
-                  );
-                })()}
-              </div>
+                  </div>
+                );
+              })()}
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2px" }}>
                 <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4 }}>{Math.min(...elevProfile)}m</div>
                 <div style={{ fontSize: "10px", color: "#BDD6F4", opacity: 0.4 }}>Elevation</div>
@@ -3001,6 +3201,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   const [savingSpot, setSavingSpot] = useState(false);
   const [viewingSpot, setViewingSpot] = useState(null);     // spot object being viewed/deleted
   const spotMarkersRef = useRef([]);                        // Mapbox Marker objects for cleanup
+  const pendingSpotMarkerRef = useRef(null);               // Temporary marker shown after long-press drop
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
 
@@ -3047,6 +3248,8 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   // Flyover mode
   const [flyoverActive, setFlyoverActive] = useState(false);
   const flyoverTimerRef = useRef(null);
+  const flyoverRafRef = useRef(null);
+  const flyoverMarkerRef = useRef(null); // animated position marker
 
   // Guided route walk state
   const [gpxRouteActive, setGpxRouteActive] = useState(false);
@@ -3093,6 +3296,104 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   const timerStartRef = useRef(null);   // Date.now() reference for elapsed time (accurate through backgrounding)
 
   const fp = PEAKS.filter(p => !cf || p.cls === cf);
+
+  // ── Flyover helpers ────────────────────────────────────────────────
+  const stopFlyover = () => {
+    const map = mapRef.current;
+    setFlyoverActive(false);
+    if (flyoverTimerRef.current) { clearTimeout(flyoverTimerRef.current); flyoverTimerRef.current = null; }
+    if (flyoverRafRef.current) { cancelAnimationFrame(flyoverRafRef.current); flyoverRafRef.current = null; }
+    if (flyoverMarkerRef.current) { try { flyoverMarkerRef.current.remove(); } catch (_) {} flyoverMarkerRef.current = null; }
+    if (map) {
+      try { map.setTerrain(null); } catch (_) {}
+      // Small delay lets terrain teardown settle before removing the source
+      setTimeout(() => {
+        try { if (map.getSource("ts-dem")) map.removeSource("ts-dem"); } catch (_) {}
+      }, 300);
+      map.easeTo({ pitch: 0, bearing: 0, duration: 900 });
+    }
+  };
+
+  const startFlyover = (coords) => {
+    const map = mapRef.current;
+    if (!map || !coords || coords.length < 2) return;
+    setFlyoverActive(true);
+
+    // 3D terrain — use unique source name to avoid conflicting with Standard style internals
+    const applyTerrain = () => {
+      try {
+        if (!map.getSource("ts-dem")) {
+          map.addSource("ts-dem", { type: "raster-dem", url: "mapbox://mapbox.mapbox-terrain-dem-v1", tileSize: 512, maxzoom: 14 });
+        }
+        map.setTerrain({ source: "ts-dem", exaggeration: 1.5 });
+      } catch (err) { console.warn("Terrain setup error:", err); }
+    };
+    if (map.isStyleLoaded()) { applyTerrain(); }
+    else { map.once("styledata", applyTerrain); }
+
+    // Animated position pin (avatar-ready: swap #flyover-pin innerHTML for custom avatar)
+    import("mapbox-gl").then(mod => {
+      const mapboxgl = mod.default;
+      if (flyoverMarkerRef.current) { try { flyoverMarkerRef.current.remove(); } catch (_) {} }
+      const el = document.createElement("div");
+      el.id = "flyover-pin";
+      el.style.cssText = "width:32px;height:40px;pointer-events:none;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.5))";
+      el.innerHTML = `<svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="pg" cx="50%" cy="35%" r="55%"><stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/><stop offset="100%" stop-color="#5A98E3" stop-opacity="0.9"/></radialGradient></defs><path d="M16 1C7.72 1 1 7.72 1 16C1 25.6 16 39 16 39C16 39 31 25.6 31 16C31 7.72 24.28 1 16 1Z" fill="url(#pg)" stroke="rgba(255,255,255,0.9)" stroke-width="1.5"/><circle cx="16" cy="15" r="6.5" fill="rgba(255,255,255,0.9)"/><circle cx="16" cy="15" r="3.5" fill="#3B82F6"/></svg>`;
+      flyoverMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: "bottom" })
+        .setLngLat([coords[0][0], coords[0][1]])
+        .addTo(map);
+    });
+
+    map.easeTo({ pitch: 62, zoom: 13.5, duration: 1200 });
+
+    const toRad = x => x * Math.PI / 180;
+    const getBearing = (a, b) => {
+      const dLng = toRad(b[0] - a[0]);
+      const y = Math.sin(dLng) * Math.cos(toRad(b[1]));
+      const x = Math.cos(toRad(a[1])) * Math.sin(toRad(b[1])) - Math.sin(toRad(a[1])) * Math.cos(toRad(b[1])) * Math.cos(dLng);
+      return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+    };
+    const getCoord = (frac) => {
+      const pos = frac * (coords.length - 1);
+      const lo = Math.floor(pos), hi = Math.min(Math.ceil(pos), coords.length - 1);
+      const t = pos - lo;
+      return [coords[lo][0] * (1 - t) + coords[hi][0] * t, coords[lo][1] * (1 - t) + coords[hi][1] * t];
+    };
+
+    const STEPS = 25, STEP_MS = 1600;
+    let step = 0;
+    const fly = () => {
+      const m = mapRef.current;
+      if (!m) return;
+      if (step >= STEPS) { stopFlyover(); return; }
+      const frac = step / STEPS;
+      const fracNext = Math.min(1, (step + 1) / STEPS);
+      const c = getCoord(frac);
+      const cNext = getCoord(fracNext);
+      const bearing = getBearing(c, cNext);
+      const pitch = 58 + Math.sin(frac * Math.PI) * 12;
+      const zoom = 13 + Math.sin(frac * Math.PI * 2) * 0.8;
+      m.easeTo({ center: [c[0], c[1]], bearing, pitch, zoom, duration: STEP_MS, easing: t => t });
+      // RAF loop to smoothly interpolate marker between step positions
+      const stepStart = performance.now();
+      const animateMarker = (now) => {
+        if (!flyoverMarkerRef.current) return;
+        const elapsed = now - stepStart;
+        const t = Math.min(elapsed / STEP_MS, 1);
+        const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        const lng = c[0] + (cNext[0] - c[0]) * ease;
+        const lat = c[1] + (cNext[1] - c[1]) * ease;
+        try { flyoverMarkerRef.current.setLngLat([lng, lat]); } catch (_) {}
+        if (t < 1) flyoverRafRef.current = requestAnimationFrame(animateMarker);
+      };
+      if (flyoverRafRef.current) cancelAnimationFrame(flyoverRafRef.current);
+      flyoverRafRef.current = requestAnimationFrame(animateMarker);
+      step++;
+      flyoverTimerRef.current = setTimeout(fly, STEP_MS * 0.82);
+    };
+    flyoverTimerRef.current = setTimeout(fly, 1300);
+  };
+  // ──────────────────────────────────────────────────────────────────
 
   // Haversine distance between two [lng,lat] points in km
   const haversineDist = (a, b) => {
@@ -3264,11 +3565,11 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       if (Capacitor.isNativePlatform()) {
         const { default: BackgroundGeolocation } = await import("@capacitor-community/background-geolocation");
         const id = await BackgroundGeolocation.addWatcher(
-          { backgroundMessage: "TrailSync is tracking your walk.", backgroundTitle: "Walk Tracking Active", requestPermissions: true, stale: false, distanceFilter: 5 },
+          { backgroundMessage: "TrailSync is tracking your walk.", backgroundTitle: "Walk Tracking Active", requestPermissions: true, stale: false, distanceFilter: 3 },
           (location, error) => {
             if (error) {
-              if (error.code === "NOT_AUTHORIZED") setGpsError("Location permission denied. Enable in Settings → Privacy → Location.");
-              else setGpsError("GPS unavailable.");
+              if (error.code === "NOT_AUTHORIZED") setGpsError("Background location denied. Go to Settings → TrailSync → Location → Always to enable tracking when the app is minimised.");
+              else setGpsError("GPS unavailable — check Location Services in Settings.");
               return;
             }
             handleGpsPoint(location.latitude, location.longitude, location.altitude ?? null, location.speed ?? null);
@@ -3400,24 +3701,116 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     map.on("dragstart", onUserMove);
     map.on("touchstart", onUserMove);
 
-    // Long-press on the map → open "Pin a Spot" sheet
+    // Long-press → draggable ghost pin → "Pin a Spot" sheet on release
+    // Ghost is a position:fixed body element so it tracks clientX/Y exactly —
+    // no Mapbox coordinate math needed for the visual, only for the final lngLat.
     let longPressTimer = null;
+    let ghostEl = null;
+    let isDraggingGhost = false;
+    let fingerPos = { x: 0, y: 0 }; // updated by native touchmove
+    let lpStartPos = null;
+
+    const removeGhost = () => {
+      if (ghostEl) { try { ghostEl.remove(); } catch(_){} ghostEl = null; }
+    };
+
+    const moveGhost = (x, y) => {
+      if (ghostEl) { ghostEl.style.left = x + "px"; ghostEl.style.top = y + "px"; }
+    };
+
+    const canvas = map.getCanvas();
+
+    // Native touchmove — passive:false so we can preventDefault during drag
+    const onNativeMove = (e) => {
+      if (e.touches.length > 1) {
+        // Second finger added (e.g. 3D tilt) — cancel any pending long-press
+        if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; lpStartPos = null; }
+        return;
+      }
+      if (e.touches.length !== 1) return;
+      const t = e.touches[0];
+      fingerPos = { x: t.clientX, y: t.clientY };
+      if (isDraggingGhost) {
+        e.preventDefault();
+        moveGhost(t.clientX, t.clientY);
+      } else if (lpStartPos && longPressTimer) {
+        const dx = t.clientX - lpStartPos.x, dy = t.clientY - lpStartPos.y;
+        if (Math.sqrt(dx * dx + dy * dy) > 8) {
+          clearTimeout(longPressTimer); longPressTimer = null; lpStartPos = null;
+        }
+      }
+    };
+
+    // Native touchend — resolve final lngLat from clientX/Y via unproject
+    const onNativeEnd = () => {
+      if (isDraggingGhost) {
+        isDraggingGhost = false;
+        map.dragPan.enable();
+        removeGhost();
+        const rect = canvas.getBoundingClientRect();
+        const lngLat = map.unproject([fingerPos.x - rect.left, fingerPos.y - rect.top]);
+        setPendingSpot({ lat: lngLat.lat, lng: lngLat.lng });
+        // Place a visible marker that persists until the form is saved or cancelled
+        if (pendingSpotMarkerRef.current) { try { pendingSpotMarkerRef.current.remove(); } catch(_) {} }
+        const dropEl = document.createElement("div");
+        dropEl.style.cssText = "width:32px;height:48px;pointer-events:none;";
+        dropEl.innerHTML = `<svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="16" cy="47" rx="5" ry="2" fill="rgba(0,0,0,0.18)"/><line x1="16" y1="25" x2="16" y2="45" stroke="#666" stroke-width="2.5" stroke-linecap="round"/><circle cx="16" cy="14" r="13" fill="rgba(0,0,0,0.18)"/><circle cx="16" cy="13" r="13" fill="#E85D3A"/><circle cx="16" cy="13" r="13" fill="url(#psg)" opacity="0.6"/><circle cx="10" cy="7" r="4.5" fill="rgba(255,255,255,0.45)"/><defs><radialGradient id="psg" cx="35%" cy="30%" r="65%"><stop offset="0%" stop-color="#fff" stop-opacity="0.55"/><stop offset="100%" stop-color="#000" stop-opacity="0.15"/></radialGradient></defs></svg>`;
+        pendingSpotMarkerRef.current = new mapboxgl.Marker({ element: dropEl, anchor: "bottom" })
+          .setLngLat([lngLat.lng, lngLat.lat])
+          .addTo(map);
+      } else {
+        clearTimeout(longPressTimer); longPressTimer = null;
+        removeGhost();
+      }
+      lpStartPos = null;
+    };
+
+    canvas.addEventListener("touchmove",   onNativeMove, { passive: false });
+    canvas.addEventListener("touchend",    onNativeEnd);
+    canvas.addEventListener("touchcancel", onNativeEnd);
+
+    // Mapbox touchstart — capture initial finger position
     const onLongPressStart = (e) => {
       if (e.originalEvent?.touches?.length !== 1) return;
-      const { lat, lng } = e.lngLat;
-      longPressTimer = setTimeout(() => { setPendingSpot({ lat, lng }); }, 650);
+      const t = e.originalEvent.touches[0];
+      lpStartPos = { x: t.clientX, y: t.clientY };
+      fingerPos  = { x: t.clientX, y: t.clientY };
+      longPressTimer = setTimeout(() => {
+        longPressTimer = null;
+        isDraggingGhost = true;
+        map.dragPan.disable();
+        // Build ghost as a fixed-position element — position tracks clientX/Y directly
+        ghostEl = document.createElement("div");
+        ghostEl.style.cssText = `position:fixed;width:32px;height:48px;pointer-events:none;z-index:9999;left:${fingerPos.x}px;top:${fingerPos.y}px;transform:translate(-50%,-100%);animation:lpDrop 0.42s cubic-bezier(0.34,1.56,0.64,1) forwards`;
+        ghostEl.innerHTML = `<svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="16" cy="47" rx="5" ry="2" fill="rgba(0,0,0,0.18)"/>
+          <line x1="16" y1="25" x2="16" y2="45" stroke="#666" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="16" cy="14" r="13" fill="rgba(0,0,0,0.18)"/>
+          <circle cx="16" cy="13" r="13" fill="#E85D3A"/>
+          <circle cx="16" cy="13" r="13" fill="url(#glg)" opacity="0.6"/>
+          <circle cx="10" cy="7" r="4.5" fill="rgba(255,255,255,0.45)"/>
+          <defs><radialGradient id="glg" cx="35%" cy="30%" r="65%"><stop offset="0%" stop-color="#fff" stop-opacity="0.55"/><stop offset="100%" stop-color="#000" stop-opacity="0.15"/></radialGradient></defs>
+        </svg>`;
+        document.body.appendChild(ghostEl);
+        setTimeout(() => { if (ghostEl) ghostEl.style.animation = "lpPulse 0.9s ease infinite"; }, 440);
+      }, 500);
     };
-    const onLongPressCancel = () => { clearTimeout(longPressTimer); };
+
     map.on("touchstart", onLongPressStart);
-    map.on("touchend",   onLongPressCancel);
-    map.on("touchmove",  onLongPressCancel);
-    map.on("dragstart",  onLongPressCancel);
 
     }); return () => {
       mapLoadedRef.current = false;
       if (mapRef.current) mapRef.current.remove();
     };
   }, []);
+
+  // Remove the pending spot marker when the form is dismissed (save or cancel)
+  useEffect(() => {
+    if (!pendingSpot && pendingSpotMarkerRef.current) {
+      try { pendingSpotMarkerRef.current.remove(); } catch(_) {}
+      pendingSpotMarkerRef.current = null;
+    }
+  }, [pendingSpot]);
 
   // When this tab becomes visible, tell Mapbox to recalculate its dimensions
   useEffect(() => {
@@ -3559,29 +3952,65 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     SPOT_TYPES.forEach(({ id, color }) => {
       const imgId = `spot-pin-${id}`;
       if (map.hasImage(imgId)) return;
-      const W = 28, H = 40;
+      const DPR = Math.min(window.devicePixelRatio || 1, 2);
+      const W = 28, H = 46;
       const canvas = document.createElement("canvas");
-      canvas.width = W; canvas.height = H;
+      canvas.width = W * DPR; canvas.height = H * DPR;
       const ctx = canvas.getContext("2d");
-      const r = W / 2 - 1;
-      const cx = W / 2, cy = r + 1;
-      // Teardrop body
+      ctx.scale(DPR, DPR);
+      const cx = W / 2;
+      const ballR = 11;
+      const ballCy = ballR + 1.5;
+
+      // Ground shadow ellipse
       ctx.beginPath();
-      ctx.arc(cx, cy, r, Math.PI * 0.2, Math.PI * 0.8, true);
-      ctx.lineTo(cx, H - 2);
-      ctx.closePath();
+      ctx.ellipse(cx, H - 1.5, 5, 1.8, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(0,0,0,0.20)";
+      ctx.fill();
+
+      // Stick — dark grey tapered effect via gradient
+      const stickGrad = ctx.createLinearGradient(cx - 1.5, 0, cx + 1.5, 0);
+      stickGrad.addColorStop(0, "rgba(80,80,80,0.9)");
+      stickGrad.addColorStop(0.5, "rgba(140,140,140,0.95)");
+      stickGrad.addColorStop(1, "rgba(80,80,80,0.9)");
+      ctx.beginPath();
+      ctx.moveTo(cx, ballCy + ballR - 3);
+      ctx.lineTo(cx, H - 3);
+      ctx.strokeStyle = stickGrad;
+      ctx.lineWidth = 3;
+      ctx.lineCap = "round";
+      ctx.stroke();
+
+      // Ball drop-shadow
+      ctx.beginPath();
+      ctx.arc(cx, ballCy + 1.5, ballR, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(0,0,0,0.22)";
+      ctx.fill();
+
+      // Ball base colour
+      ctx.beginPath();
+      ctx.arc(cx, ballCy, ballR, 0, Math.PI * 2);
       ctx.fillStyle = color;
       ctx.fill();
-      ctx.strokeStyle = "rgba(255,255,255,0.6)";
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      // White inner dot
+
+      // Radial gloss overlay — light at top-left, dark at bottom-right
+      const gloss = ctx.createRadialGradient(cx - ballR * 0.3, ballCy - ballR * 0.35, ballR * 0.05, cx, ballCy, ballR);
+      gloss.addColorStop(0, "rgba(255,255,255,0.52)");
+      gloss.addColorStop(0.45, "rgba(255,255,255,0.08)");
+      gloss.addColorStop(1, "rgba(0,0,0,0.18)");
       ctx.beginPath();
-      ctx.arc(cx, cy, r * 0.38, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      ctx.arc(cx, ballCy, ballR, 0, Math.PI * 2);
+      ctx.fillStyle = gloss;
       ctx.fill();
-      const { data } = ctx.getImageData(0, 0, W, H);
-      map.addImage(imgId, { width: W, height: H, data });
+
+      // Specular highlight (small bright dot, top-left)
+      ctx.beginPath();
+      ctx.arc(cx - ballR * 0.32, ballCy - ballR * 0.35, ballR * 0.28, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,255,255,0.60)";
+      ctx.fill();
+
+      const imageData = ctx.getImageData(0, 0, W * DPR, H * DPR);
+      map.addImage(imgId, { width: W * DPR, height: H * DPR, data: imageData.data }, { pixelRatio: DPR });
     });
 
     map.addSource(SRC, {
@@ -3698,10 +4127,16 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   useEffect(() => {
     if (!gpxRoute) {
       if (mapGpxIdRef.current && mapRef.current) { removeGpxFromMap(mapRef.current, mapGpxIdRef.current); mapGpxIdRef.current = null; }
-      if (flyoverTimerRef.current) { clearTimeout(flyoverTimerRef.current); flyoverTimerRef.current = null; }
-      setFlyoverActive(false);
+      stopFlyover();
     }
   }, [gpxRoute]);
+
+  // Auto-start flyover when opened via "flyover" source and coords are ready
+  useEffect(() => {
+    if (gpxRoute?.from === "flyover" && gpxRouteCoords && gpxRouteCoords.length > 1) {
+      startFlyover(gpxRouteCoords);
+    }
+  }, [gpxRoute?.from, gpxRouteCoords]);
 
   // ── Guided route walk: start/stop GPS tracking along GPX line ──
   useEffect(() => {
@@ -4064,8 +4499,8 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       {/* Real Mapbox Map */}
       <div ref={mapContainer} style={{ position: "absolute", inset: 0 }} />
 
-      {/* Re-centre button — visible whenever user has panned away */}
-      {userMovedMap && (
+      {/* Re-centre button — only during active recording to avoid overlap with route banner */}
+      {userMovedMap && recording && (
         <button
           onClick={() => {
             if (recording) {
@@ -4096,7 +4531,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       )}
 
       {/* Top controls — offset by status bar height when viewport-fit=cover is active */}
-      <div style={{ position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 10px)", left: 10, right: 10, display: "flex", gap: "6px", zIndex: 20 }}>
+      <div style={{ position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 10px)", left: 10, right: 10, display: flyoverActive ? "none" : "flex", gap: "6px", zIndex: 20 }}>
         <div style={{ flex: 1, position: "relative" }}>
           <div style={{ background: "rgba(4,30,61,.88)", backdropFilter: "blur(12px)", borderRadius: "12px", padding: "9px 14px", display: "flex", alignItems: "center", gap: "8px", border: `1px solid ${searchFocused ? "rgba(90,152,227,0.3)" : "rgba(90,152,227,0.15)"}` }}>
             <Search size={14} color="#BDD6F4" style={{ opacity: 0.4 }} />
@@ -4161,20 +4596,20 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       </div>
 
       {/* Spot type filter pills — shown when saved spots are visible */}
-      {showSpots && savedSpots?.length > 0 && (
+      {(showSpots || savedSpots?.length > 0) && !flyoverActive && (
         <div style={{ position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 56px)", left: 10, right: 10, zIndex: 19, display: "flex", gap: "6px", overflowX: "auto", scrollbarWidth: "none", pointerEvents: "auto" }}>
-          <button onClick={() => setSpotTypeFilter(null)} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: "14px", border: "none", background: !spotTypeFilter ? "rgba(107,203,119,0.9)" : "rgba(4,30,61,0.85)", color: !spotTypeFilter ? "#041e3d" : "#BDD6F4", fontSize: "12px", fontWeight: 700, cursor: "pointer", backdropFilter: "blur(8px)", fontFamily: "'DM Sans'" }}>All</button>
+          <button onClick={() => { setShowSpots(true); setSpotTypeFilter(null); }} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: "14px", border: "none", background: showSpots && !spotTypeFilter ? "rgba(107,203,119,0.9)" : "rgba(4,30,61,0.85)", color: showSpots && !spotTypeFilter ? "#041e3d" : "#BDD6F4", fontSize: "12px", fontWeight: 700, cursor: "pointer", backdropFilter: "blur(8px)", fontFamily: "'DM Sans'" }}>All</button>
           {SPOT_TYPES.map(({ id, label, color }) => (
-            <button key={id} onClick={() => setSpotTypeFilter(spotTypeFilter === id ? null : id)} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: "14px", border: "none", background: spotTypeFilter === id ? color : "rgba(4,30,61,0.85)", color: spotTypeFilter === id ? "#fff" : "#BDD6F4", fontSize: "12px", fontWeight: 700, cursor: "pointer", backdropFilter: "blur(8px)", fontFamily: "'DM Sans'" }}>{label}</button>
+            <button key={id} onClick={() => { if (showSpots && spotTypeFilter === id) { setShowSpots(false); setSpotTypeFilter(null); } else { setShowSpots(true); setSpotTypeFilter(id); } }} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: "14px", border: "none", background: showSpots && spotTypeFilter === id ? color : "rgba(4,30,61,0.85)", color: showSpots && spotTypeFilter === id ? "#fff" : "#BDD6F4", fontSize: "12px", fontWeight: 700, cursor: "pointer", backdropFilter: "blur(8px)", fontFamily: "'DM Sans'" }}>{label}</button>
           ))}
         </div>
       )}
 
       {/* Unsure prompt */}
-      {wo && <div onClick={goHome} style={{ position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 56px)", left: "50%", transform: "translateX(-50%)", background: "rgba(232,93,58,.92)", backdropFilter: "blur(8px)", borderRadius: "20px", padding: "7px 18px", zIndex: 20, display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", animation: "fi .4s ease", border: "1px solid rgba(248,248,248,.15)" }}><span style={{ fontSize: "14px", color: "#F8F8F8", fontWeight: 600 }}>Unsure where to go?</span><ArrowRight size={14} color="#F8F8F8" /></div>}
+      {wo && !flyoverActive && <div onClick={goHome} style={{ position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 56px)", left: "50%", transform: "translateX(-50%)", background: "rgba(232,93,58,.92)", backdropFilter: "blur(8px)", borderRadius: "20px", padding: "7px 18px", zIndex: 20, display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", animation: "fi .4s ease", border: "1px solid rgba(248,248,248,.15)" }}><span style={{ fontSize: "14px", color: "#F8F8F8", fontWeight: 600 }}>Unsure where to go?</span><ArrowRight size={14} color="#F8F8F8" /></div>}
 
       {/* GPX route banner — shown when a route is active or loading */}
-      {(gpxRoute || mapGpxLoading) && (
+      {(gpxRoute || mapGpxLoading) && !flyoverActive && (
         <div style={{ position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 56px)", left: 10, right: 10, zIndex: 22,
           background: "rgba(4,30,61,0.96)", backdropFilter: "blur(12px)", borderRadius: "14px",
           border: "1px solid rgba(232,93,58,0.25)", animation: "su .25s ease", overflow: "hidden" }}>
@@ -4198,56 +4633,6 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                 </div>
               </div>
             )}
-            {gpxRoute && !gpxRouteActive && gpxRouteCoords && !flyoverActive && (
-              <button onClick={() => {
-                const coords = gpxRouteCoords;
-                const map = mapRef.current;
-                if (!map || coords.length < 2) return;
-                setFlyoverActive(true);
-                map.easeTo({ pitch: 60, zoom: 13, duration: 1200 });
-
-                const getBearing = (a, b) => {
-                  const toRad = x => x * Math.PI / 180;
-                  const dLng = toRad(b[0] - a[0]);
-                  const y = Math.sin(dLng) * Math.cos(toRad(b[1]));
-                  const x = Math.cos(toRad(a[1])) * Math.sin(toRad(b[1])) - Math.sin(toRad(a[1])) * Math.cos(toRad(b[1])) * Math.cos(dLng);
-                  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
-                };
-                const lerp = (a, b, t) => [a[0] * (1 - t) + b[0] * t, a[1] * (1 - t) + b[1] * t];
-                const getCoord = (frac) => {
-                  const pos = frac * (coords.length - 1);
-                  const lo = Math.floor(pos), hi = Math.min(Math.ceil(pos), coords.length - 1);
-                  return lerp(coords[lo], coords[hi], pos - lo);
-                };
-
-                const STEPS = 30, STEP_MS = 3200;
-                let step = 0;
-                const fly = () => {
-                  if (step >= STEPS) { setFlyoverActive(false); map.easeTo({ pitch: 0, duration: 1000 }); return; }
-                  const frac = step / STEPS;
-                  const c = getCoord(frac);
-                  const cNext = getCoord(Math.min(1, (step + 1) / STEPS));
-                  const bearing = getBearing(c, cNext);
-                  const pitch = 55 + Math.sin(frac * Math.PI) * 15;
-                  const zoom = 12.5 + Math.sin(frac * Math.PI * 2) * 0.8;
-                  map.easeTo({ center: [c[0], c[1]], bearing, pitch, zoom, duration: STEP_MS, easing: t => t });
-                  step++;
-                  flyoverTimerRef.current = setTimeout(fly, STEP_MS * 0.85);
-                };
-                flyoverTimerRef.current = setTimeout(fly, 1300);
-              }} style={{ padding: "7px 12px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.3)", background: "rgba(90,152,227,0.12)", color: "#5A98E3", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", flexShrink: 0, display: "flex", alignItems: "center", gap: "5px" }}>
-                ✈ Flyover
-              </button>
-            )}
-            {flyoverActive && (
-              <button onClick={() => {
-                setFlyoverActive(false);
-                if (flyoverTimerRef.current) { clearTimeout(flyoverTimerRef.current); flyoverTimerRef.current = null; }
-                mapRef.current?.easeTo({ pitch: 0, duration: 800 });
-              }} style={{ padding: "7px 12px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.35)", background: "rgba(90,152,227,0.18)", color: "#5A98E3", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", flexShrink: 0 }}>
-                ✕ Stop
-              </button>
-            )}
             {gpxRoute && !gpxRouteActive && !flyoverActive && (
               <button onClick={() => setGpxRouteActive(true)} style={{ padding: "7px 14px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", flexShrink: 0, display: "flex", alignItems: "center", gap: "6px" }}>
                 <Play size={12} /> Start
@@ -4263,13 +4648,13 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       )}
 
       {/* ── ROUTE WEATHER TIMELINE ── */}
-      {gpxRoute && !gpxRouteActive && routeWeatherLoading && (
+      {gpxRoute && !gpxRouteActive && !flyoverActive && routeWeatherLoading && (
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 24, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px 16px 0 0", border: "1px solid rgba(90,152,227,0.15)", borderBottom: "none", padding: "14px 16px", textAlign: "center" }}>
           <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#5A98E3", margin: "0 auto 8px", animation: "pulse 1s ease infinite" }} />
           <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.5 }}>Calculating route forecast…</div>
         </div>
       )}
-      {gpxRoute && !gpxRouteActive && routeWeather && (
+      {gpxRoute && !gpxRouteActive && !flyoverActive && routeWeather && (
         <RouteWeatherPanel routeWeather={routeWeather} elevProfile={elevProfile} onElevHover={(hourIdx, frac) => {
           if (!gpxRouteCoords || !routeWeather) return;
           setElevHoverActive(true);
@@ -4313,7 +4698,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
         }} />
       )}
       {/* ── GUIDED ROUTE STATS BAR ── */}
-      {gpxRoute && gpxRouteActive && (
+      {gpxRoute && gpxRouteActive && !flyoverActive && (
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 24, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px 16px 0 0", border: "1px solid rgba(232,93,58,0.2)", borderBottom: "none", padding: "14px 16px 20px" }}>
           <div style={{ height: "3px", borderRadius: "2px", background: "#0a2240", marginBottom: "14px", overflow: "hidden" }}>
             <div style={{ height: "100%", background: "linear-gradient(90deg,#E85D3A,#F49D37)", borderRadius: "2px", width: `${gpxRouteProgress}%`, transition: "width 1s linear" }} />
@@ -4336,7 +4721,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
         </div>
       )}
       {/* Track button (when not in track mode) */}
-      {!trackMode && !sp && !sw && (
+      {!trackMode && !sp && !sw && !flyoverActive && (
         <button onClick={() => setTrackMode(true)} style={{
           position: "absolute", bottom: 14, left: "50%", transform: "translateX(-50%)",
           zIndex: 21, padding: "8px 20px", borderRadius: "20px",
@@ -4350,7 +4735,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       )}
 
       {/* Recording mode UI */}
-      {trackMode && (
+      {trackMode && !flyoverActive && (
         <div style={{
           position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 25,
           background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)",
@@ -4425,8 +4810,18 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                 {gpsError && (
                   <div style={{ padding: "8px 12px", borderRadius: "8px", background: "rgba(232,93,58,0.1)",
                     border: "1px solid rgba(232,93,58,0.2)", marginBottom: "10px",
-                    fontSize: "13px", color: "#E85D3A", display: "flex", alignItems: "center", gap: "6px" }}>
-                    <AlertTriangle size={12} /> {gpsError}
+                    fontSize: "13px", color: "#E85D3A", display: "flex", alignItems: "flex-start", gap: "6px" }}>
+                    <AlertTriangle size={12} style={{ flexShrink: 0, marginTop: "2px" }} /> {gpsError}
+                  </div>
+                )}
+
+                {/* Native: remind user to grant "Always" if not already recording */}
+                {!recording && !paused && !gpsError && window.Capacitor?.isNativePlatform?.() && (
+                  <div style={{ padding: "8px 12px", borderRadius: "8px", background: "rgba(90,152,227,0.08)",
+                    border: "1px solid rgba(90,152,227,0.15)", marginBottom: "10px",
+                    fontSize: "12px", color: "#BDD6F4", display: "flex", alignItems: "flex-start", gap: "6px" }}>
+                    <Navigation size={11} style={{ flexShrink: 0, marginTop: "2px", color: "#5A98E3" }} />
+                    <span>For background tracking, go to <strong style={{ color: "#F8F8F8" }}>Settings → TrailSync → Location</strong> and select <strong style={{ color: "#F8F8F8" }}>Always</strong>.</span>
                   </div>
                 )}
 
@@ -4435,14 +4830,14 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                   {!recording && !paused && (
                     <>
                       <button onClick={() => { resetTracking(); setTrackMode(false); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
-                      <button onClick={() => { setRecording(true); }} style={{ flex: 2, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#6BCB77,#55a866)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                      <button onClick={() => { setRecording(true); posthog.capture("walk_recording_started"); }} style={{ flex: 2, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#6BCB77,#55a866)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                         <Play size={16} /> Start Recording
                       </button>
                     </>
                   )}
                   {recording && (
                     <>
-                      <button onClick={() => { setRecording(false); setPaused(true); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                      <button onClick={() => { posthog.capture("walk_recording_stopped"); setRecording(false); setPaused(true); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                         <Pause size={14} /> Stop
                       </button>
                       <div style={{ flex: 1, padding: "8px", borderRadius: "10px", background: "#0a2240", textAlign: "center" }}>
@@ -4563,7 +4958,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
 
                 {/* Save buttons */}
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <button onClick={() => { resetTracking(); setTrackMode(false); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Discard</button>
+                  <button onClick={() => { posthog.capture("walk_discarded"); resetTracking(); setTrackMode(false); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Discard</button>
                   <button onClick={() => { if (onSaveWalk) onSaveWalk({ name: actName || "Untitled Walk", desc: actDesc, dist: realDistDisplay, elev: realElevDisplay, time: fmtTime(elapsed), movingTime: fmtTime(movingTimeRef.current), avgSpeed: (realDist > 0 && elapsed > 0 ? (realDist / (elapsed / 3600)).toFixed(1) : "0.0"), peaks: detectedPeaks.map(p => p.name), photos: actPhotos, date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }), route: trackPointsRef.current.map(p => [p.lng, p.lat]) }); setSaved(true); }} style={{ flex: 2, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Save & Publish</button>
                 </div>
               </>
@@ -4584,6 +4979,35 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
 
           </div>
         </div>
+      )}
+
+      {/* Flyover overlay — only "← Back to Route" visible during flyover */}
+      {flyoverActive && (
+        <button
+          onClick={stopFlyover}
+          style={{
+            position: "absolute",
+            top: "calc(env(safe-area-inset-top, 0px) + 14px)",
+            left: 14,
+            zIndex: 60,
+            padding: "10px 18px",
+            borderRadius: "14px",
+            background: "rgba(4,30,61,0.88)",
+            backdropFilter: "blur(12px)",
+            border: "1px solid rgba(90,152,227,0.25)",
+            color: "#BDD6F4",
+            fontSize: "14px",
+            fontWeight: 700,
+            cursor: "pointer",
+            fontFamily: "'DM Sans'",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.5)"
+          }}
+        >
+          ← Back to Route
+        </button>
       )}
 
       {/* Peak card */}
@@ -6132,6 +6556,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
       const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
       if (error) { console.error("Avatar upload error:", error); return; }
       const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
+      posthog.capture("avatar_updated");
       setAvatarUrl(publicUrl);
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -6222,6 +6647,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
     if (!isFollowing) {
       setFollowingCount(c => c + 1);
       await supabase.from("follows").upsert({ follower_id: userId, following_id: targetId }, { onConflict: "follower_id,following_id" });
+      posthog.capture("user_followed", { target_id: targetId, source: "profile" });
     } else {
       setFollowingCount(c => Math.max(0, c - 1));
       await supabase.from("follows").delete().eq("follower_id", userId).eq("following_id", targetId);
@@ -6503,6 +6929,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
         date_completed: logDate,
         notes: logNote || null,
       }, { onConflict: "user_id,peak_id" });
+      posthog.capture("peak_logged", { peak_name: peak?.name, peak_id: peakId, peak_class: peak?.cls, date_completed: logDate });
     } catch (e) { console.error("Failed to save peak:", e); }
   };
 
@@ -6513,6 +6940,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       await supabase.from("user_peaks").delete().eq("user_id", user.id).eq("peak_id", String(peakId));
+      posthog.capture("peak_unlogged", { peak_id: peakId });
     } catch (e) { console.error("Failed to unlog peak:", e); }
   };
 
@@ -8105,6 +8533,51 @@ export default function TrailSync() {
 
   const [prevTab, setPrevTab] = useState("home");
   const tabOrder = { home: 0, routes: 1, map: 2, learn: 3, profile: 4 };
+  const tabEnteredAt = useRef(Date.now());
+
+  // Tab view duration analytics
+  useEffect(() => {
+    const now = Date.now();
+    posthog.capture("tab_viewed", { tab, previous_tab: prevTab, prev_tab_duration_s: Math.round((now - tabEnteredAt.current) / 1000) });
+    tabEnteredAt.current = now;
+  }, [tab]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // App lifecycle + network state analytics
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let appOpenedAt = Date.now();
+    let offlineAt = null;
+    let appListener = null;
+    let netListener = null;
+    const setup = async () => {
+      try {
+        if (window.Capacitor?.isNativePlatform?.()) {
+          appListener = await CapApp.addListener("appStateChange", ({ isActive }) => {
+            if (isActive) {
+              appOpenedAt = Date.now();
+              posthog.capture("app_foregrounded");
+            } else {
+              posthog.capture("app_backgrounded", { session_duration_s: Math.round((Date.now() - appOpenedAt) / 1000) });
+            }
+          });
+        }
+        netListener = await Network.addListener("networkStatusChange", (status) => {
+          if (!status.connected) {
+            offlineAt = Date.now();
+            posthog.capture("went_offline", { connection_type: status.connectionType });
+          } else {
+            posthog.capture("came_online", {
+              offline_duration_s: offlineAt ? Math.round((Date.now() - offlineAt) / 1000) : null,
+              connection_type: status.connectionType,
+            });
+            offlineAt = null;
+          }
+        });
+      } catch {}
+    };
+    setup();
+    return () => { appListener?.remove?.(); netListener?.remove?.(); };
+  }, []);
 
   // Register service worker for PWA offline support
   useEffect(() => {
@@ -8134,6 +8607,8 @@ export default function TrailSync() {
         setUserLocation(meta.location || null);
         setUserId(session.user.id);
         setAuthState("app");
+        posthog.identify(session.user.id);
+        if (_event === "SIGNED_IN") posthog.capture("user_logged_in", { method: session.user.app_metadata?.provider || "unknown" });
         // Load followingIds immediately on auth so buttons show correctly
         supabase.from("follows").select("following_id").eq("follower_id", session.user.id)
           .then(({ data }) => {
@@ -8716,6 +9191,7 @@ export default function TrailSync() {
                       <button onClick={async () => {
                         setShowUserMenu(false);
                         await supabase.auth.signOut();
+                        posthog.reset();
                         try { localStorage.clear(); } catch {}
                         setUserName("Alex");
                         setSavedWalks([]);
@@ -8814,24 +9290,7 @@ export default function TrailSync() {
       )}
 
       {/* Content — flex:1 fills between header and tab bar */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}
-        onTouchStart={e => {
-          // Don't intercept touches that start inside a horizontally-scrollable element (e.g. weather carousel)
-          if (e.target.closest('[data-no-swipe]')) { swipeStartX.current = null; return; }
-          swipeStartX.current = e.touches[0].clientX;
-        }}
-        onTouchEnd={e => {
-          if (swipeStartX.current === null) return;
-          const dx = e.changedTouches[0].clientX - swipeStartX.current;
-          swipeStartX.current = null;
-          const TABS = ["home","routes","map","learn","profile"];
-          const curIdx = TABS.indexOf(tab);
-          if (Math.abs(dx) > 60) {
-            if (dx < 0 && curIdx < TABS.length - 1) { setPrevTab(tab); setTab(TABS[curIdx + 1]); }
-            else if (dx > 0 && curIdx > 0) { setPrevTab(tab); setTab(TABS[curIdx - 1]); }
-          }
-        }}
-      >
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {/* HomePage always mounted (like MapPage) so feed state/comments survive tab switches */}
         <div style={{ display: tab === "home" ? "flex" : "none", flex: 1, flexDirection: "column", overflow: "hidden" }}>
           <HomePage userName={userName} initialFilter={feedFilter} userId={userId} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowingCount={setFollowingCount} headerSearch={headerSearch} setHeaderSearch={setHeaderSearch} openRoute={openRouteOnMap} searchResults={searchResults} setSearchResults={setSearchResults} searching={searching} setSearching={setSearching} onViewProfile={setViewingProfile} />
@@ -8865,6 +9324,7 @@ export default function TrailSync() {
                   route_points: walk.route && walk.route.length > 1 ? walk.route : null,
                 });
                 if (walkErr) console.error("user_walks insert error:", JSON.stringify(walkErr));
+                if (!walkErr) posthog.capture("walk_saved", { distance_km: parseFloat(walk.dist) || 0, elevation_m: parseInt(walk.elev) || 0, peaks_count: (walk.peaks || []).length, duration: walk.time, offline: !navigator.onLine });
                 // Also post to community feed
                 const distNum = parseFloat(walk.dist) || 0;
                 const elevNum = parseInt(walk.elev) || 0;
@@ -8899,21 +9359,24 @@ export default function TrailSync() {
                 name: spot.name,
                 notes: spot.notes || null,
               }).select().single();
-              if (!error && data) setSavedSpots(prev => [data, ...prev]);
+              if (!error && data) { setSavedSpots(prev => [data, ...prev]); posthog.capture("saved_spot_added", { spot_type: spot.type, spot_name: spot.name }); }
             }}
             onDeleteSpot={async (id) => {
               await supabase.from("saved_spots").delete().eq("id", id);
+              posthog.capture("saved_spot_deleted");
               setSavedSpots(prev => prev.filter(s => s.id !== id));
             }}
           />
         </div>
-        {tab === "learn" && <div key="learn" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", animation: `${(tabOrder[tab]||0) > (tabOrder[prevTab]||0) ? "slideInRight" : "slideInLeft"} .26s ease` }}><LearnPage courseProgress={userCourseProgress} onCourseProgress={async (courseId, lessonsCompleted) => { setUserCourseProgress(prev => { const next = { ...prev }; if (lessonsCompleted === 0) { delete next[courseId]; } else { next[courseId] = lessonsCompleted; } return next; }); const { data: { session } } = await supabase.auth.getSession(); const user = session?.user; if (!user) return; if (lessonsCompleted === 0) { await supabase.from("user_courses").delete().eq("user_id", user.id).eq("course_id", courseId); } else { await supabase.from("user_courses").upsert({ user_id: user.id, course_id: courseId, lessons_completed: lessonsCompleted, updated_at: new Date().toISOString() }, { onConflict: "user_id,course_id" }); } }} onResetAllCourses={async () => { setUserCourseProgress({}); const { data: { session } } = await supabase.auth.getSession(); const user = session?.user; if (!user) return; await supabase.from("user_courses").delete().eq("user_id", user.id); }} /></div>}
+        {tab === "learn" && <div key="learn" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", animation: `${(tabOrder[tab]||0) > (tabOrder[prevTab]||0) ? "slideInRight" : "slideInLeft"} .26s ease` }}><LearnPage courseProgress={userCourseProgress} onCourseProgress={async (courseId, lessonsCompleted) => { setUserCourseProgress(prev => { const next = { ...prev }; if (lessonsCompleted === 0) { delete next[courseId]; } else { next[courseId] = lessonsCompleted; } return next; }); if (lessonsCompleted > 0) posthog.capture("course_lesson_completed", { course_id: courseId, lessons_completed: lessonsCompleted }); const { data: { session } } = await supabase.auth.getSession(); const user = session?.user; if (!user) return; if (lessonsCompleted === 0) { await supabase.from("user_courses").delete().eq("user_id", user.id).eq("course_id", courseId); } else { await supabase.from("user_courses").upsert({ user_id: user.id, course_id: courseId, lessons_completed: lessonsCompleted, updated_at: new Date().toISOString() }, { onConflict: "user_id,course_id" }); } }} onResetAllCourses={async () => { setUserCourseProgress({}); const { data: { session } } = await supabase.auth.getSession(); const user = session?.user; if (!user) return; await supabase.from("user_courses").delete().eq("user_id", user.id); }} /></div>}
         {tab === "profile" && <div key="profile" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", animation: `${(tabOrder[tab]||0) > (tabOrder[prevTab]||0) ? "slideInRight" : "slideInLeft"} .26s ease` }}><ProfilePage initialSec={profileSec} onSecChange={setProfileSec} goMap={() => setTab("map")} goHome={(filter) => { setFeedFilter(filter || "all"); setTab("home"); }} goRoutes={() => setTab("routes")} openRoute={openRouteOnMap} savedWalks={savedWalks} setSavedWalks={setSavedWalks} dbPeaks={dbPeaks} userName={userName} userLocation={userLocation} setUserLocation={setUserLocation} followerCount={followerCount} followingCount={followingCount} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowerCount={setFollowerCount} setFollowingCount={setFollowingCount} userId={userId} onViewProfile={setViewingProfile} onPublishPost={post => setLivePosts(prev => [post, ...prev])} onNameChange={setUserName} onSignOut={async () => {
   await supabase.auth.signOut();
+  posthog.reset();
   try { localStorage.clear(); } catch {}
   setUserName("Alex");
   setSavedWalks([]);
   setDbPeaks(null);
+  setUserCourseProgress({});
   setAuthState("login");
 }} /></div>}
       </div>

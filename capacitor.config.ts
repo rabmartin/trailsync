@@ -4,6 +4,9 @@ const config: CapacitorConfig = {
   appId: 'com.trailsync.app',
   appName: 'TrailSync',
   webDir: 'out',
+  server: {
+    allowNavigation: ['*.posthog.com', 'eu.i.posthog.com'],
+  },
   plugins: {
     BackgroundGeolocation: {
       backgroundMessage: 'TrailSync is tracking your walk.',
