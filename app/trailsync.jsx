@@ -2382,8 +2382,13 @@ const RoutePhotoCarousel = ({ photos, height = 240, autoAdvance = true }) => {
 const RoutesClusterMap = ({ filtered, selIdx, onSelIdx }) => {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
-  const gpxCacheRef = useRef({});
+  const gpxCacheRef = useRef({}); // id → [lng,lat][] | null (failed/loading)
+  const filteredRef = useRef(filtered);
+  const onSelIdxRef = useRef(onSelIdx);
   const [gpxLoading, setGpxLoading] = useState(false);
+
+  // Keep refs current on every render so stale-closure handlers see live data
+  useEffect(() => { filteredRef.current = filtered; onSelIdxRef.current = onSelIdx; });
 
   const routeCoords = (r) => {
     const pk = PEAKS_FALLBACK.find(p => r.peaks?.includes(p.name));
@@ -2391,8 +2396,11 @@ const RoutesClusterMap = ({ filtered, selIdx, onSelIdx }) => {
     return [pk?.lng ?? reg?.lng ?? -4.5, pk?.lat ?? reg?.lat ?? 56.5];
   };
 
+  // Returns coord array from hardcoded ROUTE_COORDS or dynamically loaded GPX cache
+  const getLineCoords = (r) => ROUTE_COORDS[r?.id] || gpxCacheRef.current[r?.id] || null;
+
   const buildPtFeatures = (routes, selId) => routes
-    .filter(r => !ROUTE_COORDS[r.id])
+    .filter(r => !getLineCoords(r))
     .map(r => ({
       type: "Feature",
       properties: { id: r.id, color: CLS[r.cls]?.color || "#E85D3A", selected: r.id === selId },
@@ -2406,7 +2414,6 @@ const RoutesClusterMap = ({ filtered, selIdx, onSelIdx }) => {
     wainwrights: "#C084E8", hewitts: "#5A98E3", nuttalls: "#5A98E3",
     furths: "#5A98E3", "non-mountain": "#F0C040", "sub2000": "#88C0D0",
   };
-  // Selected = lighter/whiter version of same hue
   const MAP_SEL_CLR = {
     munros: "#FFA07A", "munro-tops": "#FFA07A",
     corbetts: "#FFC87A", grahams: "#FFE080", donalds: "#FFE080",
@@ -2415,7 +2422,7 @@ const RoutesClusterMap = ({ filtered, selIdx, onSelIdx }) => {
   };
 
   const buildLineFeatures = (routes, selId) => routes
-    .filter(r => ROUTE_COORDS[r.id])
+    .filter(r => getLineCoords(r))
     .map(r => ({
       type: "Feature",
       properties: {
@@ -2424,11 +2431,11 @@ const RoutesClusterMap = ({ filtered, selIdx, onSelIdx }) => {
         selColor: MAP_SEL_CLR[r.cls] || "#FFA07A",
         selected: r.id === selId,
       },
-      geometry: { type: "LineString", coordinates: ROUTE_COORDS[r.id] },
+      geometry: { type: "LineString", coordinates: getLineCoords(r) },
     }));
 
   const fitToRoute = (map, route) => {
-    const coords = ROUTE_COORDS[route?.id];
+    const coords = getLineCoords(route);
     if (coords?.length >= 2) {
       const lngs = coords.map(c => c[0]), lats = coords.map(c => c[1]);
       map.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]], { padding: 60, duration: 700, maxZoom: 13 });
@@ -2438,7 +2445,35 @@ const RoutesClusterMap = ({ filtered, selIdx, onSelIdx }) => {
     }
   };
 
-  // Init map
+  // Dynamically load GPX for routes that have gpx_file but no hardcoded coords
+  useEffect(() => {
+    const toLoad = filtered.filter(r =>
+      r.gpx_file && !ROUTE_COORDS[r.id] && !Object.prototype.hasOwnProperty.call(gpxCacheRef.current, r.id)
+    );
+    if (!toLoad.length) return;
+    setGpxLoading(true);
+    let pending = toLoad.length;
+    toLoad.forEach(async r => {
+      gpxCacheRef.current[r.id] = null; // claim slot to prevent duplicate fetches
+      try {
+        const xml = await fetchGpxText(r.gpx_file);
+        const coords = parseGpxCoords(xml).map(c => [c[0], c[1]]);
+        if (coords.length >= 2) gpxCacheRef.current[r.id] = coords;
+      } catch { /* leave null = failed, won't retry */ }
+      if (--pending === 0) {
+        setGpxLoading(false);
+        const map = mapRef.current;
+        if (map?.isStyleLoaded()) {
+          const cur = filteredRef.current;
+          const sel = cur[selIdx ?? 0];
+          map.getSource("routes-lines")?.setData({ type: "FeatureCollection", features: buildLineFeatures(cur, sel?.id) });
+          map.getSource("routes-pts")?.setData({ type: "FeatureCollection", features: buildPtFeatures(cur, sel?.id) });
+        }
+      }
+    });
+  }, [filtered]);
+
+  // Init map — runs once; all click handlers use refs to avoid stale closures
   useEffect(() => {
     if (mapRef.current || !containerRef.current) return;
     const timer = setTimeout(() => {
@@ -2453,31 +2488,36 @@ const RoutesClusterMap = ({ filtered, selIdx, onSelIdx }) => {
         });
         mapRef.current = map;
         map.on("load", () => {
-          const selId = filtered[0]?.id;
+          const cur = filteredRef.current;
 
-          // ── GPX line layers (routes with embedded coords) ──────────────
-          map.addSource("routes-lines", { type: "geojson", data: { type: "FeatureCollection", features: buildLineFeatures(filtered, selId) } });
-          // Dim lines for unselected routes
+          // ── GPX line layers ──────────────────────────────────────────
+          map.addSource("routes-lines", { type: "geojson", data: { type: "FeatureCollection", features: buildLineFeatures(cur, null) } });
           map.addLayer({ id: "routes-lines-bg", type: "line", source: "routes-lines",
             layout: { "line-join": "round", "line-cap": "round" },
             paint: { "line-color": ["get", "color"], "line-width": 3, "line-opacity": ["case", ["==", ["get", "selected"], true], 0, 0.82] }
           });
-          // Bright thick line for selected route
           map.addLayer({ id: "routes-lines-sel", type: "line", source: "routes-lines",
             filter: ["==", ["get", "selected"], true],
             layout: { "line-join": "round", "line-cap": "round" },
             paint: { "line-color": ["get", "selColor"], "line-width": 5.5, "line-opacity": 0.97 }
           });
-          map.on("click", "routes-lines-bg", (e) => {
-            const id = e.features[0].properties.id;
-            const idx = filtered.findIndex(r => r.id === id);
-            if (idx >= 0 && onSelIdx) onSelIdx(idx);
+          // Wide invisible hit layer — makes lines easy to tap without precise aim
+          map.addLayer({ id: "routes-lines-hit", type: "line", source: "routes-lines",
+            layout: { "line-join": "round", "line-cap": "round" },
+            paint: { "line-color": "rgba(0,0,0,0)", "line-width": 22 }
           });
-          map.on("mouseenter", "routes-lines-bg", () => { map.getCanvas().style.cursor = "pointer"; });
-          map.on("mouseleave", "routes-lines-bg", () => { map.getCanvas().style.cursor = ""; });
+          const handleLineClick = (e) => {
+            const id = e.features[0].properties.id;
+            const f = filteredRef.current;
+            const idx = f.findIndex(r => r.id === id);
+            if (idx >= 0) onSelIdxRef.current?.(idx);
+          };
+          map.on("click", "routes-lines-hit", handleLineClick);
+          map.on("mouseenter", "routes-lines-hit", () => { map.getCanvas().style.cursor = "pointer"; });
+          map.on("mouseleave", "routes-lines-hit", () => { map.getCanvas().style.cursor = ""; });
 
-          // ── Dot layer (fallback for routes without GPX coords) ──────────
-          map.addSource("routes-pts", { type: "geojson", data: { type: "FeatureCollection", features: buildPtFeatures(filtered, selId) } });
+          // ── Dot layer (fallback for routes without any GPX coords) ──
+          map.addSource("routes-pts", { type: "geojson", data: { type: "FeatureCollection", features: buildPtFeatures(cur, null) } });
           map.addLayer({ id: "routes-pts-glow", type: "circle", source: "routes-pts",
             filter: ["==", ["get", "selected"], true],
             paint: { "circle-color": ["get", "color"], "circle-radius": 18, "circle-opacity": 0.18, "circle-blur": 0.6 }
@@ -2493,14 +2533,20 @@ const RoutesClusterMap = ({ filtered, selIdx, onSelIdx }) => {
           });
           map.on("click", "routes-pts-dot", (e) => {
             const id = e.features[0].properties.id;
-            const idx = filtered.findIndex(r => r.id === id);
-            if (idx >= 0 && onSelIdx) onSelIdx(idx);
+            const f = filteredRef.current;
+            const idx = f.findIndex(r => r.id === id);
+            if (idx >= 0) onSelIdxRef.current?.(idx);
           });
           map.on("mouseenter", "routes-pts-dot", () => { map.getCanvas().style.cursor = "pointer"; });
           map.on("mouseleave", "routes-pts-dot", () => { map.getCanvas().style.cursor = ""; });
 
-          // Fit to initial selected route
-          fitToRoute(map, filtered[0]);
+          // Initial view: fit to ALL route lines so Five Sisters etc. are visible
+          const allFeats = buildLineFeatures(cur, null);
+          if (allFeats.length > 0) {
+            const allCoords = allFeats.flatMap(f => f.geometry.coordinates);
+            const lngs = allCoords.map(c => c[0]), lats = allCoords.map(c => c[1]);
+            map.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]], { padding: 80, maxZoom: 10, duration: 0 });
+          }
         });
       });
     }, 150);
@@ -2513,10 +2559,8 @@ const RoutesClusterMap = ({ filtered, selIdx, onSelIdx }) => {
     if (!map) return;
     const selRoute = filtered[selIdx ?? 0];
     const update = () => {
-      const lineSrc = map.getSource("routes-lines");
-      if (lineSrc) lineSrc.setData({ type: "FeatureCollection", features: buildLineFeatures(filtered, selRoute?.id) });
-      const ptSrc = map.getSource("routes-pts");
-      if (ptSrc) ptSrc.setData({ type: "FeatureCollection", features: buildPtFeatures(filtered, selRoute?.id) });
+      map.getSource("routes-lines")?.setData({ type: "FeatureCollection", features: buildLineFeatures(filtered, selRoute?.id) });
+      map.getSource("routes-pts")?.setData({ type: "FeatureCollection", features: buildPtFeatures(filtered, selRoute?.id) });
       fitToRoute(map, selRoute);
     };
     if (map.isStyleLoaded()) update();
