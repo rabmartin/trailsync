@@ -8256,10 +8256,10 @@ const TUTORIAL_STEPS = [
     pos: "bottom", arrow: "up-center", spot: { x: 50, y: 40, r: 72 },
   },
   {
-    tab: "map",
-    title: "Filter to Your List",
-    text: "The chips at the bottom of the map let you show only the classification you're currently working through — Munros only, Wainwrights only, etc.",
-    pos: "top", arrow: "down-center", spot: { x: 50, y: 84, r: 55 },
+    tab: "routes",
+    title: "Filter to Your List 🗂️",
+    text: "Use the chips at the top of the Routes screen to narrow by classification and difficulty — Munros only, Hard walks only, etc. Tap any route card for full details and the GPX track.",
+    pos: "bottom", arrow: "up-center", spot: null,
   },
   {
     tab: "map",
@@ -8272,13 +8272,13 @@ const TUTORIAL_STEPS = [
       { icon: "👥", label: "Live Hikers",   sub: "See other TrailSync users on the hills" },
       { icon: "🚶", label: "Community Walks", sub: "Planned group walks near you" },
     ],
-    pos: "bottom", arrow: "up-right", spot: { x: 87, y: 14, r: 34 },
+    pos: "bottom", arrow: "up-right", spot: null,
   },
   {
     tab: "map",
     title: "Record Your Walk ⏺",
     text: "Tap the big centre button at the bottom to start GPS recording. Your trail draws on the map in real time as you walk.",
-    pos: "top", arrow: "down-center", spot: { x: 50, y: 92, r: 34 },
+    pos: "top", arrow: "down-center", spot: null,
   },
   {
     tab: "home",
@@ -8312,7 +8312,7 @@ const TUTORIAL_STEPS = [
   },
 ];
 
-const TutorialOverlay = ({ step, totalSteps, currentStep, onNext, onSkip }) => {
+const TutorialOverlay = ({ step, totalSteps, currentStep, onNext, onPrev, onSkip }) => {
   const isLast = currentStep === totalSteps - 1;
 
   // Dim overlay with optional spotlight cutout
@@ -8473,7 +8473,19 @@ const TutorialOverlay = ({ step, totalSteps, currentStep, onNext, onSkip }) => {
 
         {/* Buttons */}
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          {!isLast && (
+          {/* Back button — only shown after first step */}
+          {currentStep > 0 && (
+            <button onClick={onPrev} style={{
+              padding: "11px 14px", borderRadius: "12px",
+              border: "1px solid rgba(90,152,227,0.15)", background: "transparent",
+              color: "#BDD6F4", fontSize: "13px", fontWeight: 600,
+              cursor: "pointer", fontFamily: "'DM Sans'", whiteSpace: "nowrap",
+            }}>
+              ← Back
+            </button>
+          )}
+          {/* Skip — only on non-last steps where there's no back button crowding */}
+          {!isLast && currentStep === 0 && (
             <button onClick={onSkip} style={{
               padding: "11px 14px", borderRadius: "12px",
               border: "1px solid rgba(90,152,227,0.15)", background: "transparent",
@@ -9710,6 +9722,12 @@ export default function TrailSync() {
             const nextStep = tutStep + 1;
             setTutStep(nextStep);
             setTab(TUTORIAL_STEPS[nextStep].tab);
+          }}
+          onPrev={() => {
+            if (tutStep <= 0) return;
+            const prevStep = tutStep - 1;
+            setTutStep(prevStep);
+            setTab(TUTORIAL_STEPS[prevStep].tab);
           }}
           onSkip={() => {
             if (authState === "tutorial") setAuthState("app");
