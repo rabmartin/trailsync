@@ -349,18 +349,18 @@ let ROUTES = [
   { id: 10, name: "Pen y Fan Horseshoe", cls: "hewitts", reg: "Brecon Beacons", diff: "Easy", dist: 6.2, elev: 550, time: "2-3h", peaks: ["Pen y Fan", "Corn Du"], rat: 4.4, rev: 678, start: "Pont ar Daf Car Park", src: "ts" },
   { id: 11, name: "An Teallach Traverse", cls: "munros", reg: "Fisherfield", diff: "Expert", dist: 15.2, elev: 1300, time: "8-10h", peaks: ["An Teallach"], rat: 4.9, rev: 112, start: "Dundonnell Car Park", src: "ts" },
   { id: 12, name: "Schiehallion", cls: "munros", reg: "Southern Highlands", diff: "Easy", dist: 9.5, elev: 760, time: "4-5h", peaks: ["Schiehallion"], rat: 4.3, rev: 445, start: "Braes of Foss Car Park", src: "ts" },
-  { id: 13, name: "West Highland Way (Full)", cls: "non-mountain", reg: "Southern Highlands", diff: "Moderate", dist: 154, elev: 4400, time: "6-8 days", peaks: [], rat: 4.8, rev: 890, start: "Milngavie Station", src: "ts", lat: 55.943, lng: -4.311 },
-  { id: 14, name: "Loch an Eilein Circuit", cls: "non-mountain", reg: "Cairngorms", diff: "Easy", dist: 5.2, elev: 60, time: "1.5-2h", peaks: [], rat: 4.6, rev: 312, start: "Loch an Eilein Car Park", src: "ts", lat: 57.137, lng: -3.818 },
-  { id: 15, name: "Glen Nevis Gorge Walk", cls: "non-mountain", reg: "Ben Nevis & Mamores", diff: "Easy", dist: 4.8, elev: 120, time: "1.5-2h", peaks: [], rat: 4.5, rev: 267, start: "Glen Nevis Lower Falls Car Park", src: "ts", lat: 56.776, lng: -5.025 },
-  { id: 16, name: "Loch Muick Circuit", cls: "non-mountain", reg: "Cairngorms", diff: "Easy", dist: 12.0, elev: 180, time: "3-4h", peaks: [], rat: 4.4, rev: 198, start: "Spittal of Glenmuick Car Park", src: "ts", lat: 56.965, lng: -3.150 },
-  { id: 17, name: "Great Glen Way", cls: "non-mountain", reg: "Ben Nevis & Mamores", diff: "Moderate", dist: 127, elev: 2200, time: "5-6 days", peaks: [], rat: 4.5, rev: 345, start: "Fort William", src: "ts", lat: 56.816, lng: -5.106 },
-  { id: 18, name: "Trossachs Trail - Loch Katrine", cls: "non-mountain", reg: "Southern Highlands", diff: "Easy", dist: 21, elev: 280, time: "5-6h", peaks: [], rat: 4.3, rev: 178, start: "Trossachs Pier", src: "ts", lat: 56.237, lng: -4.393 },
+  { id: 13, name: "West Highland Way (Full)", cls: "non-mountain", reg: "Southern Highlands", area: "West Highland Way", diff: "Moderate", dist: 154, elev: 4400, time: "6-8 days", peaks: [], rat: 4.8, rev: 890, start: "Milngavie Station", src: "ts", lat: 55.943, lng: -4.311 },
+  { id: 14, name: "Loch an Eilein Circuit", cls: "non-mountain", reg: "Cairngorms", area: "Loch an Eilein", diff: "Easy", dist: 5.2, elev: 60, time: "1.5-2h", peaks: [], rat: 4.6, rev: 312, start: "Loch an Eilein Car Park", src: "ts", lat: 57.137, lng: -3.818 },
+  { id: 15, name: "Glen Nevis Gorge Walk", cls: "non-mountain", reg: "Ben Nevis & Mamores", area: "Glen Nevis", diff: "Easy", dist: 4.8, elev: 120, time: "1.5-2h", peaks: [], rat: 4.5, rev: 267, start: "Glen Nevis Lower Falls Car Park", src: "ts", lat: 56.776, lng: -5.025 },
+  { id: 16, name: "Loch Muick Circuit", cls: "non-mountain", reg: "Cairngorms", area: "Loch Muick", diff: "Easy", dist: 12.0, elev: 180, time: "3-4h", peaks: [], rat: 4.4, rev: 198, start: "Spittal of Glenmuick Car Park", src: "ts", lat: 56.965, lng: -3.150 },
+  { id: 17, name: "Great Glen Way", cls: "non-mountain", reg: "Ben Nevis & Mamores", area: "Great Glen Way", diff: "Moderate", dist: 127, elev: 2200, time: "5-6 days", peaks: [], rat: 4.5, rev: 345, start: "Fort William", src: "ts", lat: 56.816, lng: -5.106 },
+  { id: 18, name: "Trossachs Trail - Loch Katrine", cls: "non-mountain", reg: "Southern Highlands", area: "Loch Katrine", diff: "Easy", dist: 21, elev: 280, time: "5-6h", peaks: [], rat: 4.3, rev: 178, start: "Trossachs Pier", src: "ts", lat: 56.237, lng: -4.393 },
   { id: 21, name: "The Five Sisters of Kintail", cls: "munros", reg: "Kintail", diff: "Expert", dist: 15.0, elev: 1775, time: "8-10h", peaks: ["Sgùrr na Ciste Duibhe", "Sgùrr na Càrnach", "Sgùrr Fhuaran"], rat: 4.8, rev: 156, start: "Shiel Bridge Car Park", src: "ts" },
   { id: 19, name: "Buachaille Etive Mor - Curved Ridge", cls: "munros", reg: "Glen Coe", diff: "Expert", dist: 10.5, elev: 1020, time: "5-7h", peaks: ["Buachaille Etive Mor"], rat: 4.9, rev: 67, start: "Altnafeadh Layby", src: "community" },
-  { id: 20, name: "Cairngorms Lairig Ghru Through-Walk", cls: "non-mountain", reg: "Cairngorms", diff: "Hard", dist: 30, elev: 640, time: "10-12h", peaks: [], rat: 4.7, rev: 45, start: "Linn of Dee Car Park", src: "community", lat: 56.998, lng: -3.621 },
+  { id: 20, name: "Cairngorms Lairig Ghru Through-Walk", cls: "non-mountain", reg: "Cairngorms", area: "Lairig Ghru", diff: "Hard", dist: 30, elev: 640, time: "10-12h", peaks: [], rat: 4.7, rev: 45, start: "Linn of Dee Car Park", src: "community", lat: 56.998, lng: -3.621 },
   { id: 22, name: "Ben Challum", cls: "munros", reg: "Southern Highlands", diff: "Moderate", dist: 13.5, elev: 1025, time: "5-6h", peaks: ["Ben Challum"], rat: 4.6, rev: 38, start: "Kirkton Farm, Tyndrum", src: "ts", gpx_file: "https://mferkdgzpaaxixqlanzm.supabase.co/storage/v1/object/public/gpx-files/Ben_Challum.gpx" },
-  { id: 23, name: "Stob Bàn & Mullach nan Coirean", cls: "munros", reg: "Ben Nevis & Mamores", diff: "Hard", dist: 16.5, elev: 1350, time: "6-8h", peaks: ["Stob Bàn", "Mullach nan Coirean"], rat: 4.8, rev: 52, start: "Glen Nevis Car Park", src: "ts" },
-  { id: 24, name: "Glen Loin & Coiregrograin", cls: "non-mountain", reg: "Arrochar Alps", diff: "Moderate", dist: 14.0, elev: 520, time: "4-5h", peaks: [], rat: 4.3, rev: 64, start: "Arrochar", src: "ts" },
+  { id: 23, name: "Stob Bàn & Mullach nan Coirean", cls: "munros", reg: "Ben Nevis & Mamores", diff: "Hard", dist: 16.5, elev: 1350, time: "6-8h", peaks: ["Stob Bàn", "Mullach nan Coirean"], rat: 4.8, rev: 52, start: "Glen Nevis Car Park", src: "ts", gpx_file: "https://mferkdgzpaaxixqlanzm.supabase.co/storage/v1/object/public/gpx-files/Stob_Ban_%26_Mullach_nan_Coirean.gpx" },
+  { id: 24, name: "Glen Loin & Coiregrograin", cls: "non-mountain", reg: "Arrochar Alps", area: "Arrochar", diff: "Moderate", dist: 14.0, elev: 520, time: "4-5h", peaks: [], rat: 4.3, rev: 64, start: "Arrochar", src: "ts" },
 ];
 
 const C_WALKS = [
@@ -2397,8 +2397,9 @@ const RoutesClusterMap = ({ filtered, selIdx, onSelIdx }) => {
     return [pk?.lng ?? reg?.lng ?? -4.5, pk?.lat ?? reg?.lat ?? 56.5];
   };
 
-  // Returns coord array from hardcoded ROUTE_COORDS or dynamically loaded GPX cache
-  const getLineCoords = (r) => ROUTE_COORDS[r?.id] || gpxCacheRef.current[r?.id] || null;
+  // Returns coord array — dynamic GPX cache takes priority over hardcoded ROUTE_COORDS
+  // so that routes with a gpx_file always use the real Supabase GPX once loaded.
+  const getLineCoords = (r) => gpxCacheRef.current[r?.id] || ROUTE_COORDS[r?.id] || null;
 
   const buildPtFeatures = (routes, selId) => routes
     .filter(r => !getLineCoords(r))
@@ -2449,7 +2450,7 @@ const RoutesClusterMap = ({ filtered, selIdx, onSelIdx }) => {
   // Dynamically load GPX for routes that have gpx_file but no hardcoded coords
   useEffect(() => {
     const toLoad = filtered.filter(r =>
-      r.gpx_file && !ROUTE_COORDS[r.id] && !Object.prototype.hasOwnProperty.call(gpxCacheRef.current, r.id)
+      r.gpx_file && !Object.prototype.hasOwnProperty.call(gpxCacheRef.current, r.id)
     );
     if (!toLoad.length) return;
     setGpxLoading(true);
@@ -2718,9 +2719,16 @@ const RouteListCard = ({ r, i, onSelect }) => {
 // Routes without peaks → grouped by region (non-mountain routes only).
 const getRouteGroup = (anchor, allRoutes) => {
   if (anchor.peaks?.length > 0) {
+    // Mountain routes: group by shared peak (e.g. all Ben Nevis routes together)
     return allRoutes.filter(r => r.peaks?.some(p => anchor.peaks.includes(p)));
   }
-  return allRoutes.filter(r => (!r.peaks || r.peaks.length === 0) && r.reg === anchor.reg);
+  // Non-mountain routes: group by explicit area field so e.g. "Loch Katrine"
+  // stays separate from "West Highland Way" even if both are "Southern Highlands".
+  // Routes with no area field are standalone (won't be grouped with anything).
+  if (anchor.area) {
+    return allRoutes.filter(r => (!r.peaks || r.peaks.length === 0) && r.area === anchor.area);
+  }
+  return [anchor];
 };
 
 const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
@@ -2998,7 +3006,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
                 </span>
                 <button
                   onClick={() => { setMapSelIdx(null); setMapAnchorId(null); }}
-                  style={{ background: "rgba(4,30,61,0.85)", backdropFilter: "blur(8px)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", padding: "3px 10px", color: "#BDD6F4", fontSize: "16px", cursor: "pointer", lineHeight: 1 }}
+                  style={{ background: "rgba(4,30,61,0.85)", backdropFilter: "blur(8px)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", padding: "5px 13px", color: "#BDD6F4", fontSize: "20px", cursor: "pointer", lineHeight: 1 }}
                 >×</button>
               </div>
             )}
@@ -3051,7 +3059,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
                       <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "6px", background: `${dc(r.diff)}18`, color: dc(r.diff), fontWeight: 600, fontFamily: "'DM Sans'" }}>{r.diff}</span>
                       {r.src === "community" && <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "5px", background: "rgba(90,152,227,0.12)", color: "#5A98E3", fontWeight: 600 }}>Community</span>}
                       {routeGroup.length === 1 && (
-                        <button onClick={() => { setMapSelIdx(null); setMapAnchorId(null); }} style={{ marginLeft: "auto", background: "none", border: "none", color: "#BDD6F4", opacity: 0.5, cursor: "pointer", fontSize: "18px", lineHeight: 1, padding: "0 2px" }}>×</button>
+                        <button onClick={() => { setMapSelIdx(null); setMapAnchorId(null); }} style={{ marginLeft: "auto", background: "none", border: "none", color: "#BDD6F4", opacity: 0.6, cursor: "pointer", fontSize: "24px", lineHeight: 1, padding: "0 4px" }}>×</button>
                       )}
                     </div>
                     {/* Name + region */}
@@ -4689,7 +4697,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
         <button
           style={{
             position: "absolute",
-            bottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)",
+            bottom: "calc(env(safe-area-inset-bottom, 0px) + 34px)",
             right: "10px",
             zIndex: 25,
             width: "44px",
