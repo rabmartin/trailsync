@@ -3750,7 +3750,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
 
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
-  const geolocateRef = useRef(null);
+  const locationWatchRef = useRef(null);
   const mapLoadedRef = useRef(false);
   const gpxRouteRef = useRef(gpxRoute);
   useEffect(() => { gpxRouteRef.current = gpxRoute; }, [gpxRoute]);
@@ -3768,18 +3768,40 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       pitch: d3 ? 45 : 0,
     });
     map.addControl(new mapboxgl.NavigationControl(), "bottom-left");
-    const geolocate = new mapboxgl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showUserHeading: true });
-    map.addControl(geolocate, "bottom-right");
     mapRef.current = map;
-    geolocateRef.current = geolocate;
 
-    map.on("load", () => {
-      mapLoadedRef.current = true;
-      // Only auto-geolocate if no GPX route is waiting to be drawn
-      if (!gpxRouteRef.current) {
-        setTimeout(() => { try { geolocate.trigger(); } catch(e) {} }, 1000);
-      }
-    });
+    map.on("load", () => { mapLoadedRef.current = true; });
+
+    // Always-on location watch — keeps the custom blue marker current even when not recording
+    if (navigator.geolocation) {
+      let firstFix = true;
+      const watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          const { latitude: lat, longitude: lng, altitude: alt } = pos.coords;
+          const m = mapRef.current;
+          if (!m) return;
+          import("mapbox-gl").then(mod => {
+            const mapboxgl = mod.default;
+            if (locationMarkerRef.current) {
+              locationMarkerRef.current.setLngLat([lng, lat]);
+              const lbl = locationMarkerRef.current.getElement()?.querySelector(".elev-label");
+              if (lbl && alt != null) { lbl.textContent = `${Math.round(alt)}m`; lbl.style.display = "block"; }
+            } else if (mapLoadedRef.current) {
+              const el = createLocationDot();
+              locationMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: "center" })
+                .setLngLat([lng, lat]).addTo(m);
+            }
+            if (firstFix) {
+              firstFix = false;
+              if (!gpxRouteRef.current) m.flyTo({ center: [lng, lat], zoom: Math.max(m.getZoom(), 10), duration: 1500 });
+            }
+          });
+        },
+        null,
+        { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 }
+      );
+      locationWatchRef.current = watchId;
+    }
 
     // Detect user-initiated map panning (touchstart/dragstart have originalEvent set)
     const onUserMove = (e) => {
@@ -3788,110 +3810,9 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     map.on("dragstart", onUserMove);
     map.on("touchstart", onUserMove);
 
-    // Long-press → draggable ghost pin → "Pin a Spot" sheet on release
-    // Ghost is a position:fixed body element so it tracks clientX/Y exactly —
-    // no Mapbox coordinate math needed for the visual, only for the final lngLat.
-    let longPressTimer = null;
-    let ghostEl = null;
-    let isDraggingGhost = false;
-    let fingerPos = { x: 0, y: 0 }; // updated by native touchmove
-    let lpStartPos = null;
-
-    const removeGhost = () => {
-      if (ghostEl) { try { ghostEl.remove(); } catch(_){} ghostEl = null; }
-    };
-
-    const moveGhost = (x, y) => {
-      if (ghostEl) { ghostEl.style.left = x + "px"; ghostEl.style.top = y + "px"; }
-    };
-
-    const canvas = map.getCanvas();
-
-    // Native touchmove — passive:false so we can preventDefault during drag
-    const onNativeMove = (e) => {
-      if (e.touches.length > 1) {
-        // Second finger added (e.g. 3D tilt) — cancel any pending long-press
-        if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; lpStartPos = null; }
-        return;
-      }
-      if (e.touches.length !== 1) return;
-      const t = e.touches[0];
-      fingerPos = { x: t.clientX, y: t.clientY };
-      if (isDraggingGhost) {
-        e.preventDefault();
-        moveGhost(t.clientX, t.clientY);
-      } else if (lpStartPos && longPressTimer) {
-        const dx = t.clientX - lpStartPos.x, dy = t.clientY - lpStartPos.y;
-        if (Math.sqrt(dx * dx + dy * dy) > 8) {
-          clearTimeout(longPressTimer); longPressTimer = null; lpStartPos = null;
-        }
-      }
-    };
-
-    // Native touchend — resolve final lngLat from clientX/Y via unproject
-    const onNativeEnd = (e) => {
-      if (isDraggingGhost) {
-        isDraggingGhost = false;
-        map.dragPan.enable();
-        removeGhost();
-        // changedTouches gives the most accurate final finger position at release
-        if (e?.changedTouches?.length > 0) {
-          const t = e.changedTouches[0];
-          fingerPos = { x: t.clientX, y: t.clientY };
-        }
-        const rect = canvas.getBoundingClientRect();
-        const lngLat = map.unproject([fingerPos.x - rect.left, fingerPos.y - rect.top]);
-        setPendingSpot({ lat: lngLat.lat, lng: lngLat.lng });
-        // Place a visible marker that persists until the form is saved or cancelled
-        if (pendingSpotMarkerRef.current) { try { pendingSpotMarkerRef.current.remove(); } catch(_) {} }
-        const dropEl = document.createElement("div");
-        dropEl.style.cssText = "width:32px;height:48px;pointer-events:none;";
-        dropEl.innerHTML = `<svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="16" cy="47" rx="5" ry="2" fill="rgba(0,0,0,0.18)"/><line x1="16" y1="25" x2="16" y2="45" stroke="#666" stroke-width="2.5" stroke-linecap="round"/><circle cx="16" cy="14" r="13" fill="rgba(0,0,0,0.18)"/><circle cx="16" cy="13" r="13" fill="#E85D3A"/><circle cx="16" cy="13" r="13" fill="url(#psg)" opacity="0.6"/><circle cx="10" cy="7" r="4.5" fill="rgba(255,255,255,0.45)"/><defs><radialGradient id="psg" cx="35%" cy="30%" r="65%"><stop offset="0%" stop-color="#fff" stop-opacity="0.55"/><stop offset="100%" stop-color="#000" stop-opacity="0.15"/></radialGradient></defs></svg>`;
-        pendingSpotMarkerRef.current = new mapboxgl.Marker({ element: dropEl, anchor: "bottom" })
-          .setLngLat([lngLat.lng, lngLat.lat])
-          .addTo(map);
-      } else {
-        clearTimeout(longPressTimer); longPressTimer = null;
-        removeGhost();
-      }
-      lpStartPos = null;
-    };
-
-    canvas.addEventListener("touchmove",   onNativeMove, { passive: false });
-    canvas.addEventListener("touchend",    onNativeEnd);
-    canvas.addEventListener("touchcancel", onNativeEnd);
-
-    // Mapbox touchstart — capture initial finger position
-    const onLongPressStart = (e) => {
-      if (e.originalEvent?.touches?.length !== 1) return;
-      const t = e.originalEvent.touches[0];
-      lpStartPos = { x: t.clientX, y: t.clientY };
-      fingerPos  = { x: t.clientX, y: t.clientY };
-      longPressTimer = setTimeout(() => {
-        longPressTimer = null;
-        isDraggingGhost = true;
-        map.dragPan.disable();
-        // Build ghost as a fixed-position element — position tracks clientX/Y directly
-        ghostEl = document.createElement("div");
-        ghostEl.style.cssText = `position:fixed;width:32px;height:48px;pointer-events:none;z-index:9999;left:${fingerPos.x}px;top:${fingerPos.y}px;transform:translate(-50%,-100%);animation:lpDrop 0.42s cubic-bezier(0.34,1.56,0.64,1) forwards`;
-        ghostEl.innerHTML = `<svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <ellipse cx="16" cy="47" rx="5" ry="2" fill="rgba(0,0,0,0.18)"/>
-          <line x1="16" y1="25" x2="16" y2="45" stroke="#666" stroke-width="2.5" stroke-linecap="round"/>
-          <circle cx="16" cy="14" r="13" fill="rgba(0,0,0,0.18)"/>
-          <circle cx="16" cy="13" r="13" fill="#E85D3A"/>
-          <circle cx="16" cy="13" r="13" fill="url(#glg)" opacity="0.6"/>
-          <circle cx="10" cy="7" r="4.5" fill="rgba(255,255,255,0.45)"/>
-          <defs><radialGradient id="glg" cx="35%" cy="30%" r="65%"><stop offset="0%" stop-color="#fff" stop-opacity="0.55"/><stop offset="100%" stop-color="#000" stop-opacity="0.15"/></radialGradient></defs>
-        </svg>`;
-        document.body.appendChild(ghostEl);
-        setTimeout(() => { if (ghostEl) ghostEl.style.animation = "lpPulse 0.9s ease infinite"; }, 440);
-      }, 500);
-    };
-
-    map.on("touchstart", onLongPressStart);
-
     }); return () => {
       mapLoadedRef.current = false;
+      if (locationWatchRef.current != null) { navigator.geolocation.clearWatch(locationWatchRef.current); locationWatchRef.current = null; }
       if (mapRef.current) mapRef.current.remove();
     };
   }, []);
@@ -4599,7 +4520,8 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
               const lastPt = trackPointsRef.current[trackPointsRef.current.length - 1];
               if (lastPt && mapRef.current) mapRef.current.flyTo({ center: [lastPt.lng, lastPt.lat], duration: 600 });
             } else {
-              try { geolocateRef.current?.trigger(); } catch (_) {}
+              const pos = locationMarkerRef.current?.getLngLat();
+              if (pos && mapRef.current) mapRef.current.flyTo({ center: [pos.lng, pos.lat], zoom: Math.max(mapRef.current.getZoom(), 10), duration: 600 });
             }
             userMovedMapRef.current = false;
             setUserMovedMap(false);
@@ -4687,14 +4609,85 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
         </div>
       </div>
 
-      {/* Spot type filter pills — shown when saved spots are visible */}
-      {(showSpots || savedSpots?.length > 0) && !flyoverActive && (
+      {/* Spot type filter pills — explore mode only */}
+      {(showSpots || savedSpots?.length > 0) && !flyoverActive && !gpxRoute && !recording && !paused && (
         <div style={{ position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 56px)", left: 10, right: 10, zIndex: 19, display: "flex", gap: "6px", overflowX: "auto", scrollbarWidth: "none", pointerEvents: "auto" }}>
           <button onClick={() => { if (showSpots && !spotTypeFilter) { setShowSpots(false); } else { setShowSpots(true); setSpotTypeFilter(null); } }} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: "14px", border: "none", background: showSpots && !spotTypeFilter ? "rgba(107,203,119,0.9)" : "rgba(4,30,61,0.85)", color: showSpots && !spotTypeFilter ? "#041e3d" : "#BDD6F4", fontSize: "12px", fontWeight: 700, cursor: "pointer", backdropFilter: "blur(8px)", fontFamily: "'DM Sans'" }}>All</button>
           {SPOT_TYPES.map(({ id, label, color }) => (
             <button key={id} onClick={() => { if (showSpots && spotTypeFilter === id) { setShowSpots(false); setSpotTypeFilter(null); } else { setShowSpots(true); setSpotTypeFilter(id); } }} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: "14px", border: "none", background: showSpots && spotTypeFilter === id ? color : "rgba(4,30,61,0.85)", color: showSpots && spotTypeFilter === id ? "#fff" : "#BDD6F4", fontSize: "12px", fontWeight: 700, cursor: "pointer", backdropFilter: "blur(8px)", fontFamily: "'DM Sans'" }}>{label}</button>
           ))}
         </div>
+      )}
+
+      {/* Pin drop "+" button — explore mode only, drag to place a saved spot */}
+      {!gpxRoute && !recording && !paused && !flyoverActive && (
+        <button
+          style={{
+            position: "absolute",
+            bottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)",
+            right: "10px",
+            zIndex: 25,
+            width: "44px",
+            height: "44px",
+            borderRadius: "22px",
+            background: "rgba(4,30,61,0.92)",
+            border: "1px solid rgba(90,152,227,0.3)",
+            color: "#5A98E3",
+            fontSize: "22px",
+            fontWeight: 300,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.35)",
+            backdropFilter: "blur(8px)",
+            touchAction: "none",
+            userSelect: "none",
+            fontFamily: "'DM Sans'",
+          }}
+          onTouchStart={(e) => {
+            e.preventDefault();
+            const map = mapRef.current;
+            if (!map) return;
+            const btnRect = e.currentTarget.getBoundingClientRect();
+            const startX = btnRect.left + btnRect.width / 2;
+            const startY = btnRect.top;
+            const ghost = document.createElement("div");
+            ghost.style.cssText = `position:fixed;width:32px;height:48px;pointer-events:none;z-index:9999;left:${startX}px;top:${startY}px;transform:translate(-50%,-100%);animation:pinRise 0.32s cubic-bezier(0.34,1.56,0.64,1) forwards`;
+            ghost.innerHTML = `<svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="16" cy="47" rx="5" ry="2" fill="rgba(0,0,0,0.18)"/><line x1="16" y1="25" x2="16" y2="45" stroke="#666" stroke-width="2.5" stroke-linecap="round"/><circle cx="16" cy="14" r="13" fill="rgba(0,0,0,0.18)"/><circle cx="16" cy="13" r="13" fill="#E85D3A"/><circle cx="16" cy="13" r="13" fill="url(#pbg)" opacity="0.6"/><circle cx="10" cy="7" r="4.5" fill="rgba(255,255,255,0.45)"/><defs><radialGradient id="pbg" cx="35%" cy="30%" r="65%"><stop offset="0%" stop-color="#fff" stop-opacity="0.55"/><stop offset="100%" stop-color="#000" stop-opacity="0.15"/></radialGradient></defs></svg>`;
+            document.body.appendChild(ghost);
+            map.dragPan.disable();
+            const onMove = (ev) => {
+              const t = ev.touches?.[0] || ev;
+              ghost.style.left = t.clientX + "px";
+              ghost.style.top = t.clientY + "px";
+            };
+            const onEnd = (ev) => {
+              document.removeEventListener("touchmove", onMove);
+              document.removeEventListener("touchend", onEnd);
+              try { ghost.remove(); } catch (_) {}
+              map.dragPan.enable();
+              const t = ev.changedTouches?.[0] || ev;
+              const canvas = map.getCanvas();
+              const rect = canvas.getBoundingClientRect();
+              const lngLat = map.unproject([t.clientX - rect.left, t.clientY - rect.top]);
+              setPendingSpot({ lat: lngLat.lat, lng: lngLat.lng });
+              if (pendingSpotMarkerRef.current) { try { pendingSpotMarkerRef.current.remove(); } catch (_) {} }
+              import("mapbox-gl").then(mod => {
+                const mapboxgl = mod.default;
+                const dropEl = document.createElement("div");
+                dropEl.style.cssText = "width:32px;height:48px;pointer-events:none;";
+                dropEl.innerHTML = `<svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="16" cy="47" rx="5" ry="2" fill="rgba(0,0,0,0.18)"/><line x1="16" y1="25" x2="16" y2="45" stroke="#666" stroke-width="2.5" stroke-linecap="round"/><circle cx="16" cy="14" r="13" fill="rgba(0,0,0,0.18)"/><circle cx="16" cy="13" r="13" fill="#E85D3A"/><circle cx="16" cy="13" r="13" fill="url(#pdg)" opacity="0.6"/><circle cx="10" cy="7" r="4.5" fill="rgba(255,255,255,0.45)"/><defs><radialGradient id="pdg" cx="35%" cy="30%" r="65%"><stop offset="0%" stop-color="#fff" stop-opacity="0.55"/><stop offset="100%" stop-color="#000" stop-opacity="0.15"/></radialGradient></defs></svg>`;
+                pendingSpotMarkerRef.current = new mapboxgl.Marker({ element: dropEl, anchor: "bottom" })
+                  .setLngLat([lngLat.lng, lngLat.lat]).addTo(map);
+              });
+            };
+            document.addEventListener("touchmove", onMove, { passive: true });
+            document.addEventListener("touchend", onEnd, { once: true });
+          }}
+        >
+          +
+        </button>
       )}
 
       {/* Unsure prompt */}
