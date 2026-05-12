@@ -327,7 +327,7 @@ const REGION_PHOTOS = {
   "Breadalbane":                "/wx-photos/breadalbane.jpg",
 };
 
-const ROUTE_COORDS = {"21": [[-5.295196, 57.169531], [-5.296104, 57.169734], [-5.296411, 57.170138], [-5.296038, 57.170411], [-5.296856, 57.170675], [-5.29612, 57.171086], [-5.296222, 57.171541], [-5.294684, 57.171618], [-5.294529, 57.172662], [-5.292121, 57.172453], [-5.2921, 57.172905], [-5.291544, 57.173228], [-5.291679, 57.174531], [-5.293064, 57.175567], [-5.293408, 57.176514], [-5.293032, 57.177313], [-5.293788, 57.178112], [-5.295096, 57.178269], [-5.298334, 57.177895], [-5.3, 57.17796], [-5.304114, 57.179053], [-5.306203, 57.179069], [-5.307432, 57.179486], [-5.312431, 57.179815], [-5.315276, 57.179734], [-5.318937, 57.180347], [-5.320477, 57.181035], [-5.322118, 57.181103], [-5.324894, 57.181785], [-5.327146, 57.181799], [-5.328477, 57.181168], [-5.332006, 57.180652], [-5.334218, 57.181148], [-5.335451, 57.180543], [-5.336649, 57.180943], [-5.339118, 57.181061], [-5.340027, 57.180733], [-5.341199, 57.180727], [-5.342613, 57.181083], [-5.344534, 57.182148], [-5.345827, 57.182543], [-5.346785, 57.183144], [-5.346996, 57.18387], [-5.348029, 57.184346], [-5.347983, 57.185584], [-5.348847, 57.18608], [-5.349235, 57.18808], [-5.349778, 57.188285], [-5.349685, 57.18874], [-5.349081, 57.189098], [-5.34956, 57.189792], [-5.348924, 57.190259], [-5.348325, 57.191653], [-5.348255, 57.192252], [-5.348786, 57.192793], [-5.34824, 57.193803], [-5.348781, 57.194373], [-5.348072, 57.194719], [-5.34824, 57.195181], [-5.347802, 57.195536], [-5.347862, 57.19613], [-5.347524, 57.196119], [-5.348043, 57.196468], [-5.350227, 57.196764], [-5.350786, 57.197318], [-5.349549, 57.198283], [-5.34887, 57.199871], [-5.349067, 57.200643], [-5.353407, 57.203284], [-5.353615, 57.203946], [-5.354622, 57.204942], [-5.354237, 57.205082], [-5.354822, 57.206038], [-5.358251, 57.206314], [-5.360664, 57.206811], [-5.362752, 57.208324], [-5.368339, 57.209862], [-5.373958, 57.210415], [-5.378298, 57.211362], [-5.378837, 57.211835], [-5.380058, 57.212207], [-5.380623, 57.212782], [-5.380785, 57.213429], [-5.379812, 57.214048], [-5.381592, 57.214584], [-5.386095, 57.216984], [-5.387652, 57.217492], [-5.391596, 57.220484], [-5.393126, 57.221123], [-5.393393, 57.221671], [-5.393013, 57.222949], [-5.39388, 57.224088], [-5.395387, 57.224795], [-5.400667, 57.225007], [-5.400803, 57.22543], [-5.401505, 57.225733], [-5.402806, 57.225849], [-5.402427, 57.22697], [-5.403312, 57.227113], [-5.402721, 57.227536], [-5.402913, 57.227814], [-5.404663, 57.227537], [-5.405926, 57.226746]], "22": [[-4.662437, 56.416623], [-4.661831, 56.41764], [-4.660599, 56.41873], [-4.661078, 56.420159], [-4.659217, 56.42166], [-4.657591, 56.422032], [-4.657242, 56.421881], [-4.657278, 56.4223], [-4.656012, 56.423687], [-4.651368, 56.425909], [-4.649407, 56.42735], [-4.647857, 56.428024], [-4.647847, 56.428456], [-4.647226, 56.428883], [-4.642365, 56.429988], [-4.638752, 56.431839], [-4.638105, 56.433144], [-4.635982, 56.435386], [-4.636459, 56.435018], [-4.635355, 56.437202], [-4.634, 56.438359], [-4.629909, 56.440115], [-4.626356, 56.441293], [-4.625836, 56.441747], [-4.624804, 56.441854], [-4.623074, 56.442738], [-4.622057, 56.444033], [-4.621765, 56.443632], [-4.621726, 56.444145], [-4.622045, 56.444063], [-4.620478, 56.444919], [-4.619742, 56.446394], [-4.619691, 56.447725], [-4.620401, 56.448596], [-4.619805, 56.450594], [-4.620291, 56.453384], [-4.619207, 56.454599]], "23": [[-5.036639, 56.769528], [-5.036652, 56.770222], [-5.034397, 56.768895], [-5.034404, 56.767473], [-5.035062, 56.766957], [-5.034737, 56.766236], [-5.033266, 56.765289], [-5.032855, 56.76458], [-5.031841, 56.764334], [-5.030809, 56.763422], [-5.029547, 56.76284], [-5.029321, 56.761656], [-5.027889, 56.760913], [-5.026115, 56.759088], [-5.025828, 56.757423], [-5.025018, 56.756643], [-5.025027, 56.755931], [-5.024187, 56.754821], [-5.024237, 56.752132], [-5.023839, 56.751725], [-5.022818, 56.751615], [-5.022942, 56.752019], [-5.022419, 56.751896], [-5.022141, 56.752153], [-5.020061, 56.751616], [-5.018633, 56.750569], [-5.018705, 56.750146], [-5.01772, 56.749381], [-5.017557, 56.748659], [-5.015039, 56.74776], [-5.014587, 56.747496], [-5.014695, 56.747108], [-5.013422, 56.746587], [-5.013107, 56.746034], [-5.013439, 56.745774], [-5.013003, 56.745694], [-5.012976, 56.745411], [-5.015815, 56.744741], [-5.015739, 56.744402], [-5.014789, 56.743949], [-5.015467, 56.743862], [-5.015758, 56.743533], [-5.019923, 56.744406], [-5.022529, 56.743464], [-5.02447, 56.743208], [-5.02727, 56.74317], [-5.027373, 56.743439], [-5.028289, 56.74356], [-5.030085, 56.74328], [-5.030731, 56.743351], [-5.030338, 56.743907], [-5.030985, 56.744636], [-5.031723, 56.74465], [-5.031754, 56.745558], [-5.03251, 56.746168], [-5.035344, 56.746802], [-5.038682, 56.747124], [-5.043524, 56.746392], [-5.044434, 56.746484], [-5.046965, 56.744752], [-5.050382, 56.743549], [-5.053282, 56.742909], [-5.05496, 56.742881], [-5.056998, 56.743223]], "24": [[-4.744876, 56.206562], [-4.744712, 56.206703], [-4.745384, 56.20698], [-4.745418, 56.207246], [-4.743594, 56.208128], [-4.742989, 56.208594], [-4.741652, 56.208373], [-4.740996, 56.208946], [-4.740761, 56.21012], [-4.739342, 56.212615], [-4.738402, 56.215107], [-4.735209, 56.21777], [-4.735132, 56.218516], [-4.734369, 56.219221], [-4.732777, 56.219911], [-4.731205, 56.221277], [-4.730516, 56.222404], [-4.730213, 56.223463], [-4.729148, 56.224821], [-4.728876, 56.225684], [-4.728578, 56.225986], [-4.728546, 56.226966], [-4.728117, 56.227679], [-4.728065, 56.228166], [-4.728836, 56.229204], [-4.728799, 56.229707], [-4.731193, 56.231312], [-4.731109, 56.233389], [-4.730543, 56.23421], [-4.730539, 56.234566], [-4.730956, 56.234921], [-4.73051, 56.235388], [-4.730736, 56.235699], [-4.730567, 56.235986], [-4.730691, 56.236913], [-4.731399, 56.23746], [-4.731492, 56.237951], [-4.731948, 56.238451], [-4.732257, 56.240745], [-4.732605, 56.241134], [-4.73264, 56.241627], [-4.733027, 56.242176], [-4.734613, 56.242821], [-4.741046, 56.244203], [-4.740996, 56.244924], [-4.739966, 56.244947], [-4.739153, 56.245159], [-4.740825, 56.246194], [-4.74213, 56.246554], [-4.743635, 56.246682], [-4.745519, 56.247012], [-4.746626, 56.247659], [-4.746918, 56.247685], [-4.748227, 56.24709], [-4.748974, 56.246159], [-4.749618, 56.245825], [-4.752526, 56.245049], [-4.753473, 56.243466], [-4.753697, 56.242733], [-4.75432, 56.242112], [-4.7548, 56.241916], [-4.756174, 56.24182], [-4.758337, 56.2414], [-4.760291, 56.241304], [-4.761207, 56.241114], [-4.766984, 56.241041], [-4.767527, 56.241522], [-4.767764, 56.241582], [-4.768634, 56.241562], [-4.773724, 56.242443], [-4.775852, 56.242331], [-4.778474, 56.242021], [-4.778765, 56.241829], [-4.778915, 56.240296], [-4.779815, 56.23988], [-4.781032, 56.238639], [-4.783821, 56.236841], [-4.783538, 56.236742], [-4.783648, 56.236448], [-4.784154, 56.236024], [-4.781834, 56.236366], [-4.780761, 56.236255], [-4.779206, 56.236398], [-4.778209, 56.236672], [-4.777477, 56.237048], [-4.774419, 56.237827], [-4.77079, 56.238313], [-4.767315, 56.239146], [-4.763952, 56.239288], [-4.760597, 56.239768], [-4.758223, 56.239749], [-4.749612, 56.238961], [-4.746495, 56.238491], [-4.743993, 56.237355], [-4.741637, 56.235556], [-4.739667, 56.233734], [-4.738377, 56.232163], [-4.737829, 56.231038], [-4.738241, 56.229582], [-4.739095, 56.22821], [-4.739208, 56.2273], [-4.740266, 56.226081], [-4.741015, 56.225723], [-4.741507, 56.225155], [-4.741839, 56.223471], [-4.742635, 56.221296], [-4.747395, 56.2168], [-4.747816, 56.216152], [-4.748657, 56.21572], [-4.748873, 56.21514], [-4.749588, 56.214755], [-4.750325, 56.213561], [-4.752106, 56.212533], [-4.752718, 56.211616], [-4.752806, 56.210823], [-4.753752, 56.208501], [-4.753529, 56.208308], [-4.752362, 56.209125], [-4.75082, 56.21102], [-4.750821, 56.211488], [-4.747411, 56.213869], [-4.746171, 56.21502], [-4.74549, 56.215422], [-4.74472, 56.215259], [-4.743079, 56.214648], [-4.743475, 56.213857], [-4.744277, 56.21357], [-4.747258, 56.209931], [-4.745396, 56.209145], [-4.745747, 56.20774], [-4.746502, 56.207256], [-4.746456, 56.207059], [-4.744939, 56.206589]]};
+const ROUTE_COORDS = {"21": [[-5.295196, 57.169531], [-5.296104, 57.169734], [-5.296411, 57.170138], [-5.296038, 57.170411], [-5.296856, 57.170675], [-5.29612, 57.171086], [-5.296222, 57.171541], [-5.294684, 57.171618], [-5.294529, 57.172662], [-5.292121, 57.172453], [-5.2921, 57.172905], [-5.291544, 57.173228], [-5.291679, 57.174531], [-5.293064, 57.175567], [-5.293408, 57.176514], [-5.293032, 57.177313], [-5.293788, 57.178112], [-5.295096, 57.178269], [-5.298334, 57.177895], [-5.3, 57.17796], [-5.304114, 57.179053], [-5.306203, 57.179069], [-5.307432, 57.179486], [-5.312431, 57.179815], [-5.315276, 57.179734], [-5.318937, 57.180347], [-5.320477, 57.181035], [-5.322118, 57.181103], [-5.324894, 57.181785], [-5.327146, 57.181799], [-5.328477, 57.181168], [-5.332006, 57.180652], [-5.334218, 57.181148], [-5.335451, 57.180543], [-5.336649, 57.180943], [-5.339118, 57.181061], [-5.340027, 57.180733], [-5.341199, 57.180727], [-5.342613, 57.181083], [-5.344534, 57.182148], [-5.345827, 57.182543], [-5.346785, 57.183144], [-5.346996, 57.18387], [-5.348029, 57.184346], [-5.347983, 57.185584], [-5.348847, 57.18608], [-5.349235, 57.18808], [-5.349778, 57.188285], [-5.349685, 57.18874], [-5.349081, 57.189098], [-5.34956, 57.189792], [-5.348924, 57.190259], [-5.348325, 57.191653], [-5.348255, 57.192252], [-5.348786, 57.192793], [-5.34824, 57.193803], [-5.348781, 57.194373], [-5.348072, 57.194719], [-5.34824, 57.195181], [-5.347802, 57.195536], [-5.347862, 57.19613], [-5.347524, 57.196119], [-5.348043, 57.196468], [-5.350227, 57.196764], [-5.350786, 57.197318], [-5.349549, 57.198283], [-5.34887, 57.199871], [-5.349067, 57.200643], [-5.353407, 57.203284], [-5.353615, 57.203946], [-5.354622, 57.204942], [-5.354237, 57.205082], [-5.354822, 57.206038], [-5.358251, 57.206314], [-5.360664, 57.206811], [-5.362752, 57.208324], [-5.368339, 57.209862], [-5.373958, 57.210415], [-5.378298, 57.211362], [-5.378837, 57.211835], [-5.380058, 57.212207], [-5.380623, 57.212782], [-5.380785, 57.213429], [-5.379812, 57.214048], [-5.381592, 57.214584], [-5.386095, 57.216984], [-5.387652, 57.217492], [-5.391596, 57.220484], [-5.393126, 57.221123], [-5.393393, 57.221671], [-5.393013, 57.222949], [-5.39388, 57.224088], [-5.395387, 57.224795], [-5.400667, 57.225007], [-5.400803, 57.22543], [-5.401505, 57.225733], [-5.402806, 57.225849], [-5.402427, 57.22697], [-5.403312, 57.227113], [-5.402721, 57.227536], [-5.402913, 57.227814], [-5.404663, 57.227537], [-5.405926, 57.226746]], "22": [[-4.662437, 56.416623], [-4.661831, 56.41764], [-4.660599, 56.41873], [-4.661078, 56.420159], [-4.659217, 56.42166], [-4.657591, 56.422032], [-4.657242, 56.421881], [-4.657278, 56.4223], [-4.656012, 56.423687], [-4.651368, 56.425909], [-4.649407, 56.42735], [-4.647857, 56.428024], [-4.647847, 56.428456], [-4.647226, 56.428883], [-4.642365, 56.429988], [-4.638752, 56.431839], [-4.638105, 56.433144], [-4.635982, 56.435386], [-4.636459, 56.435018], [-4.635355, 56.437202], [-4.634, 56.438359], [-4.629909, 56.440115], [-4.626356, 56.441293], [-4.625836, 56.441747], [-4.624804, 56.441854], [-4.623074, 56.442738], [-4.622057, 56.444033], [-4.621765, 56.443632], [-4.621726, 56.444145], [-4.622045, 56.444063], [-4.620478, 56.444919], [-4.619742, 56.446394], [-4.619691, 56.447725], [-4.620401, 56.448596], [-4.619805, 56.450594], [-4.620291, 56.453384], [-4.619207, 56.454599]], "23": [[-5.036639, 56.769528], [-5.036652, 56.770222], [-5.034397, 56.768895], [-5.034404, 56.767473], [-5.035062, 56.766957], [-5.034737, 56.766236], [-5.033266, 56.765289], [-5.032855, 56.76458], [-5.031841, 56.764334], [-5.030809, 56.763422], [-5.029547, 56.76284], [-5.029321, 56.761656], [-5.027889, 56.760913], [-5.026115, 56.759088], [-5.025828, 56.757423], [-5.025018, 56.756643], [-5.025027, 56.755931], [-5.024187, 56.754821], [-5.024237, 56.752132], [-5.023839, 56.751725], [-5.022818, 56.751615], [-5.022942, 56.752019], [-5.022419, 56.751896], [-5.022141, 56.752153], [-5.020061, 56.751616], [-5.018633, 56.750569], [-5.018705, 56.750146], [-5.01772, 56.749381], [-5.017557, 56.748659], [-5.015039, 56.74776], [-5.014587, 56.747496], [-5.014695, 56.747108], [-5.013422, 56.746587], [-5.013107, 56.746034], [-5.013439, 56.745774], [-5.013003, 56.745694], [-5.012976, 56.745411], [-5.015815, 56.744741], [-5.015739, 56.744402], [-5.014789, 56.743949], [-5.015467, 56.743862], [-5.015758, 56.743533], [-5.019923, 56.744406], [-5.022529, 56.743464], [-5.02447, 56.743208], [-5.02727, 56.74317], [-5.027373, 56.743439], [-5.028289, 56.74356], [-5.030085, 56.74328], [-5.030731, 56.743351], [-5.030338, 56.743907], [-5.030985, 56.744636], [-5.031723, 56.74465], [-5.031754, 56.745558], [-5.03251, 56.746168], [-5.035344, 56.746802], [-5.038682, 56.747124], [-5.043524, 56.746392], [-5.044434, 56.746484], [-5.046965, 56.744752], [-5.050382, 56.743549], [-5.053282, 56.742909], [-5.05496, 56.742881], [-5.056998, 56.743223], [-5.054, 56.746], [-5.050, 56.750], [-5.045, 56.754], [-5.041, 56.758], [-5.038, 56.762], [-5.036, 56.766], [-5.036639, 56.769528]], "24": [[-4.744876, 56.206562], [-4.744712, 56.206703], [-4.745384, 56.20698], [-4.745418, 56.207246], [-4.743594, 56.208128], [-4.742989, 56.208594], [-4.741652, 56.208373], [-4.740996, 56.208946], [-4.740761, 56.21012], [-4.739342, 56.212615], [-4.738402, 56.215107], [-4.735209, 56.21777], [-4.735132, 56.218516], [-4.734369, 56.219221], [-4.732777, 56.219911], [-4.731205, 56.221277], [-4.730516, 56.222404], [-4.730213, 56.223463], [-4.729148, 56.224821], [-4.728876, 56.225684], [-4.728578, 56.225986], [-4.728546, 56.226966], [-4.728117, 56.227679], [-4.728065, 56.228166], [-4.728836, 56.229204], [-4.728799, 56.229707], [-4.731193, 56.231312], [-4.731109, 56.233389], [-4.730543, 56.23421], [-4.730539, 56.234566], [-4.730956, 56.234921], [-4.73051, 56.235388], [-4.730736, 56.235699], [-4.730567, 56.235986], [-4.730691, 56.236913], [-4.731399, 56.23746], [-4.731492, 56.237951], [-4.731948, 56.238451], [-4.732257, 56.240745], [-4.732605, 56.241134], [-4.73264, 56.241627], [-4.733027, 56.242176], [-4.734613, 56.242821], [-4.741046, 56.244203], [-4.740996, 56.244924], [-4.739966, 56.244947], [-4.739153, 56.245159], [-4.740825, 56.246194], [-4.74213, 56.246554], [-4.743635, 56.246682], [-4.745519, 56.247012], [-4.746626, 56.247659], [-4.746918, 56.247685], [-4.748227, 56.24709], [-4.748974, 56.246159], [-4.749618, 56.245825], [-4.752526, 56.245049], [-4.753473, 56.243466], [-4.753697, 56.242733], [-4.75432, 56.242112], [-4.7548, 56.241916], [-4.756174, 56.24182], [-4.758337, 56.2414], [-4.760291, 56.241304], [-4.761207, 56.241114], [-4.766984, 56.241041], [-4.767527, 56.241522], [-4.767764, 56.241582], [-4.768634, 56.241562], [-4.773724, 56.242443], [-4.775852, 56.242331], [-4.778474, 56.242021], [-4.778765, 56.241829], [-4.778915, 56.240296], [-4.779815, 56.23988], [-4.781032, 56.238639], [-4.783821, 56.236841], [-4.783538, 56.236742], [-4.783648, 56.236448], [-4.784154, 56.236024], [-4.781834, 56.236366], [-4.780761, 56.236255], [-4.779206, 56.236398], [-4.778209, 56.236672], [-4.777477, 56.237048], [-4.774419, 56.237827], [-4.77079, 56.238313], [-4.767315, 56.239146], [-4.763952, 56.239288], [-4.760597, 56.239768], [-4.758223, 56.239749], [-4.749612, 56.238961], [-4.746495, 56.238491], [-4.743993, 56.237355], [-4.741637, 56.235556], [-4.739667, 56.233734], [-4.738377, 56.232163], [-4.737829, 56.231038], [-4.738241, 56.229582], [-4.739095, 56.22821], [-4.739208, 56.2273], [-4.740266, 56.226081], [-4.741015, 56.225723], [-4.741507, 56.225155], [-4.741839, 56.223471], [-4.742635, 56.221296], [-4.747395, 56.2168], [-4.747816, 56.216152], [-4.748657, 56.21572], [-4.748873, 56.21514], [-4.749588, 56.214755], [-4.750325, 56.213561], [-4.752106, 56.212533], [-4.752718, 56.211616], [-4.752806, 56.210823], [-4.753752, 56.208501], [-4.753529, 56.208308], [-4.752362, 56.209125], [-4.75082, 56.21102], [-4.750821, 56.211488], [-4.747411, 56.213869], [-4.746171, 56.21502], [-4.74549, 56.215422], [-4.74472, 56.215259], [-4.743079, 56.214648], [-4.743475, 56.213857], [-4.744277, 56.21357], [-4.747258, 56.209931], [-4.745396, 56.209145], [-4.745747, 56.20774], [-4.746502, 56.207256], [-4.746456, 56.207059], [-4.744939, 56.206589]]};
 
 function useRoutePhotos(routeId) {
   const photos = routeId != null ? (ROUTE_PHOTOS[routeId] || []) : [];
@@ -349,15 +349,15 @@ let ROUTES = [
   { id: 10, name: "Pen y Fan Horseshoe", cls: "hewitts", reg: "Brecon Beacons", diff: "Easy", dist: 6.2, elev: 550, time: "2-3h", peaks: ["Pen y Fan", "Corn Du"], rat: 4.4, rev: 678, start: "Pont ar Daf Car Park", src: "ts" },
   { id: 11, name: "An Teallach Traverse", cls: "munros", reg: "Fisherfield", diff: "Expert", dist: 15.2, elev: 1300, time: "8-10h", peaks: ["An Teallach"], rat: 4.9, rev: 112, start: "Dundonnell Car Park", src: "ts" },
   { id: 12, name: "Schiehallion", cls: "munros", reg: "Southern Highlands", diff: "Easy", dist: 9.5, elev: 760, time: "4-5h", peaks: ["Schiehallion"], rat: 4.3, rev: 445, start: "Braes of Foss Car Park", src: "ts" },
-  { id: 13, name: "West Highland Way (Full)", cls: "non-mountain", reg: "Southern Highlands", diff: "Moderate", dist: 154, elev: 4400, time: "6-8 days", peaks: [], rat: 4.8, rev: 890, start: "Milngavie Station", src: "ts" },
-  { id: 14, name: "Loch an Eilein Circuit", cls: "non-mountain", reg: "Cairngorms", diff: "Easy", dist: 5.2, elev: 60, time: "1.5-2h", peaks: [], rat: 4.6, rev: 312, start: "Loch an Eilein Car Park", src: "ts" },
-  { id: 15, name: "Glen Nevis Gorge Walk", cls: "non-mountain", reg: "Ben Nevis & Mamores", diff: "Easy", dist: 4.8, elev: 120, time: "1.5-2h", peaks: [], rat: 4.5, rev: 267, start: "Glen Nevis Lower Falls Car Park", src: "ts" },
-  { id: 16, name: "Loch Muick Circuit", cls: "non-mountain", reg: "Cairngorms", diff: "Easy", dist: 12.0, elev: 180, time: "3-4h", peaks: [], rat: 4.4, rev: 198, start: "Spittal of Glenmuick Car Park", src: "ts" },
-  { id: 17, name: "Great Glen Way", cls: "non-mountain", reg: "Ben Nevis & Mamores", diff: "Moderate", dist: 127, elev: 2200, time: "5-6 days", peaks: [], rat: 4.5, rev: 345, start: "Fort William", src: "ts" },
-  { id: 18, name: "Trossachs Trail - Loch Katrine", cls: "non-mountain", reg: "Southern Highlands", diff: "Easy", dist: 21, elev: 280, time: "5-6h", peaks: [], rat: 4.3, rev: 178, start: "Trossachs Pier", src: "ts" },
+  { id: 13, name: "West Highland Way (Full)", cls: "non-mountain", reg: "Southern Highlands", diff: "Moderate", dist: 154, elev: 4400, time: "6-8 days", peaks: [], rat: 4.8, rev: 890, start: "Milngavie Station", src: "ts", lat: 55.943, lng: -4.311 },
+  { id: 14, name: "Loch an Eilein Circuit", cls: "non-mountain", reg: "Cairngorms", diff: "Easy", dist: 5.2, elev: 60, time: "1.5-2h", peaks: [], rat: 4.6, rev: 312, start: "Loch an Eilein Car Park", src: "ts", lat: 57.137, lng: -3.818 },
+  { id: 15, name: "Glen Nevis Gorge Walk", cls: "non-mountain", reg: "Ben Nevis & Mamores", diff: "Easy", dist: 4.8, elev: 120, time: "1.5-2h", peaks: [], rat: 4.5, rev: 267, start: "Glen Nevis Lower Falls Car Park", src: "ts", lat: 56.776, lng: -5.025 },
+  { id: 16, name: "Loch Muick Circuit", cls: "non-mountain", reg: "Cairngorms", diff: "Easy", dist: 12.0, elev: 180, time: "3-4h", peaks: [], rat: 4.4, rev: 198, start: "Spittal of Glenmuick Car Park", src: "ts", lat: 56.965, lng: -3.150 },
+  { id: 17, name: "Great Glen Way", cls: "non-mountain", reg: "Ben Nevis & Mamores", diff: "Moderate", dist: 127, elev: 2200, time: "5-6 days", peaks: [], rat: 4.5, rev: 345, start: "Fort William", src: "ts", lat: 56.816, lng: -5.106 },
+  { id: 18, name: "Trossachs Trail - Loch Katrine", cls: "non-mountain", reg: "Southern Highlands", diff: "Easy", dist: 21, elev: 280, time: "5-6h", peaks: [], rat: 4.3, rev: 178, start: "Trossachs Pier", src: "ts", lat: 56.237, lng: -4.393 },
   { id: 21, name: "The Five Sisters of Kintail", cls: "munros", reg: "Kintail", diff: "Expert", dist: 15.0, elev: 1775, time: "8-10h", peaks: ["Sgùrr na Ciste Duibhe", "Sgùrr na Càrnach", "Sgùrr Fhuaran"], rat: 4.8, rev: 156, start: "Shiel Bridge Car Park", src: "ts" },
   { id: 19, name: "Buachaille Etive Mor - Curved Ridge", cls: "munros", reg: "Glen Coe", diff: "Expert", dist: 10.5, elev: 1020, time: "5-7h", peaks: ["Buachaille Etive Mor"], rat: 4.9, rev: 67, start: "Altnafeadh Layby", src: "community" },
-  { id: 20, name: "Cairngorms Lairig Ghru Through-Walk", cls: "non-mountain", reg: "Cairngorms", diff: "Hard", dist: 30, elev: 640, time: "10-12h", peaks: [], rat: 4.7, rev: 45, start: "Linn of Dee Car Park", src: "community" },
+  { id: 20, name: "Cairngorms Lairig Ghru Through-Walk", cls: "non-mountain", reg: "Cairngorms", diff: "Hard", dist: 30, elev: 640, time: "10-12h", peaks: [], rat: 4.7, rev: 45, start: "Linn of Dee Car Park", src: "community", lat: 56.998, lng: -3.621 },
   { id: 22, name: "Ben Challum", cls: "munros", reg: "Southern Highlands", diff: "Moderate", dist: 13.5, elev: 1025, time: "5-6h", peaks: ["Ben Challum"], rat: 4.6, rev: 38, start: "Kirkton Farm, Tyndrum", src: "ts", gpx_file: "https://mferkdgzpaaxixqlanzm.supabase.co/storage/v1/object/public/gpx-files/Ben_Challum.gpx" },
   { id: 23, name: "Stob Bàn & Mullach nan Coirean", cls: "munros", reg: "Ben Nevis & Mamores", diff: "Hard", dist: 16.5, elev: 1350, time: "6-8h", peaks: ["Stob Bàn", "Mullach nan Coirean"], rat: 4.8, rev: 52, start: "Glen Nevis Car Park", src: "ts" },
   { id: 24, name: "Glen Loin & Coiregrograin", cls: "non-mountain", reg: "Arrochar Alps", diff: "Moderate", dist: 14.0, elev: 520, time: "4-5h", peaks: [], rat: 4.3, rev: 64, start: "Arrochar", src: "ts" },
@@ -2391,6 +2391,7 @@ const RoutesClusterMap = ({ filtered, selIdx, onSelIdx }) => {
   useEffect(() => { filteredRef.current = filtered; onSelIdxRef.current = onSelIdx; });
 
   const routeCoords = (r) => {
+    if (r.lat != null && r.lng != null) return [r.lng, r.lat];
     const pk = PEAKS_FALLBACK.find(p => r.peaks?.includes(p.name));
     const reg = ROUTE_REGIONS.find(rr => rr.name === r.reg);
     return [pk?.lng ?? reg?.lng ?? -4.5, pk?.lat ?? reg?.lat ?? 56.5];
@@ -2557,11 +2558,12 @@ const RoutesClusterMap = ({ filtered, selIdx, onSelIdx }) => {
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    const selRoute = filtered[selIdx ?? 0];
+    // null selIdx = no selection — highlight nothing, keep overview
+    const selRoute = selIdx != null ? filtered[selIdx] : null;
     const update = () => {
       map.getSource("routes-lines")?.setData({ type: "FeatureCollection", features: buildLineFeatures(filtered, selRoute?.id) });
       map.getSource("routes-pts")?.setData({ type: "FeatureCollection", features: buildPtFeatures(filtered, selRoute?.id) });
-      fitToRoute(map, selRoute);
+      if (selRoute) fitToRoute(map, selRoute);
     };
     if (map.isStyleLoaded()) update();
     else map.once("load", update);
@@ -2718,8 +2720,14 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
   const [routeSearch, setRouteSearch] = useState("");
   const [subTab, setSubTab] = useState("list");
   const [selRegion, setSelRegion] = useState(null);
-  const [mapSelIdx, setMapSelIdx] = useState(0);
+  const [mapSelIdx, setMapSelIdx] = useState(null);
   const mapCardsRef = useRef(null);
+  // Reset selection whenever the map sub-tab is opened fresh
+  const prevSubTabRef = useRef(subTab);
+  useEffect(() => {
+    if (subTab === "map" && prevSubTabRef.current !== "map") setMapSelIdx(null);
+    prevSubTabRef.current = subTab;
+  }, [subTab]);
   const [showRouteDetail, setShowRouteDetail] = useState(null); // route object
   const [routeDetailCoords, setRouteDetailCoords] = useState(null);
   const [routeDetailCoordsLoading, setRouteDetailCoordsLoading] = useState(false);
@@ -2931,99 +2939,68 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
         <RoutesClusterMap
           filtered={filtered}
           selIdx={mapSelIdx}
-          onSelIdx={(idx) => {
-            setMapSelIdx(idx);
-            if (mapCardsRef.current) {
-              const cardW = mapCardsRef.current.scrollWidth / Math.max(filtered.length, 1);
-              mapCardsRef.current.scrollTo({ left: cardW * idx, behavior: "smooth" });
-            }
-          }}
+          onSelIdx={(idx) => setMapSelIdx(idx)}
         />
 
-        {/* ── Swipeable floating route cards ── */}
-        {filtered.length > 0 && (
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 20, paddingBottom: "12px" }}>
-            {/* Route count pill */}
-            <div style={{ textAlign: "center", marginBottom: "8px" }}>
-              <span style={{ fontSize: "12px", padding: "3px 10px", borderRadius: "10px", background: "rgba(4,30,61,0.85)", backdropFilter: "blur(8px)", border: "1px solid rgba(90,152,227,0.2)", color: "#BDD6F4", fontWeight: 600, fontFamily: "'DM Sans'" }}>
-                {mapSelIdx + 1} / {filtered.length}
-              </span>
-            </div>
-            <div
-              ref={mapCardsRef}
-              data-no-swipe="1"
-              onScroll={(e) => {
-                const el = e.currentTarget;
-                if (filtered.length === 0) return;
-                const cardW = el.scrollWidth / filtered.length;
-                const idx = Math.round(el.scrollLeft / cardW);
-                if (idx !== mapSelIdx) setMapSelIdx(idx);
-              }}
-              style={{
-                display: "flex", overflowX: "auto", scrollSnapType: "x mandatory",
-                scrollBehavior: "smooth", WebkitOverflowScrolling: "touch",
-                scrollbarWidth: "none", msOverflowStyle: "none",
-                gap: "10px", padding: "0 10%",
-              }}
-            >
-              {filtered.map((r, i) => {
-                const clsColor = CLS[r.cls]?.color || "#E85D3A";
-                const isSel = i === mapSelIdx;
-                return (
-                  <div
-                    key={r.id}
-                    style={{
-                      flex: "0 0 80%", scrollSnapAlign: "center",
-                      background: "rgba(4,30,61,0.94)", backdropFilter: "blur(16px)",
-                      borderRadius: "16px",
-                      border: `1px solid ${isSel ? clsColor + "55" : "rgba(90,152,227,0.15)"}`,
-                      padding: "12px 14px",
-                      transition: "border-color .2s, transform .2s",
-                      transform: isSel ? "scale(1.01)" : "scale(0.97)",
-                      boxShadow: isSel ? `0 4px 20px ${clsColor}22` : "none",
-                    }}
-                  >
-                    {/* Top row: cls badge + difficulty */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
-                      <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "6px", background: clsColor + "22", color: clsColor, fontWeight: 700, fontFamily: "'DM Sans'" }}>{CLS[r.cls]?.name || r.cls}</span>
-                      <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "6px", background: `${dc(r.diff)}18`, color: dc(r.diff), fontWeight: 600, fontFamily: "'DM Sans'" }}>{r.diff}</span>
-                      {r.src === "community" && <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "5px", background: "rgba(90,152,227,0.12)", color: "#5A98E3", fontWeight: 600 }}>Community</span>}
-                    </div>
-                    {/* Route name */}
-                    <div style={{ fontSize: "15px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'DM Sans'", lineHeight: 1.2, marginBottom: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
-                    <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, marginBottom: "10px" }}>{r.reg}</div>
-                    {/* Stats row */}
-                    <div style={{ display: "flex", gap: "14px", marginBottom: "10px" }}>
-                      {[["📏", `${r.dist}km`], ["⛰️", `${r.elev}m`], ["⏱️", r.time]].map(([ic, val]) => (
-                        <div key={ic} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          <span style={{ fontSize: "12px" }}>{ic}</span>
-                          <span style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</span>
-                        </div>
-                      ))}
-                    </div>
-                    {/* Action buttons */}
-                    <div style={{ display: "flex", gap: "8px" }}>
-                      <button
-                        onClick={() => { setShowRouteDetail(r); posthog.capture("route_detail_viewed", { route_name: r.name, route_id: r.id, route_difficulty: r.diff }); }}
-                        style={{ flex: 1, padding: "8px", borderRadius: "10px", border: "none", background: "#0a2240", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}
-                      >
-                        Details
-                      </button>
-                      {r.gpx_file && (
-                        <button
-                          onClick={() => openRoute(r, "routes-map")}
-                          style={{ flex: 1, padding: "8px", borderRadius: "10px", border: "none", background: `linear-gradient(135deg,${clsColor},${clsColor}bb)`, color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}
-                        >
-                          Track →
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+        {/* ── Tap-to-reveal route card ── */}
+        {mapSelIdx == null && (
+          <div style={{ position: "absolute", bottom: 16, left: "50%", transform: "translateX(-50%)", zIndex: 20, pointerEvents: "none" }}>
+            <span style={{ fontSize: "12px", padding: "5px 14px", borderRadius: "12px", background: "rgba(4,30,61,0.82)", backdropFilter: "blur(8px)", border: "1px solid rgba(90,152,227,0.2)", color: "#BDD6F4", fontWeight: 600, fontFamily: "'DM Sans'" }}>
+              Tap a route to see details
+            </span>
           </div>
         )}
+        {mapSelIdx != null && filtered[mapSelIdx] && (() => {
+          const r = filtered[mapSelIdx];
+          const clsColor = CLS[r.cls]?.color || "#E85D3A";
+          return (
+            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 20, padding: "0 12px 14px", animation: "su .2s ease" }}>
+              <div style={{
+                background: "rgba(4,30,61,0.96)", backdropFilter: "blur(18px)",
+                borderRadius: "18px", border: `1px solid ${clsColor}44`,
+                padding: "14px 16px",
+                boxShadow: `0 6px 28px rgba(0,0,0,0.45), 0 0 0 1px ${clsColor}22`,
+              }}>
+                {/* Top row */}
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+                  <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "6px", background: clsColor + "22", color: clsColor, fontWeight: 700, fontFamily: "'DM Sans'" }}>{CLS[r.cls]?.name || r.cls}</span>
+                  <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "6px", background: `${dc(r.diff)}18`, color: dc(r.diff), fontWeight: 600, fontFamily: "'DM Sans'" }}>{r.diff}</span>
+                  {r.src === "community" && <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "5px", background: "rgba(90,152,227,0.12)", color: "#5A98E3", fontWeight: 600 }}>Community</span>}
+                  <button onClick={() => setMapSelIdx(null)} style={{ marginLeft: "auto", background: "none", border: "none", color: "#BDD6F4", opacity: 0.5, cursor: "pointer", fontSize: "18px", lineHeight: 1, padding: "0 2px" }}>×</button>
+                </div>
+                {/* Name + region */}
+                <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'DM Sans'", lineHeight: 1.2, marginBottom: "3px" }}>{r.name}</div>
+                <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, marginBottom: "11px" }}>{r.reg}</div>
+                {/* Stats */}
+                <div style={{ display: "flex", gap: "18px", marginBottom: "12px" }}>
+                  {[["📏", `${r.dist}km`], ["⛰️", `${r.elev}m`], ["⏱️", r.time]].map(([ic, val]) => (
+                    <div key={ic} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      <span style={{ fontSize: "13px" }}>{ic}</span>
+                      <span style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</span>
+                    </div>
+                  ))}
+                </div>
+                {/* Actions */}
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button
+                    onClick={() => { setShowRouteDetail(r); posthog.capture("route_detail_viewed", { route_name: r.name, route_id: r.id, route_difficulty: r.diff }); }}
+                    style={{ flex: 1, padding: "9px", borderRadius: "11px", border: "none", background: "#0a2240", color: "#BDD6F4", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}
+                  >
+                    Details
+                  </button>
+                  {r.gpx_file && (
+                    <button
+                      onClick={() => openRoute(r, "routes-map")}
+                      style={{ flex: 1, padding: "9px", borderRadius: "11px", border: "none", background: `linear-gradient(135deg,${clsColor},${clsColor}bb)`, color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}
+                    >
+                      Track →
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     )}
 
