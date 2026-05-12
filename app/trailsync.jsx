@@ -2776,7 +2776,9 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
   // GPX drawing now happens on main map via openRoute prop
 
   const routeSearchQ = routeSearch.toLowerCase().trim();
-  const filtered = ROUTES.filter(r => {
+  // Memoised so its reference is stable — prevents routeGroup and RoutesClusterMap's
+  // sync useEffect from needlessly recomputing on every render.
+  const filtered = useMemo(() => ROUTES.filter(r => {
     if (cf && r.cls !== cf) return false;
     if (df && r.diff !== df) return false;
     if (!showCommunity && r.src === "community") return false;
@@ -2788,7 +2790,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
     if (a.src === "ts" && b.src !== "ts") return -1;
     if (a.src !== "ts" && b.src === "ts") return 1;
     return 0;
-  });
+  }), [cf, df, showCommunity, routeSearchQ]);
 
   // Routes in the same group as the currently anchored route (stable while swiping)
   const routeGroup = useMemo(() => {
@@ -3016,12 +3018,16 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
               onScroll={(e) => {
                 const el = e.currentTarget;
                 if (routeGroup.length <= 1) return;
-                const cardW = el.scrollWidth / routeGroup.length;
-                const gIdx = Math.round(el.scrollLeft / cardW);
+                // Use the first card's actual rendered width + gap as the snap step.
+                // scrollWidth / n over-estimates because it includes container padding,
+                // causing mid-animation events to round to the wrong card index.
+                const firstCard = el.firstElementChild;
+                const step = firstCard ? firstCard.offsetWidth + 10 : el.scrollWidth / routeGroup.length;
+                const gIdx = Math.min(Math.round(el.scrollLeft / step), routeGroup.length - 1);
                 const r = routeGroup[gIdx];
                 if (r) {
                   const idx = filtered.findIndex(x => x.id === r.id);
-                  if (idx >= 0 && idx !== mapSelIdx) setMapSelIdx(idx);
+                  if (idx >= 0) setMapSelIdx(idx);
                 }
               }}
               style={{
