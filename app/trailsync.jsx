@@ -2713,6 +2713,16 @@ const RouteListCard = ({ r, i, onSelect }) => {
   );
 };
 
+// Returns all routes in the same "group" as the anchor route.
+// Routes with peaks → grouped by shared peak (any overlap).
+// Routes without peaks → grouped by region (non-mountain routes only).
+const getRouteGroup = (anchor, allRoutes) => {
+  if (anchor.peaks?.length > 0) {
+    return allRoutes.filter(r => r.peaks?.some(p => anchor.peaks.includes(p)));
+  }
+  return allRoutes.filter(r => (!r.peaks || r.peaks.length === 0) && r.reg === anchor.reg);
+};
+
 const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
   const [cf, setCf] = useState(null);
   const [df, setDf] = useState(null);
@@ -2721,11 +2731,15 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
   const [subTab, setSubTab] = useState("list");
   const [selRegion, setSelRegion] = useState(null);
   const [mapSelIdx, setMapSelIdx] = useState(null);
+  const [mapAnchorId, setMapAnchorId] = useState(null);
   const mapCardsRef = useRef(null);
   // Reset selection whenever the map sub-tab is opened fresh
   const prevSubTabRef = useRef(subTab);
   useEffect(() => {
-    if (subTab === "map" && prevSubTabRef.current !== "map") setMapSelIdx(null);
+    if (subTab === "map" && prevSubTabRef.current !== "map") {
+      setMapSelIdx(null);
+      setMapAnchorId(null);
+    }
     prevSubTabRef.current = subTab;
   }, [subTab]);
   const [showRouteDetail, setShowRouteDetail] = useState(null); // route object
@@ -2767,6 +2781,25 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
     if (a.src !== "ts" && b.src === "ts") return 1;
     return 0;
   });
+
+  // Routes in the same group as the currently anchored route (stable while swiping)
+  const routeGroup = useMemo(() => {
+    if (mapAnchorId == null) return [];
+    const anchor = filtered.find(r => r.id === mapAnchorId);
+    return anchor ? getRouteGroup(anchor, filtered) : [];
+  }, [mapAnchorId, filtered]);
+
+  // Scroll carousel to the tapped route's position within the group after render
+  useEffect(() => {
+    if (mapAnchorId == null || !mapCardsRef.current) return;
+    const gIdx = routeGroup.findIndex(r => r.id === mapAnchorId);
+    if (gIdx <= 0) return;
+    setTimeout(() => {
+      if (!mapCardsRef.current) return;
+      const cardW = mapCardsRef.current.scrollWidth / Math.max(routeGroup.length, 1);
+      mapCardsRef.current.scrollLeft = cardW * gIdx;
+    }, 0);
+  }, [mapAnchorId, routeGroup]);
 
   // Group filtered routes by region for map view
   const regionClusters = ROUTE_REGIONS.map(reg => ({
@@ -2939,10 +2972,13 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
         <RoutesClusterMap
           filtered={filtered}
           selIdx={mapSelIdx}
-          onSelIdx={(idx) => setMapSelIdx(idx)}
+          onSelIdx={(idx) => {
+            setMapSelIdx(idx);
+            setMapAnchorId(filtered[idx]?.id ?? null);
+          }}
         />
 
-        {/* ── Tap-to-reveal route card ── */}
+        {/* ── No-selection hint ── */}
         {mapSelIdx == null && (
           <div style={{ position: "absolute", bottom: 16, left: "50%", transform: "translateX(-50%)", zIndex: 20, pointerEvents: "none" }}>
             <span style={{ fontSize: "12px", padding: "5px 14px", borderRadius: "12px", background: "rgba(4,30,61,0.82)", backdropFilter: "blur(8px)", border: "1px solid rgba(90,152,227,0.2)", color: "#BDD6F4", fontWeight: 600, fontFamily: "'DM Sans'" }}>
@@ -2950,57 +2986,109 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
             </span>
           </div>
         )}
-        {mapSelIdx != null && filtered[mapSelIdx] && (() => {
-          const r = filtered[mapSelIdx];
-          const clsColor = CLS[r.cls]?.color || "#E85D3A";
-          return (
-            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 20, padding: "0 12px 14px", animation: "su .2s ease" }}>
-              <div style={{
-                background: "rgba(4,30,61,0.96)", backdropFilter: "blur(18px)",
-                borderRadius: "18px", border: `1px solid ${clsColor}44`,
-                padding: "14px 16px",
-                boxShadow: `0 6px 28px rgba(0,0,0,0.45), 0 0 0 1px ${clsColor}22`,
-              }}>
-                {/* Top row */}
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "6px", background: clsColor + "22", color: clsColor, fontWeight: 700, fontFamily: "'DM Sans'" }}>{CLS[r.cls]?.name || r.cls}</span>
-                  <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "6px", background: `${dc(r.diff)}18`, color: dc(r.diff), fontWeight: 600, fontFamily: "'DM Sans'" }}>{r.diff}</span>
-                  {r.src === "community" && <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "5px", background: "rgba(90,152,227,0.12)", color: "#5A98E3", fontWeight: 600 }}>Community</span>}
-                  <button onClick={() => setMapSelIdx(null)} style={{ marginLeft: "auto", background: "none", border: "none", color: "#BDD6F4", opacity: 0.5, cursor: "pointer", fontSize: "18px", lineHeight: 1, padding: "0 2px" }}>×</button>
-                </div>
-                {/* Name + region */}
-                <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'DM Sans'", lineHeight: 1.2, marginBottom: "3px" }}>{r.name}</div>
-                <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, marginBottom: "11px" }}>{r.reg}</div>
-                {/* Stats */}
-                <div style={{ display: "flex", gap: "18px", marginBottom: "12px" }}>
-                  {[["📏", `${r.dist}km`], ["⛰️", `${r.elev}m`], ["⏱️", r.time]].map(([ic, val]) => (
-                    <div key={ic} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      <span style={{ fontSize: "13px" }}>{ic}</span>
-                      <span style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</span>
-                    </div>
-                  ))}
-                </div>
-                {/* Actions */}
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <button
-                    onClick={() => { setShowRouteDetail(r); posthog.capture("route_detail_viewed", { route_name: r.name, route_id: r.id, route_difficulty: r.diff }); }}
-                    style={{ flex: 1, padding: "9px", borderRadius: "11px", border: "none", background: "#0a2240", color: "#BDD6F4", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}
-                  >
-                    Details
-                  </button>
-                  {r.gpx_file && (
-                    <button
-                      onClick={() => openRoute(r, "routes-map")}
-                      style={{ flex: 1, padding: "9px", borderRadius: "11px", border: "none", background: `linear-gradient(135deg,${clsColor},${clsColor}bb)`, color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}
-                    >
-                      Track →
-                    </button>
-                  )}
-                </div>
+
+        {/* ── Route group carousel (appears on tap, swipe to see variants) ── */}
+        {mapSelIdx != null && routeGroup.length > 0 && (
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 20, paddingBottom: "12px", animation: "su .2s ease" }}>
+            {/* Count pill + dismiss — only shown when group has multiple routes */}
+            {routeGroup.length > 1 && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginBottom: "8px" }}>
+                <span style={{ fontSize: "12px", padding: "3px 10px", borderRadius: "10px", background: "rgba(4,30,61,0.85)", backdropFilter: "blur(8px)", border: "1px solid rgba(90,152,227,0.2)", color: "#BDD6F4", fontWeight: 600, fontFamily: "'DM Sans'" }}>
+                  {routeGroup.findIndex(r => r.id === filtered[mapSelIdx]?.id) + 1} / {routeGroup.length} routes
+                </span>
+                <button
+                  onClick={() => { setMapSelIdx(null); setMapAnchorId(null); }}
+                  style={{ background: "rgba(4,30,61,0.85)", backdropFilter: "blur(8px)", border: "1px solid rgba(90,152,227,0.2)", borderRadius: "10px", padding: "3px 10px", color: "#BDD6F4", fontSize: "16px", cursor: "pointer", lineHeight: 1 }}
+                >×</button>
               </div>
+            )}
+            <div
+              ref={mapCardsRef}
+              data-no-swipe="1"
+              onScroll={(e) => {
+                const el = e.currentTarget;
+                if (routeGroup.length <= 1) return;
+                const cardW = el.scrollWidth / routeGroup.length;
+                const gIdx = Math.round(el.scrollLeft / cardW);
+                const r = routeGroup[gIdx];
+                if (r) {
+                  const idx = filtered.findIndex(x => x.id === r.id);
+                  if (idx >= 0 && idx !== mapSelIdx) setMapSelIdx(idx);
+                }
+              }}
+              style={{
+                display: "flex",
+                overflowX: routeGroup.length > 1 ? "auto" : "hidden",
+                scrollSnapType: "x mandatory",
+                WebkitOverflowScrolling: "touch",
+                scrollbarWidth: "none", msOverflowStyle: "none",
+                gap: "10px",
+                padding: routeGroup.length > 1 ? "0 9%" : "0 12px",
+              }}
+            >
+              {routeGroup.map((r) => {
+                const clsColor = CLS[r.cls]?.color || "#E85D3A";
+                const isActive = r.id === filtered[mapSelIdx]?.id;
+                return (
+                  <div
+                    key={r.id}
+                    style={{
+                      flex: routeGroup.length > 1 ? "0 0 82%" : "0 0 100%",
+                      scrollSnapAlign: "center",
+                      background: "rgba(4,30,61,0.96)", backdropFilter: "blur(18px)",
+                      borderRadius: "18px",
+                      border: `1px solid ${isActive ? clsColor + "55" : "rgba(90,152,227,0.12)"}`,
+                      padding: "14px 16px",
+                      transition: "transform .18s, opacity .18s, border-color .18s",
+                      transform: isActive ? "scale(1)" : "scale(0.96)",
+                      opacity: isActive ? 1 : 0.65,
+                      boxShadow: isActive ? `0 6px 28px rgba(0,0,0,0.45), 0 0 0 1px ${clsColor}22` : "none",
+                    }}
+                  >
+                    {/* Top row: badges + dismiss (single-route only) */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+                      <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "6px", background: clsColor + "22", color: clsColor, fontWeight: 700, fontFamily: "'DM Sans'" }}>{CLS[r.cls]?.name || r.cls}</span>
+                      <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "6px", background: `${dc(r.diff)}18`, color: dc(r.diff), fontWeight: 600, fontFamily: "'DM Sans'" }}>{r.diff}</span>
+                      {r.src === "community" && <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "5px", background: "rgba(90,152,227,0.12)", color: "#5A98E3", fontWeight: 600 }}>Community</span>}
+                      {routeGroup.length === 1 && (
+                        <button onClick={() => { setMapSelIdx(null); setMapAnchorId(null); }} style={{ marginLeft: "auto", background: "none", border: "none", color: "#BDD6F4", opacity: 0.5, cursor: "pointer", fontSize: "18px", lineHeight: 1, padding: "0 2px" }}>×</button>
+                      )}
+                    </div>
+                    {/* Name + region */}
+                    <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'DM Sans'", lineHeight: 1.2, marginBottom: "3px" }}>{r.name}</div>
+                    <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5, marginBottom: "11px" }}>{r.reg}</div>
+                    {/* Stats */}
+                    <div style={{ display: "flex", gap: "18px", marginBottom: "12px" }}>
+                      {[["📏", `${r.dist}km`], ["⛰️", `${r.elev}m`], ["⏱️", r.time]].map(([ic, val]) => (
+                        <div key={ic} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          <span style={{ fontSize: "13px" }}>{ic}</span>
+                          <span style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", fontFamily: "'JetBrains Mono'" }}>{val}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Actions */}
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button
+                        onClick={() => { setShowRouteDetail(r); posthog.capture("route_detail_viewed", { route_name: r.name, route_id: r.id, route_difficulty: r.diff }); }}
+                        style={{ flex: 1, padding: "9px", borderRadius: "11px", border: "none", background: "#0a2240", color: "#BDD6F4", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}
+                      >
+                        Details
+                      </button>
+                      {r.gpx_file && (
+                        <button
+                          onClick={() => openRoute(r, "routes-map")}
+                          style={{ flex: 1, padding: "9px", borderRadius: "11px", border: "none", background: `linear-gradient(135deg,${clsColor},${clsColor}bb)`, color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}
+                        >
+                          Track →
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          );
-        })()}
+          </div>
+        )}
       </div>
     )}
 
