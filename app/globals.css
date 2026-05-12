@@ -55,3 +55,14 @@ html, body {
   60%  { opacity: 1; transform: translate(-50%, -110%); }
   100% { opacity: 1; transform: translate(-50%, -100%); }
 }
+
+/* Tutorial arrow animations */
+@keyframes tutArrowUp {
+  0%, 100% { transform: translateX(-50%) translateY(0px);   }
+  50%       { transform: translateX(-50%) translateY(-10px); }
+}
+
+@keyframes tutArrowDown {
+  0%, 100% { transform: translateX(-50%) translateY(0px);   }
+  50%       { transform: translateX(-50%) translateY(10px);  }
+}

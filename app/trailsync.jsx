@@ -2740,6 +2740,10 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
   const [selRegion, setSelRegion] = useState(null);
   const [mapSelIdx, setMapSelIdx] = useState(null);
   const [mapAnchorId, setMapAnchorId] = useState(null);
+  // carouselIdx is the source of truth for which card is visible — counter reads
+  // directly from this instead of going through filtered[mapSelIdx], which was
+  // fragile across stale closures and render timing.
+  const [carouselIdx, setCarouselIdx] = useState(0);
   const mapCardsRef = useRef(null);
   // Reset selection whenever the map sub-tab is opened fresh
   const prevSubTabRef = useRef(subTab);
@@ -2747,6 +2751,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
     if (subTab === "map" && prevSubTabRef.current !== "map") {
       setMapSelIdx(null);
       setMapAnchorId(null);
+      setCarouselIdx(0);
     }
     prevSubTabRef.current = subTab;
   }, [subTab]);
@@ -2799,15 +2804,18 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
     return anchor ? getRouteGroup(anchor, filtered) : [];
   }, [mapAnchorId, filtered]);
 
-  // Scroll carousel to the tapped route's position within the group after render
+  // When the anchor changes (new map tap), sync carouselIdx and scroll to that card.
   useEffect(() => {
-    if (mapAnchorId == null || !mapCardsRef.current) return;
-    const gIdx = routeGroup.findIndex(r => r.id === mapAnchorId);
-    if (gIdx <= 0) return;
+    if (mapAnchorId == null) { setCarouselIdx(0); return; }
+    const gIdx = Math.max(0, routeGroup.findIndex(r => r.id === mapAnchorId));
+    setCarouselIdx(gIdx);
     setTimeout(() => {
       if (!mapCardsRef.current) return;
-      const cardW = mapCardsRef.current.scrollWidth / Math.max(routeGroup.length, 1);
-      mapCardsRef.current.scrollLeft = cardW * gIdx;
+      const firstCard = mapCardsRef.current.firstElementChild;
+      const step = firstCard
+        ? firstCard.offsetWidth + 10
+        : mapCardsRef.current.scrollWidth / Math.max(routeGroup.length, 1);
+      mapCardsRef.current.scrollLeft = step * gIdx;
     }, 0);
   }, [mapAnchorId, routeGroup]);
 
@@ -3004,7 +3012,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
             {routeGroup.length > 1 && (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginBottom: "8px" }}>
                 <span style={{ fontSize: "12px", padding: "3px 10px", borderRadius: "10px", background: "rgba(4,30,61,0.85)", backdropFilter: "blur(8px)", border: "1px solid rgba(90,152,227,0.2)", color: "#BDD6F4", fontWeight: 600, fontFamily: "'DM Sans'" }}>
-                  {routeGroup.findIndex(r => r.id === filtered[mapSelIdx]?.id) + 1} / {routeGroup.length} routes
+                  {carouselIdx + 1} / {routeGroup.length} routes
                 </span>
                 <button
                   onClick={() => { setMapSelIdx(null); setMapAnchorId(null); }}
@@ -3018,12 +3026,12 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
               onScroll={(e) => {
                 const el = e.currentTarget;
                 if (routeGroup.length <= 1) return;
-                // Use the first card's actual rendered width + gap as the snap step.
-                // scrollWidth / n over-estimates because it includes container padding,
-                // causing mid-animation events to round to the wrong card index.
                 const firstCard = el.firstElementChild;
                 const step = firstCard ? firstCard.offsetWidth + 10 : el.scrollWidth / routeGroup.length;
                 const gIdx = Math.min(Math.round(el.scrollLeft / step), routeGroup.length - 1);
+                // carouselIdx is the direct source of truth for the counter — no
+                // roundtrip through filtered[mapSelIdx] needed.
+                setCarouselIdx(gIdx);
                 const r = routeGroup[gIdx];
                 if (r) {
                   const idx = filtered.findIndex(x => x.id === r.id);
@@ -3042,7 +3050,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
             >
               {routeGroup.map((r) => {
                 const clsColor = CLS[r.cls]?.color || "#E85D3A";
-                const isActive = r.id === filtered[mapSelIdx]?.id;
+                const isActive = r.id === routeGroup[carouselIdx]?.id;
                 return (
                   <div
                     key={r.id}
@@ -8225,142 +8233,264 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
 /* ═══════════════════════════════════════════════════════════════════
    TUTORIAL OVERLAY
    ═══════════════════════════════════════════════════════════════════ */
+// Each step describes only what is VISIBLE on screen — no step tells the user to
+// open a panel they can't yet see. Inline `legend` and `preview` fields let us
+// show the content of collapsed panels right inside the tutorial card.
 const TUTORIAL_STEPS = [
-  { tab: "map",     title: "Welcome to TrailSync! 🏔️", text: "Your map is loaded with every UK peak, colour-coded by classification. Let's take a quick tour — it takes under a minute.", pos: "center", arrow: null, spot: null },
-  { tab: "map",     title: "🗺️ Map Layers",            text: "See that Layers button in the top-right? Tap it to switch to Topographic or Satellite view, enable 3D terrain, or overlay live wind and precipitation data.", pos: "top-left", arrow: "top-right", spot: { x: 85, y: 12, r: 44 } },
-  { tab: "map",     title: "👥 Live Hikers",            text: "Inside Layers → Community, you can toggle Live Hikers to see other TrailSync users on the hills right now. Your location is always optional and rounded to ~100m.", pos: "top-left", arrow: "top-right", spot: { x: 85, y: 12, r: 44 } },
-  { tab: "map",     title: "📍 Peak Markers",           text: "Each coloured pin is a mountain. Orange = Munro, amber = Corbett, green = Graham. Tap any marker to see summit weather, height, and log it as bagged.", pos: "bottom", arrow: "center-map", spot: { x: 50, y: 45, r: 80 } },
-  { tab: "map",     title: "🔍 Filter Peaks",           text: "Use the filter chips along the bottom of the map to show only Munros, Wainwrights, or any other classification you're working through.", pos: "top-center", arrow: "bottom-center", spot: { x: 50, y: 82, r: 55 } },
-  { tab: "home",    title: "☁️ Best Weather Areas",    text: "Swipe through the cards at the top — mountain regions ranked live by conditions right now. Green score = great day out. Tap any card to see the detailed forecast for that area.", pos: "bottom", arrow: "top-center", spot: { x: 50, y: 35, r: 90 } },
-  { tab: "home",    title: "🏕️ Community Feed",         text: "Scroll down for summit posts, events, and SAIS avalanche warnings. Use the filter row to show just summits, events, or news. You can post your own walk after recording one.", pos: "center", arrow: null, spot: null },
-  { tab: "routes",  title: "🥾 Routes",                 text: "Browse hundreds of verified walks filtered by difficulty and classification. Tap Map to see them on a regional map, or Downloaded to access offline copies.", pos: "center", arrow: null, spot: null },
-  { tab: "learn",   title: "📚 Learn & Discover",       text: "Work through skill modules on Navigation, Safety, and Wildlife — each with real lessons and a quiz at the end. Switch to Discover for articles pinned to places on the map.", pos: "center", arrow: null, spot: null },
-  { tab: "profile", title: "⛰️ Your Mountains",         text: "Every peak you bag appears here as a green dot. Red dots are still on your list. Tap any dot to log it or see more info. Your stats and walk history are here too.", pos: "center", arrow: null, spot: null },
-  { tab: "profile", title: "🎉 You're all set!",         text: "Happy walking! Tap the ? button anytime to replay this guide. Found a bug or have a suggestion? Let us know at hello@trailsync.app", pos: "center", arrow: null, spot: null },
+  {
+    tab: "map",
+    title: "Welcome to TrailSync 🏔️",
+    text: "Your personal hillwalking companion for the whole of the UK. This tour takes about 30 seconds.",
+    pos: "center", arrow: null, spot: null,
+  },
+  {
+    tab: "map",
+    title: "Every UK Peak on the Map",
+    text: "Each coloured dot or pin is a real mountain. Tap any one to see the summit weather forecast, height, and to log it as bagged.",
+    legend: [
+      { color: "#E85D3A", label: "Munro  (3,000 ft+)" },
+      { color: "#F49D37", label: "Corbett  (2,500–3,000 ft)" },
+      { color: "#7FB069", label: "Graham  (2,000–2,500 ft)" },
+      { color: "#5A98E3", label: "Wainwright & others" },
+    ],
+    pos: "bottom", arrow: "up-center", spot: { x: 50, y: 40, r: 72 },
+  },
+  {
+    tab: "map",
+    title: "Filter to Your List",
+    text: "The chips at the bottom of the map let you show only the classification you're currently working through — Munros only, Wainwrights only, etc.",
+    pos: "top", arrow: "down-center", spot: { x: 50, y: 84, r: 55 },
+  },
+  {
+    tab: "map",
+    title: "Layers Button  ↗",
+    text: "Tap the Layers button in the top-right corner to change what you see on the map. Here's what's inside:",
+    preview: [
+      { icon: "📐", label: "Topographical", sub: "Detailed contour lines & OS-style view" },
+      { icon: "🛰️", label: "Satellite",    sub: "Aerial imagery" },
+      { icon: "💨", label: "Weather overlays", sub: "Live wind, rain & cloud" },
+      { icon: "👥", label: "Live Hikers",   sub: "See other TrailSync users on the hills" },
+      { icon: "🚶", label: "Community Walks", sub: "Planned group walks near you" },
+    ],
+    pos: "bottom", arrow: "up-right", spot: { x: 87, y: 14, r: 34 },
+  },
+  {
+    tab: "map",
+    title: "Record Your Walk ⏺",
+    text: "Tap the big centre button at the bottom to start GPS recording. Your trail draws on the map in real time as you walk.",
+    pos: "top", arrow: "down-center", spot: { x: 50, y: 92, r: 34 },
+  },
+  {
+    tab: "home",
+    title: "Live Weather Rankings ☁️",
+    text: "These cards rank every mountain region by today's conditions — right now. Green score = great day to be out. Tap any card for the detailed area forecast.",
+    pos: "bottom", arrow: "up-center", spot: { x: 50, y: 28, r: 100 },
+  },
+  {
+    tab: "home",
+    title: "Community Feed 🏕️",
+    text: "Scroll down to see summit posts from other hikers, upcoming group walks, and SAIS avalanche warnings. You can post your own walk after recording one.",
+    pos: "top", arrow: "down-center", spot: { x: 50, y: 62, r: 90 },
+  },
+  {
+    tab: "routes",
+    title: "Guided Routes 🥾",
+    text: "Browse verified walks filtered by difficulty and type. Switch to the Map view to see GPX tracks overlaid on the map — tap any route to follow it live.",
+    pos: "center", arrow: null, spot: null,
+  },
+  {
+    tab: "profile",
+    title: "Your Mountains ⛰️",
+    text: "Every peak you log turns green on your profile map. Red = still on your list. Your walk history, total distance and elevation are all tracked here.",
+    pos: "center", arrow: null, spot: null,
+  },
+  {
+    tab: "map",
+    title: "You're all set! 🎉",
+    text: "Happy walking! Tap the ? button at any time to replay this guide.\n\nQuestions or bugs? hello@trailsync.app",
+    pos: "center", arrow: null, spot: null,
+  },
 ];
 
 const TutorialOverlay = ({ step, totalSteps, currentStep, onNext, onSkip }) => {
   const isLast = currentStep === totalSteps - 1;
 
-  // Spotlight mask — cuts a transparent circle out of the dim overlay
-  const spotlightStyle = step.spot
+  // Dim overlay with optional spotlight cutout
+  const overlayStyle = step.spot
     ? {
-        position: "absolute", inset: 0,
-        background: `radial-gradient(circle ${step.spot.r}px at ${step.spot.x}% ${step.spot.y}%, transparent ${step.spot.r - 4}px, rgba(4,30,61,0.82) ${step.spot.r + 10}px)`,
+        position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none",
+        background: `radial-gradient(circle ${step.spot.r}px at ${step.spot.x}% ${step.spot.y}%, transparent ${step.spot.r - 2}px, rgba(3,10,24,0.88) ${step.spot.r + 10}px)`,
       }
-    : { position: "absolute", inset: 0, background: "rgba(4,30,61,0.80)" };
+    : { position: "absolute", inset: 0, zIndex: 0, background: "rgba(3,10,24,0.82)", pointerEvents: "none" };
 
   // Pulsing ring at the spotlight centre
   const ring = step.spot ? (
     <div style={{
-      position: "absolute",
+      position: "absolute", pointerEvents: "none",
       left: `${step.spot.x}%`, top: `${step.spot.y}%`,
-      transform: "translate(-50%, -50%)",
-      width: step.spot.r * 2, height: step.spot.r * 2,
+      width: (step.spot.r + 10) * 2, height: (step.spot.r + 10) * 2,
       borderRadius: "50%",
-      border: "2.5px solid rgba(232,93,58,0.7)",
-      animation: "pulse 2s ease-in-out infinite",
-      zIndex: 91, pointerEvents: "none",
+      border: "2px solid rgba(232,93,58,0.65)",
+      transform: "translate(-50%,-50%)",
+      animation: "lpPulse 2s ease-in-out infinite",
+      zIndex: 1,
     }} />
   ) : null;
 
-  // Card position
-  const cardPos = (() => {
-    const base = {
-      position: "absolute", zIndex: 92,
-      background: "rgba(8,28,58,0.97)", backdropFilter: "blur(18px)",
-      borderRadius: "20px", border: "1px solid rgba(90,152,227,0.3)",
-      maxWidth: "340px", width: "calc(100% - 32px)", padding: "20px",
-      boxShadow: "0 12px 48px rgba(0,0,0,0.6)",
-      animation: "su .3s ease",
-    };
-    if (step.pos === "top-left") return { ...base, top: "68px", left: "16px" };
-    if (step.pos === "top-center") return { ...base, top: "68px", left: "50%", transform: "translateX(-50%)" };
-    if (step.pos === "bottom") return { ...base, bottom: "90px", left: "16px", right: "16px", maxWidth: "none", width: "auto" };
-    return { ...base, top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
+  // Bouncing directional arrows
+  const arrowEl = (() => {
+    if (!step.arrow) return null;
+
+    // Upward bounce arrow — card is at bottom, target is above
+    if (step.arrow === "up-center") return (
+      <div style={{
+        position: "absolute", zIndex: 2, pointerEvents: "none",
+        bottom: "calc(env(safe-area-inset-bottom,0px) + 230px)",
+        left: "50%", transform: "translateX(-50%)",
+        animation: "tutArrowUp 1.2s ease-in-out infinite",
+      }}>
+        <svg width="34" height="60" viewBox="0 0 34 60" fill="none">
+          <path d="M17 54 L17 12" stroke="#E85D3A" strokeWidth="3" strokeLinecap="round" strokeDasharray="6 5"/>
+          <polygon points="3,20 31,20 17,2" fill="#E85D3A"/>
+        </svg>
+      </div>
+    );
+
+    // Downward bounce arrow — card is at top, target is below
+    if (step.arrow === "down-center") return (
+      <div style={{
+        position: "absolute", zIndex: 2, pointerEvents: "none",
+        top: "calc(env(safe-area-inset-top,0px) + 175px)",
+        left: "50%", transform: "translateX(-50%)",
+        animation: "tutArrowDown 1.2s ease-in-out infinite",
+      }}>
+        <svg width="34" height="60" viewBox="0 0 34 60" fill="none">
+          <path d="M17 6 L17 48" stroke="#E85D3A" strokeWidth="3" strokeLinecap="round" strokeDasharray="6 5"/>
+          <polygon points="3,40 31,40 17,58" fill="#E85D3A"/>
+        </svg>
+      </div>
+    );
+
+    // Curved arrow toward top-right corner (Layers button)
+    if (step.arrow === "up-right") return (
+      <div style={{
+        position: "absolute", zIndex: 2, pointerEvents: "none",
+        bottom: "calc(env(safe-area-inset-bottom,0px) + 240px)",
+        right: "14px",
+      }}>
+        <svg width="80" height="110" viewBox="0 0 80 110" fill="none">
+          <path d="M62 106 Q68 60 12 8" stroke="#E85D3A" strokeWidth="3" strokeLinecap="round" strokeDasharray="7 5"/>
+          <polygon points="4,2 20,12 6,22" fill="#E85D3A"/>
+        </svg>
+      </div>
+    );
+
+    return null;
   })();
 
-  // Curved arrow SVG — from card toward spotlight
-  const arrowEl = (() => {
-    if (!step.arrow || !step.spot) return null;
-    if (step.arrow === "top-right") return (
-      <div style={{ position: "absolute", top: "56px", right: "12px", zIndex: 91, pointerEvents: "none" }}>
-        <svg width="70" height="50" viewBox="0 0 70 50" fill="none">
-          <path d="M8 42 Q35 10 62 14" stroke="#E85D3A" strokeWidth="2.5" strokeDasharray="5 4" strokeLinecap="round"/>
-          <polygon points="62,7 70,16 60,18" fill="#E85D3A"/>
-        </svg>
-      </div>
-    );
-    if (step.arrow === "bottom-center") return (
-      <div style={{ position: "absolute", bottom: "80px", left: "50%", transform: "translateX(-50%)", zIndex: 91, pointerEvents: "none" }}>
-        <svg width="30" height="52" viewBox="0 0 30 52" fill="none">
-          <path d="M15 4 Q15 26 15 46" stroke="#E85D3A" strokeWidth="2.5" strokeDasharray="5 4" strokeLinecap="round"/>
-          <polygon points="7,42 23,42 15,52" fill="#E85D3A"/>
-        </svg>
-      </div>
-    );
-    if (step.arrow === "top-center") return (
-      <div style={{ position: "absolute", top: "58px", left: "50%", transform: "translateX(-50%)", zIndex: 91, pointerEvents: "none" }}>
-        <svg width="30" height="52" viewBox="0 0 30 52" fill="none">
-          <path d="M15 48 Q15 26 15 6" stroke="#E85D3A" strokeWidth="2.5" strokeDasharray="5 4" strokeLinecap="round"/>
-          <polygon points="7,10 23,10 15,0" fill="#E85D3A"/>
-        </svg>
-      </div>
-    );
-    if (step.arrow === "center-map") return (
-      <div style={{ position: "absolute", top: "46%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 91, pointerEvents: "none" }}>
-        <div style={{ width: "90px", height: "90px", borderRadius: "50%", border: "2px dashed rgba(232,93,58,0.5)", animation: "pulse 2s ease-in-out infinite" }} />
-      </div>
-    );
-    return null;
+  // Card positioning
+  const cardBase = {
+    position: "absolute", zIndex: 3,
+    background: "rgba(5,20,46,0.97)", backdropFilter: "blur(22px)",
+    borderRadius: "22px", border: "1px solid rgba(90,152,227,0.22)",
+    padding: "20px 18px 18px",
+    boxShadow: "0 20px 60px rgba(0,0,0,0.65)",
+    width: "calc(100% - 32px)",
+    animation: "su .25s ease",
+  };
+  const cardStyle = (() => {
+    if (step.pos === "bottom") return { ...cardBase, bottom: "calc(env(safe-area-inset-bottom,0px) + 72px)", left: "16px" };
+    if (step.pos === "top")    return { ...cardBase, top: "calc(env(safe-area-inset-top,0px) + 68px)", left: "16px" };
+    return { ...cardBase, top: "50%", left: "50%", transform: "translate(-50%,-50%)", maxWidth: "360px" };
   })();
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 300, pointerEvents: "auto" }}>
-      {/* Dimmed spotlight overlay */}
-      <div style={spotlightStyle} />
-
-      {/* Pulsing ring around spotlight */}
+      {/* Dim + spotlight */}
+      <div style={overlayStyle} />
       {ring}
-
-      {/* Directional arrow */}
       {arrowEl}
 
-      {/* Tutorial card */}
-      <div style={cardPos}>
-        {/* Step progress bar */}
+      {/* Card */}
+      <div style={cardStyle}>
+        {/* Progress pills */}
         <div style={{ display: "flex", gap: "4px", marginBottom: "14px" }}>
           {[...Array(totalSteps)].map((_, i) => (
             <div key={i} style={{
-              flex: i === currentStep ? 2 : 1, height: "4px", borderRadius: "4px",
-              background: i === currentStep ? "#E85D3A" : i < currentStep ? "#5A98E3" : "rgba(90,152,227,0.2)",
-              transition: "all .35s ease",
+              height: "4px", borderRadius: "4px",
+              flex: i === currentStep ? 2.5 : 1,
+              background: i === currentStep ? "#E85D3A" : i < currentStep ? "rgba(90,152,227,0.55)" : "rgba(90,152,227,0.15)",
+              transition: "all .3s ease",
             }} />
           ))}
         </div>
 
-        {/* Step counter */}
-        <div style={{ fontSize: "11px", color: "#5A98E3", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "8px" }}>
+        {/* Step label */}
+        <div style={{ fontSize: "11px", color: "#5A98E3", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: "6px", opacity: 0.7 }}>
           Step {currentStep + 1} of {totalSteps}
         </div>
 
-        <div style={{ fontSize: "17px", fontWeight: 800, color: "#F8F8F8", marginBottom: "8px", fontFamily: "'Playfair Display',serif", lineHeight: 1.3 }}>{step.title}</div>
-        <div style={{ fontSize: "14px", color: "#BDD6F4", lineHeight: 1.65, marginBottom: "18px", opacity: 0.85 }}>{step.text}</div>
+        {/* Title */}
+        <div style={{ fontSize: "19px", fontWeight: 800, color: "#F8F8F8", marginBottom: "9px", fontFamily: "'DM Sans'", lineHeight: 1.25 }}>
+          {step.title}
+        </div>
 
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button onClick={onSkip} style={{ padding: "10px 16px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.18)", background: "transparent", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'", whiteSpace: "nowrap" }}>
-            {isLast ? "Done" : "Skip tour"}
-          </button>
+        {/* Body text */}
+        <div style={{ fontSize: "14px", color: "#BDD6F4", lineHeight: 1.65, marginBottom: step.legend || step.preview ? "13px" : "16px", opacity: 0.88, whiteSpace: "pre-line" }}>
+          {step.text}
+        </div>
+
+        {/* Peak colour legend */}
+        {step.legend && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", marginBottom: "14px" }}>
+            {step.legend.map(({ color, label }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "7px 10px", background: `${color}16`, borderRadius: "10px", border: `1px solid ${color}30` }}>
+                <div style={{ width: "11px", height: "11px", borderRadius: "50%", background: color, flexShrink: 0, boxShadow: `0 0 6px ${color}80` }} />
+                <span style={{ fontSize: "12px", color: "#BDD6F4", fontWeight: 500, lineHeight: 1.3 }}>{label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Layers panel mini-preview */}
+        {step.preview && (
+          <div style={{ background: "rgba(4,24,54,0.8)", borderRadius: "13px", padding: "4px 0", marginBottom: "14px", border: "1px solid rgba(90,152,227,0.14)" }}>
+            {step.preview.map(({ icon, label, sub }, i) => (
+              <div key={label} style={{
+                display: "flex", alignItems: "center", gap: "11px",
+                padding: "9px 13px",
+                borderBottom: i < step.preview.length - 1 ? "1px solid rgba(90,152,227,0.08)" : "none",
+              }}>
+                <span style={{ fontSize: "18px", width: "24px", textAlign: "center", flexShrink: 0 }}>{icon}</span>
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8", lineHeight: 1.2 }}>{label}</div>
+                  <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>{sub}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Buttons */}
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           {!isLast && (
-            <button onClick={onNext} style={{ flex: 1, padding: "10px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
-              Next →
+            <button onClick={onSkip} style={{
+              padding: "11px 14px", borderRadius: "12px",
+              border: "1px solid rgba(90,152,227,0.15)", background: "transparent",
+              color: "#BDD6F4", fontSize: "13px", fontWeight: 600,
+              cursor: "pointer", fontFamily: "'DM Sans'", whiteSpace: "nowrap",
+            }}>
+              Skip tour
             </button>
           )}
-          {isLast && (
-            <button onClick={onNext} style={{ flex: 1, padding: "10px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg,#6BCB77,#4aaa5a)", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>
-              🏔️ Let's go!
-            </button>
-          )}
+          <button onClick={onNext} style={{
+            flex: 1, padding: "12px", borderRadius: "12px", border: "none",
+            background: isLast ? "linear-gradient(135deg,#6BCB77,#4aaa5a)" : "linear-gradient(135deg,#E85D3A,#c94628)",
+            color: "#F8F8F8", fontSize: "15px", fontWeight: 700,
+            cursor: "pointer", fontFamily: "'DM Sans'",
+          }}>
+            {isLast ? "🏔️ Let's go hiking!" : "Next →"}
+          </button>
         </div>
       </div>
     </div>
