@@ -573,7 +573,60 @@ const dc = d => d === "Expert" ? "#E85D3A" : d === "Hard" ? "#F49D37" : d === "M
    ═══════════════════════════════════════════════════════════════════ */
 
 /** Fetch GPX XML text from a full URL (gpx_url column) */
+// ── Offline GPX cache (IndexedDB) ────────────────────────────────────────────
+// Uses the GPX URL as the storage key so fetchGpxText transparently serves
+// from cache without any call-site changes.
+const _GPX_DB = "ts-offline-gpx";
+const _GPX_STORE = "gpx";
+function _openGpxDb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(_GPX_DB, 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore(_GPX_STORE);
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function storeGpxOffline(url, gpxText) {
+  const db = await _openGpxDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(_GPX_STORE, "readwrite");
+    tx.objectStore(_GPX_STORE).put(gpxText, url);
+    tx.oncomplete = resolve; tx.onerror = () => reject(tx.error);
+  });
+}
+async function getGpxOffline(url) {
+  const db = await _openGpxDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(_GPX_STORE, "readonly");
+    const req = tx.objectStore(_GPX_STORE).get(url);
+    req.onsuccess = () => resolve(req.result ?? null); req.onerror = () => reject(req.error);
+  });
+}
+async function deleteGpxOffline(url) {
+  const db = await _openGpxDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(_GPX_STORE, "readwrite");
+    tx.objectStore(_GPX_STORE).delete(url);
+    tx.oncomplete = resolve; tx.onerror = () => reject(tx.error);
+  });
+}
+async function getAllOfflineGpxUrls() {
+  try {
+    const db = await _openGpxDb();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(_GPX_STORE, "readonly");
+      const req = tx.objectStore(_GPX_STORE).getAllKeys();
+      req.onsuccess = () => resolve(req.result ?? []); req.onerror = () => reject(req.error);
+    });
+  } catch (_) { return []; }
+}
+
 async function fetchGpxText(url) {
+  // Serve from IndexedDB cache if available (offline-first)
+  try {
+    const cached = await getGpxOffline(url);
+    if (cached) return cached;
+  } catch (_) {}
   const res = await fetch(url);
   if (!res.ok) throw new Error(`GPX fetch failed: ${res.status}`);
   return res.text();
@@ -2791,6 +2844,29 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
   const [routeDetailCoordsLoading, setRouteDetailCoordsLoading] = useState(false);
   const { photos: detailPhotos, addPhoto: addDetailPhoto, removePhoto: removeDetailPhoto } = useRoutePhotos(showRouteDetail?.id ?? null);
 
+  // Offline download state
+  const [offlineUrls, setOfflineUrls] = useState(new Set()); // Set of gpx_file URLs cached in IndexedDB
+  const [downloadingId, setDownloadingId] = useState(null);  // route.id currently being downloaded
+  useEffect(() => { getAllOfflineGpxUrls().then(urls => setOfflineUrls(new Set(urls))); }, []);
+
+  const handleDownloadRoute = async (route) => {
+    if (!route.gpx_file || downloadingId != null) return;
+    setDownloadingId(route.id);
+    try {
+      const xml = await fetch(route.gpx_file).then(r => { if (!r.ok) throw new Error(); return r.text(); });
+      await storeGpxOffline(route.gpx_file, xml);
+      setOfflineUrls(prev => new Set([...prev, route.gpx_file]));
+      if (typeof posthog !== "undefined") posthog.capture("route_saved_offline", { route_name: route.name, route_id: route.id });
+    } catch (err) { console.error("Offline download failed:", err); }
+    finally { setDownloadingId(null); }
+  };
+  const handleRemoveOffline = async (route) => {
+    try {
+      await deleteGpxOffline(route.gpx_file);
+      setOfflineUrls(prev => { const n = new Set(prev); n.delete(route.gpx_file); return n; });
+    } catch (err) { console.error("Remove offline failed:", err); }
+  };
+
   // Fetch GPX preview coords when route detail opens
   useEffect(() => {
     if (!showRouteDetail?.gpx_file) { setRouteDetailCoords(null); return; }
@@ -2985,7 +3061,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
 
           {/* Flyover + Go to Route */}
           {(showRouteDetail.gpx_file || ROUTES.find(r => r.name === showRouteDetail.name && r.gpx_file)) && (
-            <div style={{ display: "flex", gap: "10px" }}>
+            <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
               <button onClick={() => { posthog.capture("flyover_started", { route_name: showRouteDetail?.name, route_id: showRouteDetail?.id }); openRoute(showRouteDetail, "flyover"); setShowRouteDetail(null); }} style={{ flex: 1, padding: "14px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg,#5A98E3,#3a78c3)", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
                 ✈ Flyover
               </button>
@@ -2994,6 +3070,45 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
               </button>
             </div>
           )}
+
+          {/* ── Save for Offline ── */}
+          {showRouteDetail.gpx_file && (() => {
+            const saved = offlineUrls.has(showRouteDetail.gpx_file);
+            const loading = downloadingId === showRouteDetail.id;
+            if (saved) return (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", borderRadius: "12px", background: "rgba(107,203,119,0.07)", border: "1px solid rgba(107,203,119,0.2)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(107,203,119,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <CheckCircle size={16} color="#6BCB77" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#6BCB77" }}>Saved for offline</div>
+                    <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.5, marginTop: "1px" }}>Available without signal</div>
+                  </div>
+                </div>
+                <button onClick={() => handleRemoveOffline(showRouteDetail)} style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.45, cursor: "pointer", fontSize: "12px", fontWeight: 600, fontFamily: "'DM Sans'", padding: "4px 8px", borderRadius: "8px" }}>Remove</button>
+              </div>
+            );
+            if (loading) return (
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 14px", borderRadius: "12px", background: "rgba(90,152,227,0.06)", border: "1px solid rgba(90,152,227,0.14)" }}>
+                <div style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(90,152,227,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div style={{ width: 14, height: 14, border: "2px solid rgba(90,152,227,0.3)", borderTopColor: "#5A98E3", borderRadius: "50%", animation: "spin 0.75s linear infinite" }} />
+                </div>
+                <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.7 }}>Downloading route…</div>
+              </div>
+            );
+            return (
+              <button onClick={() => handleDownloadRoute(showRouteDetail)} style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "12px 14px", borderRadius: "12px", background: "rgba(90,152,227,0.05)", border: "1px solid rgba(90,152,227,0.12)", cursor: "pointer", textAlign: "left" }}>
+                <div style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(90,152,227,0.10)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Download size={15} color="#5A98E3" />
+                </div>
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: 700, color: "#BDD6F4" }}>Save for offline</div>
+                  <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.45, marginTop: "1px" }}>Use on the mountain without signal</div>
+                </div>
+              </button>
+            );
+          })()}
         </div>
       </div>
     )}
@@ -3103,6 +3218,7 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
                       <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "6px", background: clsColor + "22", color: clsColor, fontWeight: 700, fontFamily: "'DM Sans'" }}>{CLS[r.cls]?.name || r.cls}</span>
                       <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "6px", background: `${dc(r.diff)}18`, color: dc(r.diff), fontWeight: 600, fontFamily: "'DM Sans'" }}>{r.diff}</span>
                       {r.src === "community" && <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "5px", background: "rgba(90,152,227,0.12)", color: "#5A98E3", fontWeight: 600 }}>Community</span>}
+                      {r.gpx_file && offlineUrls.has(r.gpx_file) && <span title="Saved for offline" style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "5px", background: "rgba(107,203,119,0.12)", color: "#6BCB77", fontWeight: 700, display: "flex", alignItems: "center", gap: "3px" }}><Download size={9} />Offline</span>}
                       {routeGroup.length === 1 && (
                         <button onClick={() => { setMapSelIdx(null); setMapAnchorId(null); }} style={{ marginLeft: "auto", background: "none", border: "none", color: "#BDD6F4", opacity: 0.6, cursor: "pointer", fontSize: "24px", lineHeight: 1, padding: "0 4px" }}>×</button>
                       )}
