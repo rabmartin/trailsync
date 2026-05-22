@@ -2847,18 +2847,62 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
   // Offline download state
   const [offlineUrls, setOfflineUrls] = useState(new Set()); // Set of gpx_file URLs cached in IndexedDB
   const [downloadingId, setDownloadingId] = useState(null);  // route.id currently being downloaded
+  const [tilePct, setTilePct] = useState(null);              // 0-100 during tile pre-cache, null otherwise
   useEffect(() => { getAllOfflineGpxUrls().then(urls => setOfflineUrls(new Set(urls))); }, []);
+
+  // Listen for tile pre-cache progress from the service worker
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    const handler = (e) => {
+      if (e.data?.type === "TILE_PROGRESS") {
+        setTilePct(Math.round((e.data.done / e.data.total) * 100));
+      } else if (e.data?.type === "TILE_PRECACHE_DONE") {
+        setTilePct(null);
+        setDownloadingId(null);
+      }
+    };
+    navigator.serviceWorker.addEventListener("message", handler);
+    return () => navigator.serviceWorker.removeEventListener("message", handler);
+  }, []);
 
   const handleDownloadRoute = async (route) => {
     if (!route.gpx_file || downloadingId != null) return;
     setDownloadingId(route.id);
+    setTilePct(null);
     try {
+      // 1. Fetch and store GPX in IndexedDB
       const xml = await fetch(route.gpx_file).then(r => { if (!r.ok) throw new Error(); return r.text(); });
       await storeGpxOffline(route.gpx_file, xml);
       setOfflineUrls(prev => new Set([...prev, route.gpx_file]));
+
+      // 2. Pre-cache map tiles via service worker
+      const sw = navigator.serviceWorker?.controller;
+      if (sw) {
+        const coords = parseGpxCoords(xml);
+        if (coords.length > 1) {
+          const lngs = coords.map(c => c[0]), lats = coords.map(c => c[1]);
+          // Add a small buffer (0.015°≈1km) around the route bbox
+          const bbox = [
+            Math.min(...lngs) - 0.015, Math.min(...lats) - 0.015,
+            Math.max(...lngs) + 0.015, Math.max(...lats) + 0.015,
+          ];
+          setTilePct(0);
+          sw.postMessage({
+            type: "PRECACHE_TILES",
+            bbox,
+            token: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
+            minZoom: 8,
+            maxZoom: 13,  // ~500-1500 tiles for a typical Munro route
+          });
+          // downloadingId cleared by TILE_PRECACHE_DONE message handler
+          if (typeof posthog !== "undefined") posthog.capture("route_saved_offline", { route_name: route.name, route_id: route.id });
+          return; // don't clear downloadingId yet — wait for SW message
+        }
+      }
+
       if (typeof posthog !== "undefined") posthog.capture("route_saved_offline", { route_name: route.name, route_id: route.id });
     } catch (err) { console.error("Offline download failed:", err); }
-    finally { setDownloadingId(null); }
+    setDownloadingId(null);
   };
   const handleRemoveOffline = async (route) => {
     try {
@@ -3090,11 +3134,25 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
               </div>
             );
             if (loading) return (
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 14px", borderRadius: "12px", background: "rgba(90,152,227,0.06)", border: "1px solid rgba(90,152,227,0.14)" }}>
-                <div style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(90,152,227,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <div style={{ width: 14, height: 14, border: "2px solid rgba(90,152,227,0.3)", borderTopColor: "#5A98E3", borderRadius: "50%", animation: "spin 0.75s linear infinite" }} />
+              <div style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(90,152,227,0.06)", border: "1px solid rgba(90,152,227,0.14)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: tilePct !== null ? "10px" : 0 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(90,152,227,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <div style={{ width: 14, height: 14, border: "2px solid rgba(90,152,227,0.3)", borderTopColor: "#5A98E3", borderRadius: "50%", animation: "spin 0.75s linear infinite" }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#BDD6F4" }}>
+                      {tilePct !== null ? `Caching map tiles… ${tilePct}%` : "Saving route data…"}
+                    </div>
+                    <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.45, marginTop: "1px" }}>
+                      {tilePct !== null ? "So the map works without signal" : "Fetching GPX track"}
+                    </div>
+                  </div>
                 </div>
-                <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.7 }}>Downloading route…</div>
+                {tilePct !== null && (
+                  <div style={{ height: 3, borderRadius: 2, background: "rgba(90,152,227,0.15)", overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${tilePct}%`, background: "#5A98E3", borderRadius: 2, transition: "width 0.3s ease" }} />
+                  </div>
+                )}
               </div>
             );
             return (

@@ -1,8 +1,8 @@
-// TrailSync Service Worker v6
-// Network-first for app shell, cache-first for map tiles
+// TrailSync Service Worker v7
+// Cache-first for map tiles + pre-cache on route download
 
-const CACHE_NAME = "trailsync-v6";
-const TILE_CACHE = "trailsync-tiles-v6";
+const CACHE_NAME = "trailsync-v7";
+const TILE_CACHE = "trailsync-tiles-v7";
 
 // Minimal app shell — only static public files
 const APP_SHELL = ["/", "/manifest.json", "/icon-192.png", "/icon-512.png"];
@@ -42,6 +42,67 @@ self.addEventListener("activate", (event) => {
     )
   );
   self.clients.claim();
+});
+
+// ── Tile math ─────────────────────────────────────────────
+function lon2tile(lon, z) { return Math.floor((lon + 180) / 360 * Math.pow(2, z)); }
+function lat2tile(lat, z) {
+  return Math.floor(
+    (1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, z)
+  );
+}
+function tilesForBbox([minLng, minLat, maxLng, maxLat], zoom) {
+  const x0 = lon2tile(minLng, zoom), x1 = lon2tile(maxLng, zoom);
+  const y0 = lat2tile(maxLat, zoom), y1 = lat2tile(minLat, zoom); // lat is inverted in tile coords
+  const tiles = [];
+  for (let x = x0; x <= x1; x++)
+    for (let y = y0; y <= y1; y++)
+      tiles.push([x, y, zoom]);
+  return tiles;
+}
+
+// ── Pre-cache tiles for a route (triggered by download button) ──
+self.addEventListener("message", async (event) => {
+  if (event.data?.type !== "PRECACHE_TILES") return;
+  const { bbox, token, minZoom = 8, maxZoom = 13 } = event.data;
+  const client = event.source;
+
+  // Build full tile list across zoom range
+  const allTiles = [];
+  for (let z = minZoom; z <= maxZoom; z++) {
+    for (const [x, y] of tilesForBbox(bbox, z)) {
+      // Mapbox GL JS style tile endpoint (512px tiles, @2x)
+      allTiles.push(
+        `https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/tiles/512/${z}/${x}/${y}?access_token=${token}`
+      );
+    }
+  }
+
+  const cache = await caches.open(TILE_CACHE);
+  const BATCH = 8; // parallel fetches — stay polite to Mapbox rate limits
+
+  for (let i = 0; i < allTiles.length; i += BATCH) {
+    await Promise.allSettled(
+      allTiles.slice(i, i + BATCH).map(async (url) => {
+        const hit = await cache.match(url);
+        if (hit) return; // already cached
+        try {
+          const res = await fetch(url);
+          if (res.ok) await cache.put(url, res);
+        } catch { /* offline during pre-cache — skip */ }
+      })
+    );
+    // Report progress to the page so the UI can update
+    if (client) {
+      client.postMessage({
+        type: "TILE_PROGRESS",
+        done: Math.min(i + BATCH, allTiles.length),
+        total: allTiles.length,
+      });
+    }
+  }
+
+  if (client) client.postMessage({ type: "TILE_PRECACHE_DONE" });
 });
 
 // ── Fetch ─────────────────────────────────────────────────
