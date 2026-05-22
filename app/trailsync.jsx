@@ -223,6 +223,17 @@ async function fetchRegionWeather(region, dayOffset) {
 // Fetch weather for a single peak (for expanded view)
 async function fetchPeakWeather(peak, dayOffset) {
   const safeOffset = Math.max(0, dayOffset); // dayOffset -1 (best day) treated as today
+  const cacheKey = `ts-wx-pk-${peak.name}-${safeOffset}`;
+
+  // Serve from localStorage when offline
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    try {
+      const hit = JSON.parse(localStorage.getItem(cacheKey) || "null");
+      if (hit?.data) return { ...hit.data, _cached: true, _cachedAt: hit.ts };
+    } catch {}
+    return null;
+  }
+
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${peak.lat}&longitude=${peak.lng}` +
     `&daily=temperature_2m_max,temperature_2m_min,apparent_temperature_min,apparent_temperature_max,` +
     `windspeed_10m_max,windgusts_10m_max,precipitation_sum,precipitation_probability_max,weathercode,snowfall_sum,sunrise,sunset` +
@@ -254,7 +265,7 @@ async function fetchPeakWeather(peak, dayOffset) {
       });
     }
 
-    return {
+    const result = {
       f:       feelsAdj,
       t:       tempAdj,
       wi:      toMph(d.windspeed_10m_max[i]),
@@ -269,6 +280,9 @@ async function fetchPeakWeather(peak, dayOffset) {
       sunset:  d.sunset[i]  ? new Date(d.sunset[i]).toLocaleTimeString("en-GB",  { hour: "2-digit", minute: "2-digit" }) : "--:--",
       hours,
     };
+    // Persist for offline use
+    try { localStorage.setItem(cacheKey, JSON.stringify({ data: result, ts: Date.now() })); } catch {}
+    return result;
   } catch { return null; }
 }
 
@@ -340,6 +354,29 @@ function useRoutePhotos(routeId) {
   const photos = routeId != null ? (ROUTE_PHOTOS[routeId] || []) : [];
   return { photos };
 }
+
+/** Reliable online/offline detection — Capacitor Network API on native, window events on web */
+function useOnlineStatus() {
+  const [online, setOnline] = useState(() => typeof navigator !== "undefined" ? navigator.onLine : true);
+  useEffect(() => {
+    const goOnline  = () => setOnline(true);
+    const goOffline = () => setOnline(false);
+    window.addEventListener("online",  goOnline);
+    window.addEventListener("offline", goOffline);
+    let listener = null;
+    // Capacitor Network is more reliable than window events on native
+    Network.getStatus().then(s => setOnline(s.connected)).catch(() => {});
+    Network.addListener("networkStatusChange", s => setOnline(s.connected))
+      .then(l => { listener = l; }).catch(() => {});
+    return () => {
+      window.removeEventListener("online",  goOnline);
+      window.removeEventListener("offline", goOffline);
+      listener?.remove?.();
+    };
+  }, []);
+  return online;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ROUTES populated from Supabase on mount; fallback hardcoded data kept as default
@@ -1549,6 +1586,14 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
     if (initialFilter) setFf(initialFilter);
   }, [initialFilter]);
 
+  // Seed weather from localStorage on first render so offline users see something immediately
+  useEffect(() => {
+    try {
+      const hit = JSON.parse(localStorage.getItem("ts-wx-regions") || "null");
+      if (hit?.data) { setWxData(hit.data); setWxUpdated(new Date(hit.ts)); }
+    } catch {}
+  }, []);
+
   // Fetch all region weather on mount and every 30 mins
   useEffect(() => {
     let cancelled = false;
@@ -1567,8 +1612,11 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
         setWxData(map);
         setWxUpdated(new Date());
         setWxError(null);
+        // Persist for offline
+        try { localStorage.setItem("ts-wx-regions", JSON.stringify({ data: map, ts: Date.now() })); } catch {}
       } catch (e) {
-        if (!cancelled) setWxError("Weather unavailable — check your connection");
+        // Keep showing cached data — only set error if we have nothing at all
+        if (!cancelled) setWxError(wxData && Object.keys(wxData).length ? null : "Weather unavailable — check your connection");
       } finally {
         if (!cancelled) setWxLoading(false);
       }
@@ -1722,11 +1770,20 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <button onClick={() => setWindUnit(u => u === "mph" ? "kph" : "mph")} style={{ padding: "3px 8px", borderRadius: "6px", border: "1px solid rgba(90,152,227,0.2)", background: "rgba(90,152,227,0.08)", color: "#5A98E3", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>{windUnit}</button>
-                {wxUpdated && !wxLoading && (
-                  <span style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.4 }}>
-                    {wxUpdated.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
-                  </span>
-                )}
+                {wxUpdated && !wxLoading && (() => {
+                  const ageMs = Date.now() - wxUpdated.getTime();
+                  const ageH = Math.floor(ageMs / 3600000);
+                  const ageM = Math.floor((ageMs % 3600000) / 60000);
+                  const isStale = ageMs > 60 * 60 * 1000; // older than 1 hour
+                  return (
+                    <span style={{ fontSize: "11px", color: isStale ? "#F49D37" : "#BDD6F4", opacity: isStale ? 0.8 : 0.4, display: "flex", alignItems: "center", gap: "3px" }}>
+                      {isStale && <WifiOff size={10} color="#F49D37" />}
+                      {isStale
+                        ? `Cached ${ageH > 0 ? `${ageH}h ` : ""}${ageM}m ago`
+                        : wxUpdated.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  );
+                })()}
               </div>
             </div>
             <div style={{ padding: "0 14px 4px", fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>
@@ -2875,13 +2932,13 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
       await storeGpxOffline(route.gpx_file, xml);
       setOfflineUrls(prev => new Set([...prev, route.gpx_file]));
 
-      // 2. Pre-cache map tiles via service worker
+      // 2. Pre-cache map tiles via service worker — all three map styles
       const sw = navigator.serviceWorker?.controller;
       if (sw) {
         const coords = parseGpxCoords(xml);
         if (coords.length > 1) {
           const lngs = coords.map(c => c[0]), lats = coords.map(c => c[1]);
-          // Add a small buffer (0.015°≈1km) around the route bbox
+          // Add a small buffer (0.015° ≈ 1km) around the route bbox
           const bbox = [
             Math.min(...lngs) - 0.015, Math.min(...lats) - 0.015,
             Math.max(...lngs) + 0.015, Math.max(...lats) + 0.015,
@@ -2891,8 +2948,12 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
             type: "PRECACHE_TILES",
             bbox,
             token: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
-            minZoom: 8,
-            maxZoom: 13,  // ~500-1500 tiles for a typical Munro route
+            styles: [
+              // Outdoors / Topo — vector tiles, fine at high zoom
+              { url: "https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/tiles/512", minZoom: 8, maxZoom: 14 },
+              // Satellite — raster tiles are large, cap at Z12 to stay reasonable (~50-150 tiles)
+              { url: "https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/256", minZoom: 8, maxZoom: 12 },
+            ],
           });
           // downloadingId cleared by TILE_PRECACHE_DONE message handler
           if (typeof posthog !== "undefined") posthog.capture("route_saved_offline", { route_name: route.name, route_id: route.id });
@@ -2931,10 +2992,14 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
   }, [pendingRouteDetail]);
   // GPX drawing now happens on main map via openRoute prop
 
+  const isOnline = useOnlineStatus();
+
   const routeSearchQ = routeSearch.toLowerCase().trim();
   // Memoised so its reference is stable — prevents routeGroup and RoutesClusterMap's
   // sync useEffect from needlessly recomputing on every render.
   const filtered = useMemo(() => ROUTES.filter(r => {
+    // When offline, only show routes whose GPX is already cached locally
+    if (!isOnline && r.gpx_file && !offlineUrls.has(r.gpx_file)) return false;
     if (cf && r.cls !== cf) return false;
     if (df && r.diff !== df) return false;
     if (!showCommunity && r.src === "community") return false;
@@ -3367,13 +3432,36 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
         </button>}
       </div>
 
-      <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.4, marginBottom: "12px" }}>{filtered.length} routes found</div>
+      {/* Offline mode banner — shown whenever device has no connectivity */}
+      {!isOnline && (
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", padding: "12px 14px", borderRadius: "12px", background: "rgba(244,157,55,0.08)", border: "1px solid rgba(244,157,55,0.25)", marginBottom: "12px" }}>
+          <WifiOff size={16} color="#F49D37" style={{ flexShrink: 0, marginTop: 2 }} />
+          <div>
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "#F49D37" }}>Offline — showing saved routes only</div>
+            <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.55, marginTop: "2px" }}>
+              {offlineUrls.size > 0
+                ? `${filtered.length} of your ${offlineUrls.size} saved route${offlineUrls.size !== 1 ? "s" : ""} available`
+                : "No routes saved yet. Connect to Wi-Fi and download routes first."}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.4, marginBottom: "12px" }}>
+        {isOnline ? `${filtered.length} routes found` : `${filtered.length} saved route${filtered.length !== 1 ? "s" : ""}`}
+      </div>
 
       {/* ═══ LIST VIEW ═══ */}
       {subTab === "list" && (
         <div>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            {filtered.map((r, i) => (
+            {filtered.length === 0 && !isOnline ? (
+              <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                <div style={{ fontSize: "36px", marginBottom: "12px" }}>📶</div>
+                <div style={{ fontSize: "16px", fontWeight: 700, color: "#F8F8F8", marginBottom: "6px" }}>No saved routes</div>
+                <div style={{ fontSize: "13px", color: "#BDD6F4", opacity: 0.55, lineHeight: 1.5 }}>Connect to Wi-Fi, open a route and tap "Save for offline" before heading to the hills.</div>
+              </div>
+            ) : filtered.map((r, i) => (
               <RouteListCard key={r.id} r={r} i={i} onSelect={setShowRouteDetail} />
             ))}
           </div>

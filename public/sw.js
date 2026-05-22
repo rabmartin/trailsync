@@ -62,37 +62,36 @@ function tilesForBbox([minLng, minLat, maxLng, maxLat], zoom) {
 }
 
 // ── Pre-cache tiles for a route (triggered by download button) ──
+// event.data: { type, bbox, token, styles: [{ url, minZoom, maxZoom }] }
 self.addEventListener("message", async (event) => {
   if (event.data?.type !== "PRECACHE_TILES") return;
-  const { bbox, token, minZoom = 8, maxZoom = 13 } = event.data;
+  const { bbox, token, styles } = event.data;
   const client = event.source;
 
-  // Build full tile list across zoom range
+  // Build full tile URL list across all requested styles + zoom ranges
   const allTiles = [];
-  for (let z = minZoom; z <= maxZoom; z++) {
-    for (const [x, y] of tilesForBbox(bbox, z)) {
-      // Mapbox GL JS style tile endpoint (512px tiles, @2x)
-      allTiles.push(
-        `https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/tiles/512/${z}/${x}/${y}?access_token=${token}`
-      );
+  for (const { url: styleUrl, minZoom = 8, maxZoom = 13 } of (styles || [])) {
+    for (let z = minZoom; z <= maxZoom; z++) {
+      for (const [x, y] of tilesForBbox(bbox, z)) {
+        allTiles.push(`${styleUrl}/${z}/${x}/${y}?access_token=${token}`);
+      }
     }
   }
 
   const cache = await caches.open(TILE_CACHE);
-  const BATCH = 8; // parallel fetches — stay polite to Mapbox rate limits
+  const BATCH = 8; // parallel fetches — polite to Mapbox rate limits
 
   for (let i = 0; i < allTiles.length; i += BATCH) {
     await Promise.allSettled(
       allTiles.slice(i, i + BATCH).map(async (url) => {
         const hit = await cache.match(url);
-        if (hit) return; // already cached
+        if (hit) return; // already cached — skip
         try {
           const res = await fetch(url);
           if (res.ok) await cache.put(url, res);
-        } catch { /* offline during pre-cache — skip */ }
+        } catch { /* offline during pre-cache — skip gracefully */ }
       })
     );
-    // Report progress to the page so the UI can update
     if (client) {
       client.postMessage({
         type: "TILE_PROGRESS",
