@@ -40,6 +40,13 @@ const storageAdapter = (() => {
   }
 })();
 
+if (!process.env.NEXT_PUBLIC_SUPABASE_KEY) {
+  console.error(
+    "[TrailSync] NEXT_PUBLIC_SUPABASE_KEY is not set — all database operations will fail with 401. " +
+    "Add it to your Vercel environment variables and redeploy."
+  );
+}
+
 const supabase = createClient(
   "https://mferkdgzpaaxixqlanzm.supabase.co",
   process.env.NEXT_PUBLIC_SUPABASE_KEY || "",
@@ -1364,6 +1371,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   const handleFollowInSearch = async (targetId) => {
     if (!userId || !targetId) return;
     const isFollowing = followingIds?.has(targetId);
+    // Optimistic UI update
     setFollowingIds(prev => {
       const next = new Set(prev);
       isFollowing ? next.delete(targetId) : next.add(targetId);
@@ -1371,11 +1379,33 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
     });
     if (!isFollowing) {
       setFollowingCount && setFollowingCount(c => c + 1);
-      await supabase.from("follows").upsert({ follower_id: userId, following_id: targetId }, { onConflict: "follower_id,following_id" });
-      posthog.capture("user_followed", { target_id: targetId });
+      const { error } = await supabase.from("follows").upsert(
+        { follower_id: userId, following_id: targetId },
+        { onConflict: "follower_id,following_id" }
+      );
+      if (error) {
+        // Roll back optimistic update
+        setFollowingIds(prev => { const next = new Set(prev); next.delete(targetId); return next; });
+        setFollowingCount && setFollowingCount(c => Math.max(0, c - 1));
+        console.error("FOLLOW ERROR:", error.message);
+      } else {
+        // Keep target's follower_count in sync (trigger handles this if set up, belt-and-braces here)
+        const { data: pf } = await supabase.from("profiles").select("follower_count").eq("id", targetId).maybeSingle();
+        if (pf != null) await supabase.from("profiles").update({ follower_count: (pf.follower_count || 0) + 1 }).eq("id", targetId);
+        posthog.capture("user_followed", { target_id: targetId });
+      }
     } else {
       setFollowingCount && setFollowingCount(c => Math.max(0, c - 1));
-      await supabase.from("follows").delete().eq("follower_id", userId).eq("following_id", targetId);
+      const { error } = await supabase.from("follows").delete().eq("follower_id", userId).eq("following_id", targetId);
+      if (error) {
+        // Roll back optimistic update
+        setFollowingIds(prev => { const next = new Set(prev); next.add(targetId); return next; });
+        setFollowingCount && setFollowingCount(c => c + 1);
+        console.error("UNFOLLOW ERROR:", error.message);
+      } else {
+        const { data: pf } = await supabase.from("profiles").select("follower_count").eq("id", targetId).maybeSingle();
+        if (pf != null) await supabase.from("profiles").update({ follower_count: Math.max(0, (pf.follower_count || 1) - 1) }).eq("id", targetId);
+      }
     }
   };
 
@@ -9016,9 +9046,16 @@ export default function TrailSync() {
           setFollowingCount(c => Math.max(0, c - 1));
         }
       } else {
-        // Increment the target's follower_count in profiles table
-        const { data: pf } = await supabase.from("profiles").select("follower_count").eq("id", targetId).maybeSingle();
-        if (pf != null) await supabase.from("profiles").update({ follower_count: (pf.follower_count || 0) + 1 }).eq("id", targetId);
+        // Update target's follower_count and self's following_count atomically-ish
+        // (a Postgres trigger is the proper fix — this is belt-and-braces in code)
+        const [{ data: pf }, { data: me }] = await Promise.all([
+          supabase.from("profiles").select("follower_count").eq("id", targetId).maybeSingle(),
+          supabase.from("profiles").select("following_count").eq("id", userId).maybeSingle(),
+        ]);
+        await Promise.all([
+          pf != null && supabase.from("profiles").update({ follower_count: (pf.follower_count || 0) + 1 }).eq("id", targetId),
+          me != null && supabase.from("profiles").update({ following_count: (me.following_count || 0) + 1 }).eq("id", userId),
+        ]);
       }
     } else {
       setFollowingCount(c => Math.max(0, c - 1));
@@ -9028,9 +9065,14 @@ export default function TrailSync() {
         setFollowingIds(prev => { const next = new Set(prev); next.add(targetId); return next; });
         setFollowingCount(c => c + 1);
       } else {
-        // Decrement the target's follower_count in profiles table
-        const { data: pf } = await supabase.from("profiles").select("follower_count").eq("id", targetId).maybeSingle();
-        if (pf != null) await supabase.from("profiles").update({ follower_count: Math.max(0, (pf.follower_count || 1) - 1) }).eq("id", targetId);
+        const [{ data: pf }, { data: me }] = await Promise.all([
+          supabase.from("profiles").select("follower_count").eq("id", targetId).maybeSingle(),
+          supabase.from("profiles").select("following_count").eq("id", userId).maybeSingle(),
+        ]);
+        await Promise.all([
+          pf != null && supabase.from("profiles").update({ follower_count: Math.max(0, (pf.follower_count || 1) - 1) }).eq("id", targetId),
+          me != null && supabase.from("profiles").update({ following_count: Math.max(0, (me.following_count || 1) - 1) }).eq("id", userId),
+        ]);
       }
     }
   };
@@ -9096,10 +9138,12 @@ export default function TrailSync() {
           ROUTES = ROUTES.map(r => {
             const sb = supabaseByName[r.name];
             if (!sb) return r;
-            // Merge: keep hardcoded fields unless Supabase has a real value
+            // Merge: keep hardcoded fields unless Supabase has a real value.
+            // IMPORTANT: do NOT replace r.id — hardcoded IDs are the keys for
+            // ROUTE_PHOTOS and ROUTE_COORDS. Replacing with Supabase's auto-increment
+            // ID would silently orphan photos and coordinate fallbacks.
             return {
               ...r,
-              id: sb.id,                                          // use Supabase id for GPX lookup
               gpx_file: sb.gpx_file || r.gpx_file || null,
               dist: sb.dist || r.dist,
               elev: sb.elev || r.elev,
