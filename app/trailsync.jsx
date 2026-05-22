@@ -8236,49 +8236,55 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
 // Each step describes only what is VISIBLE on screen — no step tells the user to
 // open a panel they can't yet see. Inline `legend` and `preview` fields let us
 // show the content of collapsed panels right inside the tutorial card.
+//
+// SPOTLIGHT ALIGNMENT NOTE: the spot is rendered as a two-layer div:
+//   outer wrapper → translate(-50%,-50%) centres it (NO animation here)
+//   inner div     → box-shadow creates the dim overlay; lpPulse animates scale only
+// This avoids the CSS transform-override bug where animation's transform: scale()
+// replaces the inline translate and shifts the ring away from the lit area.
 const TUTORIAL_STEPS = [
   {
     tab: "map",
     title: "Welcome to TrailSync 🏔️",
-    text: "Your personal hillwalking companion for the whole of the UK. This tour takes about 30 seconds.",
+    text: "Your personal hillwalking companion for the whole of the UK.\n\nThis tour takes about 30 seconds — tap anywhere to step through it.",
     pos: "center", arrow: null, spot: null,
   },
   {
     tab: "map",
     title: "Every UK Peak on the Map",
-    text: "Each coloured dot or pin is a real mountain. Tap any one to see the summit weather forecast, height, and to log it as bagged.",
+    text: "Each coloured dot is a real mountain. Tap any one to see the summit weather forecast, height, and to log it as bagged.",
     legend: [
       { color: "#E85D3A", label: "Munro  (3,000 ft+)" },
       { color: "#F49D37", label: "Corbett  (2,500–3,000 ft)" },
       { color: "#7FB069", label: "Graham  (2,000–2,500 ft)" },
       { color: "#5A98E3", label: "Wainwright & others" },
     ],
-    pos: "bottom", arrow: "up-center", spot: { x: 50, y: 40, r: 72 },
+    pos: "bottom", arrow: "up-center", spot: { x: 50, y: 37, r: 75 },
   },
   {
     tab: "routes",
     title: "Filter to Your List 🗂️",
-    text: "Use the chips at the top of the Routes screen to narrow by classification and difficulty — Munros only, Hard walks only, etc. Tap any route card for full details and the GPX track.",
-    pos: "bottom", arrow: "up-center", spot: null,
+    text: "Use the chips at the top to show only the classification and difficulty you're working through — Munros only, Easy walks only, etc.",
+    pos: "bottom", arrow: "up-center", spot: { x: 50, y: 20, r: 55 },
   },
   {
     tab: "map",
     title: "Layers Button  ↗",
-    text: "Tap the Layers button in the top-right corner to change what you see on the map. Here's what's inside:",
+    text: "Tap the Layers button in the top-right to change what's on the map. Here's what's inside:",
     preview: [
       { icon: "📐", label: "Topographical", sub: "Detailed contour lines & OS-style view" },
-      { icon: "🛰️", label: "Satellite",    sub: "Aerial imagery" },
+      { icon: "🛰️", label: "Satellite",     sub: "Aerial imagery" },
       { icon: "💨", label: "Weather overlays", sub: "Live wind, rain & cloud" },
-      { icon: "👥", label: "Live Hikers",   sub: "See other TrailSync users on the hills" },
+      { icon: "👥", label: "Live Hikers",    sub: "See other TrailSync users on the hills" },
       { icon: "🚶", label: "Community Walks", sub: "Planned group walks near you" },
     ],
-    pos: "bottom", arrow: "up-right", spot: null,
+    pos: "bottom", arrow: "up-right", spot: { x: 88, y: 8, r: 28 },
   },
   {
     tab: "map",
     title: "Record Your Walk ⏺",
-    text: "Tap the big centre button at the bottom to start GPS recording. Your trail draws on the map in real time as you walk.",
-    pos: "top", arrow: "down-center", spot: null,
+    text: "Tap the big centre button at the bottom of the screen to start GPS recording. Your trail draws on the map in real time as you walk.",
+    pos: "top", arrow: "down-center", spot: { x: 50, y: 93, r: 30 },
   },
   {
     tab: "home",
@@ -8315,33 +8321,34 @@ const TUTORIAL_STEPS = [
 const TutorialOverlay = ({ step, totalSteps, currentStep, onNext, onPrev, onSkip }) => {
   const isLast = currentStep === totalSteps - 1;
 
-  // Dim overlay with optional spotlight cutout
-  const overlayStyle = step.spot
-    ? {
-        position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none",
-        background: `radial-gradient(circle ${step.spot.r}px at ${step.spot.x}% ${step.spot.y}%, transparent ${step.spot.r - 2}px, rgba(3,10,24,0.88) ${step.spot.r + 10}px)`,
-      }
-    : { position: "absolute", inset: 0, zIndex: 0, background: "rgba(3,10,24,0.82)", pointerEvents: "none" };
-
-  // Pulsing ring at the spotlight centre
-  const ring = step.spot ? (
+  // ── Spotlight ────────────────────────────────────────────────────────────────
+  // Two-layer approach to avoid CSS transform-override bug:
+  //   outer wrapper  → translate(-50%,-50%) centres the spot (NO animation)
+  //   inner div      → box-shadow dims everything outside; lpPulse scales in-place
+  // If both transform and animation were on one element, the animation's
+  // transform: scale() would replace the inline translate, shifting the ring off-centre.
+  const spotlightEl = step.spot ? (
     <div style={{
-      position: "absolute", pointerEvents: "none",
+      position: "absolute", pointerEvents: "none", zIndex: 1,
       left: `${step.spot.x}%`, top: `${step.spot.y}%`,
-      width: (step.spot.r + 10) * 2, height: (step.spot.r + 10) * 2,
-      borderRadius: "50%",
-      border: "2px solid rgba(232,93,58,0.65)",
-      transform: "translate(-50%,-50%)",
-      animation: "lpPulse 2s ease-in-out infinite",
-      zIndex: 1,
-    }} />
-  ) : null;
+      width: step.spot.r * 2, height: step.spot.r * 2,
+      transform: "translate(-50%, -50%)",
+    }}>
+      <div style={{
+        width: "100%", height: "100%", borderRadius: "50%",
+        boxShadow: "0 0 0 9999px rgba(3,10,24,0.88)",
+        border: "2.5px solid rgba(232,93,58,0.7)",
+        animation: "lpPulse 2s ease-in-out infinite",
+      }} />
+    </div>
+  ) : (
+    // No spotlight → plain dark overlay
+    <div style={{ position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none", background: "rgba(3,10,24,0.82)" }} />
+  );
 
-  // Bouncing directional arrows
+  // ── Directional arrows ───────────────────────────────────────────────────────
   const arrowEl = (() => {
     if (!step.arrow) return null;
-
-    // Upward bounce arrow — card is at bottom, target is above
     if (step.arrow === "up-center") return (
       <div style={{
         position: "absolute", zIndex: 2, pointerEvents: "none",
@@ -8355,8 +8362,6 @@ const TutorialOverlay = ({ step, totalSteps, currentStep, onNext, onPrev, onSkip
         </svg>
       </div>
     );
-
-    // Downward bounce arrow — card is at top, target is below
     if (step.arrow === "down-center") return (
       <div style={{
         position: "absolute", zIndex: 2, pointerEvents: "none",
@@ -8370,8 +8375,6 @@ const TutorialOverlay = ({ step, totalSteps, currentStep, onNext, onPrev, onSkip
         </svg>
       </div>
     );
-
-    // Curved arrow toward top-right corner (Layers button)
     if (step.arrow === "up-right") return (
       <div style={{
         position: "absolute", zIndex: 2, pointerEvents: "none",
@@ -8384,11 +8387,10 @@ const TutorialOverlay = ({ step, totalSteps, currentStep, onNext, onPrev, onSkip
         </svg>
       </div>
     );
-
     return null;
   })();
 
-  // Card positioning
+  // ── Card ─────────────────────────────────────────────────────────────────────
   const cardBase = {
     position: "absolute", zIndex: 3,
     background: "rgba(5,20,46,0.97)", backdropFilter: "blur(22px)",
@@ -8404,15 +8406,20 @@ const TutorialOverlay = ({ step, totalSteps, currentStep, onNext, onPrev, onSkip
     return { ...cardBase, top: "50%", left: "50%", transform: "translate(-50%,-50%)", maxWidth: "360px" };
   })();
 
+  // Hint shown instead of a Next button — tapping the overlay advances the step
+  const tapHint = step.spot ? "Tap the glow to continue →" : "Tap anywhere to continue →";
+
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 300, pointerEvents: "auto" }}>
-      {/* Dim + spotlight */}
-      <div style={overlayStyle} />
-      {ring}
+    // Entire overlay is tappable to advance (except the card — it stopPropagates)
+    <div
+      style={{ position: "fixed", inset: 0, zIndex: 300, pointerEvents: "auto" }}
+      onClick={isLast ? undefined : onNext}
+    >
+      {spotlightEl}
       {arrowEl}
 
-      {/* Card */}
-      <div style={cardStyle}>
+      {/* Card — stops propagation so tapping the card itself doesn't advance */}
+      <div style={cardStyle} onClick={e => e.stopPropagation()}>
         {/* Progress pills */}
         <div style={{ display: "flex", gap: "4px", marginBottom: "14px" }}>
           {[...Array(totalSteps)].map((_, i) => (
@@ -8436,7 +8443,7 @@ const TutorialOverlay = ({ step, totalSteps, currentStep, onNext, onPrev, onSkip
         </div>
 
         {/* Body text */}
-        <div style={{ fontSize: "14px", color: "#BDD6F4", lineHeight: 1.65, marginBottom: step.legend || step.preview ? "13px" : "16px", opacity: 0.88, whiteSpace: "pre-line" }}>
+        <div style={{ fontSize: "14px", color: "#BDD6F4", lineHeight: 1.65, marginBottom: step.legend || step.preview ? "13px" : "14px", opacity: 0.88, whiteSpace: "pre-line" }}>
           {step.text}
         </div>
 
@@ -8457,8 +8464,7 @@ const TutorialOverlay = ({ step, totalSteps, currentStep, onNext, onPrev, onSkip
           <div style={{ background: "rgba(4,24,54,0.8)", borderRadius: "13px", padding: "4px 0", marginBottom: "14px", border: "1px solid rgba(90,152,227,0.14)" }}>
             {step.preview.map(({ icon, label, sub }, i) => (
               <div key={label} style={{
-                display: "flex", alignItems: "center", gap: "11px",
-                padding: "9px 13px",
+                display: "flex", alignItems: "center", gap: "11px", padding: "9px 13px",
                 borderBottom: i < step.preview.length - 1 ? "1px solid rgba(90,152,227,0.08)" : "none",
               }}>
                 <span style={{ fontSize: "18px", width: "24px", textAlign: "center", flexShrink: 0 }}>{icon}</span>
@@ -8471,38 +8477,49 @@ const TutorialOverlay = ({ step, totalSteps, currentStep, onNext, onPrev, onSkip
           </div>
         )}
 
-        {/* Buttons */}
+        {/* Buttons + tap hint */}
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          {/* Back button — only shown after first step */}
+          {/* Back — appears on every step after the first */}
           {currentStep > 0 && (
-            <button onClick={onPrev} style={{
+            <button onClick={e => { e.stopPropagation(); onPrev(); }} style={{
               padding: "11px 14px", borderRadius: "12px",
               border: "1px solid rgba(90,152,227,0.15)", background: "transparent",
               color: "#BDD6F4", fontSize: "13px", fontWeight: 600,
-              cursor: "pointer", fontFamily: "'DM Sans'", whiteSpace: "nowrap",
+              cursor: "pointer", fontFamily: "'DM Sans'", whiteSpace: "nowrap", flexShrink: 0,
             }}>
               ← Back
             </button>
           )}
-          {/* Skip — only on non-last steps where there's no back button crowding */}
+          {/* Skip — only on step 0 (replaced by Back on subsequent steps) */}
           {!isLast && currentStep === 0 && (
-            <button onClick={onSkip} style={{
+            <button onClick={e => { e.stopPropagation(); onSkip(); }} style={{
               padding: "11px 14px", borderRadius: "12px",
               border: "1px solid rgba(90,152,227,0.15)", background: "transparent",
               color: "#BDD6F4", fontSize: "13px", fontWeight: 600,
-              cursor: "pointer", fontFamily: "'DM Sans'", whiteSpace: "nowrap",
+              cursor: "pointer", fontFamily: "'DM Sans'", whiteSpace: "nowrap", flexShrink: 0,
             }}>
               Skip tour
             </button>
           )}
-          <button onClick={onNext} style={{
-            flex: 1, padding: "12px", borderRadius: "12px", border: "none",
-            background: isLast ? "linear-gradient(135deg,#6BCB77,#4aaa5a)" : "linear-gradient(135deg,#E85D3A,#c94628)",
-            color: "#F8F8F8", fontSize: "15px", fontWeight: 700,
-            cursor: "pointer", fontFamily: "'DM Sans'",
-          }}>
-            {isLast ? "🏔️ Let's go hiking!" : "Next →"}
-          </button>
+          {/* Last step: explicit CTA button. Other steps: tap-anywhere hint. */}
+          {isLast ? (
+            <button onClick={e => { e.stopPropagation(); onNext(); }} style={{
+              flex: 1, padding: "12px", borderRadius: "12px", border: "none",
+              background: "linear-gradient(135deg,#6BCB77,#4aaa5a)",
+              color: "#F8F8F8", fontSize: "15px", fontWeight: 700,
+              cursor: "pointer", fontFamily: "'DM Sans'",
+            }}>
+              🏔️ Let&apos;s go hiking!
+            </button>
+          ) : (
+            <div style={{
+              flex: 1, textAlign: "right",
+              fontSize: "13px", color: "#BDD6F4", opacity: 0.5,
+              fontFamily: "'DM Sans'", fontStyle: "italic",
+            }}>
+              {tapHint}
+            </div>
+          )}
         </div>
       </div>
     </div>
