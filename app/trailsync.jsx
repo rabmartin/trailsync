@@ -627,7 +627,7 @@ function coordsBbox(coords) {
  * @param {mapboxgl.Map} map
  * @param {string}       id       unique key (route db id)
  * @param {Array}        coords   [[lng,lat], ...]
- * @param {object}       opts     { color, width, fitBounds, fitPadding }
+ * @param {object}       opts     { color, width, fitBounds, fitPadding, fitMaxZoom }
  */
 function drawGpxOnMap(map, id, coords, opts = {}) {
   const {
@@ -635,6 +635,7 @@ function drawGpxOnMap(map, id, coords, opts = {}) {
     width = 3.5,
     fitBounds = true,
     fitPadding = 60,
+    fitMaxZoom = 15,
   } = opts;
 
   const sourceId = `gpx-${id}`;
@@ -681,7 +682,7 @@ function drawGpxOnMap(map, id, coords, opts = {}) {
   requestAnimationFrame(animate);
 
   if (fitBounds && coords.length > 1) {
-    map.fitBounds(coordsBbox(coords), { padding: fitPadding, duration: 1000 });
+    map.fitBounds(coordsBbox(coords), { padding: fitPadding, maxZoom: fitMaxZoom, duration: 1000 });
   }
 }
 
@@ -3398,14 +3399,17 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   const [showSpots, setShowSpots] = useState(true);
   const [spotTypeFilter, setSpotTypeFilter] = useState(null); // null = all, otherwise spot type id
   const [lastAddedSpot, setLastAddedSpot] = useState(null);   // for drop animation
-  const [pendingSpot, setPendingSpot] = useState(null);     // { lat, lng } — set by long-press
+  const [pendingSpot, setPendingSpot] = useState(null);     // legacy; kept for compat
+  const [showSpotSheet, setShowSpotSheet] = useState(false); // "+" tapped — pre-placement sheet open
+  const [isDraggingSpot, setIsDraggingSpot] = useState(false); // pin placed, dragging to position
+  const [spotSheetCollapsed, setSpotSheetCollapsed] = useState(false); // sheet minimised while dragging
   const [newSpotName, setNewSpotName] = useState("");
-  const [newSpotType, setNewSpotType] = useState("other");
+  const [newSpotType, setNewSpotType] = useState("camp");
   const [newSpotNotes, setNewSpotNotes] = useState("");
   const [savingSpot, setSavingSpot] = useState(false);
   const [viewingSpot, setViewingSpot] = useState(null);     // spot object being viewed/deleted
   const spotMarkersRef = useRef([]);                        // Mapbox Marker objects for cleanup
-  const pendingSpotMarkerRef = useRef(null);               // Temporary marker shown after long-press drop
+  const pendingSpotMarkerRef = useRef(null);               // Draggable marker while placing a spot
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
 
@@ -4232,7 +4236,12 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       fetchGpxText(route.gpx_file).then(xml => {
         const coords = parseGpxCoords(xml);
         if (coords.length > 1) {
-          drawGpxOnMap(map, route.id, coords, { color: "#E85D3A", fitBounds: true, fitPadding: 80 });
+          drawGpxOnMap(map, route.id, coords, {
+            color: "#E85D3A",
+            fitBounds: true,
+            fitPadding: { top: 160, right: 60, bottom: 100, left: 60 },
+            fitMaxZoom: 14,
+          });
           mapGpxIdRef.current = route.id;
           setGpxRouteCoords(coords); // store for guided walk
         }
@@ -4736,9 +4745,16 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
         </div>
       )}
 
-      {/* Pin drop "+" button — explore mode only, drag to place a saved spot */}
-      {!gpxRoute && !recording && !paused && !flyoverActive && (
+      {/* Pin drop "+" button — tap to open the spot sheet */}
+      {!gpxRoute && !recording && !paused && !flyoverActive && !showSpotSheet && !isDraggingSpot && (
         <button
+          onClick={() => {
+            setNewSpotName("");
+            setNewSpotType("camp");
+            setNewSpotNotes("");
+            setSpotSheetCollapsed(false);
+            setShowSpotSheet(true);
+          }}
           style={{
             position: "absolute",
             bottom: "calc(env(safe-area-inset-bottom, 0px) + 34px)",
@@ -4758,49 +4774,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
             justifyContent: "center",
             boxShadow: "0 4px 16px rgba(0,0,0,0.35)",
             backdropFilter: "blur(8px)",
-            touchAction: "none",
-            userSelect: "none",
             fontFamily: "'DM Sans'",
-          }}
-          onTouchStart={(e) => {
-            e.preventDefault();
-            const map = mapRef.current;
-            if (!map) return;
-            const btnRect = e.currentTarget.getBoundingClientRect();
-            const startX = btnRect.left + btnRect.width / 2;
-            const startY = btnRect.top;
-            const ghost = document.createElement("div");
-            ghost.style.cssText = `position:fixed;width:32px;height:48px;pointer-events:none;z-index:9999;left:${startX}px;top:${startY}px;transform:translate(-50%,-100%);animation:pinRise 0.32s cubic-bezier(0.34,1.56,0.64,1) forwards`;
-            ghost.innerHTML = `<svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="16" cy="47" rx="5" ry="2" fill="rgba(0,0,0,0.18)"/><line x1="16" y1="25" x2="16" y2="45" stroke="#666" stroke-width="2.5" stroke-linecap="round"/><circle cx="16" cy="14" r="13" fill="rgba(0,0,0,0.18)"/><circle cx="16" cy="13" r="13" fill="#E85D3A"/><circle cx="16" cy="13" r="13" fill="url(#pbg)" opacity="0.6"/><circle cx="10" cy="7" r="4.5" fill="rgba(255,255,255,0.45)"/><defs><radialGradient id="pbg" cx="35%" cy="30%" r="65%"><stop offset="0%" stop-color="#fff" stop-opacity="0.55"/><stop offset="100%" stop-color="#000" stop-opacity="0.15"/></radialGradient></defs></svg>`;
-            document.body.appendChild(ghost);
-            map.dragPan.disable();
-            const onMove = (ev) => {
-              const t = ev.touches?.[0] || ev;
-              ghost.style.left = t.clientX + "px";
-              ghost.style.top = t.clientY + "px";
-            };
-            const onEnd = (ev) => {
-              document.removeEventListener("touchmove", onMove);
-              document.removeEventListener("touchend", onEnd);
-              try { ghost.remove(); } catch (_) {}
-              map.dragPan.enable();
-              const t = ev.changedTouches?.[0] || ev;
-              const canvas = map.getCanvas();
-              const rect = canvas.getBoundingClientRect();
-              const lngLat = map.unproject([t.clientX - rect.left, t.clientY - rect.top]);
-              setPendingSpot({ lat: lngLat.lat, lng: lngLat.lng });
-              if (pendingSpotMarkerRef.current) { try { pendingSpotMarkerRef.current.remove(); } catch (_) {} }
-              import("mapbox-gl").then(mod => {
-                const mapboxgl = mod.default;
-                const dropEl = document.createElement("div");
-                dropEl.style.cssText = "width:32px;height:48px;pointer-events:none;";
-                dropEl.innerHTML = `<svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="16" cy="47" rx="5" ry="2" fill="rgba(0,0,0,0.18)"/><line x1="16" y1="25" x2="16" y2="45" stroke="#666" stroke-width="2.5" stroke-linecap="round"/><circle cx="16" cy="14" r="13" fill="rgba(0,0,0,0.18)"/><circle cx="16" cy="13" r="13" fill="#E85D3A"/><circle cx="16" cy="13" r="13" fill="url(#pdg)" opacity="0.6"/><circle cx="10" cy="7" r="4.5" fill="rgba(255,255,255,0.45)"/><defs><radialGradient id="pdg" cx="35%" cy="30%" r="65%"><stop offset="0%" stop-color="#fff" stop-opacity="0.55"/><stop offset="100%" stop-color="#000" stop-opacity="0.15"/></radialGradient></defs></svg>`;
-                pendingSpotMarkerRef.current = new mapboxgl.Marker({ element: dropEl, anchor: "bottom" })
-                  .setLngLat([lngLat.lng, lngLat.lat]).addTo(map);
-              });
-            };
-            document.addEventListener("touchmove", onMove, { passive: true });
-            document.addEventListener("touchend", onEnd, { once: true });
           }}
         >
           +
@@ -5278,31 +5252,108 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
         </div>
       )}
 
-      {/* ── PIN A SPOT bottom sheet ── */}
-      {pendingSpot && (
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 40, background: "rgba(4,30,61,0.98)", backdropFilter: "blur(16px)", borderRadius: "20px 20px 0 0", border: "1px solid rgba(90,152,227,0.2)", borderBottom: "none", padding: "20px 16px 28px", animation: "su .3s ease" }}>
-          <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: "rgba(90,152,227,0.25)", margin: "0 auto 16px" }} />
-          <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8", marginBottom: "14px" }}>📍 Pin a Spot</div>
-          <div style={{ display: "flex", gap: "7px", marginBottom: "14px", flexWrap: "wrap" }}>
-            {SPOT_TYPES.map(t => (
-              <button key={t.id} onClick={() => setNewSpotType(t.id)} style={{ padding: "7px 11px", borderRadius: "20px", border: `1.5px solid ${newSpotType === t.id ? t.color : "rgba(90,152,227,0.2)"}`, background: newSpotType === t.id ? `${t.color}22` : "transparent", color: newSpotType === t.id ? t.color : "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "5px", transition: "all .15s" }}>
-                <span>{t.emoji}</span> {t.label}
-              </button>
-            ))}
+      {/* ── STAGE 1: Drop a Pin sheet — fill details before placing ── */}
+      {showSpotSheet && (
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 40, background: "rgba(4,30,61,0.98)", backdropFilter: "blur(16px)", borderRadius: "20px 20px 0 0", border: "1px solid rgba(90,152,227,0.2)", borderBottom: "none", padding: "16px 16px 28px", animation: "su .3s ease" }}>
+          {/* Collapse handle — tap to minimise/expand */}
+          <div onClick={() => setSpotSheetCollapsed(c => !c)} style={{ width: "36px", height: "4px", borderRadius: "2px", background: "rgba(90,152,227,0.35)", margin: "0 auto 14px", cursor: "pointer" }} />
+
+          {spotSheetCollapsed ? (
+            /* Collapsed summary row */
+            <div onClick={() => setSpotSheetCollapsed(false)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", paddingBottom: "4px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ fontSize: "20px" }}>{SPOT_TYPES.find(t => t.id === newSpotType)?.emoji || "📍"}</span>
+                <div>
+                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{newSpotName || "Unnamed spot"}</div>
+                  <div style={{ fontSize: "11px", color: "#BDD6F4", opacity: 0.6 }}>{SPOT_TYPES.find(t => t.id === newSpotType)?.label} · tap to expand</div>
+                </div>
+              </div>
+              <ChevronDown size={18} color="#5A98E3" />
+            </div>
+          ) : (
+            <>
+              <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8", marginBottom: "14px" }}>📍 Drop a Pin</div>
+
+              {/* Spot type selector */}
+              <div style={{ display: "flex", gap: "7px", marginBottom: "14px", flexWrap: "wrap" }}>
+                {SPOT_TYPES.map(t => (
+                  <button key={t.id} onClick={() => setNewSpotType(t.id)} style={{ padding: "7px 11px", borderRadius: "20px", border: `1.5px solid ${newSpotType === t.id ? t.color : "rgba(90,152,227,0.2)"}`, background: newSpotType === t.id ? `${t.color}22` : "transparent", color: newSpotType === t.id ? t.color : "#BDD6F4", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "5px", transition: "all .15s" }}>
+                    <span>{t.emoji}</span>{t.label}
+                  </button>
+                ))}
+              </div>
+
+              <input type="text" placeholder="Name this spot…" value={newSpotName} onChange={e => setNewSpotName(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "10px", boxSizing: "border-box" }} />
+              <textarea placeholder="Notes (optional)…" value={newSpotNotes} onChange={e => setNewSpotNotes(e.target.value)} rows={2} style={{ width: "100%", padding: "10px 12px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'", resize: "none", marginBottom: "12px", boxSizing: "border-box" }} />
+
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button onClick={() => { setShowSpotSheet(false); setNewSpotName(""); setNewSpotType("camp"); setNewSpotNotes(""); }} style={{ flex: 1, padding: "11px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
+                <button
+                  disabled={!newSpotName.trim()}
+                  onClick={() => {
+                    const map = mapRef.current;
+                    if (!map || !newSpotName.trim()) return;
+                    // Place draggable marker at current map centre
+                    import("mapbox-gl").then(mod => {
+                      const mapboxgl = mod.default;
+                      const el = document.createElement("div");
+                      el.style.cssText = "width:32px;height:48px;cursor:grab;touch-action:none;";
+                      el.innerHTML = `<svg width="32" height="48" viewBox="0 0 32 48" fill="none"><ellipse cx="16" cy="47" rx="5" ry="2" fill="rgba(0,0,0,0.18)"/><line x1="16" y1="25" x2="16" y2="45" stroke="#666" stroke-width="2.5" stroke-linecap="round"/><circle cx="16" cy="14" r="13" fill="rgba(0,0,0,0.18)"/><circle cx="16" cy="13" r="13" fill="#E85D3A"/><circle cx="16" cy="13" r="13" fill="url(#pdg)" opacity="0.6"/><circle cx="10" cy="7" r="4.5" fill="rgba(255,255,255,0.45)"/><defs><radialGradient id="pdg" cx="35%" cy="30%" r="65%"><stop offset="0%" stop-color="#fff" stop-opacity="0.55"/><stop offset="100%" stop-color="#000" stop-opacity="0.15"/></radialGradient></defs></svg>`;
+                      if (pendingSpotMarkerRef.current) { try { pendingSpotMarkerRef.current.remove(); } catch (_) {} }
+                      pendingSpotMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: "bottom", draggable: true })
+                        .setLngLat(map.getCenter())
+                        .addTo(map);
+                      setShowSpotSheet(false);
+                      setIsDraggingSpot(true);
+                    });
+                  }}
+                  style={{ flex: 2, padding: "11px", borderRadius: "12px", border: "none", background: newSpotName.trim() ? "linear-gradient(135deg,#E85D3A,#c94628)" : "#264f80", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: newSpotName.trim() ? "pointer" : "default", fontFamily: "'DM Sans'", opacity: newSpotName.trim() ? 1 : 0.5, transition: "all .2s" }}>
+                  Place Pin →
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── STAGE 2: Drag-to-position strip — shown after pin is placed ── */}
+      {isDraggingSpot && (
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 40, background: "rgba(4,30,61,0.98)", backdropFilter: "blur(16px)", borderRadius: "20px 20px 0 0", border: "1px solid rgba(90,152,227,0.2)", borderBottom: "none", padding: "16px 16px 28px", animation: "su .3s ease" }}>
+          <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: "rgba(90,152,227,0.25)", margin: "0 auto 14px" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+            <span style={{ fontSize: "26px" }}>{SPOT_TYPES.find(t => t.id === newSpotType)?.emoji || "📍"}</span>
+            <div>
+              <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>{newSpotName}</div>
+              <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.65, marginTop: "2px" }}>Drag the pin on the map to the exact location</div>
+            </div>
           </div>
-          <input type="text" placeholder="Name this spot…" value={newSpotName} onChange={e => setNewSpotName(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'", marginBottom: "10px", boxSizing: "border-box" }} />
-          <textarea placeholder="Notes (optional)…" value={newSpotNotes} onChange={e => setNewSpotNotes(e.target.value)} rows={2} style={{ width: "100%", padding: "10px 12px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.2)", background: "#041e3d", color: "#F8F8F8", fontSize: "13px", outline: "none", fontFamily: "'DM Sans'", resize: "none", marginBottom: "12px", boxSizing: "border-box" }} />
           <div style={{ display: "flex", gap: "10px" }}>
-            <button onClick={() => { setPendingSpot(null); setNewSpotName(""); setNewSpotType("other"); setNewSpotNotes(""); }} style={{ flex: 1, padding: "11px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
-            <button disabled={!newSpotName.trim() || savingSpot} onClick={async () => {
-              if (!newSpotName.trim() || savingSpot) return;
-              setSavingSpot(true);
-              const spotData = { lat: pendingSpot.lat, lng: pendingSpot.lng, type: newSpotType, name: newSpotName.trim(), notes: newSpotNotes.trim() };
-              setLastAddedSpot(spotData);
-              await onAddSpot?.(spotData);
-              setPendingSpot(null); setNewSpotName(""); setNewSpotType("other"); setNewSpotNotes(""); setSavingSpot(false);
-            }} style={{ flex: 2, padding: "11px", borderRadius: "12px", border: "none", background: newSpotName.trim() ? "linear-gradient(135deg,#6BCB77,#55a866)" : "#264f80", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: newSpotName.trim() ? "pointer" : "default", fontFamily: "'DM Sans'", opacity: newSpotName.trim() ? 1 : 0.5, transition: "all .2s" }}>
-              {savingSpot ? "Saving…" : "Save Spot"}
+            <button
+              onClick={() => {
+                if (pendingSpotMarkerRef.current) { try { pendingSpotMarkerRef.current.remove(); } catch (_) {} pendingSpotMarkerRef.current = null; }
+                setIsDraggingSpot(false); setSpotSheetCollapsed(false); setShowSpotSheet(true);
+              }}
+              style={{ flex: 1, padding: "11px", borderRadius: "12px", border: "1px solid rgba(90,152,227,0.2)", background: "transparent", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}
+            >
+              ← Back
+            </button>
+            <button
+              disabled={savingSpot}
+              onClick={async () => {
+                const marker = pendingSpotMarkerRef.current;
+                if (!marker || savingSpot) return;
+                setSavingSpot(true);
+                const lngLat = marker.getLngLat();
+                const spotData = { lat: lngLat.lat, lng: lngLat.lng, type: newSpotType, name: newSpotName.trim(), notes: newSpotNotes.trim() };
+                setLastAddedSpot(spotData);
+                try { marker.remove(); } catch (_) {}
+                pendingSpotMarkerRef.current = null;
+                await onAddSpot?.(spotData);
+                setIsDraggingSpot(false); setNewSpotName(""); setNewSpotType("camp"); setNewSpotNotes(""); setSavingSpot(false);
+              }}
+              style={{ flex: 2, padding: "11px", borderRadius: "12px", border: "none", background: savingSpot ? "#264f80" : "linear-gradient(135deg,#6BCB77,#55a866)", color: "#F8F8F8", fontSize: "13px", fontWeight: 700, cursor: savingSpot ? "default" : "pointer", fontFamily: "'DM Sans'" }}
+            >
+              {savingSpot ? "Saving…" : "✓ Save Here"}
             </button>
           </div>
         </div>
