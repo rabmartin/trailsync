@@ -3578,11 +3578,22 @@ const RouteWeatherPanel = ({ routeWeather, elevProfile, onElevHover, onElevLeave
     <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 24, background: "rgba(4,30,61,0.97)", backdropFilter: "blur(16px)", borderRadius: "16px 16px 0 0", border: "1px solid rgba(90,152,227,0.15)", borderBottom: "none" }}>
       <div onClick={() => setWxOpen(o => !o)} style={{ padding: "12px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px" }}>
         <div style={{ width: "32px", height: "3px", borderRadius: "2px", background: "rgba(90,152,227,0.3)", position: "absolute", top: "6px", left: "50%", transform: "translateX(-50%)" }} />
-        <div style={{ display: "flex", gap: "12px", flex: 1, marginTop: "4px" }}>
-          <span style={{ fontSize: "14px", color: "#BDD6F4" }}>📏 {routeWeather.totalKm}km</span>
-          <span style={{ fontSize: "14px", color: "#BDD6F4" }}>⏱️ {routeWeather.totalHours}h</span>
-          <span style={{ fontSize: "14px", color: "#BDD6F4" }}>⛰️ {routeWeather.totalAscent}m</span>
-          {routeWeather.timeline[0] && <span style={{ fontSize: "14px", color: "#BDD6F4", marginLeft: "auto" }}>{routeWeather.timeline[0].icon} {routeWeather.timeline[0].temp !== undefined ? `${Math.round(routeWeather.timeline[0].temp)}°` : ""}</span>}
+        <div style={{ flex: 1, marginTop: "4px" }}>
+          <div style={{ display: "flex", gap: "12px" }}>
+            <span style={{ fontSize: "14px", color: "#BDD6F4" }}>📏 {routeWeather.totalKm}km</span>
+            <span style={{ fontSize: "14px", color: "#BDD6F4" }}>⏱️ {routeWeather.totalHours}h</span>
+            <span style={{ fontSize: "14px", color: "#BDD6F4" }}>⛰️ {routeWeather.totalAscent}m</span>
+            {routeWeather.timeline[0] && <span style={{ fontSize: "14px", color: "#BDD6F4", marginLeft: "auto" }}>{routeWeather.timeline[0].icon} {routeWeather.timeline[0].temp !== undefined ? `${Math.round(routeWeather.timeline[0].temp)}°` : ""}</span>}
+          </div>
+          {routeWeather._cached && (
+            <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "3px" }}>
+              <WifiOff size={10} color="#F49D37" />
+              <span style={{ fontSize: "10px", color: "#F49D37", fontWeight: 600 }}>
+                Last known forecast
+                {routeWeather._cachedAt ? ` · ${Math.round((Date.now() - routeWeather._cachedAt) / 3600000)}h ago` : ""}
+              </span>
+            </div>
+          )}
         </div>
         <div style={{ color: "#BDD6F4", opacity: 0.4, fontSize: "12px", flexShrink: 0 }}>{wxOpen ? "▼" : "▲"}</div>
       </div>
@@ -4785,22 +4796,41 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     const startLat = gpxRouteCoords[0][1];
     const startLng = gpxRouteCoords[0][0];
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${startLat}&longitude=${startLng}&hourly=temperature_2m,precipitation_probability,windspeed_10m,weathercode&wind_speed_unit=kmh&timezone=UTC&forecast_days=2`;
+    const wxCacheKey = `ts-wx-route-${gpxRoute?.route?.id ?? `${startLat.toFixed(3)},${startLng.toFixed(3)}`}`;
 
-    fetch(url).then(r => r.json()).then(data => {
-      const hours = data.hourly;
-      const wxMap = {};
-      hours.time.forEach((t, i) => { wxMap[t] = { temp: hours.temperature_2m[i], precip: hours.precipitation_probability[i], wind: hours.windspeed_10m[i], code: hours.weathercode[i] }; });
-
+    const applyWeatherData = (wxMap, cached = false, cachedAt = null) => {
       const timeline = hourlyPoints.map(pt => {
         const tKey = pt.time.toISOString().slice(0, 13) + ":00";
         const wx = wxMap[tKey] || {};
         const icon = wx.code === 0 ? "☀️" : wx.code <= 2 ? "🌤️" : wx.code <= 48 ? "☁️" : wx.code <= 67 ? "🌧️" : "🌨️";
         return { ...pt, temp: wx.temp, precip: wx.precip, wind: wx.wind, icon };
       });
-
-      setRouteWeather({ timeline, totalKm: Math.round(totalKm * 10) / 10, totalHours: Math.round(totalHours * 10) / 10, totalAscent: Math.round(totalAscentM) });
+      setRouteWeather({
+        timeline,
+        totalKm: Math.round(totalKm * 10) / 10,
+        totalHours: Math.round(totalHours * 10) / 10,
+        totalAscent: Math.round(totalAscentM),
+        _cached: cached,
+        _cachedAt: cachedAt,
+      });
       setRouteWeatherLoading(false);
-    }).catch(() => setRouteWeatherLoading(false));
+    };
+
+    fetch(url).then(r => r.json()).then(data => {
+      const hours = data.hourly;
+      const wxMap = {};
+      hours.time.forEach((t, i) => { wxMap[t] = { temp: hours.temperature_2m[i], precip: hours.precipitation_probability[i], wind: hours.windspeed_10m[i], code: hours.weathercode[i] }; });
+      // Persist for offline use
+      try { localStorage.setItem(wxCacheKey, JSON.stringify({ wxMap, ts: Date.now() })); } catch {}
+      applyWeatherData(wxMap);
+    }).catch(() => {
+      // Network failed — try localStorage
+      try {
+        const hit = JSON.parse(localStorage.getItem(wxCacheKey) || "null");
+        if (hit?.wxMap) { applyWeatherData(hit.wxMap, true, hit.ts); return; }
+      } catch {}
+      setRouteWeatherLoading(false);
+    });
   }, [gpxRouteCoords]);
 
   // Update map style when layer changes

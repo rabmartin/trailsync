@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:native": "NEXT_BUILD_TARGET=native next build",
     "start": "next start",
     "lint": "eslint"
   },
