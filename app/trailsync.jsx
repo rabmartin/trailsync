@@ -1051,7 +1051,7 @@ const LoginScreen = ({ onLogin, onGoSignup }) => {
     setError("");
     const { error: authError } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: "https://trailsync-zeta.vercel.app/auth/callback" },
+      options: { redirectTo: `${typeof window !== "undefined" ? window.location.origin : "https://trailsync-zeta.vercel.app"}/auth/callback` },
     });
     if (authError) { setError(authError.message); setOauthLoading(null); }
     // On success browser redirects away — auth listener in parent handles the rest
@@ -2367,7 +2367,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
               </button>
               <button onClick={async (e) => {
                 e.stopPropagation();
-                try { await navigator.share({ title: `TrailSync — ${p.user}`, text: p.text, url: "https://trailsync-zeta.vercel.app" }); } catch {}
+                try { await navigator.share({ title: `TrailSync — ${p.user}`, text: p.text, url: window.location.origin }); } catch {}
               }} style={{ background: "none", border: "none", color: "#BDD6F4", opacity: 0.5, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'DM Sans'" }}>
                 <Share2 size={14} />
               </button>
