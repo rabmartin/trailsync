@@ -1318,6 +1318,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
   const [feedPostOpen, setFeedPostOpen] = useState(false);
   const [feedPostText, setFeedPostText] = useState("");
   const [feedPosting, setFeedPosting] = useState(false);
+  const [feedPostPhotos, setFeedPostPhotos] = useState([]); // File[]
 
   // Run search whenever headerSearch changes
   useEffect(() => {
@@ -1348,6 +1349,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
         comments: 0,
         peaks: p.peaks || [],
         route: p.route_points || null,
+        photos: p.photo_urls || [],
       }));
       const liveIds = new Set(liveMapped.map(p => String(p.id)));
       const hardcoded = FEED.filter(p => !liveIds.has(String(p.id)));
@@ -1544,6 +1546,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
         time: timeAgo(p.created_at), type: p.type || "summit",
         text: p.text, likes: p.likes || 0, comments: 0, peaks: p.peaks || [],
         route: p.route_points || null,
+        photos: p.photo_urls || [],
         isLive: true,
       }));
       const liveIds = new Set(livePostsMapped.map(p => String(p.id)));
@@ -1714,20 +1717,48 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
               <div style={{ fontSize: "15px", fontWeight: 700, color: "#F8F8F8" }}>{userName}</div>
             </div>
             <textarea autoFocus placeholder="Share a summit, trail conditions, local wildlife…" value={feedPostText} onChange={e => setFeedPostText(e.target.value)} rows={3} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.15)", background: "#041e3d", color: "#F8F8F8", fontSize: "15px", outline: "none", fontFamily: "'DM Sans'", resize: "none", boxSizing: "border-box" }} />
+            {/* Photo picker */}
+            <label style={{ marginTop: "8px", width: "100%", padding: "9px", borderRadius: "8px", border: "1px dashed rgba(90,152,227,0.25)", background: "transparent", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontFamily: "'DM Sans'", boxSizing: "border-box" }}>
+              <Camera size={14} /> {feedPostPhotos.length > 0 ? `${feedPostPhotos.length} photo${feedPostPhotos.length > 1 ? "s" : ""} added — tap to add more` : "Add Photos"}
+              <input type="file" accept="image/*" multiple style={{ display: "none" }} onChange={e => { const files = Array.from(e.target.files || []); if (files.length) setFeedPostPhotos(prev => [...prev, ...files]); e.target.value = ""; }} />
+            </label>
+            {feedPostPhotos.length > 0 && (
+              <div style={{ display: "flex", gap: "6px", marginTop: "8px", overflowX: "auto", paddingBottom: "4px" }}>
+                {feedPostPhotos.map((f, i) => (
+                  <div key={i} style={{ position: "relative", flexShrink: 0 }}>
+                    <img src={URL.createObjectURL(f)} alt="" style={{ width: "62px", height: "62px", borderRadius: "8px", objectFit: "cover" }} />
+                    <button onClick={() => setFeedPostPhotos(p => p.filter((_, j) => j !== i))} style={{ position: "absolute", top: "-5px", right: "-5px", width: "18px", height: "18px", borderRadius: "50%", background: "#E85D3A", border: "2px solid #041e3d", color: "#fff", fontSize: "12px", lineHeight: 1, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
             <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
-              <button onClick={() => { setFeedPostOpen(false); setFeedPostText(""); }} style={{ flex: 1, padding: "9px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
+              <button onClick={() => { setFeedPostOpen(false); setFeedPostText(""); setFeedPostPhotos([]); }} style={{ flex: 1, padding: "9px", borderRadius: "8px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans'" }}>Cancel</button>
               <button disabled={!feedPostText.trim() || feedPosting} onClick={async () => {
                 if (!feedPostText.trim() || feedPosting) return;
                 setFeedPosting(true);
                 const { data: { user } } = await supabase.auth.getUser();
                 if (user) {
                   const meta = user.user_metadata || {};
-                  const newPost = { user_id: user.id, username: meta.username || meta.full_name?.split(" ")[0] || null, full_name: meta.full_name || null, type: "summit", text: feedPostText.trim(), peaks: [] };
+                  // Upload any attached photos
+                  let photoUrls = [];
+                  if (feedPostPhotos.length > 0) {
+                    const uploads = await Promise.all(feedPostPhotos.map(async (file) => {
+                      const ext = file.name.split(".").pop() || "jpg";
+                      const path = `posts/${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+                      const { error: upErr } = await supabase.storage.from("walk-photos").upload(path, file, { upsert: false });
+                      if (upErr) { console.error("Photo upload error:", upErr); return null; }
+                      const { data: urlData } = supabase.storage.from("walk-photos").getPublicUrl(path);
+                      return urlData?.publicUrl || null;
+                    }));
+                    photoUrls = uploads.filter(Boolean);
+                  }
+                  const newPost = { user_id: user.id, username: meta.username || meta.full_name?.split(" ")[0] || null, full_name: meta.full_name || null, type: "summit", text: feedPostText.trim(), peaks: [], photo_urls: photoUrls.length > 0 ? photoUrls : null };
                   await supabase.from("posts").insert(newPost);
-                  posthog.capture("post_created", { post_type: "summit", source: "feed" });
-                  setLivePosts(prev => [{ id: Date.now(), user: meta.username || meta.full_name?.split(" ")[0] || userName, av: (userName||"U")[0].toUpperCase(), time: "just now", type: "summit", text: feedPostText.trim(), likes: 0, comments: 0, peaks: [], user_id: user.id }, ...prev]);
+                  posthog.capture("post_created", { post_type: "summit", source: "feed", photos: photoUrls.length });
+                  setLivePosts(prev => [{ id: Date.now(), user: meta.username || meta.full_name?.split(" ")[0] || userName, av: (userName||"U")[0].toUpperCase(), time: "just now", type: "summit", text: feedPostText.trim(), likes: 0, comments: 0, peaks: [], photos: photoUrls, user_id: user.id }, ...prev]);
                 }
-                setFeedPostText(""); setFeedPostOpen(false); setFeedPosting(false);
+                setFeedPostText(""); setFeedPostPhotos([]); setFeedPostOpen(false); setFeedPosting(false);
               }} style={{ flex: 2, padding: "9px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", opacity: !feedPostText.trim() || feedPosting ? 0.6 : 1 }}>
                 {feedPosting ? "Posting…" : "Post to Feed"}
               </button>
@@ -2348,6 +2379,13 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
             {p.type === "walk" && p.route && p.route.length > 2 && (
               <div style={{ marginTop: "10px" }} onClick={e => e.stopPropagation()}>
                 <RoutePreview points={p.route} height={120} />
+              </div>
+            )}
+            {p.photos && p.photos.length > 0 && (
+              <div style={{ display: "flex", gap: "6px", marginTop: "10px", overflowX: "auto", paddingBottom: "2px" }} onClick={e => e.stopPropagation()}>
+                {p.photos.map((url, i) => (
+                  <img key={i} src={url} alt="" style={{ width: p.photos.length === 1 ? "100%" : "110px", height: p.photos.length === 1 ? "200px" : "110px", borderRadius: "10px", objectFit: "cover", flexShrink: 0 }} />
+                ))}
               </div>
             )}
             <div style={{ display: "flex", gap: "16px", marginTop: "12px" }}>
@@ -3757,7 +3795,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   const [elapsed, setElapsed] = useState(0);
   const [actName, setActName] = useState("");
   const [actDesc, setActDesc] = useState("");
-  const [actPhotos, setActPhotos] = useState(0);
+  const [actPhotos, setActPhotos] = useState([]); // array of File objects
   const [saved, setSaved] = useState(false);
 
   // Real GPS tracking state
@@ -4122,7 +4160,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     setSaved(false);
     setActName("");
     setActDesc("");
-    setActPhotos(0);
+    setActPhotos([]);
   };
 
   // Timer — Date-based so phone lock / backgrounding doesn't lose time
@@ -5425,14 +5463,27 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                 )}
 
                 {/* Add photos */}
-                <button onClick={() => setActPhotos(p => p + 1)} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px dashed rgba(90,152,227,0.25)", background: "transparent", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontFamily: "'DM Sans'", marginBottom: "14px" }}>
-                  <Camera size={14} /> {actPhotos > 0 ? `${actPhotos} photo${actPhotos > 1 ? "s" : ""} added — tap to add more` : "Add Photos"}
-                </button>
+                <div style={{ marginBottom: "14px" }}>
+                  <label style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px dashed rgba(90,152,227,0.25)", background: "transparent", color: "#BDD6F4", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontFamily: "'DM Sans'", boxSizing: "border-box" }}>
+                    <Camera size={14} /> {actPhotos.length > 0 ? `${actPhotos.length} photo${actPhotos.length > 1 ? "s" : ""} added — tap to add more` : "Add Photos"}
+                    <input type="file" accept="image/*" multiple style={{ display: "none" }} onChange={e => { const files = Array.from(e.target.files || []); if (files.length) setActPhotos(prev => [...prev, ...files]); e.target.value = ""; }} />
+                  </label>
+                  {actPhotos.length > 0 && (
+                    <div style={{ display: "flex", gap: "6px", marginTop: "8px", overflowX: "auto", paddingBottom: "4px" }}>
+                      {actPhotos.map((f, i) => (
+                        <div key={i} style={{ position: "relative", flexShrink: 0 }}>
+                          <img src={URL.createObjectURL(f)} alt="" style={{ width: "62px", height: "62px", borderRadius: "8px", objectFit: "cover", display: "block" }} />
+                          <button onClick={() => setActPhotos(p => p.filter((_, j) => j !== i))} style={{ position: "absolute", top: "-5px", right: "-5px", width: "18px", height: "18px", borderRadius: "50%", background: "#E85D3A", border: "2px solid #041e3d", color: "#fff", cursor: "pointer", fontSize: "11px", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1 }}>×</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
                 {/* Save buttons */}
                 <div style={{ display: "flex", gap: "8px" }}>
                   <button onClick={() => { posthog.capture("walk_discarded"); resetTracking(); setTrackMode(false); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Discard</button>
-                  <button onClick={() => { if (onSaveWalk) onSaveWalk({ name: actName || "Untitled Walk", desc: actDesc, dist: realDistDisplay, elev: realElevDisplay, time: fmtTime(elapsed), movingTime: fmtTime(movingTimeRef.current), avgSpeed: (realDist > 0 && elapsed > 0 ? (realDist / (elapsed / 3600)).toFixed(1) : "0.0"), peaks: detectedPeaks.map(p => p.name), photos: actPhotos, date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }), route: trackPointsRef.current.map(p => [p.lng, p.lat]) }); setSaved(true); }} style={{ flex: 2, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Save & Publish</button>
+                  <button onClick={() => { if (onSaveWalk) onSaveWalk({ name: actName || "Untitled Walk", desc: actDesc, dist: realDistDisplay, elev: realElevDisplay, time: fmtTime(elapsed), movingTime: fmtTime(movingTimeRef.current), avgSpeed: (realDist > 0 && elapsed > 0 ? (realDist / (elapsed / 3600)).toFixed(1) : "0.0"), peaks: detectedPeaks.map(p => p.name), photoFiles: actPhotos, date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }), route: trackPointsRef.current.map(p => [p.lng, p.lat]) }); setSaved(true); }} style={{ flex: 2, padding: "11px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>Save & Publish</button>
                 </div>
               </>
             )}
@@ -5444,8 +5495,8 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
                 <div style={{ fontSize: "16px", fontWeight: 800, color: "#F8F8F8", fontFamily: "'Playfair Display',serif" }}>Walk Saved!</div>
                 <div style={{ fontSize: "14px", color: "#BDD6F4", opacity: 0.6, marginTop: "4px", marginBottom: "16px" }}>Published to your profile and the community feed</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <button onClick={() => { setTrackMode(false); setFinished(false); setSaved(false); setRecording(false); setPaused(false); setElapsed(0); setActName(""); setActDesc(""); setActPhotos(0); goProfile("posts"); }} style={{ width: "100%", padding: "11px 24px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>View Activity</button>
-                  <button onClick={() => { setTrackMode(false); setFinished(false); setSaved(false); setRecording(false); setPaused(false); setElapsed(0); setActName(""); setActDesc(""); setActPhotos(0); }} style={{ width: "100%", padding: "11px 24px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Back to Map</button>
+                  <button onClick={() => { setTrackMode(false); setFinished(false); setSaved(false); setRecording(false); setPaused(false); setElapsed(0); setActName(""); setActDesc(""); setActPhotos([]); goProfile("posts"); }} style={{ width: "100%", padding: "11px 24px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg,#E85D3A,#d04a2a)", color: "#F8F8F8", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'" }}>View Activity</button>
+                  <button onClick={() => { setTrackMode(false); setFinished(false); setSaved(false); setRecording(false); setPaused(false); setElapsed(0); setActName(""); setActDesc(""); setActPhotos([]); }} style={{ width: "100%", padding: "11px 24px", borderRadius: "10px", border: "1px solid rgba(90,152,227,0.15)", background: "transparent", color: "#BDD6F4", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Back to Map</button>
                 </div>
               </div>
             )}
@@ -10095,6 +10146,19 @@ export default function TrailSync() {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) { console.error("Walk save failed: no authenticated user"); return; }
                 const meta = user.user_metadata || {};
+                // Upload walk photos to Supabase Storage
+                let photoUrls = [];
+                if (walk.photoFiles && walk.photoFiles.length > 0) {
+                  const uploads = await Promise.all(walk.photoFiles.map(async (file) => {
+                    const ext = file.name.split(".").pop() || "jpg";
+                    const path = `walks/${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+                    const { error: upErr } = await supabase.storage.from("walk-photos").upload(path, file, { upsert: false });
+                    if (upErr) { console.error("Walk photo upload error:", upErr); return null; }
+                    const { data: urlData } = supabase.storage.from("walk-photos").getPublicUrl(path);
+                    return urlData?.publicUrl || null;
+                  }));
+                  photoUrls = uploads.filter(Boolean);
+                }
                 // Save to user_walks
                 const { error: walkErr } = await supabase.from("user_walks").insert({
                   user_id: user.id,
@@ -10106,12 +10170,12 @@ export default function TrailSync() {
                   moving_time: walk.movingTime,
                   avg_speed_kph: parseFloat(walk.avgSpeed) || 0,
                   peaks: walk.peaks || [],
-                  photos: walk.photos || 0,
+                  photo_urls: photoUrls.length > 0 ? photoUrls : null,
                   date_walked: dateWalked,
                   route_points: walk.route && walk.route.length > 1 ? walk.route : null,
                 });
                 if (walkErr) console.error("user_walks insert error:", JSON.stringify(walkErr));
-                if (!walkErr) posthog.capture("walk_saved", { distance_km: parseFloat(walk.dist) || 0, elevation_m: parseInt(walk.elev) || 0, peaks_count: (walk.peaks || []).length, duration: walk.time, offline: !navigator.onLine });
+                if (!walkErr) posthog.capture("walk_saved", { distance_km: parseFloat(walk.dist) || 0, elevation_m: parseInt(walk.elev) || 0, peaks_count: (walk.peaks || []).length, duration: walk.time, photos: photoUrls.length, offline: !navigator.onLine });
                 // Also post to community feed
                 const distNum = parseFloat(walk.dist) || 0;
                 const elevNum = parseInt(walk.elev) || 0;
@@ -10127,6 +10191,7 @@ export default function TrailSync() {
                   text: parts.join(" · "),
                   peaks: walk.peaks || [],
                   route_points: walk.route && walk.route.length > 1 ? walk.route : null,
+                  photo_urls: photoUrls.length > 0 ? photoUrls : null,
                 });
                 if (postErr) console.error("posts insert error:", JSON.stringify(postErr));
               } catch (e) { console.error("Failed to save walk:", e); }
