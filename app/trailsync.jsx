@@ -3728,6 +3728,8 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   const [statsCollapsed, setStatsCollapsed] = useState(false);
   // Flyover mode
   const [flyoverActive, setFlyoverActive] = useState(false);
+  const [flyoverSpeed, setFlyoverSpeed] = useState(1); // 1 = normal, 1.5 = fast, 2 = double
+  const flyoverSpeedRef = useRef(1);
   const flyoverTimerRef = useRef(null);
   const flyoverRafRef = useRef(null);
   const flyoverMarkerRef = useRef(null); // animated position marker
@@ -3782,6 +3784,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   const stopFlyover = () => {
     const map = mapRef.current;
     setFlyoverActive(false);
+    setFlyoverSpeed(1); flyoverSpeedRef.current = 1;
     if (flyoverTimerRef.current) { clearTimeout(flyoverTimerRef.current); flyoverTimerRef.current = null; }
     if (flyoverRafRef.current) { cancelAnimationFrame(flyoverRafRef.current); flyoverRafRef.current = null; }
     if (flyoverMarkerRef.current) { try { flyoverMarkerRef.current.remove(); } catch (_) {} flyoverMarkerRef.current = null; }
@@ -3841,12 +3844,14 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
       return [coords[lo][0] * (1 - t) + coords[hi][0] * t, coords[lo][1] * (1 - t) + coords[hi][1] * t];
     };
 
-    const STEPS = 25, STEP_MS = 1600;
+    const STEPS = 25;
+    const BASE_MS = 1600;
     let step = 0;
     const fly = () => {
       const m = mapRef.current;
       if (!m) return;
       if (step >= STEPS) { stopFlyover(); return; }
+      const STEP_MS = BASE_MS / flyoverSpeedRef.current;
       const frac = step / STEPS;
       const fracNext = Math.min(1, (step + 1) / STEPS);
       const c = getCoord(frac);
@@ -5451,31 +5456,25 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
 
       {/* Flyover overlay — only "← Back to Route" visible during flyover */}
       {flyoverActive && (
-        <button
-          onClick={stopFlyover}
-          style={{
-            position: "absolute",
-            top: "calc(env(safe-area-inset-top, 0px) + 14px)",
-            left: 14,
-            zIndex: 60,
-            padding: "10px 18px",
-            borderRadius: "14px",
-            background: "rgba(4,30,61,0.88)",
-            backdropFilter: "blur(12px)",
-            border: "1px solid rgba(90,152,227,0.25)",
-            color: "#BDD6F4",
-            fontSize: "14px",
-            fontWeight: 700,
-            cursor: "pointer",
-            fontFamily: "'DM Sans'",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.5)"
-          }}
-        >
-          ← Back to Route
-        </button>
+        <div style={{ position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 14px)", left: 14, zIndex: 60, display: "flex", gap: "8px" }}>
+          <button
+            onClick={stopFlyover}
+            style={{ padding: "10px 18px", borderRadius: "14px", background: "rgba(4,30,61,0.88)", backdropFilter: "blur(12px)", border: "1px solid rgba(90,152,227,0.25)", color: "#BDD6F4", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 4px 20px rgba(0,0,0,0.5)" }}
+          >
+            ← Back to Route
+          </button>
+          <button
+            onClick={() => {
+              const next = flyoverSpeed === 1 ? 1.5 : flyoverSpeed === 1.5 ? 2 : 1;
+              setFlyoverSpeed(next);
+              flyoverSpeedRef.current = next;
+            }}
+            style={{ padding: "10px 16px", borderRadius: "14px", background: "rgba(4,30,61,0.88)", backdropFilter: "blur(12px)", border: "1px solid rgba(90,152,227,0.25)", color: flyoverSpeed === 1 ? "#BDD6F4" : "#F49D37", fontSize: "15px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans'", boxShadow: "0 4px 20px rgba(0,0,0,0.5)", letterSpacing: "1px" }}
+            title="Flyover speed"
+          >
+            {flyoverSpeed === 1 ? "›" : flyoverSpeed === 1.5 ? "»" : "»»"}
+          </button>
+        </div>
       )}
 
       {/* Peak card */}
@@ -6512,25 +6511,26 @@ const RoutePreview = ({ points, height = 150 }) => {
   const latPad = (maxLat - minLat) * 0.18 || 0.012;
   const bMinLng = minLng - lngPad, bMaxLng = maxLng + lngPad;
   const bMinLat = minLat - latPad, bMaxLat = maxLat + latPad;
-  const W = 320, H = height;
+  const W = 640, H = height * 2; // 2× for retina; SVG viewBox stays at display size
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   const mapUrl = token
     ? `https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/static/[${bMinLng.toFixed(5)},${bMinLat.toFixed(5)},${bMaxLng.toFixed(5)},${bMaxLat.toFixed(5)}]/${W}x${H}?access_token=${token}&attribution=false&logo=false`
     : null;
+  const SVG_W = W / 2, SVG_H = height; // SVG coordinate space matches display pixels
   // Mercator projection to match static map tiles
   const mercY = lat => Math.log(Math.tan((lat * Math.PI / 180) / 2 + Math.PI / 4));
   const mMinY = mercY(bMinLat), mMaxY = mercY(bMaxLat);
-  const toX = lng => ((lng - bMinLng) / (bMaxLng - bMinLng)) * W;
-  const toY = lat => H - ((mercY(lat) - mMinY) / (mMaxY - mMinY)) * H;
+  const toX = lng => ((lng - bMinLng) / (bMaxLng - bMinLng)) * SVG_W;
+  const toY = lat => SVG_H - ((mercY(lat) - mMinY) / (mMaxY - mMinY)) * SVG_H;
   const d = points.map((p, i) => `${i === 0 ? "M" : "L"}${toX(p[0]).toFixed(1)} ${toY(p[1]).toFixed(1)}`).join(" ");
   const sx = toX(points[0][0]), sy = toY(points[0][1]);
   const ex = toX(points[points.length - 1][0]), ey = toY(points[points.length - 1][1]);
   return (
     <div style={{ borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(90,152,227,0.15)", position: "relative" }}>
       {mapUrl
-        ? <img src={mapUrl} alt="" style={{ width: "100%", height: `${H}px`, display: "block", objectFit: "cover" }} />
-        : <div style={{ width: "100%", height: `${H}px`, background: "#0a2240" }} />}
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }} preserveAspectRatio="none">
+        ? <img src={mapUrl} alt="" style={{ width: "100%", height: `${height}px`, display: "block" }} />
+        : <div style={{ width: "100%", height: `${height}px`, background: "#0a2240" }} />}
+      <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }} preserveAspectRatio="none">
         <defs>
           <linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#5A98E3" /><stop offset="100%" stopColor="#6BCB77" />
@@ -7053,6 +7053,9 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
   const [followerList, setFollowerList] = useState([]);
   const [followingList, setFollowingList] = useState([]);
   const [listLoading, setListLoading] = useState(false);
+  const [followSearch, setFollowSearch] = useState("");
+  const [followSearchResults, setFollowSearchResults] = useState([]);
+  const [followSearching, setFollowSearching] = useState(false);
   // Walk detail — self-contained
   const [selWalk, setSelWalk] = useState(null);
   const [confirmDeleteWalk, setConfirmDeleteWalk] = useState(false);
@@ -7163,7 +7166,21 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
           if (followData && followData.length > 0) {
             const ids = followData.map(f => f.following_id);
             const { data: profiles } = await supabase.from("profiles").select("id, username, full_name, location").in("id", ids);
-            setFollowingList(profiles || []);
+            // Fallback: for any id missing from profiles, try posts table
+            const foundIds = new Set((profiles || []).map(p => p.id));
+            const missingIds = ids.filter(id => !foundIds.has(id));
+            let fallback = [];
+            if (missingIds.length > 0) {
+              const { data: postUsers } = await supabase
+                .from("posts").select("user_id, username, full_name").in("user_id", missingIds).order("created_at", { ascending: false });
+              if (postUsers) {
+                const seen = new Set();
+                fallback = postUsers
+                  .filter(p => { if (seen.has(p.user_id)) return false; seen.add(p.user_id); return true; })
+                  .map(p => ({ id: p.user_id, username: p.username, full_name: p.full_name }));
+              }
+            }
+            setFollowingList([...(profiles || []), ...fallback]);
             // Sync followingIds so Follow/Following buttons show correctly
             setFollowingIds(new Set(ids));
             setFollowingCount(ids.length);
@@ -7178,6 +7195,28 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
     }
     loadList();
   }, [showFollowers, followerFilter, userId]);
+
+  // Search for users inside the modal
+  useEffect(() => {
+    if (!followSearch || followSearch.length < 2) { setFollowSearchResults([]); return; }
+    setFollowSearching(true);
+    const t = setTimeout(async () => {
+      try {
+        const [profRes, postRes] = await Promise.all([
+          supabase.from("profiles").select("id, username, full_name, location").or(`username.ilike.%${followSearch}%,full_name.ilike.%${followSearch}%`).limit(8),
+          supabase.from("posts").select("user_id, username, full_name").or(`username.ilike.%${followSearch}%,full_name.ilike.%${followSearch}%`).limit(10),
+        ]);
+        const merged = [...(profRes.data || [])];
+        const seen = new Set(merged.map(u => u.id));
+        for (const p of (postRes.data || [])) {
+          if (!seen.has(p.user_id) && p.user_id !== userId) { seen.add(p.user_id); merged.push({ id: p.user_id, username: p.username, full_name: p.full_name }); }
+        }
+        setFollowSearchResults(merged.filter(u => u.id !== userId));
+      } catch (_) {}
+      setFollowSearching(false);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [followSearch, userId]);
 
   // Follow / unfollow a user
   const handleFollow = async (targetId) => {
@@ -7512,21 +7551,59 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
             </div>
           </div>
 
-          {/* Filters */}
-          <div style={{ display: "flex", gap: "6px", padding: "10px 16px 8px", borderBottom: "1px solid rgba(90,152,227,0.07)" }}>
-            {[["recent", "Recent"], ["area", "By Area"], ["interacted", "Most Interacted"]].map(([k, l]) => (
-              <button key={k} onClick={() => setFollowerFilter(k)} style={{ padding: "5px 12px", borderRadius: "8px", border: "none", background: followerFilter === k ? "rgba(90,152,227,0.15)" : "rgba(90,152,227,0.05)", color: followerFilter === k ? "#5A98E3" : "#BDD6F4", fontSize: "13px", fontWeight: followerFilter === k ? 700 : 500, cursor: "pointer", fontFamily: "'DM Sans'" }}>{l}</button>
-            ))}
+          {/* Search input */}
+          <div style={{ padding: "10px 16px 8px", borderBottom: "1px solid rgba(90,152,227,0.07)" }}>
+            <div style={{ background: "rgba(90,152,227,0.06)", border: "1px solid rgba(90,152,227,0.15)", borderRadius: "10px", padding: "8px 12px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Search size={14} color="#BDD6F4" style={{ opacity: 0.4, flexShrink: 0 }} />
+              <input
+                type="text"
+                placeholder="Search hikers…"
+                value={followSearch}
+                onChange={e => setFollowSearch(e.target.value)}
+                style={{ flex: 1, background: "none", border: "none", outline: "none", color: "#F8F8F8", fontSize: "15px", fontFamily: "'DM Sans'" }}
+              />
+              {followSearch && <button onClick={() => { setFollowSearch(""); setFollowSearchResults([]); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#BDD6F4", padding: 0, display: "flex" }}><X size={13} /></button>}
+            </div>
           </div>
+
+          {/* Filters — only show when not searching */}
+          {!followSearch && (
+            <div style={{ display: "flex", gap: "6px", padding: "10px 16px 8px", borderBottom: "1px solid rgba(90,152,227,0.07)" }}>
+              {[["recent", "Recent"], ["area", "By Area"], ["interacted", "Most Interacted"]].map(([k, l]) => (
+                <button key={k} onClick={() => setFollowerFilter(k)} style={{ padding: "5px 12px", borderRadius: "8px", border: "none", background: followerFilter === k ? "rgba(90,152,227,0.15)" : "rgba(90,152,227,0.05)", color: followerFilter === k ? "#5A98E3" : "#BDD6F4", fontSize: "13px", fontWeight: followerFilter === k ? 700 : 500, cursor: "pointer", fontFamily: "'DM Sans'" }}>{l}</button>
+              ))}
+            </div>
+          )}
 
           {/* User list */}
           <div style={{ flex: 1, overflowY: "auto" }}>
-            {listLoading ? (
+            {/* Search results */}
+            {followSearch.length >= 2 && (
+              followSearching
+                ? <div style={{ padding: "30px", textAlign: "center", fontSize: "14px", color: "#BDD6F4", opacity: 0.4 }}>Searching…</div>
+                : followSearchResults.length === 0
+                  ? <div style={{ padding: "40px 24px", textAlign: "center", fontSize: "14px", color: "#BDD6F4", opacity: 0.4 }}>No hikers found for "{followSearch}"</div>
+                  : followSearchResults.map(u => (
+                    <div key={u.id} onClick={() => { setShowFollowers(null); setFollowSearch(""); if (onViewProfile) onViewProfile(u); }} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "12px 16px", borderBottom: "1px solid rgba(90,152,227,0.07)", cursor: "pointer" }}>
+                      <div style={{ width: "42px", height: "42px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>{(u.username || u.full_name || "?")[0].toUpperCase()}</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{u.full_name || u.username}</div>
+                        {u.username && <div style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>@{u.username}{u.location ? ` · ${u.location}` : ""}</div>}
+                      </div>
+                      {u.id !== userId && (
+                        <button onClick={e => { e.stopPropagation(); handleFollow(u.id); }} style={{ padding: "6px 14px", borderRadius: "9px", cursor: "pointer", flexShrink: 0, background: followingIds?.has(u.id) ? "transparent" : "linear-gradient(135deg,#E85D3A,#d04a2a)", color: followingIds?.has(u.id) ? "#5A98E3" : "#F8F8F8", fontSize: "13px", fontWeight: 700, fontFamily: "'DM Sans'", border: followingIds?.has(u.id) ? "1px solid rgba(90,152,227,0.3)" : "none" }}>
+                          {followingIds?.has(u.id) ? "Following" : "Follow"}
+                        </button>
+                      )}
+                    </div>
+                  ))
+            )}
+            {!followSearch && listLoading ? (
               <div style={{ padding: "60px", textAlign: "center" }}>
                 <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#5A98E3", margin: "0 auto", animation: "pulse 1s ease infinite" }} />
                 <div style={{ fontSize: "14px", color: "#BDD6F4", opacity: 0.4, marginTop: "12px" }}>Loading…</div>
               </div>
-            ) : (showFollowers === "followers" ? followerList : followingList).length === 0 ? (
+            ) : !followSearch && (showFollowers === "followers" ? followerList : followingList).length === 0 ? (
               <div style={{ padding: "60px 24px", textAlign: "center" }}>
                 <Users size={40} color="#5A98E3" style={{ opacity: 0.2, marginBottom: "16px" }} />
                 <div style={{ fontSize: "16px", fontWeight: 700, color: "#F8F8F8", marginBottom: "8px" }}>No {showFollowers} yet</div>
@@ -7534,7 +7611,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                   {showFollowers === "followers" ? "When people follow you they'll appear here." : "Search for hikers and follow them to see their walks and summits."}
                 </div>
               </div>
-            ) : (showFollowers === "followers" ? followerList : followingList).map(u => (
+            ) : !followSearch && (showFollowers === "followers" ? followerList : followingList).map(u => (
               <div key={u.id} onClick={() => { setShowFollowers(null); if (onViewProfile) onViewProfile(u); }} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 16px", borderBottom: "1px solid rgba(90,152,227,0.07)", cursor: "pointer" }}>
                 <div style={{ width: "46px", height: "46px", borderRadius: "50%", background: "linear-gradient(135deg,#264f80,#5A98E3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", fontWeight: 700, color: "#F8F8F8", flexShrink: 0 }}>
                   {(u.username || u.full_name || "?")[0].toUpperCase()}
@@ -7546,7 +7623,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
                   </div>
                 </div>
                 {u.id !== userId && (
-                  <button onClick={() => handleFollow(u.id)} style={{
+                  <button onClick={e => { e.stopPropagation(); handleFollow(u.id); }} style={{
                     padding: "7px 16px", borderRadius: "10px", cursor: "pointer", flexShrink: 0,
                     background: followingIds?.has(u.id) ? "transparent" : "linear-gradient(135deg,#E85D3A,#d04a2a)",
                     color: followingIds?.has(u.id) ? "#5A98E3" : "#F8F8F8",
