@@ -405,6 +405,118 @@ let ROUTES = [
   { id: 22, name: "Ben Challum", cls: "munros", reg: "Southern Highlands", diff: "Moderate", dist: 13.5, elev: 1025, time: "5-6h", peaks: ["Ben Challum"], rat: 4.6, rev: 38, start: "Kirkton Farm, Tyndrum", src: "ts", gpx_file: "https://mferkdgzpaaxixqlanzm.supabase.co/storage/v1/object/public/gpx-files/Ben_Challum.gpx" },
   { id: 23, name: "Stob Bàn & Mullach nan Coirean", cls: "munros", reg: "Ben Nevis & Mamores", diff: "Hard", dist: 16.5, elev: 1350, time: "6-8h", peaks: ["Stob Bàn", "Mullach nan Coirean"], rat: 4.8, rev: 52, start: "Glen Nevis Car Park", src: "ts", gpx_file: "https://mferkdgzpaaxixqlanzm.supabase.co/storage/v1/object/public/gpx-files/Stob_Ban_%26_Mullach_nan_Coirean.gpx" },
   { id: 24, name: "Glen Loin & Coiregrograin", cls: "non-mountain", reg: "Arrochar Alps", area: "Arrochar", diff: "Moderate", dist: 14.0, elev: 520, time: "4-5h", peaks: [], rat: 4.3, rev: 64, start: "Arrochar", src: "ts" },
+
+  // ── MAMORES & LOCHABER ────────────────────────────────────────────────────
+  { id: 25, name: "Ring of Steall", cls: "munros", reg: "Ben Nevis & Mamores", diff: "Hard", dist: 18.4, elev: 1600, time: "7-9h", peaks: ["Am Bodach", "Sgurr a'Mhaim", "Stob Coire a'Chairn", "An Gearanach"], rat: 4.8, rev: 203, start: "Polldubh Car Park, Glen Nevis", src: "ts" },
+  { id: 26, name: "Grey Corries Ridge", cls: "munros", reg: "Ben Nevis & Mamores", diff: "Hard", dist: 19.0, elev: 1380, time: "7-9h", peaks: ["Stob Choire Claurigh", "Stob a'Choire Mheadhoin", "Stob Coire Easain"], rat: 4.7, rev: 124, start: "Corriechoille Farm, Spean Bridge", src: "ts" },
+  { id: 27, name: "Aonach Mor & Aonach Beag", cls: "munros", reg: "Ben Nevis & Mamores", diff: "Hard", dist: 14.0, elev: 1240, time: "5-7h", peaks: ["Aonach Mor", "Aonach Beag"], rat: 4.6, rev: 167, start: "Nevis Range Car Park", src: "ts" },
+  { id: 28, name: "Binnein Mor & Na Gruagaichean", cls: "munros", reg: "Ben Nevis & Mamores", diff: "Hard", dist: 17.0, elev: 1450, time: "7-9h", peaks: ["Binnein Mor", "Na Gruagaichean"], rat: 4.7, rev: 89, start: "Kinlochleven", src: "ts" },
+  { id: 29, name: "Creag Meagaidh via Coire Ardair", cls: "munros", reg: "Ben Nevis & Mamores", diff: "Moderate", dist: 16.0, elev: 1040, time: "5-7h", peaks: ["Creag Meagaidh", "Stob Poite Coire Ardair", "Carn Liath"], rat: 4.7, rev: 198, start: "Aberarder Car Park, A86", src: "ts" },
+  { id: 30, name: "Beinn a'Chaorainn & Beinn Teallach", cls: "munros", reg: "Ben Nevis & Mamores", diff: "Hard", dist: 18.0, elev: 1200, time: "7-8h", peaks: ["Beinn a'Chaorainn", "Beinn Teallach"], rat: 4.4, rev: 67, start: "Roughburn Layby, A86", src: "ts" },
+
+  // ── GLEN COE ─────────────────────────────────────────────────────────────
+  { id: 31, name: "Bidean nam Bian & Stob Coire Sgreamhach", cls: "munros", reg: "Glen Coe", diff: "Hard", dist: 11.0, elev: 1150, time: "5-7h", peaks: ["Bidean nam Bian", "Stob Coire Sgreamhach"], rat: 4.8, rev: 178, start: "Glencoe Car Park (Pass of Glencoe)", src: "ts" },
+  { id: 32, name: "Buachaille Etive Beag", cls: "munros", reg: "Glen Coe", diff: "Moderate", dist: 9.0, elev: 870, time: "4-5h", peaks: ["Stob Dubh", "Stob Coire Raineach"], rat: 4.5, rev: 142, start: "Lairig Eilde Layby, A82", src: "ts" },
+  { id: 33, name: "Aonach Eagach Ridge", cls: "munros", reg: "Glen Coe", diff: "Expert", dist: 10.0, elev: 980, time: "6-8h", peaks: ["Meall Dearg", "Sgorr nam Fiannaidh"], rat: 4.9, rev: 198, start: "Glencoe Village Car Park", src: "ts" },
+
+  // ── SOUTHERN HIGHLANDS ────────────────────────────────────────────────────
+  { id: 34, name: "Ben Vorlich & Stuc a'Chroin", cls: "munros", reg: "Southern Highlands", diff: "Moderate", dist: 16.0, elev: 1260, time: "6-7h", peaks: ["Ben Vorlich", "Stuc a'Chroin"], rat: 4.5, rev: 287, start: "Ardvorlich Car Park, Loch Earn", src: "ts" },
+  { id: 35, name: "Ben More & Stob Binnein", cls: "munros", reg: "Southern Highlands", diff: "Hard", dist: 15.0, elev: 1520, time: "6-8h", peaks: ["Ben More", "Stob Binnein"], rat: 4.7, rev: 234, start: "Benmore Farm, Crianlarich", src: "ts" },
+  { id: 36, name: "Cruach Ardrain & Beinn Tulaichean", cls: "munros", reg: "Southern Highlands", diff: "Hard", dist: 16.0, elev: 1280, time: "6-8h", peaks: ["Cruach Ardrain", "Beinn Tulaichean"], rat: 4.4, rev: 156, start: "Crianlarich Village", src: "ts" },
+  { id: 37, name: "Ben Lui, Ben Oss & Beinn Dubhchraig", cls: "munros", reg: "Southern Highlands", diff: "Hard", dist: 18.0, elev: 1450, time: "7-9h", peaks: ["Ben Lui", "Ben Oss", "Beinn Dubhchraig"], rat: 4.7, rev: 178, start: "Dalrigh Car Park, Tyndrum", src: "ts" },
+  { id: 38, name: "Beinn Dorain & Beinn an Dothaidh", cls: "munros", reg: "Southern Highlands", diff: "Moderate", dist: 16.0, elev: 1340, time: "6-7h", peaks: ["Beinn Dorain", "Beinn an Dothaidh"], rat: 4.6, rev: 198, start: "Bridge of Orchy Station", src: "ts" },
+  { id: 39, name: "Beinn Achaladair & Beinn a'Chreachain", cls: "munros", reg: "Southern Highlands", diff: "Hard", dist: 20.0, elev: 1380, time: "7-8h", peaks: ["Beinn Achaladair", "Beinn a'Chreachain"], rat: 4.6, rev: 112, start: "Achallader Farm, Bridge of Orchy", src: "ts" },
+
+  // ── BREADALBANE ──────────────────────────────────────────────────────────
+  { id: 40, name: "Ben Lawers & Beinn Ghlas", cls: "munros", reg: "Breadalbane", diff: "Moderate", dist: 11.0, elev: 1020, time: "4-6h", peaks: ["Ben Lawers", "Beinn Ghlas"], rat: 4.6, rev: 312, start: "Ben Lawers Visitor Centre", src: "ts" },
+  { id: 41, name: "Ben Lawers Five Munros", cls: "munros", reg: "Breadalbane", diff: "Hard", dist: 20.0, elev: 1800, time: "8-10h", peaks: ["Meall a'Choire Leith", "Meall Corranaich", "Beinn Ghlas", "Ben Lawers", "An Stuc"], rat: 4.8, rev: 145, start: "Ben Lawers Visitor Centre", src: "ts" },
+  { id: 42, name: "Meall nan Tarmachan Ridge", cls: "munros", reg: "Breadalbane", diff: "Easy", dist: 11.0, elev: 720, time: "4-5h", peaks: ["Meall nan Tarmachan"], rat: 4.5, rev: 267, start: "Ben Lawers Car Park, A827", src: "ts" },
+  { id: 43, name: "Carn Mairg & the Glen Lyon Four", cls: "munros", reg: "Breadalbane", diff: "Moderate", dist: 18.0, elev: 1320, time: "6-8h", peaks: ["Carn Gorm", "Meall Garbh", "Carn Mairg", "Meall nan Aighean"], rat: 4.5, rev: 112, start: "Invervar, Glen Lyon", src: "ts" },
+  { id: 44, name: "Stuchd an Lochain & Meall Buidhe", cls: "munros", reg: "Breadalbane", diff: "Moderate", dist: 16.0, elev: 1080, time: "5-7h", peaks: ["Stuchd an Lochain", "Meall Buidhe"], rat: 4.3, rev: 78, start: "Loch an Daimh Dam, Glen Lyon", src: "ts" },
+
+  // ── CAIRNGORMS ───────────────────────────────────────────────────────────
+  { id: 45, name: "Braeriach, Cairn Toul & the Angel's Peak", cls: "munros", reg: "Cairngorms", diff: "Expert", dist: 26.0, elev: 1450, time: "9-11h", peaks: ["Braeriach", "Sgor an Lochain Uaine", "Cairn Toul", "The Devil's Point"], rat: 4.9, rev: 89, start: "Whitewell Car Park, Rothiemurchus", src: "ts" },
+  { id: 46, name: "Beinn a'Bhuird & Ben Avon", cls: "munros", reg: "Cairngorms", diff: "Hard", dist: 32.0, elev: 1060, time: "10-12h", peaks: ["Beinn a'Bhuird", "Ben Avon"], rat: 4.7, rev: 67, start: "Keiloch Car Park, Invercauld", src: "ts" },
+  { id: 47, name: "Lochnagar & White Mounth", cls: "munros", reg: "Cairngorms", diff: "Moderate", dist: 18.0, elev: 900, time: "6-8h", peaks: ["Lochnagar", "Cac Carn Beag"], rat: 4.7, rev: 312, start: "Spittal of Glenmuick Car Park", src: "ts" },
+  { id: 48, name: "Broad Cairn & Cairn Bannoch", cls: "munros", reg: "Cairngorms", diff: "Moderate", dist: 16.0, elev: 720, time: "5-7h", peaks: ["Broad Cairn", "Cairn Bannoch"], rat: 4.4, rev: 134, start: "Spittal of Glenmuick Car Park", src: "ts" },
+  { id: 49, name: "Glas Maol, Cairn of Claise & Carn an Tuirc", cls: "munros", reg: "Cairngorms", diff: "Easy", dist: 16.0, elev: 780, time: "5-6h", peaks: ["Glas Maol", "Cairn of Claise", "Carn an Tuirc", "Tom Buidhe"], rat: 4.3, rev: 156, start: "Glenshee Ski Centre", src: "ts" },
+  { id: 50, name: "Mount Keen via Glen Esk", cls: "munros", reg: "Cairngorms", diff: "Moderate", dist: 16.0, elev: 690, time: "5-6h", peaks: ["Mount Keen"], rat: 4.2, rev: 134, start: "Glen Esk Car Park", src: "ts" },
+  { id: 51, name: "Four Monadh Liath Munros", cls: "munros", reg: "Cairngorms", diff: "Moderate", dist: 26.0, elev: 1100, time: "8-10h", peaks: ["A'Chailleach", "Carn Sgulain", "Carn Dearg", "Geal-charn"], rat: 4.2, rev: 78, start: "Newtonmore Village", src: "ts" },
+  { id: 52, name: "Drumochter Pass Munros", cls: "munros", reg: "Cairngorms", diff: "Moderate", dist: 22.0, elev: 980, time: "6-8h", peaks: ["A'Bhuidheanach Bheag", "Carn na Caim", "Geal-charn", "Beinn Udlamain"], rat: 4.1, rev: 89, start: "Drumochter Pass Layby, A9", src: "ts" },
+  { id: 53, name: "Morrone, Braemar", cls: "munros", reg: "Cairngorms", diff: "Easy", dist: 12.0, elev: 650, time: "3-4h", peaks: ["Morrone"], rat: 4.1, rev: 98, start: "Braemar Village", src: "ts" },
+
+  // ── KINTAIL & GLEN SHIEL ─────────────────────────────────────────────────
+  { id: 54, name: "South Glen Shiel Ridge", cls: "munros", reg: "Kintail", diff: "Hard", dist: 19.0, elev: 1650, time: "8-10h", peaks: ["Creag a'Mhaim", "Druim Shionnach", "Aonach air Chrith", "Maol Chinn-dearg", "Sgurr an Doire Leathain", "Sgurr an Lochain", "Creag nan Damh"], rat: 4.9, rev: 167, start: "Cluanie Inn", src: "ts" },
+  { id: 55, name: "A'Chralaig & Mullach Fraoch-coire", cls: "munros", reg: "Kintail", diff: "Hard", dist: 15.0, elev: 1150, time: "5-7h", peaks: ["A'Chralaig", "Mullach Fraoch-coire"], rat: 4.7, rev: 112, start: "Cluanie Inn", src: "ts" },
+  { id: 56, name: "Sgurr nan Conbhairean & Sail Chaorainn", cls: "munros", reg: "Kintail", diff: "Hard", dist: 14.0, elev: 1100, time: "5-7h", peaks: ["Sgurr nan Conbhairean", "Sail Chaorainn"], rat: 4.6, rev: 89, start: "Cluanie Inn", src: "ts" },
+  { id: 57, name: "The Saddle & Sgurr na Sgine", cls: "munros", reg: "Kintail", diff: "Hard", dist: 15.0, elev: 1360, time: "6-8h", peaks: ["The Saddle", "Sgurr na Sgine"], rat: 4.8, rev: 134, start: "Shiel Bridge Car Park", src: "ts" },
+  { id: 58, name: "Beinn Fhada & A'Ghlas-bheinn", cls: "munros", reg: "Kintail", diff: "Hard", dist: 18.0, elev: 1280, time: "7-9h", peaks: ["Beinn Fhada", "A'Ghlas-bheinn"], rat: 4.6, rev: 78, start: "Morvich Car Park", src: "ts" },
+  { id: 59, name: "Ciste Dhubh", cls: "munros", reg: "Kintail", diff: "Moderate", dist: 14.0, elev: 1050, time: "5-6h", peaks: ["Ciste Dhubh"], rat: 4.5, rev: 67, start: "Cluanie Inn", src: "ts" },
+
+  // ── TORRIDON ─────────────────────────────────────────────────────────────
+  { id: 60, name: "Beinn Eighe: Ruadh-stac Mor & Spidean Coire nan Clach", cls: "munros", reg: "Torridon", diff: "Hard", dist: 14.0, elev: 1060, time: "6-8h", peaks: ["Ruadh-stac Mor", "Spidean Coire nan Clach"], rat: 4.8, rev: 123, start: "Kinlochewe Car Park", src: "ts" },
+  { id: 61, name: "Beinn Alligin: Tom na Gruagaich & Sgurr Mhor", cls: "munros", reg: "Torridon", diff: "Hard", dist: 11.0, elev: 1050, time: "5-7h", peaks: ["Tom na Gruagaich", "Sgurr Mhor"], rat: 4.8, rev: 145, start: "Beinn Alligin Car Park, Torridon", src: "ts" },
+  { id: 62, name: "Slioch", cls: "munros", reg: "Torridon", diff: "Hard", dist: 15.0, elev: 1080, time: "6-8h", peaks: ["Slioch"], rat: 4.8, rev: 112, start: "Kinlochewe Car Park", src: "ts" },
+  { id: 63, name: "Maol Chean-dearg", cls: "corbetts", reg: "Torridon", diff: "Moderate", dist: 12.0, elev: 900, time: "4-6h", peaks: ["Maol Chean-dearg"], rat: 4.6, rev: 78, start: "Coulags Car Park, Strathcarron", src: "ts" },
+  { id: 64, name: "Beinn Damh", cls: "corbetts", reg: "Torridon", diff: "Moderate", dist: 11.0, elev: 930, time: "5-6h", peaks: ["Beinn Damh"], rat: 4.6, rev: 89, start: "Annat Car Park, Torridon", src: "ts" },
+  { id: 65, name: "Fionn Bheinn", cls: "munros", reg: "Torridon", diff: "Easy", dist: 10.0, elev: 720, time: "3-4h", peaks: ["Fionn Bheinn"], rat: 4.1, rev: 112, start: "Achnasheen Station Car Park", src: "ts" },
+
+  // ── ISLE OF SKYE ─────────────────────────────────────────────────────────
+  { id: 66, name: "Bla Bheinn (Blaven)", cls: "munros", reg: "Isle of Skye", diff: "Hard", dist: 10.0, elev: 1050, time: "5-7h", peaks: ["Bla Bheinn"], rat: 4.9, rev: 189, start: "Loch Slapin Car Park", src: "ts" },
+  { id: 67, name: "Bruach na Frithe", cls: "munros", reg: "Isle of Skye", diff: "Hard", dist: 13.0, elev: 950, time: "5-6h", peaks: ["Bruach na Frithe"], rat: 4.7, rev: 145, start: "Sligachan Hotel Car Park", src: "ts" },
+  { id: 68, name: "Sgurr nan Gillean", cls: "munros", reg: "Isle of Skye", diff: "Expert", dist: 10.0, elev: 1000, time: "5-7h", peaks: ["Sgurr nan Gillean"], rat: 4.9, rev: 134, start: "Sligachan Hotel Car Park", src: "ts" },
+  { id: 69, name: "Inaccessible Pinnacle & Sgurr Mhic Choinnich", cls: "munros", reg: "Isle of Skye", diff: "Expert", dist: 12.0, elev: 1100, time: "7-10h", peaks: ["Sgurr Dearg (Inaccessible Pinnacle)", "Sgurr Mhic Choinnich"], rat: 5.0, rev: 89, start: "Glen Brittle Memorial Hut", src: "ts" },
+  { id: 70, name: "Sgurr a'Ghreadaidh & Sgurr a'Mhadaidh", cls: "munros", reg: "Isle of Skye", diff: "Expert", dist: 14.0, elev: 1150, time: "7-9h", peaks: ["Sgurr a'Ghreadaidh", "Sgurr a'Mhadaidh"], rat: 4.9, rev: 67, start: "Glen Brittle Car Park", src: "ts" },
+
+  // ── FISHERFIELD & REMOTE NORTHWEST ───────────────────────────────────────
+  { id: 71, name: "Fisherfield Six (2-day)", cls: "munros", reg: "Fisherfield", diff: "Expert", dist: 40.0, elev: 2600, time: "2 days", peaks: ["A'Mhaighdean", "Ruadh Stac Mor", "Mullach Coire Mhic Fhearchair", "Beinn Tarsuinn", "Sgurr Ban", "Beinn a'Chlaidheimh"], rat: 5.0, rev: 56, start: "Corrie Hallie Car Park, Dundonnell", src: "ts" },
+
+  // ── GLEN AFFRIC ──────────────────────────────────────────────────────────
+  { id: 72, name: "Tom a'Choinich & Toll Creagach", cls: "munros", reg: "Glen Affric", diff: "Moderate", dist: 16.0, elev: 1080, time: "6-7h", peaks: ["Tom a'Choinich", "Toll Creagach"], rat: 4.5, rev: 89, start: "Dog Falls Car Park, Glen Affric", src: "ts" },
+  { id: 73, name: "Carn Eighe, Mam Sodhail & Beinn Fhionnlaidh", cls: "munros", reg: "Glen Affric", diff: "Hard", dist: 22.0, elev: 1500, time: "8-10h", peaks: ["Carn Eighe", "Mam Sodhail", "Beinn Fhionnlaidh"], rat: 4.8, rev: 78, start: "Affric Lodge Car Park", src: "ts" },
+  { id: 74, name: "Sgurr nan Ceathreamhnan & Mullach na Dheiragain", cls: "munros", reg: "Glen Affric", diff: "Expert", dist: 26.0, elev: 1550, time: "9-11h", peaks: ["Sgurr nan Ceathreamhnan", "Mullach na Dheiragain"], rat: 4.9, rev: 45, start: "Affric Lodge Car Park", src: "ts" },
+
+  // ── STRATHFARRAR ─────────────────────────────────────────────────────────
+  { id: 75, name: "Strathfarrar Four", cls: "munros", reg: "Strathfarrar", diff: "Hard", dist: 24.0, elev: 1500, time: "8-10h", peaks: ["Sgurr na Ruaidhe", "Carn nan Gobhar", "Sgurr a'Choire Ghlais", "Sgurr Fhuar-thuill"], rat: 4.7, rev: 56, start: "Strathfarrar Gate (permit required)", src: "ts" },
+
+  // ── KNOYDART ─────────────────────────────────────────────────────────────
+  { id: 76, name: "Sgurr na Ciche & Garbh Chioch Mhor", cls: "munros", reg: "Knoydart", diff: "Expert", dist: 20.0, elev: 1500, time: "8-10h", peaks: ["Sgurr na Ciche", "Garbh Chioch Mhor", "Sgurr nan Coireachan"], rat: 4.9, rev: 45, start: "Strathan Car Park, Loch Arkaig", src: "ts" },
+  { id: 77, name: "Ladhar Bheinn, Knoydart", cls: "munros", reg: "Knoydart", diff: "Expert", dist: 22.0, elev: 1280, time: "8-10h", peaks: ["Ladhar Bheinn"], rat: 5.0, rev: 67, start: "Barrisdale Bay (boat or walk from Kinloch Hourn)", src: "ts" },
+  { id: 78, name: "Meall Buidhe & Luinne Bheinn, Knoydart", cls: "munros", reg: "Knoydart", diff: "Expert", dist: 18.0, elev: 1300, time: "7-9h", peaks: ["Meall Buidhe", "Luinne Bheinn"], rat: 4.8, rev: 34, start: "Kinloch Hourn", src: "ts" },
+
+  // ── ASSYNT & FAR NORTH ───────────────────────────────────────────────────
+  { id: 79, name: "Beinn Dearg & Cona'Mheall", cls: "munros", reg: "Assynt & Far North", diff: "Hard", dist: 17.0, elev: 1050, time: "6-8h", peaks: ["Beinn Dearg", "Cona'Mheall"], rat: 4.6, rev: 89, start: "Inverlael Car Park, Loch Broom", src: "ts" },
+  { id: 80, name: "Seana Bhraigh", cls: "munros", reg: "Assynt & Far North", diff: "Expert", dist: 28.0, elev: 1000, time: "8-10h", peaks: ["Seana Bhraigh"], rat: 4.8, rev: 45, start: "Inverlael Car Park, Loch Broom", src: "ts" },
+  { id: 81, name: "Ben More Assynt & Conival", cls: "munros", reg: "Assynt & Far North", diff: "Hard", dist: 16.0, elev: 1160, time: "7-9h", peaks: ["Conival", "Ben More Assynt"], rat: 4.8, rev: 112, start: "Inchnadamph Hotel Car Park", src: "ts" },
+  { id: 82, name: "Ben Hope — Most Northerly Munro", cls: "munros", reg: "Assynt & Far North", diff: "Moderate", dist: 10.0, elev: 920, time: "4-5h", peaks: ["Ben Hope"], rat: 4.6, rev: 145, start: "Ben Hope Car Park, Strathmore", src: "ts" },
+  { id: 83, name: "Ben Klibreck", cls: "munros", reg: "Assynt & Far North", diff: "Moderate", dist: 18.0, elev: 860, time: "5-7h", peaks: ["Ben Klibreck"], rat: 4.4, rev: 89, start: "Crask Inn Layby, A836", src: "ts" },
+  { id: 84, name: "Ben Wyvis", cls: "munros", reg: "Assynt & Far North", diff: "Easy", dist: 14.0, elev: 880, time: "4-5h", peaks: ["Ben Wyvis"], rat: 4.3, rev: 234, start: "Garbat Car Park, A835", src: "ts" },
+
+  // ── CORBETTS ─────────────────────────────────────────────────────────────
+  { id: 85, name: "Beinn Resipol", cls: "corbetts", reg: "Ardnamurchan", diff: "Moderate", dist: 14.0, elev: 845, time: "5-6h", peaks: ["Beinn Resipol"], rat: 4.7, rev: 89, start: "Resipole Car Park, Ardnamurchan", src: "ts" },
+  { id: 86, name: "Beinn an Lochain", cls: "corbetts", reg: "Arrochar Alps", diff: "Moderate", dist: 8.0, elev: 900, time: "3-5h", peaks: ["Beinn an Lochain"], rat: 4.5, rev: 112, start: "Rest and Be Thankful Car Park", src: "ts" },
+  { id: 87, name: "Beinn Bheula", cls: "corbetts", reg: "Arrochar Alps", diff: "Moderate", dist: 14.0, elev: 780, time: "4-5h", peaks: ["Beinn Bheula"], rat: 4.3, rev: 56, start: "Lochgoilhead Car Park", src: "ts" },
+  { id: 88, name: "Foinaven", cls: "corbetts", reg: "Assynt & Far North", diff: "Hard", dist: 16.0, elev: 1100, time: "6-8h", peaks: ["Foinaven", "Ganu Mor"], rat: 4.9, rev: 67, start: "Rhiconich Car Park", src: "ts" },
+  { id: 89, name: "Quinag", cls: "corbetts", reg: "Assynt & Far North", diff: "Moderate", dist: 12.0, elev: 1050, time: "5-7h", peaks: ["Quinag", "Sail Gharbh", "Sail Gorm"], rat: 4.8, rev: 89, start: "Quinag Car Park, A894", src: "ts" },
+  { id: 90, name: "Ben Loyal", cls: "corbetts", reg: "Assynt & Far North", diff: "Moderate", dist: 14.0, elev: 770, time: "5-6h", peaks: ["Ben Loyal"], rat: 4.7, rev: 78, start: "Tongue Village Car Park", src: "ts" },
+  { id: 91, name: "Ben Vane", cls: "munros", reg: "Arrochar Alps", diff: "Hard", dist: 7.0, elev: 840, time: "3-4h", peaks: ["Ben Vane"], rat: 4.4, rev: 134, start: "Inveruglas Car Park, Loch Lomond", src: "ts" },
+  { id: 92, name: "Beinn Ime", cls: "munros", reg: "Arrochar Alps", diff: "Hard", dist: 10.0, elev: 1000, time: "4-5h", peaks: ["Beinn Ime"], rat: 4.5, rev: 167, start: "Rest and Be Thankful Car Park", src: "ts" },
+  { id: 93, name: "Ben Vorlich (Loch Lomond)", cls: "munros", reg: "Arrochar Alps", diff: "Moderate", dist: 10.0, elev: 943, time: "4-5h", peaks: ["Ben Vorlich"], rat: 4.4, rev: 198, start: "Ardlui Car Park, Loch Lomond", src: "ts" },
+  { id: 94, name: "Beinn Narnain & A'Chrois", cls: "munros", reg: "Arrochar Alps", diff: "Hard", dist: 12.0, elev: 1050, time: "5-6h", peaks: ["Beinn Narnain", "A'Chrois"], rat: 4.4, rev: 145, start: "Succoth Car Park, Arrochar", src: "ts" },
+
+  // ── WAINWRIGHTS (additional) ─────────────────────────────────────────────
+  { id: 95, name: "Scafell Pike via Corridor Route", cls: "wainwrights", reg: "Lake District", diff: "Hard", dist: 13.0, elev: 990, time: "5-7h", peaks: ["Scafell Pike"], rat: 4.6, rev: 567, start: "Wasdale Head Car Park", src: "ts" },
+  { id: 96, name: "Scafell Pike & Scafell", cls: "wainwrights", reg: "Lake District", diff: "Expert", dist: 16.0, elev: 1240, time: "7-9h", peaks: ["Scafell Pike", "Scafell"], rat: 4.8, rev: 234, start: "Wasdale Head Car Park", src: "ts" },
+  { id: 97, name: "Blencathra via Sharp Edge", cls: "wainwrights", reg: "Lake District", diff: "Hard", dist: 11.0, elev: 840, time: "4-6h", peaks: ["Blencathra"], rat: 4.8, rev: 312, start: "Scales Car Park, A66", src: "ts" },
+  { id: 98, name: "Skiddaw", cls: "wainwrights", reg: "Lake District", diff: "Moderate", dist: 13.0, elev: 870, time: "4-6h", peaks: ["Skiddaw"], rat: 4.4, rev: 389, start: "Latrigg Car Park, Keswick", src: "ts" },
+  { id: 99, name: "Great Gable", cls: "wainwrights", reg: "Lake District", diff: "Hard", dist: 11.0, elev: 900, time: "4-6h", peaks: ["Great Gable"], rat: 4.7, rev: 456, start: "Honister Pass Car Park", src: "ts" },
+  { id: 100, name: "The Old Man of Coniston", cls: "wainwrights", reg: "Lake District", diff: "Moderate", dist: 10.0, elev: 760, time: "3-5h", peaks: ["The Old Man of Coniston"], rat: 4.5, rev: 423, start: "Coniston Village Car Park", src: "ts" },
+
+  // ── HEWITTS (additional Wales) ────────────────────────────────────────────
+  { id: 101, name: "Tryfan via North Ridge", cls: "hewitts", reg: "Snowdonia", diff: "Expert", dist: 8.0, elev: 900, time: "4-6h", peaks: ["Tryfan"], rat: 4.9, rev: 312, start: "Ogwen Cottage Car Park", src: "ts" },
+  { id: 102, name: "Glyderau Traverse (Glyder Fawr & Glyder Fach)", cls: "hewitts", reg: "Snowdonia", diff: "Hard", dist: 12.0, elev: 1050, time: "5-7h", peaks: ["Glyder Fawr", "Glyder Fach"], rat: 4.8, rev: 245, start: "Ogwen Cottage Car Park", src: "ts" },
+  { id: 103, name: "Cadair Idris via Pony Path", cls: "hewitts", reg: "Snowdonia", diff: "Moderate", dist: 11.0, elev: 900, time: "4-6h", peaks: ["Cadair Idris"], rat: 4.7, rev: 389, start: "Toll-y-Mwnwgl Car Park, Minffordd", src: "ts" },
+  { id: 104, name: "Carnedd Llewelyn & Carnedd Dafydd", cls: "hewitts", reg: "Snowdonia", diff: "Hard", dist: 14.0, elev: 1050, time: "5-7h", peaks: ["Carnedd Llewelyn", "Carnedd Dafydd"], rat: 4.6, rev: 189, start: "Ogwen Cottage Car Park", src: "ts" },
 ];
 
 const C_WALKS = [
@@ -7198,12 +7310,25 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
           const { data: followData } = await supabase
             .from("follows")
             .select("follower_id")
-            .eq("following_id", userId)
-            .order("created_at", { ascending: followerFilter === "recent" ? false : true });
+            .eq("following_id", userId);
           if (followData && followData.length > 0) {
             const ids = followData.map(f => f.follower_id);
             const { data: profiles } = await supabase.from("profiles").select("id, username, full_name, location").in("id", ids);
-            setFollowerList(profiles || []);
+            // Fallback: for anyone missing from profiles, check posts table
+            const foundIds = new Set((profiles || []).map(p => p.id));
+            const missingIds = ids.filter(id => !foundIds.has(id));
+            let fallback = [];
+            if (missingIds.length > 0) {
+              const { data: postUsers } = await supabase
+                .from("posts").select("user_id, username, full_name").in("user_id", missingIds).order("created_at", { ascending: false });
+              if (postUsers) {
+                const seen = new Set();
+                fallback = postUsers
+                  .filter(p => { if (seen.has(p.user_id)) return false; seen.add(p.user_id); return true; })
+                  .map(p => ({ id: p.user_id, username: p.username, full_name: p.full_name }));
+              }
+            }
+            setFollowerList([...(profiles || []), ...fallback]);
           } else {
             setFollowerList([]);
           }
@@ -7212,8 +7337,7 @@ const ProfilePage = ({ initialSec, onSecChange, goMap, goHome, goRoutes, openRou
           const { data: followData } = await supabase
             .from("follows")
             .select("following_id")
-            .eq("follower_id", userId)
-            .order("created_at", { ascending: followerFilter === "recent" ? false : true });
+            .eq("follower_id", userId);
           if (followData && followData.length > 0) {
             const ids = followData.map(f => f.following_id);
             const { data: profiles } = await supabase.from("profiles").select("id, username, full_name, location").in("id", ids);
