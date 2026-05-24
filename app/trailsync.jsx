@@ -4184,7 +4184,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     try {
       const { Capacitor } = await import("@capacitor/core");
       if (Capacitor.isNativePlatform()) {
-        const { default: BackgroundGeolocation } = await import("@capacitor-community/background-geolocation");
+        const { default: BackgroundGeolocation } = await import(/* webpackIgnore: true */ "@capacitor-community/background-geolocation");
         const id = await BackgroundGeolocation.addWatcher(
           { backgroundMessage: "TrailSync is tracking your walk.", backgroundTitle: "Walk Tracking Active", requestPermissions: true, stale: false, distanceFilter: 3 },
           (location, error) => {
@@ -4221,7 +4221,7 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
   const stopGps = async () => {
     if (bgWatchRef.current !== null) {
       try {
-        const { default: BackgroundGeolocation } = await import("@capacitor-community/background-geolocation");
+        const { default: BackgroundGeolocation } = await import(/* webpackIgnore: true */ "@capacitor-community/background-geolocation");
         await BackgroundGeolocation.removeWatcher({ id: bgWatchRef.current });
       } catch (_) {}
       bgWatchRef.current = null;
