@@ -3218,20 +3218,6 @@ const RoutesPage = ({ openRoute, pendingRouteDetail, onClearPendingRoute }) => {
           </div>
         </div>
 
-        {/* Route GPX preview */}
-        <div style={{ background: "#041e3d", flexShrink: 0, position: "relative" }}>
-          {routeDetailCoordsLoading && (
-            <div style={{ height: "80px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: "2px solid rgba(90,152,227,0.2)", borderTop: "2px solid #5A98E3", animation: "spin 0.7s linear infinite" }} />
-            </div>
-          )}
-          {!routeDetailCoordsLoading && routeDetailCoords && routeDetailCoords.length > 1 && (
-            <RoutePreview points={routeDetailCoords} height={120} />
-          )}
-          {/* Fade overlays */}
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "24px", background: "linear-gradient(to bottom, rgba(13,45,84,0.85), transparent)", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "24px", background: "linear-gradient(to top, #041e3d, transparent)", pointerEvents: "none" }} />
-        </div>
 
         {/* Body */}
         <div style={{ flex: 1, padding: "20px 16px 40px" }}>
