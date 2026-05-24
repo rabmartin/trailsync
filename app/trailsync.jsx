@@ -2599,7 +2599,7 @@ const RoutePhotoCarousel = ({ photos, height = 240, autoAdvance = true }) => {
 
   useEffect(() => {
     if (!autoAdvance || photos.length < 2) return;
-    timerRef.current = setInterval(() => setIdx(i => (i + 1) % photos.length), 4000);
+    timerRef.current = setInterval(() => setIdx(i => (i + 1) % photos.length), 5000);
     return () => clearInterval(timerRef.current);
   }, [photos.length, autoAdvance]);
 
