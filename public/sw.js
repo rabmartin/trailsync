@@ -1,8 +1,8 @@
-// TrailSync Service Worker v7
+// TrailSync Service Worker v8
 // Cache-first for map tiles + pre-cache on route download
 
-const CACHE_NAME = "trailsync-v7";
-const TILE_CACHE = "trailsync-tiles-v7";
+const CACHE_NAME = "trailsync-v8";
+const TILE_CACHE = "trailsync-tiles-v8";
 
 // Minimal app shell — only static public files
 const APP_SHELL = ["/", "/manifest.json", "/icon-192.png", "/icon-512.png"];
