@@ -1092,7 +1092,7 @@ const UsernamePrompt = ({ onDone, fullName }) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       await supabase.auth.updateUser({ data: { ...user.user_metadata, username } });
-      await supabase.from("profiles").upsert({ id: user.id, username, full_name: user.user_metadata?.full_name, location: user.user_metadata?.location }, { onConflict: "id" });
+      await supabase.from("profiles").upsert({ id: user.id, username, full_name: user.user_metadata?.full_name, location: user.user_metadata?.location, date_of_birth: user.user_metadata?.date_of_birth || null }, { onConflict: "id" });
     }
     posthog.capture("username_saved");
     onDone(username);
@@ -1394,7 +1394,7 @@ const SignupScreen = ({ onSignup, onGoLogin }) => {
 /* ═══════════════════════════════════════════════════════════════════
    TAB 1: HOME
    ═══════════════════════════════════════════════════════════════════ */
-const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingIds, setFollowingCount, headerSearch, setHeaderSearch, openRoute, searchResults, setSearchResults, searching, setSearching, onViewProfile }) => {
+const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingIds, setFollowingCount, headerSearch, setHeaderSearch, openRoute, searchResults, setSearchResults, searching, setSearching, onViewProfile, feedRefreshKey }) => {
   const [wxOpen, setWxOpen] = useState(true);
   const [ff, setFf] = useState(initialFilter || "all");
   const [expandedArea, setExpandedArea] = useState(null);
@@ -1483,7 +1483,7 @@ const HomePage = ({ userName, initialFilter, userId, followingIds, setFollowingI
 
   useEffect(() => {
     fetchPosts();
-  }, [userId]);
+  }, [userId, feedRefreshKey]);
 
   // Fetch live SAIS avalanche data via our Vercel proxy (cached 1hr server-side)
   useEffect(() => {
@@ -4269,6 +4269,45 @@ const MapPage = ({ goHome, goProfile, onSaveWalk, openRoute, gpxRoute, onCloseGp
     }, 1000);
     return () => clearInterval(iv);
   }, [recording]);
+
+  // Persist walk state to localStorage so iOS WebView suspension doesn't lose it
+  useEffect(() => {
+    if ((recording || paused) && !saved) {
+      const state = {
+        timerStart: timerStartRef.current || (Date.now() - elapsed * 1000),
+        realDist, realElev, elapsed,
+        trackPoints: trackPointsRef.current,
+        movingTime: movingTimeRef.current,
+        wasPaused: paused && !recording,
+      };
+      try { localStorage.setItem("ts_active_walk", JSON.stringify(state)); } catch (_) {}
+    } else {
+      try { localStorage.removeItem("ts_active_walk"); } catch (_) {}
+    }
+  }, [recording, paused, saved, realDist, realElev, elapsed]);
+
+  // Restore walk state on mount if iOS killed the WebView mid-walk
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("ts_active_walk");
+      if (!saved) return;
+      const s = JSON.parse(saved);
+      if (!s?.timerStart) return;
+      const restoredElapsed = Math.floor((Date.now() - s.timerStart) / 1000);
+      if (restoredElapsed < 30) return; // ignore stale/accidental saves under 30s
+      timerStartRef.current = s.timerStart;
+      trackPointsRef.current = s.trackPoints || [];
+      movingTimeRef.current = s.movingTime || 0;
+      setRealDist(s.realDist || 0);
+      setRealElev(s.realElev || 0);
+      setElapsed(restoredElapsed);
+      if (s.wasPaused) {
+        setPaused(true); // restore into paused state so user can review before resuming
+      } else {
+        setRecording(true); // was mid-recording — resume immediately
+      }
+    } catch (_) {}
+  }, []);
 
   // Start/stop GPS watch based on recording state
   useEffect(() => {
@@ -9565,6 +9604,7 @@ export default function TrailSync() {
   // Auth state managed by Supabase session only — no localStorage sync needed
   const [profileSec, setProfileSec] = useState("mountains");
   const [feedFilter, setFeedFilter] = useState("all");
+  const [feedRefreshKey, setFeedRefreshKey] = useState(0);
   const [savedWalks, setSavedWalks] = useState([]);
   const [savedSpots, setSavedSpots] = useState([]);
   const [tutStep, setTutStep] = useState(0);
@@ -9810,6 +9850,10 @@ export default function TrailSync() {
       if (user.user_metadata?.username) {
         await supabase.from("profiles").update({ username: user.user_metadata.username })
           .eq("id", user.id).is("username", null);
+      }
+      if (user.user_metadata?.date_of_birth) {
+        await supabase.from("profiles").update({ date_of_birth: user.user_metadata.date_of_birth })
+          .eq("id", user.id).is("date_of_birth", null);
       }
 
       // Fetch all peaks from Supabase
@@ -10240,7 +10284,7 @@ export default function TrailSync() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {/* HomePage always mounted (like MapPage) so feed state/comments survive tab switches */}
         <div style={{ display: tab === "home" ? "flex" : "none", flex: 1, flexDirection: "column", overflow: "hidden" }}>
-          <HomePage userName={userName} initialFilter={feedFilter} userId={userId} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowingCount={setFollowingCount} headerSearch={headerSearch} setHeaderSearch={setHeaderSearch} openRoute={openRouteOnMap} searchResults={searchResults} setSearchResults={setSearchResults} searching={searching} setSearching={setSearching} onViewProfile={setViewingProfile} />
+          <HomePage userName={userName} initialFilter={feedFilter} userId={userId} followingIds={followingIds} setFollowingIds={setFollowingIds} setFollowingCount={setFollowingCount} headerSearch={headerSearch} setHeaderSearch={setHeaderSearch} openRoute={openRouteOnMap} searchResults={searchResults} setSearchResults={setSearchResults} searching={searching} setSearching={setSearching} onViewProfile={setViewingProfile} feedRefreshKey={feedRefreshKey} />
         </div>
         {tab === "routes" && <div key="routes" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", animation: `${(tabOrder[tab]||0) > (tabOrder[prevTab]||0) ? "slideInRight" : "slideInLeft"} .26s ease` }}><RoutesPage openRoute={openRouteOnMap} pendingRouteDetail={pendingRouteDetail} onClearPendingRoute={() => setPendingRouteDetail(null)} /></div>}
         {/* MapPage always mounted so GPX/Mapbox state survives tab switches — hidden with CSS when not active */}
@@ -10303,6 +10347,7 @@ export default function TrailSync() {
                   photo_urls: photoUrls.length > 0 ? photoUrls : null,
                 });
                 if (postErr) console.error("posts insert error:", JSON.stringify(postErr));
+                else setFeedRefreshKey(k => k + 1);
               } catch (e) { console.error("Failed to save walk:", e); }
             }}
             openRoute={openRouteOnMap}
