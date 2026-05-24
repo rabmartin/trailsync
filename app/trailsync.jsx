@@ -322,7 +322,7 @@ let PEAKS = PEAKS_FALLBACK;
 // ── Hardwired route photos — drop images into public/route-photos/ ────────────
 // Keys are route IDs. Add as many paths per route as you like for the carousel.
 const ROUTE_PHOTOS = {
-  1:  ["/route-photos/1-1.jpg"],
+  1:  ["/route-photos/1-1.jpg", "/route-photos/1-2.jpg", "/route-photos/1-3.jpg", "/route-photos/1-4.jpg"],
   2:  ["/route-photos/2-1.jpg"],
 };
 
