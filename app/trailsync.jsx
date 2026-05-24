@@ -2933,54 +2933,53 @@ const ROUTE_EXTRA_DEFAULT = { terrain: ["Mountain Path","Open Hillside"], descri
 const RouteListCard = ({ r, i, onSelect }) => {
   const { photos } = useRoutePhotos(r.id);
   const heroPhoto = photos[0] || null;
-  return (
-    <div
-      onClick={() => onSelect(r)}
-      style={{
-        borderRadius: "14px",
-        border: "1px solid rgba(90,152,227,0.1)",
-        cursor: "pointer",
-        animation: `fi .3s ease ${i * .04}s both`,
-        overflow: "hidden",
-        position: "relative",
-        background: "#0a2240",
-      }}
-    >
-      {/* Photo banner — only when a photo exists */}
-      {heroPhoto && (
-        <div style={{ position: "relative", height: 110, overflow: "hidden" }}>
-          <img src={heroPhoto} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(4,30,61,0.1) 0%, rgba(4,30,61,0.85) 100%)" }} />
-          {/* Name overlay on photo */}
-          <div style={{ position: "absolute", bottom: 10, left: 14, right: 14 }}>
-            <div style={{ fontSize: "17px", fontWeight: 800, color: "#F8F8F8", lineHeight: 1.2, fontFamily: "'DM Sans',sans-serif", textShadow: "0 2px 6px rgba(0,0,0,0.6)" }}>{r.name}</div>
+
+  if (heroPhoto) {
+    // Full-bleed photo card
+    return (
+      <div onClick={() => onSelect(r)} style={{ borderRadius: "14px", border: "1px solid rgba(90,152,227,0.1)", cursor: "pointer", animation: `fi .3s ease ${i * .04}s both`, overflow: "hidden", position: "relative", height: "200px" }}>
+        <img src={heroPhoto} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        {/* Gradient — dark at bottom for text legibility */}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(4,30,61,0.15) 0%, rgba(4,30,61,0.5) 50%, rgba(4,30,61,0.92) 100%)" }} />
+        {/* Content overlaid */}
+        <div style={{ position: "absolute", inset: 0, padding: "12px 14px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+          {/* Top row — badges */}
+          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+            <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "8px", background: `${CLS[r.cls]?.color}30`, color: CLS[r.cls]?.color, fontWeight: 700, backdropFilter: "blur(4px)" }}>{CLS[r.cls]?.name}</span>
+            <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "8px", background: `${dc(r.diff)}30`, color: dc(r.diff), fontWeight: 700, backdropFilter: "blur(4px)" }}>{r.diff}</span>
+          </div>
+          {/* Bottom — name + stats */}
+          <div>
+            <div style={{ fontSize: "18px", fontWeight: 800, color: "#F8F8F8", lineHeight: 1.2, fontFamily: "'DM Sans',sans-serif", textShadow: "0 2px 8px rgba(0,0,0,0.8)", marginBottom: "8px" }}>{r.name}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              <span style={{ fontSize: "12px", color: "#F8F8F8", opacity: 0.85, display: "flex", alignItems: "center", gap: "4px" }}><Navigation size={11} /> {r.dist}km</span>
+              <span style={{ fontSize: "12px", color: "#F8F8F8", opacity: 0.85, display: "flex", alignItems: "center", gap: "4px" }}><TrendingUp size={11} /> {r.elev}m</span>
+              <span style={{ fontSize: "12px", color: "#F8F8F8", opacity: 0.85, display: "flex", alignItems: "center", gap: "4px" }}><Clock size={11} /> {r.time}</span>
+              <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "4px" }}><Star size={11} color="#EBCB8B" fill="#EBCB8B" /><span style={{ fontSize: "12px", fontWeight: 700, color: "#F8F8F8" }}>{r.rat}</span></span>
+            </div>
           </div>
         </div>
-      )}
-      {/* Card body */}
+      </div>
+    );
+  }
+
+  // No photo — standard navy card
+  return (
+    <div onClick={() => onSelect(r)} style={{ borderRadius: "14px", border: "1px solid rgba(90,152,227,0.1)", cursor: "pointer", animation: `fi .3s ease ${i * .04}s both`, overflow: "hidden", position: "relative", background: "#0a2240" }}>
       <div style={{ padding: "12px 14px" }}>
-        {!heroPhoto && (
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "8px" }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "18px", fontWeight: 800, color: "#F8F8F8", lineHeight: 1.2, fontFamily: "'DM Sans',sans-serif" }}>{r.name}</div>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
-              {(r.gpx_file || ROUTES.find(x => x.name === r.name && x.gpx_file)) && (
-                <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "8px", background: "rgba(232,93,58,0.12)", color: "#E85D3A", fontWeight: 700 }}>View on map →</span>
-              )}
-              <Star size={12} color="#EBCB8B" fill="#EBCB8B" />
-              <span style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{r.rat}</span>
-              <span style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>({r.rev})</span>
-            </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "8px" }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: "18px", fontWeight: 800, color: "#F8F8F8", lineHeight: 1.2, fontFamily: "'DM Sans',sans-serif" }}>{r.name}</div>
           </div>
-        )}
-        {heroPhoto && (
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0, marginBottom: "8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+            {(r.gpx_file || ROUTES.find(x => x.name === r.name && x.gpx_file)) && (
+              <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "8px", background: "rgba(232,93,58,0.12)", color: "#E85D3A", fontWeight: 700 }}>View on map →</span>
+            )}
             <Star size={12} color="#EBCB8B" fill="#EBCB8B" />
-            <span style={{ fontSize: "13px", fontWeight: 700, color: "#F8F8F8" }}>{r.rat}</span>
+            <span style={{ fontSize: "14px", fontWeight: 700, color: "#F8F8F8" }}>{r.rat}</span>
             <span style={{ fontSize: "12px", color: "#BDD6F4", opacity: 0.5 }}>({r.rev})</span>
           </div>
-        )}
+        </div>
         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
           <span style={{ fontSize: "12px", padding: "2px 8px", borderRadius: "8px", background: `${CLS[r.cls]?.color}15`, color: CLS[r.cls]?.color, fontWeight: 600 }}>{CLS[r.cls]?.name}</span>
           <span style={{ fontSize: "12px", padding: "2px 8px", borderRadius: "8px", background: `${dc(r.diff)}18`, color: dc(r.diff), fontWeight: 600 }}>{r.diff}</span>
